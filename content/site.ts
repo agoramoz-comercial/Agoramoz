@@ -14,14 +14,14 @@ export const CTA = { primary: CTA_PRIMARY, secondary: CTA_SECONDARY } as const;
 
 /* ---------------------------------------------------------------- navegação */
 
+/**
+ * As soluções NÃO vivem aqui. Duplicavam slug, label e short dos ficheiros de
+ * conteúdo e já tinham divergido — foi essa duplicação que produziu quatro
+ * ligações para páginas que não existiam. A navegação lê agora
+ * `getSolutionSummaries()` do registry, pelo que só pode apontar para o que
+ * está publicado.
+ */
 export const NAV = {
-  solutions: [
-    { slug: 'websites-avancados', label: 'Websites avançados', short: 'Captar e qualificar oportunidades' },
-    { slug: 'software-empresarial', label: 'Software empresarial', short: 'Sistemas à medida dos seus processos' },
-    { slug: 'automacao-de-processos', label: 'Automação de processos', short: 'Menos trabalho repetitivo e menos erros' },
-    { slug: 'agentes-ia', label: 'Agentes de IA', short: 'Assistentes com objetivo, fontes e supervisão' },
-    { slug: 'infraestrutura-digital', label: 'Infraestrutura digital', short: 'Integração, segurança e monitorização' },
-  ],
   primary: [
     { href: '/como-trabalhamos', label: 'Como trabalhamos' },
     { href: '/sobre', label: 'Sobre' },

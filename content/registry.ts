@@ -3,7 +3,11 @@ import { mz } from './countries/mz';
 import { pt } from './countries/pt';
 import { br } from './countries/br';
 import { mzEnergiaMineracao } from './sectors/mz/energia-mineracao';
+import { websitesAvancados } from './solutions/websites-avancados';
+import { softwareEmpresarial } from './solutions/software-empresarial';
 import { automacaoDeProcessos } from './solutions/automacao-de-processos';
+import { agentesIa } from './solutions/agentes-ia';
+import { infraestruturaDigital } from './solutions/infraestrutura-digital';
 
 /** Rótulos legíveis dos setores. Os slugs são sempre ASCII sem acentos. */
 export const SECTOR_LABELS: Record<SectorSlug, string> = {
@@ -42,8 +46,16 @@ export const SECTOR_PAGES: Record<string, SectorPage> = {
   'mz/energia-mineracao': mzEnergiaMineracao,
 };
 
+/**
+ * Ordem intencional: é a ordem em que aparecem no mega-menu, na grelha da home
+ * e no footer. Da aquisição para a base que a sustenta.
+ */
 export const SOLUTIONS: Record<string, SolutionPage> = {
+  'websites-avancados': websitesAvancados,
+  'software-empresarial': softwareEmpresarial,
   'automacao-de-processos': automacaoDeProcessos,
+  'agentes-ia': agentesIa,
+  'infraestrutura-digital': infraestruturaDigital,
 };
 
 /* -------------------------------------------------------------------- lookups */
@@ -85,6 +97,21 @@ export function getCountriesForSector(sector: SectorSlug): CountryCode[] {
 
 export function getAllSectorParams(): { pais: CountryCode; setor: SectorSlug }[] {
   return Object.values(SECTOR_PAGES).map((p) => ({ pais: p.country, setor: p.sector }));
+}
+
+/**
+ * Resumos para navegação. Única fonte de verdade: substituiu o NAV.solutions
+ * que vivia em content/site.ts e que já tinha divergido dos ficheiros de
+ * conteúdo. Uma capacidade sem ficheiro publicado deixa de poder aparecer
+ * como ligação — que era a origem das quatro ligações mortas.
+ */
+export function getSolutionSummaries() {
+  return Object.values(SOLUTIONS).map((s) => ({
+    slug: s.slug,
+    label: s.label,
+    short: s.short,
+    href: `/solucoes/${s.slug}`,
+  }));
 }
 
 export function getAllSolutionParams(): { solucao: SolutionSlug }[] {

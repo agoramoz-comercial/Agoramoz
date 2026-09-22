@@ -131,7 +131,8 @@ export default async function SolucaoPage({ params }: Props) {
       </Section>
 
       <Section surface="light" aria-labelledby="h-faq-sol">
-        <SectionHeading id="h-faq-sol" eyebrow="Perguntas frequentes" title={`Sobre ${s.label.toLowerCase()}.`} />
+        {/* Sem toLowerCase(): destruía o acrónimo em "Agentes de IA". */}
+        <SectionHeading id="h-faq-sol" eyebrow="Perguntas frequentes" title={`Sobre ${s.label}.`} />
         <div className="mt-10 max-w-[52rem]">
           <Accordion items={s.faq} />
         </div>

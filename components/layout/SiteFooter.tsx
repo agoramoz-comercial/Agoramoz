@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { Logo } from '@/components/brand/Logo';
 import { NAV, SITE } from '@/content/site';
+import { getSolutionSummaries } from '@/content/registry';
 import { COUNTRIES, COUNTRY_CODES, getSectorsForCountry } from '@/content/registry';
 import { MotionToggle } from '@/components/motion/MotionToggle';
 
 export function SiteFooter() {
+  const solutions = getSolutionSummaries();
+
   return (
     <footer data-surface="deep" className="bg-[color:var(--surface)] text-[color:var(--on-surface)]">
       <div
@@ -25,12 +28,14 @@ export function SiteFooter() {
 
           <nav aria-label="Soluções">
             <h2 className="font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
-              Soluções
+              <Link href="/solucoes" className="hover:text-[color:var(--on-surface)]">
+                Soluções
+              </Link>
             </h2>
             <ul className="mt-4 space-y-2.5">
-              {NAV.solutions.map((s) => (
+              {solutions.map((s) => (
                 <li key={s.slug}>
-                  <Link href={`/solucoes/${s.slug}`} className="text-sm hover:text-[color:var(--accent)]">
+                  <Link href={s.href} className="text-sm hover:text-[color:var(--accent)]">
                     {s.label}
                   </Link>
                 </li>

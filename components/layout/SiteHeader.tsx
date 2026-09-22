@@ -8,6 +8,7 @@ import { Menu, X, ChevronDown } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { CTA, NAV } from '@/content/site';
+import { getSolutionSummaries } from '@/content/registry';
 import { COUNTRIES, COUNTRY_CODES, getSectorsForCountry } from '@/content/registry';
 import { cn } from '@/lib/utils/cn';
 
@@ -15,6 +16,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState<'solucoes' | 'setores' | null>(null);
+  const solutions = getSolutionSummaries();
 
   /**
    * Fechar os menus quando a rota muda. Ajustar estado durante o render (em
@@ -102,8 +104,8 @@ export function SiteHeader() {
                   <p className="mt-2 mb-1 font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--accent)] uppercase">
                     Soluções
                   </p>
-                  {NAV.solutions.map((s) => (
-                    <Link key={s.slug} href={`/solucoes/${s.slug}`} className="min-h-11 py-2.5 text-[0.9375rem]">
+                  {solutions.map((s) => (
+                    <Link key={s.slug} href={s.href} className="min-h-11 py-2.5 text-[0.9375rem]">
                       {s.label}
                     </Link>
                   ))}
@@ -143,12 +145,24 @@ export function SiteHeader() {
             style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
           >
             {menu === 'solucoes'
-              ? NAV.solutions.map((s) => (
-                  <Link key={s.slug} href={`/solucoes/${s.slug}`} className="group rounded-sm p-3 hover:bg-[color:var(--surface-raised)]">
-                    <span className="block font-display font-semibold">{s.label}</span>
-                    <span className="mt-1 block text-sm text-[color:var(--muted)]">{s.short}</span>
-                  </Link>
-                ))
+              ? [
+                  ...solutions.map((s) => (
+                    <Link key={s.slug} href={s.href} className="group rounded-sm p-3 hover:bg-[color:var(--surface-raised)]">
+                      <span className="block font-display font-semibold">{s.label}</span>
+                      <span className="mt-1 block text-sm text-[color:var(--muted)]">{s.short}</span>
+                    </Link>
+                  )),
+                  <Link
+                    key="indice"
+                    href="/solucoes"
+                    className="rounded-sm p-3 text-[color:var(--accent)] hover:bg-[color:var(--surface-raised)]"
+                  >
+                    <span className="block font-display font-semibold">Ver todas as soluções</span>
+                    <span className="mt-1 block text-sm text-[color:var(--muted)]">
+                      Como se combinam num único sistema
+                    </span>
+                  </Link>,
+                ]
               : COUNTRY_CODES.map((code) => (
                   <div key={code} className="p-3">
                     <Link href={`/${code}`} className="block font-display font-semibold hover:text-[color:var(--accent)]">

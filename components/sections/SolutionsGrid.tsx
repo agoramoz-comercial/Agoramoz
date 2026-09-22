@@ -1,15 +1,17 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
-import { NAV } from '@/content/site';
+import { getSolutionSummaries } from '@/content/registry';
 
 export function SolutionsGrid() {
+  const solutions = getSolutionSummaries();
+
   return (
     <Reveal className="mt-12 grid gap-px overflow-hidden rounded-[--radius-lg] border border-[color:var(--border)] bg-[color:var(--border)] sm:grid-cols-2 lg:grid-cols-3">
-      {NAV.solutions.map((s) => (
+      {solutions.map((s) => (
         <Link
           key={s.slug}
-          href={`/solucoes/${s.slug}`}
+          href={s.href}
           data-animate
           className="group flex min-h-[11rem] flex-col justify-between bg-[color:var(--surface)] p-6 transition-colors hover:bg-[color:var(--surface-raised)]"
         >
