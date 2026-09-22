@@ -1,4 +1,13 @@
-import { CTA_PRIMARY, CTA_SECONDARY, DEMO_DISCLAIMER, type FaqItem, type Problem, type ProofItem } from './types';
+import {
+  CTA_PRIMARY,
+  CTA_SECONDARY,
+  DEMO_DISCLAIMER,
+  type Certification,
+  type FaqItem,
+  type Problem,
+  type ProofItem,
+  type SocialLink,
+} from './types';
 
 export const SITE = {
   name: 'AGORAMOZ',
@@ -8,7 +17,45 @@ export const SITE = {
   description:
     'A AGORAMOZ desenvolve websites avançados, software, automações e agentes de IA adaptados aos processos da sua empresa, em Moçambique, Portugal e Brasil.',
   email: 'comercial@agoramoz.com',
+  /**
+   * Um número para os três mercados. O WhatsApp é internacional e não custa
+   * nada a quem liga de Portugal ou do Brasil — por isso o canal é da empresa,
+   * não de um país. Uma linha local, se um dia existir, entra em
+   * `Country.whatsapp` e ganha precedência sobre este.
+   */
+  whatsapp: { e164: '258824780097', display: '+258 82 478 0097' },
 } as const;
+
+/* ------------------------------------------------------------------- canais */
+
+/**
+ * Canais públicos da AGORAMOZ. Fonte única — o rodapé, a página de contactos,
+ * o menu móvel e o JSON-LD leem todos daqui. Acrescentar uma rede é acrescentar
+ * uma linha a este array; nenhum componente precisa de saber que ela existe.
+ *
+ * POR PREENCHER: Facebook, YouTube, X e TikTok, se existirem. O tipo já os
+ * aceita — falta a URL de cada um.
+ */
+export const SOCIAL: readonly SocialLink[] = [
+  {
+    id: 'linkedin',
+    label: 'LinkedIn',
+    handle: 'AGORAMOZ',
+    href: 'https://www.linkedin.com/company/agoramoz',
+  },
+  {
+    id: 'instagram',
+    label: 'Instagram',
+    handle: '@agoramoz',
+    href: 'https://www.instagram.com/agoramoz',
+  },
+  {
+    id: 'whatsapp',
+    label: 'WhatsApp',
+    handle: SITE.whatsapp.display,
+    href: `https://wa.me/${SITE.whatsapp.e164}`,
+  },
+] as const;
 
 export const CTA = { primary: CTA_PRIMARY, secondary: CTA_SECONDARY } as const;
 
@@ -152,6 +199,20 @@ export const PROOF_SECTION = {
 
 /* ---------------------------------------------------------------- fundadores */
 
+/**
+ * Quem lidera.
+ *
+ * `certifications` está vazio de propósito, não por esquecimento. As
+ * credenciais de cada fundador vivem nos perfis do LinkedIn e não foram
+ * transcritas para aqui — inventar uma certificação seria a mesma falha que
+ * inventar um cliente, com o agravante de ser uma afirmação sobre uma pessoa
+ * real. A secção de credenciais só aparece no site quando este array deixar de
+ * estar vazio; enquanto estiver, o bloco não é renderizado de todo.
+ *
+ * Para preencher, uma entrada por credencial:
+ *   { name: 'Nome da certificação', issuer: 'Entidade emissora', year: '2024' }
+ * `issuer` é obrigatório — ver a nota em `content/types.ts`.
+ */
 export const FOUNDERS = {
   eyebrow: 'Quem lidera',
   title: 'Estratégia, tecnologia e desenvolvimento de oportunidades.',
@@ -161,12 +222,14 @@ export const FOUNDERS = {
       role: 'Founder & CEO',
       body: 'Responsável por estratégia digital, sistemas de crescimento, automação e inteligência artificial.',
       linkedin: 'https://mz.linkedin.com/in/gerson-samussene-95b7a322b',
+      certifications: [] as readonly Certification[],
     },
     {
       name: 'Sheinaz de Sousa Amisse',
       role: 'Co-founder & Chief Energy Officer',
       body: 'Responsável por parcerias estratégicas, oportunidades, investimento e desenvolvimento no setor energético.',
       linkedin: 'https://mz.linkedin.com/in/sheinaz-amisse',
+      certifications: [] as readonly Certification[],
     },
   ],
 } as const;

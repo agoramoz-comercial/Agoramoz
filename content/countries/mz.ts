@@ -16,8 +16,9 @@ export const mz: Country = {
   locale: 'pt-MZ',
   currency: 'MZN',
   dialCode: '+258',
-  // POR PREENCHER: número real. Fica `null` até ser fornecido — a UI
-  // esconde o botão de WhatsApp em vez de mostrar um número inventado.
+  // Sem linha local. Não é ausência de WhatsApp: a UI cai para o número da
+  // empresa em SITE.whatsapp. Este campo só se preenche quando existir mesmo
+  // uma linha própria neste país.
   whatsapp: null,
   privacyRegime: 'MZ',
   consent: {

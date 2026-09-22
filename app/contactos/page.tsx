@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { COUNTRIES, COUNTRY_CODES } from '@/content/registry';
 import { CTA, SITE } from '@/content/site';
+import { SocialLinks } from '@/components/ui/SocialLinks';
 import { buildMetadata } from '@/lib/seo/site';
 
 export const metadata: Metadata = buildMetadata({
@@ -27,13 +28,25 @@ export default function ContactosPage() {
           title="Descreva o processo. Respondemos com o próximo passo."
           lead="O caminho mais rápido é o formulário de diagnóstico: recolhe o contexto de que precisamos para responder com substância em vez de pedir uma reunião para perceber o assunto."
         />
-        <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Button asChild size="lg">
             <Link href="/diagnostico">{CTA.primary}</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
           </Button>
+          <Button asChild size="lg" variant="outline">
+            <a href={`https://wa.me/${SITE.whatsapp.e164}`} target="_blank" rel="noopener noreferrer">
+              WhatsApp {SITE.whatsapp.display}
+            </a>
+          </Button>
+        </div>
+
+        <div className="mt-14 grid lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <h2 className="rule-label text-[color:var(--muted)]">Canais diretos</h2>
+            <SocialLinks variant="list" className="mt-4" />
+          </div>
         </div>
       </Section>
 
@@ -49,21 +62,25 @@ export default function ContactosPage() {
                   {c.dialCode} · {c.currency} · {c.privacyRegime === 'MZ' ? 'Proteção de dados' : c.privacyRegime}
                 </p>
                 <p className="mt-4 text-sm text-[color:var(--muted)]">{c.positioning}</p>
-                {c.whatsapp ? (
+                {/* Linha local quando existir; caso contrário o número da empresa,
+                    identificado como tal para não sugerir presença local. */}
+                <div className="mt-5 flex flex-col gap-2">
                   <a
-                    href={`https://wa.me/${c.whatsapp.e164}`}
-                    className="mt-5 inline-block text-sm text-[color:var(--accent)] underline-offset-4 hover:underline"
+                    href={`https://wa.me/${(c.whatsapp ?? SITE.whatsapp).e164}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center text-sm text-[color:var(--accent)] underline-offset-4 hover:underline"
                   >
-                    WhatsApp {c.whatsapp.display}
+                    WhatsApp {(c.whatsapp ?? SITE.whatsapp).display}
+                    {!c.whatsapp && <span className="ml-1.5 text-[color:var(--muted)]">· linha AGORAMOZ</span>}
                   </a>
-                ) : (
                   <Link
                     href={`/diagnostico?pais=${code}`}
-                    className="mt-5 inline-block text-sm text-[color:var(--accent)] underline-offset-4 hover:underline"
+                    className="inline-flex min-h-11 items-center text-sm text-[color:var(--accent)] underline-offset-4 hover:underline"
                   >
                     Solicitar diagnóstico para {c.name}
                   </Link>
-                )}
+                </div>
               </div>
             );
           })}

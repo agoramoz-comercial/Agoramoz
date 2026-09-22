@@ -12,6 +12,9 @@ export const pt: Country = {
   locale: 'pt-PT',
   currency: 'EUR',
   dialCode: '+351',
+  // Sem linha local. Não é ausência de WhatsApp: a UI cai para o número da
+  // empresa em SITE.whatsapp. Este campo só se preenche quando existir mesmo
+  // uma linha própria neste país.
   whatsapp: null,
   privacyRegime: 'RGPD',
   consent: {

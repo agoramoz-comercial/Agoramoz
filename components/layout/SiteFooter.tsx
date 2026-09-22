@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/brand/Logo';
 import { NAV, SITE } from '@/content/site';
+import { SocialLinks } from '@/components/ui/SocialLinks';
 import { getSolutionSummaries } from '@/content/registry';
 import { COUNTRIES, COUNTRY_CODES, getSectorsForCountry } from '@/content/registry';
 import { MotionToggle } from '@/components/motion/MotionToggle';
@@ -14,16 +15,33 @@ export function SiteFooter() {
         className="mx-auto w-full py-20"
         style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
       >
-        <div className="rule grid gap-12 pt-10 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        {/* Quatro colunas a partir de 768px davam ~180px a cada uma, e a coluna
+            Mercados leva listas de setores aninhadas: ilegível em tablet.
+            Duas colunas em md, quatro só quando há largura para elas. */}
+        <div className="rule grid gap-x-10 gap-y-12 pt-10 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <Logo href={null} />
             <p className="mt-4 max-w-xs text-sm text-[color:var(--muted)]">{SITE.tagline}.</p>
-            <a
-              href={`mailto:${SITE.email}`}
-              className="mt-4 inline-block rounded-xs text-sm text-[color:var(--accent)] underline-offset-4 hover:underline"
-            >
-              {SITE.email}
-            </a>
+
+            <div className="mt-6 flex flex-col gap-2">
+              <a
+                href={`mailto:${SITE.email}`}
+                className="inline-flex min-h-11 items-center rounded-xs text-sm text-[color:var(--on-surface)] underline-offset-4 hover:underline"
+              >
+                {SITE.email}
+              </a>
+              <a
+                href={`https://wa.me/${SITE.whatsapp.e164}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center rounded-xs text-sm text-[color:var(--on-surface)] underline-offset-4 hover:underline"
+              >
+                WhatsApp {SITE.whatsapp.display}
+                <span className="sr-only"> (abre noutro separador)</span>
+              </a>
+            </div>
+
+            <SocialLinks className="mt-5" />
           </div>
 
           <nav aria-label="Soluções">

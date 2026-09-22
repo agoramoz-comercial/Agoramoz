@@ -120,7 +120,14 @@ export interface Country {
   locale: Locale;
   currency: Currency;
   dialCode: string;
-  whatsapp: { e164: string; display: string } | null;
+  /**
+   * Linha local, quando existir. `null` NÃO significa sem WhatsApp: a UI cai
+   * para `SITE.whatsapp`, o número único da empresa. Este campo existe só para
+   * o dia em que houver uma linha própria em Portugal ou no Brasil — copiar o
+   * mesmo número para os três ficheiros de país criaria a fonte dupla de
+   * verdade que já produziu quatro ligações mortas neste projeto.
+   */
+  whatsapp: PhoneNumber | null;
   privacyRegime: 'MZ' | 'RGPD' | 'LGPD';
   consent: { text: string; policyHref: string };
   investmentBands: InvestmentBand[];
@@ -179,4 +186,35 @@ export interface SolutionPage {
   faq: FaqItem[];
   seo: SeoMeta;
   updatedAt: string;
+}
+
+/* --------------------------------------------------------- contacto e perfil */
+
+/**
+ * Uma certificação SEM entidade emissora não é uma certificação — é uma
+ * afirmação. `issuer` é obrigatório pela mesma razão que este ficheiro torna
+ * impossível representar um cliente inventado: uma credencial que ninguém
+ * emitiu não é verificável por quem lê.
+ */
+export interface Certification {
+  name: string;
+  /** Quem emitiu. Obrigatório. */
+  issuer: string;
+  /** Ano de emissão, quando conhecido. */
+  year?: string;
+}
+
+/** Canal público da empresa. O `handle` é o que se mostra; o `href` é onde vai. */
+export interface SocialLink {
+  id: 'linkedin' | 'instagram' | 'whatsapp' | 'facebook' | 'youtube' | 'x' | 'tiktok';
+  label: string;
+  handle: string;
+  href: string;
+}
+
+/** Um número de telefone em duas formas: a que se marca e a que se lê. */
+export interface PhoneNumber {
+  /** E.164 sem `+` nem espaços — é o formato que o wa.me exige. */
+  e164: string;
+  display: string;
 }

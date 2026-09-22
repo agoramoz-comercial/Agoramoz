@@ -8,7 +8,7 @@ import type { Problem } from '@/content/types';
 export function ProblemGrid({ items, columns = 2 }: { items: Problem[]; columns?: 2 | 3 | 4 }) {
   return (
     <Reveal className="mt-16">
-      <ul className={columns >= 3 ? 'grid gap-x-10 md:grid-cols-2 xl:grid-cols-3' : 'grid gap-x-16 md:grid-cols-2'}>
+      <ul className={columns >= 3 ? 'grid gap-x-10 md:grid-cols-2 lg:grid-cols-3' : 'grid gap-x-16 md:grid-cols-2'}>
         {items.map((p, i) => (
           <li
             key={p.title}

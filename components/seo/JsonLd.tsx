@@ -1,4 +1,4 @@
-import { FOUNDERS, SITE } from '@/content/site';
+import { FOUNDERS, SITE, SOCIAL } from '@/content/site';
 import { SITE_URL, absolute } from '@/lib/seo/site';
 
 function Script({ data }: { data: object }) {
@@ -22,6 +22,18 @@ export function OrganizationJsonLd() {
         description: SITE.description,
         email: SITE.email,
         logo: absolute('/brand/logo-light-bg.png'),
+        /* Perfis oficiais: é o que liga a entidade às redes nos motores de busca. */
+        sameAs: SOCIAL.filter((s) => s.id !== 'whatsapp').map((s) => s.href),
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            contactType: 'sales',
+            email: SITE.email,
+            telephone: `+${SITE.whatsapp.e164}`,
+            availableLanguage: ['pt'],
+            areaServed: ['MZ', 'PT', 'BR'],
+          },
+        ],
         areaServed: [
           { '@type': 'Country', name: 'Moçambique' },
           { '@type': 'Country', name: 'Portugal' },

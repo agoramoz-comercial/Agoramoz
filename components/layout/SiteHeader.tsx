@@ -7,7 +7,8 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
-import { CTA, NAV } from '@/content/site';
+import { CTA, NAV, SITE } from '@/content/site';
+import { SocialLinks } from '@/components/ui/SocialLinks';
 import { getSolutionSummaries } from '@/content/registry';
 import { COUNTRIES, COUNTRY_CODES, getSectorsForCountry } from '@/content/registry';
 import { cn } from '@/lib/utils/cn';
@@ -130,6 +131,23 @@ export function SiteHeader() {
                   <Button asChild className="mt-6 w-full">
                     <Link href="/diagnostico">{CTA.primary}</Link>
                   </Button>
+
+                  {/* Num telemóvel é aqui que se procura como falar com alguém. */}
+                  <div className="mt-8 border-t border-dashed border-[color:var(--hairline)] pt-5">
+                    <p className="rule-label text-[color:var(--muted)]">Canais diretos</p>
+                    <a
+                      href={`https://wa.me/${SITE.whatsapp.e164}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 flex min-h-11 items-center text-[0.9375rem]"
+                    >
+                      WhatsApp {SITE.whatsapp.display}
+                    </a>
+                    <a href={`mailto:${SITE.email}`} className="flex min-h-11 items-center text-[0.9375rem]">
+                      {SITE.email}
+                    </a>
+                    <SocialLinks className="mt-3" />
+                  </div>
                 </nav>
               </Dialog.Content>
             </Dialog.Portal>
@@ -141,7 +159,7 @@ export function SiteHeader() {
       {menu && (
         <div className="hidden border-t border-[color:var(--hairline)] bg-[color:var(--surface)] lg:block">
           <div
-            className="mx-auto grid w-full gap-x-12 gap-y-3 py-12 md:grid-cols-3"
+            className="mx-auto grid w-full gap-x-12 gap-y-3 py-12 lg:grid-cols-3"
             style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
           >
             {menu === 'solucoes'

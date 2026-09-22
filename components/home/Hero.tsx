@@ -175,9 +175,12 @@ export function Hero() {
         <div data-animate className="flex flex-col gap-4 md:col-span-5 md:items-end">
           {/* Envolve em vez de transbordar: os dois CTA lado a lado não cabem
               em cinco colunas a nenhuma largura, e antes desbordavam para
-              cima do parágrafo à esquerda. */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap md:justify-end">
-            <MagneticButton>
+              cima do parágrafo à esquerda. Com `flex-1` e uma base comum, os
+              dois ficam com a mesma largura quer partilhem a linha quer não —
+              sem isso o secundário ficava pendurado, mais estreito, por baixo
+              do primário. */}
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap md:justify-end [&>*]:sm:flex-1 [&>*]:sm:basis-[17rem]">
+            <MagneticButton className="[&>*]:w-full">
               <Button asChild size="lg">
                 <Link href="/diagnostico">
                   {CTA.primary}
@@ -187,7 +190,7 @@ export function Hero() {
                 </Link>
               </Button>
             </MagneticButton>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="outline" className="w-full">
               <Link href="#setores">Explorar soluções por setor</Link>
             </Button>
           </div>
