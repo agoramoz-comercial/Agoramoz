@@ -62,7 +62,8 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="rule-label inline-flex min-h-11 items-center px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
+              aria-current={pathname === item.href ? 'page' : undefined}
+              className="rule-label inline-flex min-h-11 items-center px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
             >
               {item.label}
             </Link>
@@ -70,8 +71,20 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/diagnostico">{CTA.primary}</Link>
+          {/*
+            Abaixo de 640px este botão tinha `hidden sm:inline-flex`: num
+            telemóvel não havia CTA nenhum no cabeçalho. Passa a estar sempre
+            presente, com rótulo curto onde não cabe o longo — o destino é o
+            mesmo, e o nome acessível mantém o rótulo completo.
+          */}
+          <Button asChild size="sm">
+            <Link href="/diagnostico">
+              <span className="sm:hidden" aria-hidden>
+                Diagnóstico
+              </span>
+              <span className="hidden sm:inline">{CTA.primary}</span>
+              <span className="sr-only sm:hidden">{CTA.primary}</span>
+            </Link>
           </Button>
 
           <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -106,7 +119,12 @@ export function SiteHeader() {
                     Soluções
                   </p>
                   {solutions.map((s) => (
-                    <Link key={s.slug} href={s.href} className="min-h-11 py-2.5 text-[0.9375rem]">
+                    <Link
+                      key={s.slug}
+                      href={s.href}
+                      aria-current={pathname === s.href ? 'page' : undefined}
+                      className="flex min-h-11 items-center text-[0.9375rem] aria-[current=page]:text-[color:var(--accent)]"
+                    >
                       {s.label}
                     </Link>
                   ))}
@@ -115,14 +133,24 @@ export function SiteHeader() {
                     Setores
                   </p>
                   {COUNTRY_CODES.map((code) => (
-                    <Link key={code} href={`/${code}`} className="min-h-11 py-2.5 text-[0.9375rem]">
+                    <Link
+                      key={code}
+                      href={`/${code}`}
+                      aria-current={pathname === `/${code}` ? 'page' : undefined}
+                      className="flex min-h-11 items-center text-[0.9375rem] aria-[current=page]:text-[color:var(--accent)]"
+                    >
                       {COUNTRIES[code].name}
                     </Link>
                   ))}
 
                   <div className="mt-5 border-t border-[color:var(--border)] pt-3">
                     {NAV.primary.map((item) => (
-                      <Link key={item.href} href={item.href} className="block min-h-11 py-2.5 text-[0.9375rem]">
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        aria-current={pathname === item.href ? 'page' : undefined}
+                        className="flex min-h-11 items-center text-[0.9375rem] aria-[current=page]:text-[color:var(--accent)]"
+                      >
                         {item.label}
                       </Link>
                     ))}

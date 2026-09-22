@@ -30,7 +30,7 @@ export function CustomCursor() {
         yTo(e.clientY);
         gsap.to(el, { autoAlpha: 1, duration: 0.2, overwrite: 'auto' });
 
-        const interactive = (e.target as Element | null)?.closest?.('a, button, [role="radio"], [role="tab"]');
+        const interactive = (e.target as Element | null)?.closest?.('a, button, [role="radio"]');
         gsap.to(el, { scale: interactive ? 3.2 : 1, duration: 0.25, overwrite: 'auto' });
       };
       const onLeave = () => gsap.to(el, { autoAlpha: 0, duration: 0.2 });

@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/brand/Logo';
 import { NAV, SITE } from '@/content/site';
 import { SocialLinks } from '@/components/ui/SocialLinks';
@@ -6,8 +9,19 @@ import { getSolutionSummaries } from '@/content/registry';
 import { COUNTRIES, COUNTRY_CODES, getSectorsForCountry } from '@/content/registry';
 import { MotionToggle } from '@/components/motion/MotionToggle';
 
+/**
+ * Duas correções que só um teste por ecrã apanha:
+ *
+ * 1. **Alvo de toque.** Estas ligações tinham 14 a 17px de altura — abaixo do
+ *    mínimo de 24x24 da WCAG 2.2 AA (2.5.8). O axe não testa este critério,
+ *    pelo que passavam sem aviso. `min-h-11` dá 44px, que é o conforto, não só
+ *    a conformidade.
+ * 2. **`aria-current`.** Nenhuma navegação do site marcava a página atual.
+ */
 export function SiteFooter() {
   const solutions = getSolutionSummaries();
+  const pathname = usePathname();
+  const current = (href: string) => (pathname === href ? 'page' : undefined);
 
   return (
     <footer data-surface="deep" className="bg-[color:var(--surface)] text-[color:var(--on-surface)]">
@@ -46,14 +60,18 @@ export function SiteFooter() {
 
           <nav aria-label="Soluções">
             <h2 className="rule-label text-[color:var(--muted)]">
-              <Link href="/solucoes" className="hover:text-[color:var(--on-surface)]">
+              <Link href="/solucoes" className="flex min-h-11 items-center hover:text-[color:var(--on-surface)]">
                 Soluções
               </Link>
             </h2>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-2">
               {solutions.map((s) => (
                 <li key={s.slug}>
-                  <Link href={s.href} className="text-sm transition-colors hover:text-[color:var(--accent)]">
+                  <Link
+                    href={s.href}
+                    aria-current={current(s.href)}
+                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  >
                     {s.label}
                   </Link>
                 </li>
@@ -65,18 +83,26 @@ export function SiteFooter() {
             <h2 className="rule-label text-[color:var(--muted)]">
               Mercados
             </h2>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-2">
               {COUNTRY_CODES.map((code) => (
                 <li key={code}>
-                  <Link href={`/${code}`} className="text-sm transition-colors hover:text-[color:var(--accent)]">
+                  <Link
+                    href={`/${code}`}
+                    aria-current={current(`/${code}`)}
+                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  >
                     {COUNTRIES[code].name}
                   </Link>
-                  <ul className="mt-1.5 space-y-1">
+                  <ul className="mt-0.5 mb-2 pl-3">
                     {getSectorsForCountry(code)
                       .filter((s) => s.published)
                       .map((s) => (
                         <li key={s.sector}>
-                          <Link href={s.href} className="text-[length:var(--text-micro)] text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]">
+                          <Link
+                            href={s.href}
+                            aria-current={current(s.href)}
+                            className="flex min-h-11 items-center text-[length:var(--text-micro)] text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
+                          >
                             {s.label}
                           </Link>
                         </li>
@@ -91,21 +117,33 @@ export function SiteFooter() {
             <h2 className="rule-label text-[color:var(--muted)]">
               Empresa
             </h2>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-2">
               {NAV.primary.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-sm transition-colors hover:text-[color:var(--accent)]">
+                  <Link
+                    href={item.href}
+                    aria-current={current(item.href)}
+                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  >
                     {item.label}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/diagnostico" className="text-sm transition-colors hover:text-[color:var(--accent)]">
+                <Link
+                  href="/diagnostico"
+                  aria-current={current('/diagnostico')}
+                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                >
                   Solicitar diagnóstico
                 </Link>
               </li>
               <li>
-                <Link href="/privacidade" className="text-sm transition-colors hover:text-[color:var(--accent)]">
+                <Link
+                  href="/privacidade"
+                  aria-current={current('/privacidade')}
+                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                >
                   Privacidade
                 </Link>
               </li>

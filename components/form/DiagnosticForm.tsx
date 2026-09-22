@@ -10,10 +10,29 @@ import { ChipGroup } from '@/components/ui/ChipGroup';
 import { Field, inputClass } from './Field';
 import { COMPANY_SIZES, DECISION_ROLES, STEP_FIELDS, TIMEFRAMES, leadSchema, type LeadInput } from '@/lib/forms/lead-schema';
 import { COUNTRIES, COUNTRY_CODES, SECTOR_LABELS } from '@/content/registry';
-import { IMPROVEMENT_GOALS } from '@/content/site';
+import Link from 'next/link';
+import { IMPROVEMENT_GOALS, SITE } from '@/content/site';
 import type { CountryCode } from '@/content/types';
 import { track } from '@/lib/analytics/track';
 import { cn } from '@/lib/utils/cn';
+
+const DRAFT_KEY = 'agoramoz:diagnostico:rascunho';
+
+/**
+ * Os ÚNICOS campos que podem ser gravados. Lista de permissão, não de
+ * exclusão: acrescentar um campo pessoal ao formulário não o faz entrar aqui
+ * por acidente.
+ */
+const DRAFT_FIELDS = [
+  'country',
+  'sector',
+  'companySize',
+  'processToImprove',
+  'decisionTimeframe',
+  'decisionRole',
+] as const satisfies readonly (keyof LeadInput)[];
+// `investmentBand` fica de fora de propósito: não identifica ninguém, mas é o
+// campo comercialmente mais sensível do formulário e não vale o risco.
 
 const STEP_TITLES = [
   'Onde opera a sua empresa',
@@ -76,6 +95,51 @@ export function DiagnosticForm() {
     if (step > 0 && headingRef.current) headingRef.current.focus();
   }, [step]);
 
+  /**
+   * Rascunho — e o que NUNCA entra nele.
+   *
+   * Cinco passos num telemóvel: um recarregar, uma chamada a entrar, um
+   * separador trocado, e perdia-se tudo. Guardar o progresso é um ganho real.
+   *
+   * Mas isto é um formulário cujo próprio texto de consentimento fala de
+   * proteção de dados. Por isso guarda-se SÓ o enquadramento — país, setor,
+   * dimensão, processos, prazo, papel na decisão — e NUNCA nome, email,
+   * telefone, empresa ou o texto livre sobre o impacto. Nada que identifique
+   * uma pessoa fica no dispositivo.
+   *
+   * `sessionStorage` e não `localStorage`: morre com o separador. E é limpo no
+   * envio, para não sobreviver ao seu propósito.
+   */
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as Partial<LeadInput>;
+      for (const key of DRAFT_FIELDS) {
+        const value = draft[key];
+        if (value !== undefined && value !== null && value !== '') {
+          form.setValue(key, value as never, { shouldValidate: false });
+        }
+      }
+    } catch {
+      // Um rascunho ilegível não pode impedir o formulário de abrir.
+    }
+    // Só na montagem: repor a meio de uma edição apagaria o que se está a escrever.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function saveDraft() {
+    try {
+      const values = form.getValues();
+      const draft: Record<string, unknown> = {};
+      for (const key of DRAFT_FIELDS) draft[key] = values[key];
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // Sem armazenamento (janela privada, cookies bloqueados) não há rascunho,
+      // e o formulário funciona na mesma.
+    }
+  }
+
   function markStarted() {
     if (started.current) return;
     started.current = true;
@@ -86,6 +150,7 @@ export function DiagnosticForm() {
     const ok = await form.trigger(STEP_FIELDS[step] as unknown as (keyof LeadInput)[]);
     if (!ok) return errorRef.current?.focus();
     track({ name: 'form_step_completed', step: step + 1, stepId: STEP_TITLES[step]! });
+    saveDraft();
     setStep((s) => Math.min(s + 1, STEP_TITLES.length - 1));
   }
 
@@ -100,6 +165,11 @@ export function DiagnosticForm() {
       if (!res.ok) throw new Error('request failed');
       const data = (await res.json()) as { tier?: string };
       track({ name: 'form_completed', tier: data.tier ?? 'unknown' });
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* nada a limpar */
+      }
       setStatus('done');
     } catch {
       setStatus('error');
@@ -107,16 +177,54 @@ export function DiagnosticForm() {
   });
 
   if (status === 'done') {
+    /**
+     * O momento mais valioso do site acabava numa caixa sem saída: sem próximo
+     * passo, sem prazo, sem canal alternativo e sem forma de voltar. Quem
+     * acabou de confiar dados à empresa fica agora a saber o que acontece a
+     * seguir e tem por onde continuar.
+     */
     return (
-      <div className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-8 text-center">
-        <span className="mx-auto grid size-12 place-items-center rounded-full bg-[color:var(--ok)]">
-          <Check aria-hidden className="size-6 text-white" />
+      <div
+        role="status"
+        className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-8"
+      >
+        <span className="grid size-12 place-items-center rounded-full bg-[color:var(--ok)]">
+          <Check aria-hidden className="size-6 text-[color:var(--surface)]" />
         </span>
         <h2 className="mt-5 font-display text-[length:var(--text-h3)]">Pedido recebido.</h2>
-        <p className="mx-auto mt-3 max-w-md text-[color:var(--muted)]">
+        <p className="mt-3 max-w-md text-[color:var(--muted)]">
           Vamos analisar o que descreveu e responder com os próximos passos. Se concluirmos que não há
           adequação, dizemos isso — é mais útil para si do que uma proposta que não faz sentido.
         </p>
+
+        <div className="rule mt-7 pt-6">
+          <p className="rule-label text-[color:var(--muted)]">O que acontece agora</p>
+          <ol className="mt-4 space-y-3">
+            {[
+              'Lemos o que descreveu e identificamos o bloqueio principal.',
+              'Respondemos por email com o problema, a viabilidade e o próximo passo.',
+              'Se fizer sentido avançar, marcamos uma conversa objetiva.',
+            ].map((t, i) => (
+              <li key={t} className="flex items-baseline gap-4 text-sm text-[color:var(--muted)]">
+                <span className="rule-label shrink-0 text-[color:var(--accent)]">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                {t}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="rule mt-7 flex flex-col gap-3 pt-6 sm:flex-row sm:flex-wrap">
+          <Button asChild variant="outline">
+            <a href={`https://wa.me/${SITE.whatsapp.e164}`} target="_blank" rel="noopener noreferrer">
+              Acrescentar algo por WhatsApp
+            </a>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/solucoes">Ver as soluções entretanto</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -362,9 +470,32 @@ export function DiagnosticForm() {
       </div>
 
       {status === 'error' && (
-        <p role="alert" className="mt-6 text-sm text-[color:var(--color-signal-600)]">
-          Não foi possível enviar o pedido. Tente novamente ou escreva para comercial@agoramoz.com.
-        </p>
+        /* O email estava escrito à mão aqui; passou a vir de SITE. E o WhatsApp
+           é a recuperação mais rápida — quem acabou de perder cinco passos de
+           formulário não quer abrir o cliente de email. */
+        <div role="alert" className="mt-6 border border-[color:var(--color-signal-600)] p-4">
+          <p className="text-sm">Não foi possível enviar o pedido.</p>
+          <p className="mt-1.5 text-sm text-[color:var(--muted)]">
+            As suas respostas continuam aqui — carregue outra vez em enviar. Se voltar a falhar,
+            fale connosco por{' '}
+            <a
+              href={`https://wa.me/${SITE.whatsapp.e164}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[color:var(--accent)] underline underline-offset-4"
+            >
+              WhatsApp
+            </a>{' '}
+            ou{' '}
+            <a
+              href={`mailto:${SITE.email}`}
+              className="text-[color:var(--accent)] underline underline-offset-4"
+            >
+              {SITE.email}
+            </a>
+            .
+          </p>
+        </div>
       )}
 
       <div className="mt-8 flex items-center justify-between gap-3">

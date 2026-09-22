@@ -42,13 +42,19 @@ export function SectorExplorer({ initial = 'mz' }: { initial?: CountryCode }) {
 
   return (
     <div className="mt-14">
-      <div role="tablist" aria-label="Filtrar setores por país" className="flex flex-wrap gap-2">
+      {/*
+        Isto NÃO é um tablist. Um `role="tab"` obriga a `aria-controls`, a um
+        `tabpanel` associado e a navegação por setas — nada disso existia aqui,
+        e o axe não o apanha porque cada papel é válido isoladamente. O que isto
+        é mesmo: um grupo de botões de alternância. `aria-pressed` diz a verdade
+        e funciona com o Tab, que é o que as pessoas usam.
+      */}
+      <div role="group" aria-label="Filtrar setores por país" className="flex flex-wrap gap-2">
         {COUNTRY_CODES.map((code) => (
           <button
             key={code}
-            role="tab"
             type="button"
-            aria-selected={active === code}
+            aria-pressed={active === code}
             onClick={() => select(code)}
             className={cn(
               'min-h-11 rounded-full border px-5 text-[0.9375rem] transition-colors',

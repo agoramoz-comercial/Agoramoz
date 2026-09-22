@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { COUNTRY_CODES, COUNTRIES } from '@/content/registry';
 
 /**
@@ -6,6 +9,8 @@ import { COUNTRY_CODES, COUNTRIES } from '@/content/registry';
  * enquadramento geográfico e um caminho rápido por país.
  */
 export function TopBar() {
+  const pathname = usePathname();
+
   return (
     <div data-surface="deep" className="bg-[color:var(--surface)] text-[color:var(--on-surface)]">
       <div
@@ -20,7 +25,8 @@ export function TopBar() {
             <Link
               key={code}
               href={`/${code}`}
-              className="rule-label px-2 py-1 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
+              aria-current={pathname === `/${code}` ? 'page' : undefined}
+              className="rule-label inline-flex min-h-11 items-center px-2 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
             >
               {COUNTRIES[code].name}
             </Link>

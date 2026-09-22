@@ -8,6 +8,7 @@ import { SectionIndex } from '@/components/layout/SectionIndex';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { TopBar } from '@/components/layout/TopBar';
+import { MobileCtaBar } from '@/components/layout/MobileCtaBar';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd';
 import { SITE } from '@/content/site';
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteHeader />
           <main id="conteudo">{children}</main>
           <SiteFooter />
+          <MobileCtaBar />
         </MotionProvider>
       </body>
     </html>

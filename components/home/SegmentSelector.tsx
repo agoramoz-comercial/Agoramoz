@@ -174,7 +174,10 @@ export function SegmentSelector() {
       </div>
 
       <p className="rule-label mt-4 text-center text-[color:var(--muted)]">
-        Prefere ver tudo? <a href="#setores" className="underline underline-offset-4">Todos os setores</a>
+        Prefere ver tudo?{' '}
+        <a href="#setores" className="inline-flex min-h-11 items-center underline underline-offset-4">
+          Todos os setores
+        </a>
       </p>
     </div>
   );
