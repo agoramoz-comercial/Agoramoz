@@ -46,7 +46,7 @@ export default async function PaisPage({ params }: Props) {
     <div lang={c.locale}>
       <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: c.name, path: `/${c.code}` }]} />
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <div className="rule flex items-baseline gap-4 pt-6">
           <span className="rule-label text-[color:var(--muted)]">{c.locale}</span>
           <span className="rule-label text-[color:var(--accent)]">{c.hero.eyebrow}</span>

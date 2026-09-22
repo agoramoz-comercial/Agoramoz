@@ -103,7 +103,7 @@ export function FlowDiagram() {
         >
           {SYSTEM_FLOW.steps.map((s, i) => (
             <li key={s.key} data-flow-step className="lg:w-[24rem] lg:shrink-0">
-              <div className="border-t border-[color:var(--hairline)] pt-6">
+              <div className="border-t border-dashed border-[color:var(--hairline)] pt-6">
                 <span className="rule-label text-[color:var(--accent)]">
                   {String(i + 1).padStart(2, '0')}
                 </span>

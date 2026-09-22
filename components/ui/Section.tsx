@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils/cn';
 import { Container } from './Container';
+import { ContourField } from './ContourField';
 
 export type Surface = 'light' | 'tint' | 'dark' | 'deep';
 
@@ -18,6 +19,8 @@ type SectionProps = {
   index?: string;
   /** Desenha as colunas verticais ténues da grelha no fundo. */
   lines?: boolean;
+  /** Desenha a malha de contorno topográfica no fundo. */
+  contour?: boolean;
   'aria-labelledby'?: string;
   'aria-label'?: string;
 };
@@ -33,6 +36,7 @@ export function Section({
   bleed = false,
   index,
   lines = false,
+  contour = false,
   ...aria
 }: SectionProps) {
   const pad =
@@ -55,8 +59,10 @@ export function Section({
       style={{ paddingBlock: pad }}
       {...aria}
     >
+      {contour && <ContourField />}
+
       {bleed ? (
-        children
+        <div className="relative z-[1]">{children}</div>
       ) : (
         <Container className={cn('relative z-[1]', innerClassName)}>{children}</Container>
       )}

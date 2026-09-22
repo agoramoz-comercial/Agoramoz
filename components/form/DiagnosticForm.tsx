@@ -132,7 +132,7 @@ export function DiagnosticForm() {
       className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
     >
       <div className="flex items-center justify-between gap-4">
-        <p className="font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--accent)] uppercase">
+        <p className="font-techno font-medium text-[length:var(--text-micro)] tracking-[var(--tracking-techno)] text-[color:var(--accent)] uppercase">
           Passo {step + 1} de {STEP_TITLES.length}
         </p>
         <div className="h-1 w-32 overflow-hidden rounded-full bg-[color:var(--border)]">

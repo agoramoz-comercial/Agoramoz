@@ -1,58 +1,72 @@
 @import 'tailwindcss';
 
 /* ===========================================================================
-   AGORAMOZ — sistema visual: editorial escuro, tipografia brutal.
+   AGORAMOZ — sistema visual: monocromia técnica, crómio e malha de contorno.
 
-   Base quase-preta com papel quente nas secções claras, tipografia display
-   grande e apertada, grelha visível, numeração de secções e grão subtil.
-   A cor da marca é usada como bisturi — nunca como decoração.
+   Neutros frios do quase-preto ao giz. A hierarquia vem do tipo de letra, do
+   tracking e do traço — não da cor. Só três coisas no site inteiro carregam
+   cor, e todas por razão funcional:
 
-   Os rácios de contraste abaixo foram calculados contra as superfícies reais
+     1. o CTA primário e o estado ativo  — conversão;
+     2. o selo `conceptual`              — obrigação de integridade;
+     3. a marca no logótipo              — identidade, não tema.
+
+   Tudo o resto é neutro. Se algo ganhar cor sem estar nesta lista, é um erro.
+
+   Os rácios de contraste abaixo foram CALCULADOS contra as superfícies reais
    deste sistema, não estimados. As regras que deles decorrem são vinculativas.
    =========================================================================== */
 
 @theme {
-  /* Tinta — superfícies escuras */
-  --color-ink-950: #08090b;
-  --color-ink-900: #0f1012;
-  --color-ink-850: #131417;
-  --color-ink-800: #17181b;
-  --color-ink-700: #24262a;
-  --color-ink-600: #3a3d42;
+  /* Tinta fria — superfícies escuras */
+  --color-ink-950: #0a0a0b;
+  --color-ink-900: #101012;
+  --color-ink-850: #141417;
+  --color-ink-800: #18181b;
+  --color-ink-700: #26262a;
+  --color-ink-600: #3c3c42;
 
-  /* Papel quente — superfícies claras. Branco puro lê a frio e genérico. */
-  --color-paper: #edeae4;
-  --color-paper-2: #e2ded6;
-  --color-paper-3: #d5d0c6;
+  /* Giz — superfícies claras. Branco puro brilha demais ao lado do crómio. */
+  --color-chalk: #ededeb;
+  --color-chalk-2: #e2e2e0;
+  --color-chalk-3: #d2d2d0;
 
-  /* Neutros quentes */
-  --color-warm-700: #46423b;
-  --color-warm-600: #5f5a52; /* 5,70:1 sobre papel — AA */
-  --color-warm-400: #8f8a82; /* 5,72:1 sobre tinta — AA */
-  --color-warm-300: #b5afa5;
+  /* Neutros de aço
+     #5C5C63 sobre giz      5,66:1 — AA
+     #5C5C63 sobre giz-2    5,11:1 — AA
+     #8E8E96 sobre tinta-900 5,85:1 — AA
+     #8E8E96 sobre tinta-800 5,45:1 — AA
+     (#5C5C63 sobre giz-3 dá 4,38:1 e reprovaria: giz-3 é cor de traço,
+      nunca superfície de texto.) */
+  --color-steel-700: #44444a;
+  --color-steel-600: #5c5c63;
+  --color-steel-400: #8e8e96;
+  --color-steel-300: #b4b4ba;
+  --color-steel-200: #d8d8de; /* 13,94:1 sobre tinta-950 — AA */
 
-  /* Sinal — a cor de energia da marca, reservada à conversão e ao acento */
-  --color-signal-700: #b82200; /* 5,36:1 sobre papel — AA */
-  --color-signal-600: #e22a00; /* fundo do CTA: 4,65:1 com branco — AA */
-  --color-signal-500: #ff3b10; /* 5,50:1 sobre tinta — AA */
+  /* Sinal — reservado à conversão e ao estado ativo. Nunca decoração. */
+  --color-signal-700: #b82200;
+  --color-signal-600: #e22a00; /* fundo do CTA: 4,60:1 com branco — AA */
+  --color-signal-500: #ff3b10;
 
-  /* Marca secundária — diagramas, fluxos e dados. Nunca texto sobre claro. */
+  /* Identidade: vivem só no logótipo e no selo `conceptual`. */
   --color-growth-500: #00b060;
-  --color-growth-600: #009152;
-  --color-energy-500: #ffd62e;
+  --color-energy-500: #ffd62e; /* 14,05:1 com tinta-950 no selo — AA */
 
   /* ------------------------------------------------------------ tipografia */
   --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* Techno quadrada: numerais, rótulos e wordmark. Nunca corpo de texto. */
+  --font-techno: var(--font-chakra), ui-monospace, monospace;
 
-  /* Escala editorial: salto grande entre display e corpo, sem meio-termo. */
   --text-display: clamp(2.375rem, 1.1rem + 4.9vw, 4.75rem);
   --text-h1: clamp(2.25rem, 1.2rem + 4.2vw, 4.5rem);
   --text-h2: clamp(1.875rem, 1.25rem + 2.6vw, 3.5rem);
   --text-h3: clamp(1.1875rem, 1.05rem + 0.7vw, 1.625rem);
   --text-lead: clamp(1.0625rem, 1rem + 0.45vw, 1.375rem);
   --text-micro: 0.6875rem;
+  /* Numeral de secção em escala de estatística — motivo das duas referências. */
+  --text-numeral: clamp(2.5rem, 1.6rem + 3.4vw, 4.25rem);
 
   --leading-display: 0.94;
   --leading-heading: 1.02;
@@ -61,6 +75,7 @@
   --tracking-display: -0.045em;
   --tracking-heading: -0.035em;
   --tracking-eyebrow: 0.16em;
+  --tracking-techno: 0.2em;
 
   /* ---------------------------------------------------------------- layout */
   --container-max: 88rem;
@@ -68,7 +83,6 @@
   --space-section: clamp(5rem, 3rem + 9vw, 11rem);
   --space-section-tight: clamp(3rem, 2rem + 4vw, 6rem);
 
-  /* Editorial brutalista: cantos vivos. O raio é a exceção, não a regra. */
   --radius-xs: 2px;
   --radius-sm: 3px;
   --radius-md: 4px;
@@ -80,54 +94,73 @@
    Sistema de superfícies. <Section surface> escreve data-surface, que religa
    os tokens semânticos. Os filhos leem só semântica — ficam corretos em
    qualquer superfície, sem uma única variante dark: espalhada pelo código.
+
+   `--accent` é agora NEUTRO de alto contraste: é o registo dos rótulos, não
+   uma cor. `--signal` é o único caminho para o vermelho.
    =========================================================================== */
 
 [data-surface='light'] {
-  --surface: var(--color-paper);
-  --surface-raised: var(--color-paper-2);
+  --surface: var(--color-chalk);
+  --surface-raised: var(--color-chalk-2);
   --on-surface: var(--color-ink-950);
-  --muted: var(--color-warm-600);
-  --border: var(--color-paper-3);
+  --muted: var(--color-steel-600);
+  --border: var(--color-chalk-3);
   --hairline: color-mix(in oklab, var(--color-ink-950) 14%, transparent);
-  --accent: var(--color-signal-700);
-  --ok: var(--color-growth-600);
-  --motif: color-mix(in oklab, var(--color-ink-950) 22%, transparent);
+  --accent: var(--color-ink-700); /* 12,86:1 — AA */
+  --signal: var(--color-signal-700);
+  --ok: var(--color-ink-700);
+  --motif: color-mix(in oklab, var(--color-ink-950) 10%, transparent);
+  --chrome-a: #0a0a0b;
+  --chrome-b: #3c3c42;
+  --chrome-c: #55575d; /* paragem mais clara: 6,16:1 sobre giz — AA */
 }
 
 [data-surface='tint'] {
-  --surface: var(--color-paper-2);
-  --surface-raised: var(--color-paper);
+  --surface: var(--color-chalk-2);
+  --surface-raised: var(--color-chalk);
   --on-surface: var(--color-ink-950);
-  --muted: var(--color-warm-600);
-  --border: var(--color-paper-3);
+  --muted: var(--color-steel-600);
+  --border: var(--color-chalk-3);
   --hairline: color-mix(in oklab, var(--color-ink-950) 16%, transparent);
-  --accent: var(--color-signal-700);
-  --ok: var(--color-growth-600);
-  --motif: color-mix(in oklab, var(--color-ink-950) 22%, transparent);
+  --accent: var(--color-ink-700); /* 11,62:1 — AA */
+  --signal: var(--color-signal-700);
+  --ok: var(--color-ink-700);
+  --motif: color-mix(in oklab, var(--color-ink-950) 10%, transparent);
+  --chrome-a: #0a0a0b;
+  --chrome-b: #3c3c42;
+  --chrome-c: #55575d; /* 5,57:1 sobre giz-2 — AA */
 }
 
 [data-surface='dark'] {
   --surface: var(--color-ink-900);
   --surface-raised: var(--color-ink-850);
-  --on-surface: var(--color-paper);
-  --muted: var(--color-warm-400);
-  --border: color-mix(in oklab, var(--color-paper) 16%, transparent);
-  --hairline: color-mix(in oklab, var(--color-paper) 18%, transparent);
-  --accent: var(--color-signal-500);
-  --ok: var(--color-growth-500);
-  --motif: color-mix(in oklab, var(--color-paper) 14%, transparent);
+  --on-surface: var(--color-chalk);
+  --muted: var(--color-steel-400);
+  --border: color-mix(in oklab, var(--color-chalk) 16%, transparent);
+  --hairline: color-mix(in oklab, var(--color-chalk) 18%, transparent);
+  --accent: var(--color-steel-200); /* 13,39:1 — AA */
+  --signal: var(--color-signal-500);
+  --ok: var(--color-steel-200);
+  --motif: color-mix(in oklab, var(--color-chalk) 24%, transparent);
+  --chrome-a: #ffffff;
+  --chrome-b: #d2d3d9;
+  --chrome-c: #9ea0a8; /* paragem mais escura: 7,28:1 sobre tinta-900 — AA */
 }
 
 [data-surface='deep'] {
   --surface: var(--color-ink-950);
   --surface-raised: var(--color-ink-900);
-  --on-surface: var(--color-paper);
-  --muted: var(--color-warm-400);
-  --border: color-mix(in oklab, var(--color-paper) 14%, transparent);
-  --hairline: color-mix(in oklab, var(--color-paper) 16%, transparent);
-  --accent: var(--color-signal-500);
-  --ok: var(--color-growth-500);
-  --motif: color-mix(in oklab, var(--color-paper) 12%, transparent);
+  --on-surface: var(--color-chalk);
+  --muted: var(--color-steel-400);
+  --border: color-mix(in oklab, var(--color-chalk) 14%, transparent);
+  --hairline: color-mix(in oklab, var(--color-chalk) 16%, transparent);
+  --accent: var(--color-steel-200); /* 13,94:1 — AA */
+  --signal: var(--color-signal-500);
+  --ok: var(--color-steel-200);
+  --motif: color-mix(in oklab, var(--color-chalk) 22%, transparent);
+  --chrome-a: #ffffff;
+  --chrome-b: #d2d3d9;
+  --chrome-c: #9ea0a8; /* 7,58:1 sobre tinta-950 — AA */
 }
 
 @layer base {
@@ -146,7 +179,7 @@
   body {
     margin: 0;
     background-color: var(--color-ink-950);
-    color: var(--color-paper);
+    color: var(--color-chalk);
     font-family: var(--font-sans);
     font-size: 1rem;
     line-height: var(--leading-body);
@@ -195,17 +228,32 @@
 }
 
 @layer components {
-  /* Numeração de secção: mono, pequena, com a régua a seguir. */
+  /* Rótulo techno: o registo das referências — quadrado, aberto, maiúsculas. */
   .rule-label {
-    font-family: var(--font-mono);
+    font-family: var(--font-techno);
     font-size: var(--text-micro);
-    letter-spacing: var(--tracking-eyebrow);
+    font-weight: 500;
+    letter-spacing: var(--tracking-techno);
     text-transform: uppercase;
+  }
+
+  /* Numeral de secção em escala de estatística. */
+  .numeral {
+    font-family: var(--font-techno);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 0.82;
   }
 
   /* Régua horizontal fina — a estrutura da grelha fica visível. */
   .rule {
     border-top: 1px solid var(--hairline);
+  }
+
+  /* Traço tracejado: o contorno dos cartões das referências. */
+  .dashed-rule {
+    border-top: 1px dashed var(--hairline);
   }
 
   /* Colunas verticais ténues no fundo de uma secção. */
@@ -223,11 +271,130 @@
     opacity: 0.45;
     mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
   }
+
+  /* Quadriculado 8×8 — a marca de dither das duas referências. */
+  .dither {
+    background-image: repeating-conic-gradient(
+      var(--motif) 0% 25%,
+      transparent 0% 50%
+    );
+    background-size: 8px 8px;
+  }
 }
 
 /* ---------------------------------------------------------------------------
-   Grão. Um único pseudo-elemento fixo, fora do fluxo e sem eventos. É o que
-   tira o aspeto de gradiente digital sem custar um único pedido de rede.
+   Crómio.
+
+   Gradiente multi-paragem recortado ao texto. Sem 3D, sem WebGL, sem imagens
+   e sem uma linha de JavaScript: o brilho desliza por uma propriedade
+   registada, o que mantém a animação na thread de composição.
+
+   REGRA VINCULATIVA: a rampa nunca ultrapassa `--chrome-c`, que em cada
+   superfície é a paragem de pior contraste e está calculada para passar AA
+   (7,28:1 em tinta-900; 6,16:1 em giz). Alargar a rampa parte a
+   acessibilidade de todo o texto crómio do site.
+   --------------------------------------------------------------------------- */
+
+@property --chrome-pos {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+.chrome-text {
+  /* Sem recorte ao texto, `color: transparent` apagaria o título. O bloco
+     abaixo só pinta crómio onde o recorte existe mesmo. */
+  color: var(--on-surface);
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .chrome-text {
+    background-image: linear-gradient(
+      100deg,
+      var(--chrome-a) 0%,
+      var(--chrome-b) 12%,
+      var(--chrome-c) 24%,
+      var(--chrome-a) 38%,
+      var(--chrome-b) 52%,
+      var(--chrome-c) 64%,
+      var(--chrome-a) 78%,
+      var(--chrome-b) 100%
+    );
+    background-size: 175% 100%;
+    background-position: var(--chrome-pos) center;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    /* O texto recortado perde as descendentes se a caixa apertar. */
+    padding-block: 0.06em;
+    margin-block: -0.06em;
+  }
+}
+
+@keyframes chrome-sweep {
+  to {
+    --chrome-pos: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   O varrimento é OPT-IN, e por medição.
+
+   Animar `--chrome-pos` repinta o gradiente a cada frame, e como está
+   recortado ao texto obriga a recompor a máscara. Ligado em toda a gente e
+   para sempre, custava cinco a doze tarefas longas por scroll na home.
+
+   Ficam duas formas, ambas contidas:
+     .chrome-sweep — corre UMA vez, à entrada. É o momento em que o metal
+                     ganha vida; depois para e o custo desaparece.
+     .chrome-loop  — contínuo, reservado a áreas minúsculas (o wordmark).
+   Tudo o resto usa `.chrome-text` sozinha, que é um gradiente estático e
+   custa o mesmo que uma cor.
+   --------------------------------------------------------------------------- */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .chrome-sweep {
+    animation: chrome-sweep 2.6s cubic-bezier(0.22, 1, 0.36, 1) 1 both;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chrome-loop {
+    animation: chrome-sweep 7s linear infinite alternate;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Malha de contorno. Deriva de --motif e desliza com uma única transformação
+   composta. O ContourField desenha os caminhos; isto governa o movimento.
+   --------------------------------------------------------------------------- */
+
+@keyframes contour-drift {
+  from {
+    transform: scale(1.1) translate3d(2%, 1%, 0);
+  }
+  to {
+    transform: scale(1.1) translate3d(-2%, -1%, 0);
+  }
+}
+
+/* A escala de 1,1 é constante nas duas pontas: sem ela a deriva descobriria a
+   borda da malha. Fora deste media query o elemento fica parado e à escala 1.
+   O alvo é o <div> de HTML que embrulha o SVG, nunca o <g> lá dentro: um <g>
+   transformado não é promovido a camada e obriga a rasterizar a malha inteira
+   a cada frame. */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  [data-contour-drift] {
+    transform-origin: center;
+    animation: contour-drift 26s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Grão. Um único pseudo-elemento fixo, fora do fluxo e sem eventos. Dá ao
+   crómio o aspeto de metal escovado em vez de plástico, sem custar um único
+   pedido de rede.
    --------------------------------------------------------------------------- */
 .grain::after {
   content: '';
@@ -235,7 +402,7 @@
   inset: -50%;
   z-index: 60;
   pointer-events: none;
-  opacity: 0.042;
+  opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -260,6 +427,12 @@
 
 :root[data-motion='reduced'] [data-animate] {
   visibility: visible;
+}
+
+:root[data-motion='reduced'] .chrome-sweep,
+:root[data-motion='reduced'] .chrome-loop,
+:root[data-motion='reduced'] [data-contour-drift] {
+  animation: none;
 }
 
 /* O SplitText envolve cada linha; o wrapper precisa de recortar para a máscara

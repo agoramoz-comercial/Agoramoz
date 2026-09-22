@@ -17,7 +17,7 @@ export default function SolucoesPage() {
   return (
     <>
       <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Soluções', path: '/solucoes' }]} />
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <SectionHeading
           as="h1"
           eyebrow="Soluções"

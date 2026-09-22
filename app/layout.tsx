@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Archivo, Inter, JetBrains_Mono } from 'next/font/google';
+import { Archivo, Chakra_Petch, Inter } from 'next/font/google';
 import { MotionProvider } from '@/components/motion/MotionProvider';
 import { ScrollProgress } from '@/components/motion/ScrollProgress';
 import { CustomCursor } from '@/components/motion/CustomCursor';
+import { PageTransition } from '@/components/motion/PageTransition';
 import { SectionIndex } from '@/components/layout/SectionIndex';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
@@ -25,10 +26,17 @@ const archivo = Archivo({
   display: 'swap',
 });
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
-const jetbrains = JetBrains_Mono({
+
+/**
+ * Chakra Petch é a voz techno do sistema: contadores quadrados, terminais
+ * cortados na diagonal. Vive nos numerais, nos rótulos e no wordmark — nunca
+ * no corpo de texto, onde a caixa quadrada cansa a leitura. Dois pesos
+ * chegam: 500 para rótulos, 600 para numerais em escala de estatística.
+ */
+const chakra = Chakra_Petch({
   subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-jetbrains-mono',
+  weight: ['500', '600'],
+  variable: '--font-chakra',
   display: 'swap',
 });
 
@@ -41,14 +49,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#08090B',
+  themeColor: '#0A0A0B',
   width: 'device-width',
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt" className={`${archivo.variable} ${inter.variable} ${jetbrains.variable}`}>
+    <html lang="pt" className={`${archivo.variable} ${inter.variable} ${chakra.variable}`}>
       <head>
         {/* Sem JS, nada do que o GSAP revelaria fica escondido. */}
         <noscript>
@@ -61,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WebSiteJsonLd />
         <MotionProvider>
           <ScrollProgress />
+          <PageTransition />
           <CustomCursor />
           <SectionIndex />
           <TopBar />

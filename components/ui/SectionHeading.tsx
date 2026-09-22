@@ -1,10 +1,15 @@
 import { cn } from '@/lib/utils/cn';
 import { SplitHeading } from '@/components/motion/SplitHeading';
+import { DitherMark } from '@/components/ui/DitherMark';
 
 /**
- * Cabeçalho editorial assimétrico: número e eyebrow numa coluna estreita à
- * esquerda, título a ocupar a largura. A régua por cima torna a grelha
- * visível — é estrutura, não ornamento.
+ * Cabeçalho assimétrico: o número da secção em escala de estatística — o
+ * motivo dominante das duas referências — com o eyebrow techno por baixo, e o
+ * título a ocupar a largura. A régua por cima torna a grelha visível: é
+ * estrutura, não ornamento.
+ *
+ * O número é o único elemento crómio do cabeçalho. Pô-lo também no título
+ * duplicaria a assinatura e tirar-lhe-ia força.
  */
 export function SectionHeading({
   eyebrow,
@@ -17,7 +22,7 @@ export function SectionHeading({
   max = 'measure',
 }: {
   eyebrow?: string;
-  /** Número da secção, ex. "04". Mono, ao lado do eyebrow. */
+  /** Número da secção, ex. "04". Techno, em escala display. */
   number?: string;
   title: string;
   lead?: React.ReactNode;
@@ -34,10 +39,17 @@ export function SectionHeading({
     <div className={cn('rule pt-6', className)}>
       <div className="grid gap-x-10 gap-y-6 md:grid-cols-12">
         {(eyebrow || number) && (
-          <div className="flex items-baseline gap-4 md:col-span-3 md:flex-col md:gap-2">
-            {number && <span className="rule-label text-[color:var(--muted)]">{number}</span>}
+          <div className="flex items-baseline gap-5 md:col-span-3 md:block">
+            {number && (
+              <span className="numeral chrome-text block text-[length:var(--text-numeral)]">
+                {number}
+              </span>
+            )}
             {eyebrow && (
-              <span className="rule-label text-[color:var(--accent)]">{eyebrow}</span>
+              <span className="mt-4 flex items-center gap-2.5 md:mt-5">
+                <DitherMark size="sm" />
+                <span className="rule-label text-[color:var(--accent)]">{eyebrow}</span>
+              </span>
             )}
           </div>
         )}

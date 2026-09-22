@@ -46,7 +46,7 @@ export function OfferSection({ href = '/diagnostico' }: { href?: string }) {
             <li
               key={d}
               data-animate
-              className="flex items-baseline gap-6 border-t border-[color:var(--hairline)] py-4"
+              className="flex items-baseline gap-6 border-t border-dashed border-[color:var(--hairline)] py-4"
             >
               <span className="rule-label shrink-0 text-[color:var(--accent)]">
                 {String(i + 1).padStart(2, '0')}

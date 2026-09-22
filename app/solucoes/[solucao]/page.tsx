@@ -49,7 +49,7 @@ export default async function SolucaoPage({ params }: Props) {
         ]}
       />
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <div className="rule flex items-baseline gap-4 pt-6">
           <span className="rule-label text-[color:var(--muted)]">{s.hero.eyebrow}</span>
           <span className="rule-label text-[color:var(--accent)]">{s.label}</span>
@@ -124,7 +124,7 @@ export default async function SolucaoPage({ params }: Props) {
         <Reveal className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {s.process.map((p, i) => (
             <div key={p.title} data-animate className="border-t border-[color:var(--border)] pt-5">
-              <span className="font-mono text-[length:var(--text-micro)] text-[color:var(--accent)]">
+              <span className="font-techno font-medium text-[length:var(--text-micro)] text-[color:var(--accent)]">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <h3 className="mt-2 font-display text-[length:var(--text-h3)]">{p.title}</h3>
@@ -151,7 +151,7 @@ export default async function SolucaoPage({ params }: Props) {
         </div>
       </Section>
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <FinalCta />
       </Section>
     </>

@@ -21,7 +21,7 @@ export default function SobrePage() {
     <>
       <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Sobre', path: '/sobre' }]} />
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <div className="rule flex items-baseline gap-4 pt-6">
           <span className="rule-label text-[color:var(--muted)]">01</span>
           <span className="rule-label text-[color:var(--accent)]">Sobre</span>
@@ -75,7 +75,7 @@ export default function SobrePage() {
         <SectionHeading id="h-risco-sobre" eyebrow={RISK_REDUCTION.eyebrow} title={RISK_REDUCTION.title} lead={RISK_REDUCTION.body} max="wide" />
       </Section>
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <FinalCta />
       </Section>
     </>

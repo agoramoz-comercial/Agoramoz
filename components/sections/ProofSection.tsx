@@ -22,7 +22,7 @@ export function ProofSection({ items }: { items: ProofItem[] }) {
           <li
             key={item.title}
             data-animate
-            className="flex flex-col border-t border-[color:var(--hairline)] py-9 md:odd:pr-10 md:even:border-l md:even:border-l-[color:var(--hairline)] md:even:pl-10"
+            className="flex flex-col border-t border-dashed border-[color:var(--hairline)] py-9 md:odd:pr-10 md:even:border-l md:even:border-dashed md:even:border-l-[color:var(--hairline)] md:even:pl-10"
           >
             <div className="flex items-center justify-between gap-4">
               <span className="rule-label text-[color:var(--muted)]">

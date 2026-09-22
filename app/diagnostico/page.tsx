@@ -41,7 +41,7 @@ export default function DiagnosticoPage() {
       <FaqJsonLd items={FAQ} />
       <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Diagnóstico', path: '/diagnostico' }]} />
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
             <div className="rule flex items-baseline gap-4 pt-6">
@@ -59,7 +59,7 @@ export default function DiagnosticoPage() {
             </p>
             <ol className="mt-12">
               {OFFER.deliverables.map((d, i) => (
-                <li key={d} className="flex items-baseline gap-6 border-t border-[color:var(--hairline)] py-4">
+                <li key={d} className="flex items-baseline gap-6 border-t border-dashed border-[color:var(--hairline)] py-4">
                   <span className="rule-label shrink-0 text-[color:var(--accent)]">
                     {String(i + 1).padStart(2, '0')}
                   </span>

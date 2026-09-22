@@ -17,9 +17,9 @@ export function SolutionsGrid() {
           <li key={s.slug} data-animate>
             <Link
               href={s.href}
-              className="group relative flex items-baseline gap-6 border-t border-[color:var(--hairline)] py-7 transition-colors duration-500 hover:border-[color:var(--accent)] md:gap-10 md:py-9"
+              className="group relative flex items-baseline gap-6 border-t border-dashed border-[color:var(--hairline)] py-7 transition-colors duration-500 hover:border-[color:var(--accent)] md:gap-10 md:py-9"
             >
-              <span className="rule-label shrink-0 text-[color:var(--muted)] transition-colors duration-500 group-hover:text-[color:var(--accent)]">
+              <span className="numeral shrink-0 text-[1.75rem] text-[color:var(--muted)] transition-colors duration-500 group-hover:text-[color:var(--accent)] md:text-[2.25rem]">
                 {String(i + 1).padStart(2, '0')}
               </span>
 

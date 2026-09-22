@@ -9,7 +9,7 @@ export function Founders() {
           <li
             key={p.name}
             data-animate
-            className="grid gap-6 border-t border-[color:var(--hairline)] py-10 md:grid-cols-12 md:gap-10"
+            className="grid gap-6 border-t border-dashed border-[color:var(--hairline)] py-10 md:grid-cols-12 md:gap-10"
           >
             <span className="rule-label text-[color:var(--muted)] md:col-span-1">
               {String(i + 1).padStart(2, '0')}

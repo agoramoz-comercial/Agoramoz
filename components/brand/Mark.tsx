@@ -3,8 +3,10 @@
  *
  * O letterform (barras + O) usa `currentColor`, pelo que herda `--on-surface`
  * e fica correto em fundo claro ou escuro sem duplicar o ficheiro. As três
- * cores da marca — verde, vermelho-laranja e amarelo — são fixas: são a
- * identidade, não um tema.
+ * cores da marca — verde, vermelho-laranja e amarelo — são fixas e apontam
+ * para os tokens de identidade, NUNCA para os semânticos: num sistema
+ * monocromático `--ok` resolve para neutro, e o logótipo é identidade, não
+ * tema. É o único sítio do site onde as três cores aparecem juntas.
  */
 export function Mark({ className, title }: { className?: string; title?: string }) {
   return (
@@ -19,7 +21,7 @@ export function Mark({ className, title }: { className?: string; title?: string 
     >
       {/* Ondas: verde (crescimento), neutro, amarelo (processo) */}
       <g strokeWidth="56" strokeLinecap="round">
-        <path d="M80 70 L268 180" stroke="var(--ok)" />
+        <path d="M80 70 L268 180" stroke="var(--color-growth-500)" />
         <path d="M22 267 L246 267" stroke="currentColor" />
         <path d="M80 462 L268 352" stroke="var(--color-energy-500)" />
       </g>

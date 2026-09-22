@@ -20,7 +20,7 @@ export default function ContactosPage() {
     <>
       <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Contactos', path: '/contactos' }]} />
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <SectionHeading
           as="h1"
           eyebrow="Contactos"
@@ -45,7 +45,7 @@ export default function ContactosPage() {
             return (
               <div key={code} className="border border-[color:var(--border)] p-6">
                 <h2 className="font-display text-[length:var(--text-h3)]">{c.name}</h2>
-                <p className="mt-1.5 font-mono text-[length:var(--text-micro)] text-[color:var(--muted)]">
+                <p className="mt-1.5 font-techno font-medium text-[length:var(--text-micro)] text-[color:var(--muted)]">
                   {c.dialCode} · {c.currency} · {c.privacyRegime === 'MZ' ? 'Proteção de dados' : c.privacyRegime}
                 </p>
                 <p className="mt-4 text-sm text-[color:var(--muted)]">{c.positioning}</p>

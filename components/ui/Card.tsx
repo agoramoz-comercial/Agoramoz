@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils/cn';
 
 /**
- * Célula editorial: régua no topo em vez de caixa fechada. A estrutura vem da
- * grelha, não de contornos — é o que separa um sistema editorial de um
- * mosaico de cartões.
+ * Célula técnica: régua tracejada no topo em vez de caixa fechada. O tracejado
+ * é o contorno das referências — lê-se como um painel de instrumentação, não
+ * como um cartão de marketing. A estrutura continua a vir da grelha.
  */
 export function Card({
   className,
@@ -25,10 +25,10 @@ export function Card({
       className={cn(
         'relative',
         boxed
-          ? 'border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-7 md:p-9'
-          : 'border-t border-[color:var(--hairline)] pt-6',
+          ? 'border border-dashed border-[color:var(--border)] bg-[color:var(--surface-raised)] p-7 md:p-9'
+          : 'border-t border-dashed border-[color:var(--hairline)] pt-6',
         interactive &&
-          'transition-colors duration-300 hover:border-[color:var(--accent)]',
+          'transition-colors duration-300 hover:border-solid hover:border-[color:var(--accent)]',
         className,
       )}
       {...rest}

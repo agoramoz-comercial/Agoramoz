@@ -13,7 +13,7 @@ export function ProblemGrid({ items, columns = 2 }: { items: Problem[]; columns?
           <li
             key={p.title}
             data-animate
-            className="group border-t border-[color:var(--hairline)] py-8 transition-colors duration-500 hover:border-[color:var(--accent)]"
+            className="group border-t border-dashed border-[color:var(--hairline)] py-8 transition-colors duration-500 hover:border-[color:var(--accent)]"
           >
             <div className="flex items-start gap-6">
               <span className="rule-label mt-1.5 shrink-0 text-[color:var(--muted)] transition-colors duration-500 group-hover:text-[color:var(--accent)]">

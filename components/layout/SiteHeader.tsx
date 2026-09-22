@@ -101,7 +101,7 @@ export function SiteHeader() {
                 </div>
 
                 <nav aria-label="Navegação móvel" className="mt-8 flex flex-col gap-1">
-                  <p className="mt-2 mb-1 font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--accent)] uppercase">
+                  <p className="mt-2 mb-1 font-techno font-medium text-[length:var(--text-micro)] tracking-[var(--tracking-techno)] text-[color:var(--accent)] uppercase">
                     Soluções
                   </p>
                   {solutions.map((s) => (
@@ -110,7 +110,7 @@ export function SiteHeader() {
                     </Link>
                   ))}
 
-                  <p className="mt-5 mb-1 font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--accent)] uppercase">
+                  <p className="mt-5 mb-1 font-techno font-medium text-[length:var(--text-micro)] tracking-[var(--tracking-techno)] text-[color:var(--accent)] uppercase">
                     Setores
                   </p>
                   {COUNTRY_CODES.map((code) => (
@@ -147,7 +147,7 @@ export function SiteHeader() {
             {menu === 'solucoes'
               ? [
                   ...solutions.map((s) => (
-                    <Link key={s.slug} href={s.href} className="group border-t border-[color:var(--hairline)] py-4 transition-colors hover:border-[color:var(--accent)]">
+                    <Link key={s.slug} href={s.href} className="group border-t border-dashed border-[color:var(--hairline)] py-4 transition-colors hover:border-[color:var(--accent)]">
                       <span className="block font-display text-[1.0625rem] font-semibold tracking-[-0.02em]">{s.label}</span>
                       <span className="mt-1 block text-sm text-[color:var(--muted)]">{s.short}</span>
                     </Link>
@@ -164,7 +164,7 @@ export function SiteHeader() {
                   </Link>,
                 ]
               : COUNTRY_CODES.map((code) => (
-                  <div key={code} className="border-t border-[color:var(--hairline)] py-4">
+                  <div key={code} className="border-t border-dashed border-[color:var(--hairline)] py-4">
                     <Link href={`/${code}`} className="block font-display font-semibold hover:text-[color:var(--accent)]">
                       {COUNTRIES[code].name}
                     </Link>

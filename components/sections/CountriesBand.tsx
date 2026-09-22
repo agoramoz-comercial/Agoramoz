@@ -12,7 +12,7 @@ export function CountriesBand() {
             <li key={code} data-animate className="lg:border-l lg:border-[color:var(--hairline)] lg:first:border-l-0">
               <Link
                 href={`/${code}`}
-                className="group flex h-full flex-col justify-between border-t border-[color:var(--hairline)] py-8 lg:border-t-0 lg:px-8 lg:first:pl-0 lg:last:pr-0"
+                className="group flex h-full flex-col justify-between border-t border-dashed border-[color:var(--hairline)] py-8 lg:border-t-0 lg:px-8 lg:first:pl-0 lg:last:pr-0"
               >
                 <div>
                   <div className="flex items-baseline gap-4">

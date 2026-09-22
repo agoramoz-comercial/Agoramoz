@@ -45,7 +45,7 @@ export default function HomePage() {
       <FaqJsonLd items={HOME_FAQ} />
 
       {/* 2 + 3 — Hero e seletor de país/setor */}
-      <Section surface="deep" spacing="tight" index="Início" lines aria-label="Apresentação">
+      <Section surface="deep" spacing="tight" index="Início" aria-label="Apresentação">
         <div className="pt-8 pb-4 lg:pt-16">
           <Hero />
         </div>
@@ -84,7 +84,7 @@ export default function HomePage() {
       </Section>
 
       {/* 6 — Soluções */}
-      <Section surface="light" id="solucoes" index="Soluções" aria-labelledby="h-solucoes">
+      <Section surface="light" id="solucoes" index="Soluções" contour aria-labelledby="h-solucoes">
         <SectionHeading
           id="h-solucoes"
           number="03"
@@ -96,7 +96,7 @@ export default function HomePage() {
       </Section>
 
       {/* 7 — Países */}
-      <Section surface="dark" id="mercados" index="Mercados" lines aria-labelledby="h-mercados">
+      <Section surface="dark" id="mercados" index="Mercados" contour aria-labelledby="h-mercados">
         <SectionHeading
           id="h-mercados"
           number="04"
@@ -139,7 +139,7 @@ export default function HomePage() {
       </Section>
 
       {/* 10 — Oferta de entrada */}
-      <Section surface="deep" id="diagnostico" index="Diagnóstico" lines aria-label="Oferta de diagnóstico">
+      <Section surface="deep" id="diagnostico" index="Diagnóstico" contour aria-label="Oferta de diagnóstico">
         <OfferSection />
       </Section>
 
@@ -171,7 +171,7 @@ export default function HomePage() {
             <p
               key={p}
               data-animate
-              className="flex items-baseline gap-6 border-t border-[color:var(--hairline)] py-6 text-[color:var(--muted)]"
+              className="flex items-baseline gap-6 border-t border-dashed border-[color:var(--hairline)] py-6 text-[color:var(--muted)]"
             >
               <span className="rule-label shrink-0 text-[color:var(--accent)]">
                 {String(i + 1).padStart(2, '0')}
@@ -209,7 +209,7 @@ export default function HomePage() {
       </Section>
 
       {/* 16 — CTA final */}
-      <Section surface="deep" index="Contacto" lines aria-label="Solicitar diagnóstico">
+      <Section surface="deep" index="Contacto" contour aria-label="Solicitar diagnóstico">
         <FinalCta />
       </Section>
     </>

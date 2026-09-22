@@ -83,7 +83,7 @@ export default async function SetorPage({ params }: Props) {
       />
 
       {/* 1 + 2 — identificação e hero orientado ao resultado */}
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <div className="rule flex flex-wrap items-baseline gap-x-4 gap-y-1 pt-6">
           <span className="rule-label text-[color:var(--muted)]">{country.name}</span>
           <Eyebrow>{SECTOR_LABELS[page.sector]}</Eyebrow>
@@ -159,7 +159,7 @@ export default async function SetorPage({ params }: Props) {
         <Reveal className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {page.system.steps.map((s, i) => (
             <div key={s.title} data-animate className="border-t border-[color:var(--border)] pt-5">
-              <span className="font-mono text-[length:var(--text-micro)] text-[color:var(--accent)]">
+              <span className="font-techno font-medium text-[length:var(--text-micro)] text-[color:var(--accent)]">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <h3 className="mt-2 font-display text-[length:var(--text-h3)]">{s.title}</h3>
@@ -242,7 +242,7 @@ export default async function SetorPage({ params }: Props) {
       </Section>
 
       {/* 14 — CTA final */}
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <FinalCta href={`/diagnostico?pais=${page.country}&setor=${page.sector}`} />
       </Section>
     </div>

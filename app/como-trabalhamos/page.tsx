@@ -21,7 +21,7 @@ export default function ComoTrabalhamosPage() {
     <>
       <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Como trabalhamos', path: '/como-trabalhamos' }]} />
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <SectionHeading as="h1" eyebrow={PROCESS.eyebrow} title={PROCESS.title} lead={PROCESS.lead} max="wide" />
         <ProcessTimeline />
       </Section>
@@ -46,7 +46,7 @@ export default function ComoTrabalhamosPage() {
         <ProofSection items={PROOF} />
       </Section>
 
-      <Section surface="deep">
+      <Section surface="deep" contour>
         <FinalCta />
       </Section>
     </>
