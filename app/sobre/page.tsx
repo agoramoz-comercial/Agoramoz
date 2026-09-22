@@ -36,7 +36,7 @@ export default function SobrePage() {
           A AGORAMOZ desenvolve websites avançados, software empresarial, automações e agentes de IA.
           Não vendemos ferramentas — construímos o sistema entre o problema económico e o resultado.
         </p>
-        <div className="rule mt-16 grid gap-12 pt-10 md:grid-cols-3">
+        <div className="rule mt-16 grid gap-12 pt-10 md:grid-cols-2 lg:grid-cols-3">
           <div>
             <h2 className="font-display text-[length:var(--text-h3)] font-semibold">O que fazemos</h2>
             <p className="mt-3 text-[color:var(--muted)]">

@@ -170,6 +170,13 @@
     text-wrap: pretty;
   }
 
+  /* O cabeçalho é fixo: sem isto, saltar para uma âncora esconde o título
+     por baixo dele. */
+  section[id],
+  [id][data-section-index] {
+    scroll-margin-top: 7rem;
+  }
+
   :focus-visible {
     outline: none;
     box-shadow:

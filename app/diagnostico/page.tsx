@@ -45,7 +45,7 @@ export default function DiagnosticoPage() {
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
             <div className="rule flex items-baseline gap-4 pt-6">
-              <span className="rule-label text-[color:var(--muted)]">Oferta de entrada</span>
+              <span className="rule-label text-[color:var(--muted)]">{OFFER.eyebrow}</span>
               <span className="rule-label text-[color:var(--accent)]">{OFFER.name}</span>
             </div>
             <SplitHeading

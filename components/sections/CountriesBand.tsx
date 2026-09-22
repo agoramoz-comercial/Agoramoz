@@ -5,14 +5,14 @@ import { COUNTRIES, COUNTRY_CODES } from '@/content/registry';
 export function CountriesBand() {
   return (
     <Reveal className="mt-16">
-      <ul className="grid md:grid-cols-3">
+      <ul className="grid lg:grid-cols-3">
         {COUNTRY_CODES.map((code, i) => {
           const c = COUNTRIES[code];
           return (
-            <li key={code} data-animate className="md:border-l md:border-[color:var(--hairline)] md:first:border-l-0">
+            <li key={code} data-animate className="lg:border-l lg:border-[color:var(--hairline)] lg:first:border-l-0">
               <Link
                 href={`/${code}`}
-                className="group flex h-full flex-col justify-between border-t border-[color:var(--hairline)] py-8 md:border-t-0 md:px-8 md:first:pl-0 md:last:pr-0"
+                className="group flex h-full flex-col justify-between border-t border-[color:var(--hairline)] py-8 lg:border-t-0 lg:px-8 lg:first:pl-0 lg:last:pr-0"
               >
                 <div>
                   <div className="flex items-baseline gap-4">
@@ -30,7 +30,7 @@ export function CountriesBand() {
                 </div>
 
                 <span className="rule-label mt-8 inline-flex items-center gap-2 text-[color:var(--accent)]">
-                  Explorar
+                  Explorar {c.name}
                   <span aria-hidden className="transition-transform duration-500 group-hover:translate-x-1">
                     →
                   </span>

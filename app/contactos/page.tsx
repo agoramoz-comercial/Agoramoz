@@ -39,7 +39,7 @@ export default function ContactosPage() {
 
       <Section surface="light" aria-labelledby="h-mercados-contacto">
         <SectionHeading id="h-mercados-contacto" eyebrow="Por mercado" title="Onde operamos." />
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {COUNTRY_CODES.map((code) => {
             const c = COUNTRIES[code];
             return (

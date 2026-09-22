@@ -116,7 +116,7 @@ export function Hero() {
               </Button>
             </MagneticButton>
             <Button asChild size="lg" variant="outline">
-              <Link href="#setores">Explorar por setor</Link>
+              <Link href="#setores">Explorar soluções por setor</Link>
             </Button>
           </div>
           <p className="rule-label text-[color:var(--muted)] md:text-right">
