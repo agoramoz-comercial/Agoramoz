@@ -33,11 +33,11 @@ export function SiteHeader() {
   return (
     <header
       data-surface="deep"
-      className="sticky top-0 z-50 border-b border-[color:var(--border)] bg-[color:var(--surface)]/95 text-[color:var(--on-surface)] backdrop-blur-md"
+      className="sticky top-0 z-50 border-b border-[color:var(--hairline)] bg-[color:var(--surface)]/90 text-[color:var(--on-surface)] backdrop-blur-xl"
       onMouseLeave={() => setMenu(null)}
     >
       <div
-        className="mx-auto flex w-full items-center justify-between gap-6 py-3.5"
+        className="mx-auto flex w-full items-center justify-between gap-6 py-4"
         style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
       >
         <Logo />
@@ -51,17 +51,17 @@ export function SiteHeader() {
               aria-haspopup="true"
               onClick={() => setMenu(menu === key ? null : key)}
               onMouseEnter={() => setMenu(key)}
-              className="inline-flex min-h-11 items-center gap-1 rounded-xs px-3 text-[0.9375rem] text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
+              className="rule-label inline-flex min-h-11 items-center gap-1.5 px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
             >
               {key === 'solucoes' ? 'Soluções' : 'Setores'}
-              <ChevronDown aria-hidden className={cn('size-4 transition-transform', menu === key && 'rotate-180')} />
+              <ChevronDown aria-hidden className={cn('size-3.5 transition-transform duration-300', menu === key && 'rotate-180')} />
             </button>
           ))}
           {NAV.primary.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="inline-flex min-h-11 items-center rounded-xs px-3 text-[0.9375rem] text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
+              className="rule-label inline-flex min-h-11 items-center px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
             >
               {item.label}
             </Link>
@@ -139,32 +139,32 @@ export function SiteHeader() {
 
       {/* Mega-menu (desktop) */}
       {menu && (
-        <div className="hidden border-t border-[color:var(--border)] bg-[color:var(--surface)] lg:block">
+        <div className="hidden border-t border-[color:var(--hairline)] bg-[color:var(--surface)] lg:block">
           <div
-            className="mx-auto grid w-full gap-x-8 gap-y-3 py-8 md:grid-cols-3"
+            className="mx-auto grid w-full gap-x-12 gap-y-3 py-12 md:grid-cols-3"
             style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
           >
             {menu === 'solucoes'
               ? [
                   ...solutions.map((s) => (
-                    <Link key={s.slug} href={s.href} className="group rounded-sm p-3 hover:bg-[color:var(--surface-raised)]">
-                      <span className="block font-display font-semibold">{s.label}</span>
+                    <Link key={s.slug} href={s.href} className="group border-t border-[color:var(--hairline)] py-4 transition-colors hover:border-[color:var(--accent)]">
+                      <span className="block font-display text-[1.0625rem] font-semibold tracking-[-0.02em]">{s.label}</span>
                       <span className="mt-1 block text-sm text-[color:var(--muted)]">{s.short}</span>
                     </Link>
                   )),
                   <Link
                     key="indice"
                     href="/solucoes"
-                    className="rounded-sm p-3 text-[color:var(--accent)] hover:bg-[color:var(--surface-raised)]"
+                    className="border-t border-[color:var(--accent)] py-4 text-[color:var(--accent)]"
                   >
-                    <span className="block font-display font-semibold">Ver todas as soluções</span>
+                    <span className="block font-display text-[1.0625rem] font-semibold tracking-[-0.02em]">Ver todas as soluções</span>
                     <span className="mt-1 block text-sm text-[color:var(--muted)]">
                       Como se combinam num único sistema
                     </span>
                   </Link>,
                 ]
               : COUNTRY_CODES.map((code) => (
-                  <div key={code} className="p-3">
+                  <div key={code} className="border-t border-[color:var(--hairline)] py-4">
                     <Link href={`/${code}`} className="block font-display font-semibold hover:text-[color:var(--accent)]">
                       {COUNTRIES[code].name}
                     </Link>

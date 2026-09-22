@@ -108,7 +108,7 @@ export function DiagnosticForm() {
 
   if (status === 'done') {
     return (
-      <div className="rounded-[--radius-xl] border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-8 text-center">
+      <div className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-8 text-center">
         <span className="mx-auto grid size-12 place-items-center rounded-full bg-[color:var(--ok)]">
           <Check aria-hidden className="size-6 text-white" />
         </span>
@@ -129,7 +129,7 @@ export function DiagnosticForm() {
       onSubmit={onSubmit}
       onChange={markStarted}
       noValidate
-      className="rounded-[--radius-xl] border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
+      className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
     >
       <div className="flex items-center justify-between gap-4">
         <p className="font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--accent)] uppercase">
@@ -252,8 +252,7 @@ export function DiagnosticForm() {
                       className={cn(
                         'flex min-h-11 cursor-pointer items-center gap-3 rounded-[--radius-sm] border px-4 py-3 text-[0.9375rem]',
                         checked
-                          ? 'border-[color:var(--accent)] bg-[color:var(--color-cta)] text-white'
-                          : 'border-[color:var(--border)]',
+                          ? 'border-[color:var(--accent)] bg-[color:var(--color-signal-600)] text-white': 'border-[color:var(--border)]',
                       )}
                     >
                       <input

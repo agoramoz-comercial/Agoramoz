@@ -41,7 +41,7 @@ export function SectorExplorer({ initial = 'mz' }: { initial?: CountryCode }) {
   }) as (code: CountryCode) => void;
 
   return (
-    <div className="mt-10">
+    <div className="mt-14">
       <div role="tablist" aria-label="Filtrar setores por país" className="flex flex-wrap gap-2">
         {COUNTRY_CODES.map((code) => (
           <button
@@ -53,8 +53,7 @@ export function SectorExplorer({ initial = 'mz' }: { initial?: CountryCode }) {
             className={cn(
               'min-h-11 rounded-full border px-5 text-[0.9375rem] transition-colors',
               active === code
-                ? 'border-[color:var(--accent)] bg-[color:var(--color-cta)] text-white'
-                : 'border-[color:var(--border)] hover:border-[color:var(--accent)]',
+                ? 'border-[color:var(--accent)] bg-[color:var(--color-signal-600)] text-white': 'border-[color:var(--border)] hover:border-[color:var(--accent)]',
             )}
           >
             {COUNTRIES[code].name}
@@ -62,12 +61,12 @@ export function SectorExplorer({ initial = 'mz' }: { initial?: CountryCode }) {
         ))}
       </div>
 
-      <ul ref={grid} className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <ul ref={grid} className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3">
         {getSectorsForCountry(active).map((s) => (
           <li key={s.sector} data-sector-card>
             <Link
               href={s.href}
-              className="group flex h-full flex-col justify-between rounded-[--radius-lg] border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 transition-colors hover:border-[color:var(--accent)]"
+              className="group flex h-full flex-col justify-between  border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 transition-colors hover:border-[color:var(--accent)]"
             >
               <div>
                 <h3 className="font-display text-[1.0625rem] font-semibold">{s.label}</h3>
@@ -77,9 +76,9 @@ export function SectorExplorer({ initial = 'mz' }: { initial?: CountryCode }) {
                   </p>
                 )}
               </div>
-              <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-[color:var(--accent)]">
+              <span className="rule-label mt-8 inline-flex items-center gap-2 text-[color:var(--accent)]">
                 {s.published ? 'Ver solução' : 'Solicitar diagnóstico'}
-                <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight aria-hidden className="size-3.5 transition-transform duration-500 group-hover:translate-x-1" />
               </span>
             </Link>
           </li>

@@ -2,12 +2,12 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { SplitHeading } from '@/components/motion/SplitHeading';
 import { Accordion } from '@/components/ui/Accordion';
 import { DiagnosticForm } from '@/components/form/DiagnosticForm';
 import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
 import { OFFER } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
-import { Check } from 'lucide-react';
 
 const FAQ = [
   {
@@ -44,22 +44,36 @@ export default function DiagnosticoPage() {
       <Section surface="deep">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
-            <SectionHeading as="h1" eyebrow={OFFER.name} title={OFFER.title} lead={OFFER.promise} max="none" />
-            <ul className="mt-9 space-y-3.5">
-              {OFFER.deliverables.map((d) => (
-                <li key={d} className="flex items-start gap-3">
-                  <Check aria-hidden className="mt-1 size-4 shrink-0 text-[color:var(--ok)]" />
+            <div className="rule flex items-baseline gap-4 pt-6">
+              <span className="rule-label text-[color:var(--muted)]">Oferta de entrada</span>
+              <span className="rule-label text-[color:var(--accent)]">{OFFER.name}</span>
+            </div>
+            <SplitHeading
+              as="h1"
+              className="mt-10 max-w-[15ch] text-[length:var(--text-h1)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)]"
+            >
+              {OFFER.title}
+            </SplitHeading>
+            <p className="mt-8 max-w-[48ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
+              {OFFER.promise}
+            </p>
+            <ol className="mt-12">
+              {OFFER.deliverables.map((d, i) => (
+                <li key={d} className="flex items-baseline gap-6 border-t border-[color:var(--hairline)] py-4">
+                  <span className="rule-label shrink-0 text-[color:var(--accent)]">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                   <span className="text-sm text-[color:var(--muted)]">{d}</span>
                 </li>
               ))}
-            </ul>
-            <p className="mt-9 border-t border-[color:var(--border)] pt-5 text-sm text-[color:var(--muted)]">
+            </ol>
+            <p className="rule mt-10 pt-5 text-sm text-[color:var(--muted)]">
               Não garantimos resultados que dependem da procura, do preço ou da execução da sua equipa.
               Garantimos os compromissos técnicos e operacionais que forem definidos contratualmente.
             </p>
           </div>
 
-          <Suspense fallback={<div className="min-h-[32rem] rounded-[--radius-xl] border border-[color:var(--border)]" />}>
+          <Suspense fallback={<div className="min-h-[32rem]  border border-[color:var(--border)]" />}>
             <DiagnosticForm />
           </Suspense>
         </div>

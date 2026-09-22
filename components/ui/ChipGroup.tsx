@@ -74,10 +74,10 @@ export function ChipGroup({
               onClick={() => onChange(opt.value)}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={cn(
-                'min-h-11 rounded-[--radius-sm] border px-4 py-3 text-left text-[0.9375rem] transition-colors',
+                'min-h-12 border px-4 py-3 text-left text-[0.9375rem] transition-colors duration-300',
                 checked
-                  ? 'border-[color:var(--accent)] bg-[color:var(--color-cta)] text-white'
-                  : 'border-[color:var(--border)] bg-[color:var(--surface-raised)] hover:border-[color:var(--accent)]',
+                  ? 'border-[color:var(--color-signal-600)] bg-[color:var(--color-signal-600)] text-white'
+                  : 'border-[color:var(--border)] bg-transparent hover:border-[color:var(--on-surface)]',
               )}
             >
               <span className="block font-medium">{opt.label}</span>

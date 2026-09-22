@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { SplitHeading } from '@/components/motion/SplitHeading';
 import { ProblemGrid } from '@/components/sections/ProblemGrid';
 import { SectorExplorer } from '@/components/sections/SectorExplorer';
 import { SolutionsGrid } from '@/components/sections/SolutionsGrid';
@@ -46,8 +47,20 @@ export default async function PaisPage({ params }: Props) {
       <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: c.name, path: `/${c.code}` }]} />
 
       <Section surface="deep">
-        <SectionHeading as="h1" eyebrow={c.hero.eyebrow} title={c.hero.headline} lead={c.hero.lead} max="wide" />
-        <p className="mt-9 max-w-[46rem] border-l-2 border-[color:var(--accent)] pl-6 text-[length:var(--text-lead)]">
+        <div className="rule flex items-baseline gap-4 pt-6">
+          <span className="rule-label text-[color:var(--muted)]">{c.locale}</span>
+          <span className="rule-label text-[color:var(--accent)]">{c.hero.eyebrow}</span>
+        </div>
+        <SplitHeading
+          as="h1"
+          className="mt-10 max-w-[19ch] text-[length:var(--text-display)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)]"
+        >
+          {c.hero.headline}
+        </SplitHeading>
+        <p className="mt-10 max-w-[56ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
+          {c.hero.lead}
+        </p>
+        <p className="mt-10 max-w-[56ch] border-l border-[color:var(--accent)] pl-6 text-[length:var(--text-lead)]">
           {c.positioning}
         </p>
       </Section>

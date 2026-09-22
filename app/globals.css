@@ -1,141 +1,133 @@
 @import 'tailwindcss';
 
 /* ===========================================================================
-   AGORAMOZ — Design tokens
-   Paleta: azul profundo (terreno institucional) + as três cores da marca como
-   sistema de sinal. Os rácios de contraste abaixo foram calculados, não
-   estimados — as regras que deles decorrem são vinculativas.
+   AGORAMOZ — sistema visual: editorial escuro, tipografia brutal.
+
+   Base quase-preta com papel quente nas secções claras, tipografia display
+   grande e apertada, grelha visível, numeração de secções e grão subtil.
+   A cor da marca é usada como bisturi — nunca como decoração.
+
+   Os rácios de contraste abaixo foram calculados contra as superfícies reais
+   deste sistema, não estimados. As regras que deles decorrem são vinculativas.
    =========================================================================== */
 
 @theme {
-  /* Azul profundo — eixo institucional, secções escuras */
-  --color-navy-950: #050d1a;
-  --color-navy-900: #08172b;
-  --color-navy-800: #0c2340;
-  --color-navy-700: #123156;
-  --color-navy-600: #1a4472;
-  --color-navy-500: #245c94;
-  --color-navy-400: #4a82b8;
-  --color-navy-300: #8ab2d6;
-  --color-navy-100: #dce8f4;
+  /* Tinta — superfícies escuras */
+  --color-ink-950: #08090b;
+  --color-ink-900: #0f1012;
+  --color-ink-850: #131417;
+  --color-ink-800: #17181b;
+  --color-ink-700: #24262a;
+  --color-ink-600: #3a3d42;
 
-  /* Neutros frios */
-  --color-slate-50: #f7f9fb;
-  --color-slate-100: #eef2f6;
-  --color-slate-200: #dde4ec;
-  --color-slate-300: #c2cdd9;
-  --color-slate-400: #94a3b4;
-  --color-slate-500: #5c6b7a; /* 5.47:1 sobre branco — AA */
-  --color-slate-600: #4c5c6e;
-  --color-slate-700: #35434f;
+  /* Papel quente — superfícies claras. Branco puro lê a frio e genérico. */
+  --color-paper: #edeae4;
+  --color-paper-2: #e2ded6;
+  --color-paper-3: #d5d0c6;
 
-  /* Sinal — cor de energia da marca, reservada à conversão.
-     signal-600 sobre branco = 4.60:1 (AA). signal-500 sobre navy-950 = 5.46:1. */
-  --color-signal-700: #b82200;
-  --color-signal-600: #e22a00;
-  --color-signal-500: #ff3b10;
-  --color-signal-100: #ffe4dc;
+  /* Neutros quentes */
+  --color-warm-700: #46423b;
+  --color-warm-600: #5f5a52; /* 5,70:1 sobre papel — AA */
+  --color-warm-400: #8f8a82; /* 5,72:1 sobre tinta — AA */
+  --color-warm-300: #b5afa5;
 
-  /* Marca secundária — apenas diagramas, fluxos e dados. NUNCA texto em branco. */
+  /* Sinal — a cor de energia da marca, reservada à conversão e ao acento */
+  --color-signal-700: #b82200; /* 5,36:1 sobre papel — AA */
+  --color-signal-600: #e22a00; /* fundo do CTA: 4,65:1 com branco — AA */
+  --color-signal-500: #ff3b10; /* 5,50:1 sobre tinta — AA */
+
+  /* Marca secundária — diagramas, fluxos e dados. Nunca texto sobre claro. */
   --color-growth-500: #00b060;
-  --color-growth-300: #46d392;
+  --color-growth-600: #009152;
   --color-energy-500: #ffd62e;
 
-  --color-ink: #04070c;
-  --color-paper: #ffffff;
-
-  /* Fundo do CTA primário: fixo em qualquer superfície, porque carrega
-     sempre texto branco. signal-600 + branco = 4.65:1 (AA).
-     O signal-500 NUNCA serve de fundo com texto branco: dá 3.56:1. */
-  --color-cta: #e22a00;
-  --color-cta-hover: #b82200;
-
-  /* Tipografia */
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  /* ------------------------------------------------------------ tipografia */
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
-  /* Reduzido de 5.25rem: a 84px o headline ocupava seis linhas e empurrava
-     o CTA primário para fora do primeiro ecrã. */
-  --text-display: clamp(2.125rem, 1.25rem + 3.1vw, 3.5rem);
-  --text-h1: clamp(2rem, 1.35rem + 2.6vw, 3.125rem);
-  --text-h2: clamp(1.625rem, 1.25rem + 1.6vw, 2.375rem);
-  --text-h3: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
-  --text-lead: clamp(1.0625rem, 1rem + 0.4vw, 1.3125rem);
-  --text-micro: 0.75rem;
+  /* Escala editorial: salto grande entre display e corpo, sem meio-termo. */
+  --text-display: clamp(2.375rem, 1.1rem + 4.9vw, 4.75rem);
+  --text-h1: clamp(2.25rem, 1.2rem + 4.2vw, 4.5rem);
+  --text-h2: clamp(1.875rem, 1.25rem + 2.6vw, 3.5rem);
+  --text-h3: clamp(1.1875rem, 1.05rem + 0.7vw, 1.625rem);
+  --text-lead: clamp(1.0625rem, 1rem + 0.45vw, 1.375rem);
+  --text-micro: 0.6875rem;
 
-  --leading-display: 1.04;
-  --leading-heading: 1.14;
+  --leading-display: 0.94;
+  --leading-heading: 1.02;
+  --leading-body: 1.62;
 
-  --tracking-display: -0.025em;
-  --tracking-eyebrow: 0.1em;
+  --tracking-display: -0.045em;
+  --tracking-heading: -0.035em;
+  --tracking-eyebrow: 0.16em;
 
-  /* Layout */
-  --container-max: 78rem;
-  --container-gutter: clamp(1rem, 5vw, 3rem);
-  --space-section: clamp(4rem, 2rem + 8vw, 9rem);
-  --space-section-tight: clamp(2.5rem, 1.5rem + 4vw, 5rem);
+  /* ---------------------------------------------------------------- layout */
+  --container-max: 88rem;
+  --container-gutter: clamp(1.125rem, 4vw, 4rem);
+  --space-section: clamp(5rem, 3rem + 9vw, 11rem);
+  --space-section-tight: clamp(3rem, 2rem + 4vw, 6rem);
 
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-
-  --shadow-1: 0 1px 2px rgb(5 13 26 / 0.06), 0 8px 24px -12px rgb(5 13 26 / 0.18);
-  --shadow-2: 0 2px 4px rgb(5 13 26 / 0.07), 0 24px 48px -24px rgb(5 13 26 / 0.28);
+  /* Editorial brutalista: cantos vivos. O raio é a exceção, não a regra. */
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
 }
 
 /* ===========================================================================
-   Sistema de superfícies.
-   <Section surface> escreve data-surface, que religa os tokens semânticos.
-   Os filhos leem só semântica — ficam corretos em qualquer superfície, sem
-   uma única variante dark: espalhada pelo código.
+   Sistema de superfícies. <Section surface> escreve data-surface, que religa
+   os tokens semânticos. Os filhos leem só semântica — ficam corretos em
+   qualquer superfície, sem uma única variante dark: espalhada pelo código.
    =========================================================================== */
 
 [data-surface='light'] {
   --surface: var(--color-paper);
-  --surface-raised: var(--color-slate-50);
-  --on-surface: var(--color-ink);
-  --muted: var(--color-slate-500);
-  --border: var(--color-slate-200);
-  /* signal-700: o signal-600 falha AA aos 12px dos eyebrows (4.35:1). */
+  --surface-raised: var(--color-paper-2);
+  --on-surface: var(--color-ink-950);
+  --muted: var(--color-warm-600);
+  --border: var(--color-paper-3);
+  --hairline: color-mix(in oklab, var(--color-ink-950) 14%, transparent);
   --accent: var(--color-signal-700);
-  --ok: #009152;
-  --motif: var(--color-navy-300);
+  --ok: var(--color-growth-600);
+  --motif: color-mix(in oklab, var(--color-ink-950) 22%, transparent);
 }
 
 [data-surface='tint'] {
-  --surface: var(--color-slate-50);
+  --surface: var(--color-paper-2);
   --surface-raised: var(--color-paper);
-  --on-surface: var(--color-ink);
-  --muted: var(--color-slate-500);
-  --border: var(--color-slate-200);
+  --on-surface: var(--color-ink-950);
+  --muted: var(--color-warm-600);
+  --border: var(--color-paper-3);
+  --hairline: color-mix(in oklab, var(--color-ink-950) 16%, transparent);
   --accent: var(--color-signal-700);
-  --ok: #009152;
-  --motif: var(--color-navy-300);
+  --ok: var(--color-growth-600);
+  --motif: color-mix(in oklab, var(--color-ink-950) 22%, transparent);
 }
 
 [data-surface='dark'] {
-  --surface: var(--color-navy-900);
-  --surface-raised: var(--color-navy-800);
-  --on-surface: var(--color-slate-50);
-  --muted: var(--color-navy-300);
-  --border: color-mix(in oklab, var(--color-navy-300) 22%, transparent);
+  --surface: var(--color-ink-900);
+  --surface-raised: var(--color-ink-850);
+  --on-surface: var(--color-paper);
+  --muted: var(--color-warm-400);
+  --border: color-mix(in oklab, var(--color-paper) 16%, transparent);
+  --hairline: color-mix(in oklab, var(--color-paper) 18%, transparent);
   --accent: var(--color-signal-500);
-  --ok: var(--color-growth-300);
-  --motif: var(--color-navy-600);
+  --ok: var(--color-growth-500);
+  --motif: color-mix(in oklab, var(--color-paper) 14%, transparent);
 }
 
 [data-surface='deep'] {
-  --surface: var(--color-navy-950);
-  --surface-raised: var(--color-navy-900);
+  --surface: var(--color-ink-950);
+  --surface-raised: var(--color-ink-900);
   --on-surface: var(--color-paper);
-  --muted: var(--color-navy-300);
-  --border: color-mix(in oklab, var(--color-navy-400) 18%, transparent);
+  --muted: var(--color-warm-400);
+  --border: color-mix(in oklab, var(--color-paper) 14%, transparent);
+  --hairline: color-mix(in oklab, var(--color-paper) 16%, transparent);
   --accent: var(--color-signal-500);
-  --ok: var(--color-growth-300);
-  --motif: var(--color-navy-700);
+  --ok: var(--color-growth-500);
+  --motif: color-mix(in oklab, var(--color-paper) 12%, transparent);
 }
 
 @layer base {
@@ -147,18 +139,20 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    /* O smooth nativo quebra o refresh() do ScrollTrigger. */
     scroll-behavior: auto;
   }
 
   body {
     margin: 0;
-    background-color: var(--color-paper);
-    color: var(--color-ink);
+    background-color: var(--color-ink-950);
+    color: var(--color-paper);
     font-family: var(--font-sans);
     font-size: 1rem;
-    line-height: 1.65;
+    line-height: var(--leading-body);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
 
   h1,
@@ -168,8 +162,7 @@
     font-family: var(--font-display);
     font-weight: 700;
     line-height: var(--leading-heading);
-    letter-spacing: -0.02em;
-    text-wrap: balance;
+    letter-spacing: var(--tracking-heading);
     margin: 0;
   }
 
@@ -180,19 +173,63 @@
   :focus-visible {
     outline: none;
     box-shadow:
-      0 0 0 2px var(--surface, var(--color-paper)),
+      0 0 0 2px var(--surface, var(--color-ink-950)),
       0 0 0 4px var(--color-signal-500);
-    border-radius: var(--radius-xs);
   }
 
   ::selection {
     background: var(--color-signal-500);
-    color: var(--color-paper);
+    color: #fff;
   }
 
   svg {
     display: block;
   }
+}
+
+@layer components {
+  /* Numeração de secção: mono, pequena, com a régua a seguir. */
+  .rule-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+
+  /* Régua horizontal fina — a estrutura da grelha fica visível. */
+  .rule {
+    border-top: 1px solid var(--hairline);
+  }
+
+  /* Colunas verticais ténues no fundo de uma secção. */
+  .grid-lines::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--hairline) 0 1px,
+      transparent 1px calc(100% / 6)
+    );
+    opacity: 0.45;
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Grão. Um único pseudo-elemento fixo, fora do fluxo e sem eventos. É o que
+   tira o aspeto de gradiente digital sem custar um único pedido de rede.
+   --------------------------------------------------------------------------- */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.042;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ---------------------------------------------------------------------------
@@ -208,8 +245,19 @@
   [data-animate] {
     visibility: visible;
   }
+
+  .grain::after {
+    display: none;
+  }
 }
 
 :root[data-motion='reduced'] [data-animate] {
   visibility: visible;
+}
+
+/* O SplitText envolve cada linha; o wrapper precisa de recortar para a máscara
+   funcionar. text-wrap: balance interfere com a divisão — nunca em elementos
+   divididos. */
+[data-split] {
+  text-wrap: initial;
 }

@@ -17,13 +17,11 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1',
-        'font-mono text-[length:var(--text-micro)] tracking-[0.04em] uppercase',
-        variant === 'neutral' &&
-          'border border-[color:var(--border)] text-[color:var(--muted)]',
-        variant === 'accent' && 'bg-[color:var(--color-cta)] text-white',
+        'rule-label inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1',
+        variant === 'neutral' && 'border border-[color:var(--border)] text-[color:var(--muted)]',
+        variant === 'accent' && 'bg-[color:var(--color-signal-600)] text-white',
         variant === 'conceptual' &&
-          'border border-[color:var(--color-energy-500)] bg-[color:var(--color-energy-500)] text-[color:var(--color-ink)]',
+          'bg-[color:var(--color-energy-500)] text-[color:var(--color-ink-950)]',
         className,
       )}
     >

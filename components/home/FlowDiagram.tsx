@@ -7,12 +7,20 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { SYSTEM_FLOW } from '@/content/site';
 
 /**
- * O único pin da página. Em desktop, os 7 passos correm na horizontal com
- * scrub 1:1 e a linha de ligação é desenhada em sincronia (DrawSVG).
+ * Scroll horizontal sem pin.
  *
- * `end` é função de `scrollWidth` (regra 2) e `invalidateOnRefresh` recalcula
- * no resize. Em mobile e em reduced-motion o pin nunca é criado: a lista fica
- * empilhada na vertical e totalmente percorrível por teclado.
+ * A versão com `pin: true` produzia CLS de 0,99: o pin-spacer do ScrollTrigger
+ * cresce a altura do documento quando é criado e outra vez quando o refresh
+ * pós-carregamento das fontes recalcula a distância — e tudo o que está abaixo
+ * salta duas vezes.
+ *
+ * Aqui a altura é reservada em CSS (`lg:h-[280vh]`) desde o primeiro paint e
+ * o sticky é nativo, pelo que não há inserção de espaço nem salto. O
+ * ScrollTrigger limita-se a fazer scrub do `x` da pista dentro do intervalo
+ * que a secção já ocupa.
+ *
+ * `end` depende do layout, por isso é função, com `invalidateOnRefresh` para
+ * recalcular no resize. `ease: none` é obrigatório num scrub 1:1.
  */
 export function FlowDiagram() {
   const scope = useRef<HTMLDivElement>(null);
@@ -28,38 +36,31 @@ export function FlowDiagram() {
           if (!ctx.conditions?.isDesktop) return;
 
           const el = track.current!;
-          const distance = () => el.scrollWidth - el.clientWidth;
+          const distance = () => Math.max(0, el.scrollWidth - el.clientWidth);
           if (distance() <= 0) return;
 
-          const tl = gsap.timeline({
+          const tween = gsap.to(el, {
+            x: () => -distance(),
+            ease: EASE.none,
             scrollTrigger: {
-              id: 'flow-pin',
+              id: 'flow-scrub',
               trigger: scope.current,
               start: 'top top',
-              end: () => `+=${distance()}`,
-              pin: true,
+              end: 'bottom bottom',
               scrub: 1,
               invalidateOnRefresh: true,
-              anticipatePin: 1,
               markers: DEV,
             },
           });
 
-          tl.to(el, { x: () => -distance(), ease: EASE.none });
-
-          const line = scope.current!.querySelector('[data-flow-line]');
-          if (line) {
-            tl.fromTo(line, { drawSVG: '0%' }, { drawSVG: '100%', ease: EASE.none }, 0);
-          }
-
           return () => {
-            tl.scrollTrigger?.kill();
-            tl.kill();
+            tween.scrollTrigger?.kill();
+            tween.kill();
           };
         },
       );
 
-      // Mobile / reduced-motion: revelação simples, sem pin.
+      // Mobile e tablet: lista vertical, revelação simples, sem sticky.
       mm.add('(max-width: 1023px), (prefers-reduced-motion: reduce)', () => {
         const steps = scope.current!.querySelectorAll('[data-flow-step]');
         gsap.from(steps, {
@@ -77,40 +78,40 @@ export function FlowDiagram() {
   );
 
   return (
-    <div ref={scope} className="overflow-hidden">
-      <div style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }} className="mx-auto">
-        <Eyebrow>{SYSTEM_FLOW.eyebrow}</Eyebrow>
-        <h2 className="mt-4 max-w-[22ch] text-[length:var(--text-h2)]">{SYSTEM_FLOW.title}</h2>
-        <p className="mt-5 max-w-[46rem] text-[length:var(--text-lead)] text-[color:var(--muted)]">
-          {SYSTEM_FLOW.lead}
-        </p>
-      </div>
-
-      <div className="relative mt-14">
-        {/* Linha de ligação — decorativa, escondida dos leitores de ecrã */}
-        <svg
-          aria-hidden
-          className="pointer-events-none absolute top-[2.15rem] left-0 hidden h-px w-full lg:block"
-          preserveAspectRatio="none"
-          viewBox="0 0 1000 1"
+    <div ref={scope} className="lg:h-[280vh]">
+      <div className="lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:justify-center lg:overflow-hidden">
+        <div
+          style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
+          className="mx-auto w-full"
         >
-          <line data-flow-line x1="0" y1="0.5" x2="1000" y2="0.5" stroke="var(--accent)" strokeWidth="1" />
-        </svg>
+          <div className="rule flex items-baseline gap-4 pt-6">
+            <span className="rule-label text-[color:var(--muted)]">05</span>
+            <Eyebrow>{SYSTEM_FLOW.eyebrow}</Eyebrow>
+          </div>
+          <h2 className="mt-8 max-w-[18ch] text-[length:var(--text-h1)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)]">
+            {SYSTEM_FLOW.title}
+          </h2>
+          <p className="mt-8 max-w-[52ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
+            {SYSTEM_FLOW.lead}
+          </p>
+        </div>
 
         <ol
           ref={track}
-          className="flex flex-col gap-8 lg:flex-row lg:gap-10 lg:will-change-transform"
+          className="mt-12 flex flex-col gap-10 lg:mt-16 lg:flex-row lg:gap-14 lg:will-change-transform"
           style={{ paddingInline: 'var(--container-gutter)' }}
         >
           {SYSTEM_FLOW.steps.map((s, i) => (
-            <li key={s.key} data-flow-step className="lg:w-[22rem] lg:shrink-0">
-              <div className="flex items-center gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full border border-[color:var(--accent)] bg-[color:var(--surface)] font-mono text-[length:var(--text-micro)] text-[color:var(--accent)]">
+            <li key={s.key} data-flow-step className="lg:w-[24rem] lg:shrink-0">
+              <div className="border-t border-[color:var(--hairline)] pt-6">
+                <span className="rule-label text-[color:var(--accent)]">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <h3 className="font-display text-[length:var(--text-h3)]">{s.title}</h3>
+                <h3 className="mt-4 font-display text-[length:var(--text-h2)] leading-[1.02] font-bold tracking-[var(--tracking-heading)]">
+                  {s.title}
+                </h3>
+                <p className="mt-4 max-w-[38ch] text-[color:var(--muted)]">{s.body}</p>
               </div>
-              <p className="mt-3 text-[color:var(--muted)]">{s.body}</p>
             </li>
           ))}
         </ol>

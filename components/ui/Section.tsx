@@ -14,6 +14,10 @@ type SectionProps = {
   as?: 'section' | 'div' | 'footer' | 'aside';
   /** Desliga o Container quando a secção precisa de sangrar até à margem. */
   bleed?: boolean;
+  /** Rótulo curto para o rail de índice. Registar só as secções da home. */
+  index?: string;
+  /** Desenha as colunas verticais ténues da grelha no fundo. */
+  lines?: boolean;
   'aria-labelledby'?: string;
   'aria-label'?: string;
 };
@@ -27,6 +31,8 @@ export function Section({
   children,
   as: As = 'section',
   bleed = false,
+  index,
+  lines = false,
   ...aria
 }: SectionProps) {
   const pad =
@@ -40,14 +46,20 @@ export function Section({
     <As
       id={id}
       data-surface={surface}
+      data-section-index={index}
       className={cn(
         'relative isolate bg-[color:var(--surface)] text-[color:var(--on-surface)]',
+        lines && 'grid-lines',
         className,
       )}
       style={{ paddingBlock: pad }}
       {...aria}
     >
-      {bleed ? children : <Container className={innerClassName}>{children}</Container>}
+      {bleed ? (
+        children
+      ) : (
+        <Container className={cn('relative z-[1]', innerClassName)}>{children}</Container>
+      )}
     </As>
   );
 }

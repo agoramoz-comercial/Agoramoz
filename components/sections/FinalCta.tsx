@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { MagneticButton } from '@/components/motion/MagneticButton';
+import { SplitHeading } from '@/components/motion/SplitHeading';
 import { CTA } from '@/content/site';
 
 export function FinalCta({
@@ -12,15 +14,33 @@ export function FinalCta({
   href?: string;
 }) {
   return (
-    <div className="mx-auto max-w-[46rem] text-center">
-      <h2 className="text-[length:var(--text-h2)]">{title}</h2>
-      <p className="mt-5 text-[length:var(--text-lead)] text-[color:var(--muted)]">{body}</p>
-      <Button asChild size="lg" className="mt-9">
-        <Link href={href}>{CTA.primary}</Link>
-      </Button>
-      <p className="mt-5 font-mono text-[length:var(--text-micro)] text-[color:var(--muted)]">
-        Sem pressão comercial. Sem soluções genéricas. Sem promessas impossíveis.
-      </p>
+    <div>
+      <SplitHeading
+        as="h2"
+        className="max-w-[16ch] text-[length:var(--text-h1)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)]"
+      >
+        {title}
+      </SplitHeading>
+
+      <div className="rule mt-14 grid gap-10 pt-8 md:grid-cols-12 md:gap-8">
+        <p className="text-[length:var(--text-lead)] text-[color:var(--muted)] md:col-span-6">{body}</p>
+
+        <div className="flex flex-col gap-5 md:col-span-6 md:items-end">
+          <MagneticButton>
+            <Button asChild size="lg">
+              <Link href={href}>
+                {CTA.primary}
+                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </Button>
+          </MagneticButton>
+          <p className="rule-label text-[color:var(--muted)] md:text-right">
+            Sem pressão comercial · Sem soluções genéricas · Sem promessas impossíveis
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

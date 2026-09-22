@@ -92,11 +92,11 @@ export function SegmentSelector() {
     <div ref={scope} className="w-full">
       <div
         ref={panelRef}
-        className="rounded-[--radius-xl] border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
+        className="border border-[color:var(--border)] p-7 md:p-10"
       >
         <div className="flex items-center justify-between gap-4">
           <Eyebrow>Encontre o seu caminho</Eyebrow>
-          <p className="font-mono text-[length:var(--text-micro)] text-[color:var(--muted)]">
+          <p className="rule-label text-[color:var(--muted)]">
             Passo {step + 1} de {STEPS.length}
           </p>
         </div>
@@ -105,12 +105,12 @@ export function SegmentSelector() {
           ref={headingRef}
           tabIndex={-1}
           aria-live="polite"
-          className="mt-4 font-display text-[length:var(--text-h3)] font-semibold outline-none"
+          className="mt-6 font-display text-[length:var(--text-h2)] leading-[1.05] font-bold tracking-[var(--tracking-heading)] outline-none"
         >
           {STEPS[step]!.question}
         </p>
 
-        <div className="mt-6">
+        <div className="mt-8">
           {step === 0 && (
             <ChipGroup
               legend="Onde opera a sua empresa?"
@@ -146,7 +146,7 @@ export function SegmentSelector() {
           )}
         </div>
 
-        <div className="mt-7 flex items-center justify-between gap-3">
+        <div className="rule mt-10 flex items-center justify-between gap-3 pt-6">
           <Button
             type="button"
             variant="ghost"
@@ -173,7 +173,7 @@ export function SegmentSelector() {
         </div>
       </div>
 
-      <p className="mt-3 text-center font-mono text-[length:var(--text-micro)] text-[color:var(--muted)]">
+      <p className="rule-label mt-4 text-center text-[color:var(--muted)]">
         Prefere ver tudo? <a href="#setores" className="underline underline-offset-4">Todos os setores</a>
       </p>
     </div>

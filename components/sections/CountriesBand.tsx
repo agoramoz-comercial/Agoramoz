@@ -1,33 +1,45 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { COUNTRIES, COUNTRY_CODES } from '@/content/registry';
 
 export function CountriesBand() {
   return (
-    <Reveal className="mt-12 grid gap-5 md:grid-cols-3">
-      {COUNTRY_CODES.map((code) => {
-        const c = COUNTRIES[code];
-        return (
-          <Link
-            key={code}
-            href={`/${code}`}
-            data-animate
-            className="group flex flex-col justify-between rounded-[--radius-lg] border border-[color:var(--border)] p-7 transition-colors hover:border-[color:var(--accent)]"
-          >
-            <div>
-              <p className="font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--accent)] uppercase">
-                {c.name}
-              </p>
-              <p className="mt-4 text-[color:var(--muted)]">{c.positioning}</p>
-            </div>
-            <span className="mt-7 inline-flex items-center gap-1.5 text-sm font-medium text-[color:var(--accent)]">
-              Explorar {c.name}
-              <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-        );
-      })}
+    <Reveal className="mt-16">
+      <ul className="grid md:grid-cols-3">
+        {COUNTRY_CODES.map((code, i) => {
+          const c = COUNTRIES[code];
+          return (
+            <li key={code} data-animate className="md:border-l md:border-[color:var(--hairline)] md:first:border-l-0">
+              <Link
+                href={`/${code}`}
+                className="group flex h-full flex-col justify-between border-t border-[color:var(--hairline)] py-8 md:border-t-0 md:px-8 md:first:pl-0 md:last:pr-0"
+              >
+                <div>
+                  <div className="flex items-baseline gap-4">
+                    <span className="rule-label text-[color:var(--muted)]">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="rule-label text-[color:var(--accent)]">{c.locale}</span>
+                  </div>
+
+                  <h3 className="mt-6 font-display text-[length:var(--text-h2)] leading-[1.02] font-bold tracking-[var(--tracking-heading)] transition-transform duration-500 group-hover:translate-x-1.5">
+                    {c.name}
+                  </h3>
+
+                  <p className="mt-5 text-[color:var(--muted)]">{c.positioning}</p>
+                </div>
+
+                <span className="rule-label mt-8 inline-flex items-center gap-2 text-[color:var(--accent)]">
+                  Explorar
+                  <span aria-hidden className="transition-transform duration-500 group-hover:translate-x-1">
+                    →
+                  </span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </Reveal>
   );
 }

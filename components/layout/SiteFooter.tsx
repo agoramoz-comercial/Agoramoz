@@ -11,10 +11,10 @@ export function SiteFooter() {
   return (
     <footer data-surface="deep" className="bg-[color:var(--surface)] text-[color:var(--on-surface)]">
       <div
-        className="mx-auto w-full py-16"
+        className="mx-auto w-full py-20"
         style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
       >
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="rule grid gap-12 pt-10 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <Logo href={null} />
             <p className="mt-4 max-w-xs text-sm text-[color:var(--muted)]">{SITE.tagline}.</p>
@@ -27,7 +27,7 @@ export function SiteFooter() {
           </div>
 
           <nav aria-label="Soluções">
-            <h2 className="font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
+            <h2 className="rule-label text-[color:var(--muted)]">
               <Link href="/solucoes" className="hover:text-[color:var(--on-surface)]">
                 Soluções
               </Link>
@@ -35,7 +35,7 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2.5">
               {solutions.map((s) => (
                 <li key={s.slug}>
-                  <Link href={s.href} className="text-sm hover:text-[color:var(--accent)]">
+                  <Link href={s.href} className="text-sm transition-colors hover:text-[color:var(--accent)]">
                     {s.label}
                   </Link>
                 </li>
@@ -44,13 +44,13 @@ export function SiteFooter() {
           </nav>
 
           <nav aria-label="Mercados">
-            <h2 className="font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
+            <h2 className="rule-label text-[color:var(--muted)]">
               Mercados
             </h2>
             <ul className="mt-4 space-y-2.5">
               {COUNTRY_CODES.map((code) => (
                 <li key={code}>
-                  <Link href={`/${code}`} className="text-sm hover:text-[color:var(--accent)]">
+                  <Link href={`/${code}`} className="text-sm transition-colors hover:text-[color:var(--accent)]">
                     {COUNTRIES[code].name}
                   </Link>
                   <ul className="mt-1.5 space-y-1">
@@ -58,7 +58,7 @@ export function SiteFooter() {
                       .filter((s) => s.published)
                       .map((s) => (
                         <li key={s.sector}>
-                          <Link href={s.href} className="text-[length:var(--text-micro)] text-[color:var(--muted)] hover:text-[color:var(--on-surface)]">
+                          <Link href={s.href} className="text-[length:var(--text-micro)] text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]">
                             {s.label}
                           </Link>
                         </li>
@@ -70,24 +70,24 @@ export function SiteFooter() {
           </nav>
 
           <nav aria-label="Empresa">
-            <h2 className="font-mono text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
+            <h2 className="rule-label text-[color:var(--muted)]">
               Empresa
             </h2>
             <ul className="mt-4 space-y-2.5">
               {NAV.primary.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-sm hover:text-[color:var(--accent)]">
+                  <Link href={item.href} className="text-sm transition-colors hover:text-[color:var(--accent)]">
                     {item.label}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/diagnostico" className="text-sm hover:text-[color:var(--accent)]">
+                <Link href="/diagnostico" className="text-sm transition-colors hover:text-[color:var(--accent)]">
                   Solicitar diagnóstico
                 </Link>
               </li>
               <li>
-                <Link href="/privacidade" className="text-sm hover:text-[color:var(--accent)]">
+                <Link href="/privacidade" className="text-sm transition-colors hover:text-[color:var(--accent)]">
                   Privacidade
                 </Link>
               </li>
@@ -95,8 +95,8 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <div className="mt-14 flex flex-col gap-4 border-t border-[color:var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[length:var(--text-micro)] text-[color:var(--muted)]">
+        <div className="rule mt-16 flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="rule-label text-[color:var(--muted)]">
             © {new Date().getFullYear()} AGORAMOZ. Todos os direitos reservados.
           </p>
           <MotionToggle />

@@ -43,7 +43,7 @@ export default function ContactosPage() {
           {COUNTRY_CODES.map((code) => {
             const c = COUNTRIES[code];
             return (
-              <div key={code} className="rounded-[--radius-lg] border border-[color:var(--border)] p-6">
+              <div key={code} className="border border-[color:var(--border)] p-6">
                 <h2 className="font-display text-[length:var(--text-h3)]">{c.name}</h2>
                 <p className="mt-1.5 font-mono text-[length:var(--text-micro)] text-[color:var(--muted)]">
                   {c.dialCode} · {c.currency} · {c.privacyRegime === 'MZ' ? 'Proteção de dados' : c.privacyRegime}

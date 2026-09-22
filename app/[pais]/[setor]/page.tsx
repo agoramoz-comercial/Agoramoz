@@ -9,6 +9,8 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Accordion } from '@/components/ui/Accordion';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
+import { SplitHeading } from '@/components/motion/SplitHeading';
+import { MagneticButton } from '@/components/motion/MagneticButton';
 import { ProblemGrid } from '@/components/sections/ProblemGrid';
 import { ProofSection } from '@/components/sections/ProofSection';
 import { OfferSection } from '@/components/sections/OfferSection';
@@ -82,25 +84,34 @@ export default async function SetorPage({ params }: Props) {
 
       {/* 1 + 2 — identificação e hero orientado ao resultado */}
       <Section surface="deep">
-        <Eyebrow>
-          {country.name} · {SECTOR_LABELS[page.sector]}
-        </Eyebrow>
-        <h1 className="mt-6 max-w-[20ch] text-[length:var(--text-h1)] leading-[var(--leading-heading)] tracking-[var(--tracking-display)]">
+        <div className="rule flex flex-wrap items-baseline gap-x-4 gap-y-1 pt-6">
+          <span className="rule-label text-[color:var(--muted)]">{country.name}</span>
+          <Eyebrow>{SECTOR_LABELS[page.sector]}</Eyebrow>
+        </div>
+        <SplitHeading
+          as="h1"
+          className="mt-10 max-w-[19ch] text-[length:var(--text-display)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)]"
+        >
           {page.hero.headline}
-        </h1>
+        </SplitHeading>
 
         {/* A fórmula do documento: audiência, país, resultado, mecanismo e
             obstáculo. Longa de mais para H1, essencial como posicionamento. */}
-        <p className="mt-7 max-w-[52rem] border-l-2 border-[color:var(--accent)] pl-6 text-[length:var(--text-lead)]">
+        <p className="mt-12 max-w-[56ch] border-l border-[color:var(--accent)] pl-6 text-[length:var(--text-lead)]">
           {renderSectorFormula(page)}
         </p>
 
-        <p className="mt-6 max-w-[46rem] text-[color:var(--muted)]">{page.hero.lead}</p>
+        <p className="mt-8 max-w-[52ch] text-[color:var(--muted)]">{page.hero.lead}</p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg">
-            <Link href={`/diagnostico?pais=${page.country}&setor=${page.sector}`}>{CTA.primary}</Link>
-          </Button>
+          <MagneticButton>
+            <Button asChild size="lg">
+              <Link href={`/diagnostico?pais=${page.country}&setor=${page.sector}`}>
+                {CTA.primary}
+                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </Link>
+            </Button>
+          </MagneticButton>
           <Button asChild size="lg" variant="outline">
             <Link href="#prova-set">{CTA.secondary}</Link>
           </Button>
