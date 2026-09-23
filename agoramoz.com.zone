@@ -1,0 +1,42 @@
+; Zona DNS de agoramoz.com — para importar na Vercel
+;
+;   npx vercel login
+;   npx vercel dns import agoramoz.com agoramoz.com.zone
+;
+; Os oito registos de correio sao copia exacta do que a Hostinger serve hoje.
+; Foram lidos directamente dos nameservers autoritativos (atlas/hyperion.
+; dns-parking.com) em 2026-09-23, nao de memoria. A caixa comercial@agoramoz.com
+; esta em uso, por isso estes oito sao os que NAO podem falhar.
+;
+; Os dois registos de web apontam ja para a Vercel e substituem o
+; A @ 2.57.91.91 (o IP de estacionamento da Hostinger), que e o registo que o
+; hPanel nao deixou alterar.
+;
+; TTL de 60 s de proposito: no primeiro dia permite corrigir depressa. Sobe-se
+; depois da migracao estar confirmada.
+
+$ORIGIN agoramoz.com.
+$TTL 60
+
+; ---------------------------------------------------------------------------
+; WEB — passa a servir a partir da Vercel
+; ---------------------------------------------------------------------------
+@                           60  IN  A      76.76.21.21
+www                         60  IN  CNAME  cname.vercel-dns.com.
+
+; ---------------------------------------------------------------------------
+; CORREIO — inalterado, continua na Hostinger
+; ---------------------------------------------------------------------------
+@                           60  IN  MX     5 mx1.hostinger.com.
+@                           60  IN  MX     10 mx2.hostinger.com.
+@                           60  IN  TXT    "v=spf1 include:_spf.mail.hostinger.com ~all"
+_dmarc                      60  IN  TXT    "v=DMARC1; p=none"
+
+; DKIM — as tres chaves que a Hostinger publica
+hostingermail-a._domainkey  60  IN  CNAME  hostingermail-a.dkim.mail.hostinger.com.
+hostingermail-b._domainkey  60  IN  CNAME  hostingermail-b.dkim.mail.hostinger.com.
+hostingermail-c._domainkey  60  IN  CNAME  hostingermail-c.dkim.mail.hostinger.com.
+
+; Deteccao automatica de conta nos clientes de correio
+autodiscover                60  IN  CNAME  autodiscover.mail.hostinger.com.
+autoconfig                  60  IN  CNAME  autoconfig.mail.hostinger.com.
