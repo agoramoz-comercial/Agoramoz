@@ -4,7 +4,7 @@
 
 | # | Lacuna | Porque bloqueia |
 |---|---|---|
-| ~~B-01~~ | **Em curso.** Restaurei o `AGORAMOZX` via API (`restore_project`) — passou de `INACTIVE` a `COMING_UP`. O esquema continua por inventariar até a base aceitar ligações | Assim que estiver `ACTIVE_HEALTHY`, `list_tables` diz o que lá está. Só depois disso escrevo migrações |
+| ~~B-01~~ | **RESOLVIDO.** Restaurei o `AGORAMOZX` (`restore_project`), ficou `ACTIVE_HEALTHY`, e inventariei: `public` com **zero tabelas**, **zero migrações**, só os esquemas próprios do Supabase. Sem herança nem risco de colisão. As migrações 0001–0005 estão aplicadas e verificadas | — |
 | **B-02** | **Plano do Supabase por confirmar** | No plano gratuito os projetos pausam por inatividade — foi o que os deixou a ambos `INACTIVE`. Com a captura de leads dependente da base, uma pausa derruba o funil em silêncio, que é exactamente o que este trabalho existe para eliminar |
 | **B-03** | **URL e autenticação do n8n na VPS desconhecidos** | Não posso verificar alcançabilidade a partir da Vercel nem desenhar a autenticação do consumidor |
 | **B-04** | **Sem fornecedor de IA** | O n8n tem uma única credencial, do tipo `smtp`. Sem credencial de IA não há camada de redação. Implemento a interface e testes com mock; **não simulo integração real** |
@@ -20,6 +20,22 @@
 | **G-04** | O pedido assume função de scoring a reutilizar; ela existe e é pura, **mas não é versionada** | `scoreLead` não emite `scoring_version` |
 | **G-05** | O pedido fala em workflows n8n exportados; **não existe nenhum no repositório** | O workflow «Radar de Concursos» vive só na instância |
 | **G-06** | **T-02: o `tier` chega ao browser**, contra a regra escrita em `lead-score.ts:9` | Corrigir é alteração de comportamento observável (D-15) — precisa da sua confirmação |
+
+## 2-bis. Estado da base de dados
+
+Aplicado e verificado no `AGORAMOZX` (eu-west-1):
+
+- 19 tabelas em `public`, **RLS ligada em todas**, com políticas.
+- Migrações `0001`–`0005` em `supabase/migrations/`, registadas na base.
+- Ingestão transacional provada: duas chamadas com a mesma chave de
+  idempotência produziram exactamente 1 resposta, 1 contacto, 1 organização,
+  1 oportunidade, 1 diagnóstico e 1 evento de outbox.
+- **Dez invariantes testadas por tentativa de violação; dez bloquearam.**
+- Seed de produção: questionário `diagnostico-estrategico` v1 publicado.
+- Dados de teste removidos. O `audit_log` manteve a linha do teste porque é
+  append-only e não se deixa apagar — que é exactamente o que se pretendia.
+
+**Por ligar:** a rota ainda não chama a RPC. É o Lote 5.
 
 ## 3. Lacunas de qualidade que herdamos
 
