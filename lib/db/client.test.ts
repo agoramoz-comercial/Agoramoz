@@ -13,7 +13,16 @@ import { ingestDiagnosticResponse, type IngestArgs } from './client';
  * que a divergência apareça aqui e não lá.
  */
 
-const MIGRACAO = 'supabase/migrations/0005_ingest.sql';
+/**
+ * A assinatura viva está em 0009, não em 0005.
+ *
+ * 0009 larga explicitamente a assinatura de 16 argumentos e recria a função
+ * com 17 — porque `create or replace` com uma assinatura diferente não
+ * substitui, cria uma SOBRECARGA, e ficariam duas funções com o mesmo nome a
+ * disputar as chamadas. Apontar este teste para 0005 passaria a validar uma
+ * função que já não existe.
+ */
+const MIGRACAO = 'supabase/migrations/0009_atribuicao.sql';
 
 function parametrosDaMigracao(): string[] {
   const sql = readFileSync(MIGRACAO, 'utf-8');
@@ -43,8 +52,22 @@ function argumentos(): IngestArgs {
     consentText: 'texto',
     consentVersion: 'consent.mz.aabbccddeeff',
     correlationId: '11111111-1111-4111-8111-111111111111',
-    ipHash: 'c'.repeat(32),
-    userAgentHash: 'd'.repeat(32),
+    // 64, não 32: as colunas exigem `^[0-9a-f]{64}$`. Uma fixture com o
+    // comprimento errado foi, uma vez, o que deixou passar um defeito que
+    // fazia toda a submissão real devolver 503.
+    ipHash: 'c'.repeat(64),
+    userAgentHash: 'd'.repeat(64),
+    attribution: {
+      utm_source: 'google',
+      utm_medium: 'organic',
+      utm_campaign: 'gbp',
+      utm_content: null,
+      landing_page: '/perfil',
+      referrer: 'www.google.com',
+      first_touch_at: '2026-09-24T10:00:00.000Z',
+      last_touch_at: '2026-09-24T10:05:00.000Z',
+      channel: 'gbp',
+    },
   };
 }
 
@@ -63,11 +86,32 @@ describe('contrato da função de ingestão', () => {
     expect(Object.keys(params).sort()).toEqual(parametrosDaMigracao().sort());
   });
 
-  it('a migração declara os 16 parâmetros esperados', () => {
+  it('a migração declara os 17 parâmetros esperados', () => {
     // Guarda contra o próprio extrator: se a expressão regular deixasse de
     // apanhar a assinatura, o teste de cima passava a comparar duas listas
     // vazias e deixava de proteger fosse o que fosse.
-    expect(parametrosDaMigracao()).toHaveLength(16);
+    expect(parametrosDaMigracao()).toHaveLength(17);
+  });
+});
+
+describe('a assinatura antiga não sobrevive', () => {
+  const sql = readFileSync(MIGRACAO, 'utf-8');
+
+  it('0009 larga explicitamente a assinatura de 16 argumentos', () => {
+    // Sem o `drop`, `create or replace` criaria uma sobrecarga e a função
+    // antiga continuaria a aceitar submissões — sem atribuição, em silêncio.
+    expect(sql).toMatch(/drop function if exists public\.ingest_diagnostic_response\(/);
+  });
+
+  it('continua a ser security definer com search_path fixo', () => {
+    const inicio = sql.indexOf('create or replace function public.ingest_diagnostic_response(');
+    const cabecalho = sql.slice(inicio, sql.indexOf('as $$', inicio));
+    expect(cabecalho).toContain('security definer');
+    expect(cabecalho).toContain('set search_path = public, pg_catalog');
+  });
+
+  it('continua revogada de anon e authenticated', () => {
+    expect(sql).toMatch(/revoke all on function public\.ingest_diagnostic_response\([\s\S]*?from public, anon, authenticated/);
   });
 });
 

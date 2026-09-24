@@ -585,3 +585,116 @@ describe('o que nunca chega à base', () => {
     expect(ingest).not.toHaveBeenCalled();
   });
 });
+
+describe('atribuição', () => {
+  const ORIGEM = {
+    utm_source: 'google',
+    utm_medium: 'organic',
+    utm_campaign: 'gbp',
+    utm_content: null,
+    landing_page: '/perfil',
+    referrer: 'www.google.com',
+    first_touch_at: '2026-09-24T10:00:00.000Z',
+    last_touch_at: '2026-09-24T10:05:00.000Z',
+  };
+
+  it('a origem chega à ingestão, com o canal derivado', async () => {
+    const POST = await comBase();
+    await POST(pedido({ ...VALIDO, atribuicao: ORIGEM }));
+
+    const a = argsDaIngestao().attribution;
+    expect(a?.utm_campaign).toBe('gbp');
+    expect(a?.channel).toBe('gbp');
+    expect(a?.landing_page).toBe('/perfil');
+  });
+
+  it('NUNCA entra no que é gravado como resposta', async () => {
+    /**
+     * `responses.raw` é imutável depois de inserida. Se a origem entrasse ali
+     * por causa do spread de `rawForStorage`, uma atribuição errada ficava
+     * para sempre — e `response_answers` ganhava uma linha por cada UTM.
+     */
+    const POST = await comBase();
+    await POST(pedido({ ...VALIDO, atribuicao: ORIGEM }));
+
+    const args = argsDaIngestao();
+    expect(args.payload).not.toHaveProperty('atribuicao');
+    expect(args.normalized).not.toHaveProperty('atribuicao');
+    expect(JSON.stringify(args.payload)).not.toContain('utm_');
+    expect(JSON.stringify(args.normalized)).not.toContain('utm_');
+  });
+
+  it('não altera a chave de idempotência', async () => {
+    /**
+     * A asserção comercial deste ficheiro: a MESMA pessoa a submeter o mesmo
+     * formulário vinda de duas campanhas diferentes continua a ser UM lead.
+     * Se a origem entrasse na impressão digital, seriam dois — e o comercial
+     * ligava duas vezes à mesma pessoa.
+     */
+    const POST = await comBase();
+    await POST(pedido({ ...VALIDO, atribuicao: ORIGEM }));
+    await POST(pedido({ ...VALIDO, atribuicao: { ...ORIGEM, utm_campaign: 'linkedin-q4' } }));
+    await POST(pedido(VALIDO));
+
+    const chaves = ingest.mock.calls.map(([, args]) => args.idempotencyKey);
+    expect(new Set(chaves).size).toBe(1);
+  });
+
+  it('um UTM forjado fica nulo e o lead entra na mesma', async () => {
+    const POST = await comBase();
+    const res = await POST(
+      pedido({
+        ...VALIDO,
+        atribuicao: { ...ORIGEM, utm_source: '</script><script>alert(1)</script>' },
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const a = argsDaIngestao().attribution;
+    expect(a?.utm_source).toBeNull();
+    expect(a?.utm_campaign).toBe('gbp');
+    expect(JSON.stringify(a)).not.toContain('script');
+  });
+
+  it('a hora do último toque é a do servidor, não a do browser', async () => {
+    // O relógio do browser pode estar errado por meses, e este valor ordena
+    // eventos comerciais.
+    const POST = await comBase();
+    const antes = Date.now();
+    await POST(pedido({ ...VALIDO, atribuicao: { ...ORIGEM, last_touch_at: '2030-01-01T00:00:00.000Z' } }));
+
+    const quando = Date.parse(argsDaIngestao().attribution!.last_touch_at);
+    expect(quando).toBeGreaterThanOrEqual(antes - 1000);
+    expect(quando).toBeLessThanOrEqual(Date.now() + 1000);
+  });
+
+  it('sem atribuição, a submissão passa e a origem fica nula', async () => {
+    const POST = await comBase();
+    const res = await POST(pedido(VALIDO));
+
+    expect(res.status).toBe(200);
+    expect(argsDaIngestao().attribution).toBeNull();
+  });
+
+  it('uma atribuição absurda não faz falhar a submissão', async () => {
+    const POST = await comBase();
+    for (const lixo of ['texto', 42, [], true]) {
+      const res = await POST(pedido({ ...VALIDO, atribuicao: lixo }));
+      expect(res.status).toBe(200);
+    }
+  });
+
+  it('um caminho privado nunca chega à base', async () => {
+    const POST = await comBase();
+    await POST(
+      pedido({
+        ...VALIDO,
+        atribuicao: { ...ORIGEM, landing_page: '/documento/8f14e45fceea167a5a36dedd4bea2543' },
+      }),
+    );
+
+    const a = argsDaIngestao().attribution;
+    expect(a?.landing_page).toBe('(privado)');
+    expect(JSON.stringify(a)).not.toContain('8f14e45');
+  });
+});

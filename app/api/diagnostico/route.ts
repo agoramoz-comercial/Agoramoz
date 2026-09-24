@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
+import { derivarCanal } from '@/lib/attribution/channel';
+import { sanitizarAtribuicao } from '@/lib/attribution/sanitize';
 import { serverEnv } from '@/lib/config/env';
+import { SITE_URL } from '@/lib/seo/site';
 import { dbAdmin, ingestDiagnosticResponse, type IngestResult } from '@/lib/db/client';
 import { consentTextFor, consentVersionFor } from '@/lib/diagnostic/consent';
 import {
@@ -45,6 +48,9 @@ export const dynamic = 'force-dynamic';
  * efeito lateral de alguém renomear um questionário no painel.
  */
 const QUESTIONNAIRE_VERSION = 'diagnostico-v1';
+
+/** Serve para distinguir navegação interna de uma referência externa. */
+const HOST_PROPRIO = new URL(SITE_URL).host;
 
 /**
  * Instanciado à primeira chamada, não no topo do módulo: `serverEnv()` valida
@@ -187,6 +193,25 @@ export async function POST(request: Request) {
 
   const input = parsed.data;
 
+  /**
+   * 7-bis. A origem, saneada — num `safeParse` PRÓPRIO, ao lado do lead.
+   *
+   * `leadSchema.safeParse` descarta chaves desconhecidas, e é `parsed.data`
+   * que segue para `rawForStorage`. Portanto a atribuição não entra em
+   * `responses.raw` — que é imutável depois de inserida — nem em
+   * `canonicalAnswers`, e por isso **não altera a chave de idempotência**. A
+   * mesma pessoa vinda de duas campanhas continua a ser um lead.
+   *
+   * E a origem NUNCA faz falhar uma submissão: quem preencheu cinco passos
+   * quer falar connosco, e perder isso porque um UTM vinha malformado seria
+   * trocar o valioso pelo acessório. Uma origem recusada fica `desconhecido`.
+   */
+  const atribuicao = sanitizarAtribuicao((payload as { atribuicao?: unknown }).atribuicao, {
+    agora: new Date(),
+    hostProprio: HOST_PROPRIO,
+  });
+  const canal = derivarCanal(atribuicao);
+
   // 8. Pontuação e regras. Puro, determinístico, sem rede — o resultado é o
   //    mesmo em cada execução, e é isso que torna um diagnóstico reproduzível.
   const { score, tier } = scoreDiagnostic(input);
@@ -278,6 +303,7 @@ export async function POST(request: Request) {
       consentText,
       consentVersion,
       correlationId,
+      attribution: atribuicao ? { ...atribuicao, channel: canal } : null,
       /**
        * SHA-256 completo, não a chave do limitador. As colunas `ip_hash` e
        * `user_agent_hash` exigem 64 hexadecimais por CHECK; a chave do

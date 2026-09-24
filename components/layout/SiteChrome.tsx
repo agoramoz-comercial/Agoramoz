@@ -8,7 +8,8 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileCtaBar } from '@/components/layout/MobileCtaBar';
 import { SkipLink } from '@/components/ui/SkipLink';
-import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd';
+import { AttributionBoot } from '@/components/analytics/AttributionBoot';
+import { SiteJsonLd } from '@/components/seo/JsonLd';
 
 /**
  * A casca do site público.
@@ -32,8 +33,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   return (
     <div className="grain">
       <SkipLink />
-      <OrganizationJsonLd />
-      <WebSiteJsonLd />
+      <SiteJsonLd />
+      <AttributionBoot />
       <MotionProvider>
         <ScrollProgress />
         <PageTransition />

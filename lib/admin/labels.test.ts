@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { DIAGNOSTIC_STATES } from '@/lib/diagnostic/types';
-import { ESTADO_DIAGNOSTICO, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE } from './labels';
+import { ESTADO_DIAGNOSTICO, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE , CANAL, __canais } from './labels';
 
 describe('rótulos de estado', () => {
   it('todos os estados de diagnóstico têm rótulo', () => {
@@ -25,5 +25,17 @@ describe('rótulos de estado', () => {
     const noSql = [...bloco!.matchAll(/'([a-z]+)'/g)].map((m) => m[1]!).sort();
     expect([...FASES_OPORTUNIDADE].sort()).toEqual(noSql);
     expect(Object.keys(FASE_OPORTUNIDADE).sort()).toEqual(noSql);
+  });
+});
+
+describe('canais de aquisição', () => {
+  it('todo o canal tem rótulo', () => {
+    // Um canal novo sem rótulo apareceria como «undefined» num ecrã de CRM em
+    // vez de partir aqui.
+    for (const c of __canais) expect(CANAL[c], c).toBeDefined();
+  });
+
+  it('não há rótulos para canais que não existem', () => {
+    expect(Object.keys(CANAL).sort()).toEqual([...__canais].sort());
   });
 });

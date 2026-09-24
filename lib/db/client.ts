@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { serverEnv } from '@/lib/config/env';
+import type { Atribuicao, Canal } from '@/lib/attribution/types';
 
 /**
  * Cliente de servidor para o Postgres do Supabase.
@@ -78,6 +79,17 @@ export interface IngestArgs {
   readonly correlationId: string;
   readonly ipHash?: string | null;
   readonly userAgentHash?: string | null;
+  /**
+   * A origem da visita, já saneada, mais o canal derivado. Chega como um único
+   * objecto porque nada aqui a interpreta — a base grava-a e aplica a sua
+   * própria camada de limpeza. Enviar nove parâmetros soltos só aumentaria a
+   * superfície do contrato sem comprar nada.
+   */
+  readonly attribution?: AtribuicaoGravavel | null;
+}
+
+export interface AtribuicaoGravavel extends Atribuicao {
+  readonly channel: Canal;
 }
 
 /**
@@ -108,6 +120,7 @@ export async function ingestDiagnosticResponse(
     p_correlation_id: args.correlationId,
     p_ip_hash: args.ipHash ?? null,
     p_user_agent_hash: args.userAgentHash ?? null,
+    p_attribution: args.attribution ?? null,
   });
 
   if (error) {

@@ -1,3 +1,4 @@
+import { CANAIS, type Canal } from '@/lib/attribution/types';
 import { DIAGNOSTIC_STATES, type DiagnosticState } from '@/lib/diagnostic/types';
 
 /**
@@ -122,3 +123,28 @@ export const ORIGEM_EVIDENCIA: Record<string, string> = {
   derivado: 'Calculado a partir das respostas',
   catalogo: 'Conteúdo da AGORAMOZ',
 };
+
+/**
+ * Os canais de aquisição.
+ *
+ * A lista vem de `lib/attribution/types.ts` — a mesma que o `check` da base
+ * espelha e que `derivarCanal` produz. Redeclará-la aqui criava a terceira
+ * cópia de uma lista de sete valores, e a terceira cópia é sempre a que fica
+ * para trás.
+ */
+export const CANAL: Record<Canal, Rotulo> = {
+  gbp: { texto: 'Perfil de empresa', tom: 'bom', nota: 'Chegou pelo perfil da AGORAMOZ no Google.' },
+  organico: { texto: 'Pesquisa orgânica', tom: 'bom' },
+  social: { texto: 'Redes sociais', tom: 'neutro' },
+  referencia: { texto: 'Referência', tom: 'neutro', nota: 'Veio de outro site.' },
+  campanha: { texto: 'Campanha', tom: 'espera' },
+  directo: { texto: 'Direto', tom: 'neutro', nota: 'Escreveu o endereço ou usou um marcador.' },
+  desconhecido: {
+    texto: 'Desconhecido',
+    tom: 'aviso',
+    nota: 'Sem JavaScript, ou sem sinal de origem. Vigiar: mede quanta atribuição se está a perder.',
+  },
+};
+
+/** Para o teste que exige rótulo para todo o canal. */
+export const __canais = CANAIS;

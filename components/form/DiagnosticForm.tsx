@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { IMPROVEMENT_GOALS, SITE } from '@/content/site';
 import type { CountryCode } from '@/content/types';
 import { track } from '@/lib/analytics/track';
+import { lerAtribuicao } from '@/lib/attribution/storage';
 import { cn } from '@/lib/utils/cn';
 
 const DRAFT_KEY = 'agoramoz:diagnostico:rascunho';
@@ -160,7 +161,19 @@ export function DiagnosticForm() {
       const res = await fetch('/api/diagnostico', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        /**
+         * A atribuição viaja ao LADO do lead, não dentro dele.
+         *
+         * Se entrasse no `leadSchema`, entrava também em `rawForStorage` — que
+         * é um spread — e portanto em `responses.raw`, que é imutável depois de
+         * inserida. Uma origem errada ficava lá para sempre.
+         *
+         * E, sobretudo: a chave de idempotência deriva das respostas. Se a
+         * origem contasse para ela, a MESMA pessoa a submeter o mesmo
+         * formulário vinda de duas campanhas criava dois leads — exactamente o
+         * defeito que a ingestão transacional existe para impedir.
+         */
+        body: JSON.stringify({ ...values, atribuicao: lerAtribuicao() }),
       });
       if (!res.ok) throw new Error('request failed');
       /**

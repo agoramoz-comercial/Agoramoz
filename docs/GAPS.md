@@ -12,6 +12,22 @@
 | **B-06** | **Publicação automática parada** | Descoberto em 2026-09-24: `agoramoz.com` servia o commit `bdc9b59`, e os 19 commits seguintes nunca foram construídos — nenhum deployment existe para eles. Uma criação manual de deployment a partir do mesmo `ref` funciona, pelo que a ligação ao GitHub está viva e o que falha é o gatilho. **Enquanto não for reposto, cada push precisa de publicação manual** |
 | **B-07** | **Verificação de ponta a ponta por fazer** | Nenhuma submissão real chegou a passar por HTTP até à base. Tudo o resto foi provado — esquema, invariantes, arranque da aplicação — mas o percurso completo do formulário só se prova submetendo |
 
+## 1-bis. Lacunas factuais de identidade e SEO (2026-09-24)
+
+Levantadas ao ligar o SEO avançado e o Perfil de Empresa. **Nenhuma foi
+resolvida por invenção.**
+
+| # | Lacuna | O que bloqueia |
+|---|---|---|
+| **B-08** | Sem morada, coordenadas nem horário | `LocalBusiness`. É provavelmente o correcto — a empresa é de área de serviço, confirmado pelo fundador. Fica registado e **provado pelo compilador**: `localBusinessNode` não aceita factos `'unknown'`, e uma tentativa de o chamar produz três erros TS2322 |
+| **B-09** | Sem Search Console e sem Analytics | Não se sabe que consultas trazem visitas. O encaixe fica pronto por variável de ambiente; criar as propriedades é do lado do dono |
+| **B-10** | **O LinkedIn da empresa lista duas localizações**, e a segunda é `Avellino Way, Mountain View, California 94043` — o endereço de exemplo do próprio LinkedIn | Não bloqueia código. Contradiz qualquer morada que venhamos a publicar e corrói a correspondência perfil↔website que o `sameAs` existe para construir. **Corrige-se no LinkedIn.** O guarda `motivoDePlaceholder` impede que este valor entre no repositório |
+| **B-11** | Sem nome legal registado, NUIT, data de fundação, número de colaboradores | `Organization.legalName` e `identifier` ficam omitidos — omitir é a acção correcta, emitir `null` seria afirmar que não existem |
+| **B-12** | Sem clientes, depoimentos, casos ou métricas citáveis | Não bloqueia: `content/types.ts` já os torna irrepresentáveis. Limita permanentemente o que a prova pode dizer, e a página de perfil é construída para estar correcta sem eles |
+| **B-13** | Sem rota de documentos | `document_confirmed_view` fica definido sem emissor. A coluna `documents.confirmed_view_at` já existe desde 0003. Depende de B-03/B-04 |
+| **B-14** | Sem Facebook, YouTube, X, TikTok, sem certificações | `sameAs` e credenciais mais fracos do que podiam ser. O tipo já os aceita |
+| **B-15** | **Primeiro toque entre sessões por decidir** | A atribuição usa `sessionStorage`, e portanto morre com o separador. `localStorage` daria primeiro toque a 90 dias — mas é um identificador persistente por dispositivo, e `/privacidade` promete hoje, por escrito, que «a medição de utilização é agregada e não identifica visitantes individualmente». Estender a janela exige essa decisão **e** a edição da política. Não foi assumido em silêncio |
+
 ## 2. Divergências entre o pedido e o repositório
 
 | # | Divergência | Detalhe |
@@ -21,6 +37,7 @@
 | **G-03** | O pedido pede testes em várias categorias; **não existe runner nem um único teste** | `@playwright/test` está instalado mas sem ficheiros nem script. É preciso escolher e instalar um runner unitário |
 | **G-04** | O pedido assume função de scoring a reutilizar; ela existe e é pura, **mas não é versionada** | `scoreLead` não emite `scoring_version` |
 | **G-05** | O pedido fala em workflows n8n exportados; **não existe nenhum no repositório** | O workflow «Radar de Concursos» vive só na instância |
+| **G-07** | O pedido fala em `ingest_lead`; **a função chama-se `ingest_diagnostic_response`** | Usei a que existe. Criar um `ingest_lead` seria um segundo caminho de ingestão com a sua própria idempotência, o seu próprio registo de consentimento e os seus próprios defeitos |
 | **G-06** | **T-02: o `tier` chega ao browser**, contra a regra escrita em `lead-score.ts:9` | Corrigir é alteração de comportamento observável (D-15) — precisa da sua confirmação |
 
 ## 2-bis. Estado da base de dados

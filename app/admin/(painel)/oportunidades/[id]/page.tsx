@@ -9,7 +9,8 @@ import {
 } from '@/components/admin/primitives';
 import { Button } from '@/components/ui/Button';
 import { atribuirOportunidade, mudarFase, registarNota } from '@/lib/admin/actions';
-import { CLASSIFICACAO, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE } from '@/lib/admin/labels';
+import { CANAL, CLASSIFICACAO, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE } from '@/lib/admin/labels';
+import type { Canal } from '@/lib/attribution/types';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 
@@ -40,7 +41,7 @@ export default async function OportunidadePage({
     supabase
       .from('deals')
       .select(
-        'id, stage, tier, score, owner_id, next_action_at, created_at, contacts(id, name, email), organisations(id, name), source_response_id',
+        'id, stage, tier, score, owner_id, next_action_at, created_at, acquisition_channel, acquisition_campaign, contacts(id, name, email), organisations(id, name), source_response_id',
       )
       .eq('id', id)
       .maybeSingle(),
@@ -63,7 +64,30 @@ export default async function OportunidadePage({
     created_at: string;
     contacts: { id: string; name: string; email: string } | null;
     organisations: { id: string; name: string } | null;
+    acquisition_channel: string;
+    acquisition_campaign: string | null;
+    source_response_id: string | null;
   };
+
+  /**
+   * O detalhe da origem vive em `response_attribution` e lê-se por junção.
+   * Só o canal e a campanha estão projectados em `deals` — são os dois que a
+   * lista filtra, e é a lista que se abre dezenas de vezes por dia.
+   *
+   * Consulta separada e não dentro do `Promise.all` acima porque depende do
+   * `source_response_id`, que só se conhece depois da primeira.
+   */
+  const atribuicao = d.source_response_id
+    ? (
+        await supabase
+          .from('response_attribution')
+          .select(
+            'utm_source, utm_medium, utm_campaign, utm_content, landing_page, referrer_host, first_touch_at, last_touch_at, channel',
+          )
+          .eq('response_id', d.source_response_id)
+          .maybeSingle()
+      ).data
+    : null;
 
   const escreve = podeEscrever(sessao.papel);
   const linhas = (actividades.data ?? []) as unknown as Actividade[];
@@ -115,6 +139,34 @@ export default async function OportunidadePage({
               valor: pessoas.find((p) => p.id === d.owner_id)?.display_name ?? 'Por atribuir',
             },
             { termo: 'Criada', valor: <DataHora valor={d.created_at} /> },
+          ]}
+        />
+      </section>
+
+      <section aria-labelledby="origem" className="mb-10">
+        <h2 id="origem" className="mb-4 text-sm font-medium">
+          Origem
+        </h2>
+        <DefinitionList
+          itens={[
+            {
+              termo: 'Canal',
+              valor: <StateBadge rotulo={CANAL[d.acquisition_channel as Canal]} />,
+            },
+            { termo: 'Campanha', valor: d.acquisition_campaign ?? '—' },
+            { termo: 'Fonte', valor: atribuicao?.utm_source ?? '—' },
+            { termo: 'Meio', valor: atribuicao?.utm_medium ?? '—' },
+            { termo: 'Conteúdo', valor: atribuicao?.utm_content ?? '—' },
+            { termo: 'Página de entrada', valor: atribuicao?.landing_page ?? '—' },
+            { termo: 'Veio de', valor: atribuicao?.referrer_host ?? '—' },
+            {
+              termo: 'Primeiro contacto',
+              valor: atribuicao?.first_touch_at ? <DataHora valor={atribuicao.first_touch_at} /> : '—',
+            },
+            {
+              termo: 'Submeteu',
+              valor: atribuicao?.last_touch_at ? <DataHora valor={atribuicao.last_touch_at} /> : '—',
+            },
           ]}
         />
       </section>
