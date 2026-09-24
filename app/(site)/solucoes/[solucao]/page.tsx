@@ -29,7 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { solucao } = await params;
   const s = getSolution(solucao);
   if (!s) return {};
-  return buildMetadata({ title: s.seo.title, description: s.seo.description, path: `/solucoes/${s.slug}` });
+  const path = `/solucoes/${s.slug}`;
+  return buildMetadata({
+    title: s.seo.title,
+    description: s.seo.description,
+    path,
+    imagemPropria: true,
+  });
 }
 
 export default async function SolucaoPage({ params }: Props) {

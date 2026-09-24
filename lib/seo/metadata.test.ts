@@ -172,3 +172,64 @@ describe('títulos e descrições são únicos', () => {
     );
   });
 });
+
+describe('imagem de partilha por página', () => {
+  /**
+   * Medido a 2026-09-24, com `next start` e `curl`, porque nenhuma destas
+   * regras é visível no código:
+   *
+   * · `app/opengraph-image.tsx` NÃO é herdado pelas páginas em `app/(site)/`.
+   *   Uma página sem ficheiro no próprio segmento não emitia `og:image`
+   *   nenhuma — a causa-raiz do defeito que existia em produção.
+   * · Declarar `images` em `buildMetadata` SUPRIME a convenção de ficheiro.
+   * · O URL que o Next serve pela convenção leva um hash de conteúdo
+   *   (`/diagnostico/opengraph-image-1x7g51?67aff32f...`) que não é previsível.
+   *   Construí-lo à mão dá **404** — foi o que aconteceu à primeira tentativa.
+   *
+   * Daí a regra, nos dois sentidos: uma rota com ficheiro próprio TEM de pedir
+   * `imagemPropria`, e uma que o peça TEM de ter ficheiro. Errar de um lado dá
+   * imagem partida; do outro, imagem genérica onde devia ser específica.
+   */
+  function segmentos(): { dir: string; temFicheiro: boolean; pedeFlag: boolean }[] {
+    const saida: { dir: string; temFicheiro: boolean; pedeFlag: boolean }[] = [];
+    const andar = (raiz: string) => {
+      const nomes = readdirSync(raiz);
+      if (nomes.includes('page.tsx')) {
+        saida.push({
+          dir: raiz,
+          temFicheiro: nomes.includes('opengraph-image.tsx'),
+          pedeFlag: readFileSync(join(raiz, 'page.tsx'), 'utf-8').includes('imagemPropria: true'),
+        });
+      }
+      for (const nome of nomes) {
+        const caminho = join(raiz, nome);
+        if (statSync(caminho).isDirectory()) andar(caminho);
+      }
+    };
+    andar('app/(site)');
+    return saida;
+  }
+
+  it('toda a rota com imagem própria declara imagemPropria', () => {
+    const esquecidas = segmentos().filter((s) => s.temFicheiro && !s.pedeFlag).map((s) => s.dir);
+    expect(esquecidas).toEqual([]);
+  });
+
+  it('toda a rota que declara imagemPropria tem o ficheiro', () => {
+    // Este e o lado que da 404: a flag sem ficheiro faz o Next nao emitir nada.
+    const mentirosas = segmentos().filter((s) => s.pedeFlag && !s.temFicheiro).map((s) => s.dir);
+    expect(mentirosas).toEqual([]);
+  });
+
+  it('não se constrói o URL de uma imagem de convenção à mão', () => {
+    // A primeira tentativa fazia isto e produzia 404 em todas as páginas com
+    // imagem própria. O hash não é previsível a partir do código.
+    expect(readFileSync('lib/seo/site.ts', 'utf-8')).not.toContain('imagemDaRota');
+  });
+
+  it('a verificação vê de facto os segmentos', () => {
+    const s = segmentos();
+    expect(s.length).toBeGreaterThanOrEqual(10);
+    expect(s.filter((x) => x.temFicheiro).length).toBeGreaterThanOrEqual(4);
+  });
+});

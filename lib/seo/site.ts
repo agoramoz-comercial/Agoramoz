@@ -49,6 +49,7 @@ export function buildMetadata({
   languages,
   noindex,
   image,
+  imagemPropria,
   tituloAbsoluto,
 }: {
   title: string;
@@ -57,6 +58,16 @@ export function buildMetadata({
   languages?: Record<string, string>;
   noindex?: boolean;
   image?: ImagemSocial;
+  /**
+   * A rota tem `opengraph-image.tsx` no seu próprio segmento.
+   *
+   * Quando é verdade, esta função NÃO declara `images` — deixa o Next
+   * preencher pela convenção de ficheiro. É obrigatório fazê-lo assim: o URL
+   * que o Next serve leva um hash de conteúdo
+   * (`/diagnostico/opengraph-image-1x7g51?67aff32f…`) que não é previsível
+   * daqui. Construí-lo à mão dá 404 — medido, não suposto.
+   */
+  imagemPropria?: boolean;
   /**
    * Ignora o template `'%s | AGORAMOZ'` da raiz.
    *
@@ -68,6 +79,21 @@ export function buildMetadata({
   tituloAbsoluto?: boolean;
 }): Metadata {
   const imagem = image ?? OG_IMAGE_PADRAO;
+
+  /**
+   * A causa-raiz do defeito original, medida a 2026-09-24.
+   *
+   * `app/opengraph-image.tsx` existe na raiz e **não é herdado** pelas páginas
+   * em `app/(site)/`: uma página sem ficheiro no próprio segmento não emitia
+   * `og:image` nenhuma. Por isso a omissão por defeito é declarar a imagem da
+   * raiz — que é o único URL sem hash, e funciona.
+   *
+   * O inverso também é verdade: declarar `images` suprime a convenção. Uma
+   * rota com imagem própria tem de pedir para não ser declarada.
+   */
+  const partilha = imagemPropria
+    ? {}
+    : { images: [imagem] };
 
   return {
     title: tituloAbsoluto ? { absolute: title } : title,
@@ -83,9 +109,14 @@ export function buildMetadata({
       siteName: 'AGORAMOZ',
       locale: 'pt_PT',
       type: 'website',
-      images: [imagem],
+      ...partilha,
     },
-    twitter: { card: 'summary_large_image', title, description, images: [imagem.url] },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(imagemPropria ? {} : { images: [imagem.url] }),
+    },
     ...(noindex ? { robots: { index: false, follow: false } } : {}),
   };
 }

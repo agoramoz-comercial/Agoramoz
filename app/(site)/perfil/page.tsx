@@ -37,6 +37,7 @@ export const metadata: Metadata = buildMetadata({
   title: PERFIL.seo.title,
   description: PERFIL.seo.description,
   path: '/perfil',
+  imagemPropria: true,
 });
 
 export default function PerfilPage() {

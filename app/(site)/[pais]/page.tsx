@@ -32,6 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/${c.code}`,
     // hreflang recíproco: os três hubs de país existem todos.
     languages: { 'pt-MZ': '/mz', 'pt-PT': '/pt', 'pt-BR': '/br', 'x-default': '/' },
+    imagemPropria: true,
   });
 }
 

@@ -34,6 +34,7 @@ export const metadata: Metadata = buildMetadata({
   description:
     'O AGORA Opportunity Diagnostic identifica onde a sua empresa perde oportunidades, tempo ou capacidade operacional e recomenda a arquitetura de maior impacto.',
   path: '/diagnostico',
+  imagemPropria: true,
 });
 
 export default function DiagnosticoPage() {
