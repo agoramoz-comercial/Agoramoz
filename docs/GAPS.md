@@ -6,9 +6,10 @@
 |---|---|---|
 | ~~B-01~~ | **RESOLVIDO.** Restaurei o `AGORAMOZX` (`restore_project`), ficou `ACTIVE_HEALTHY`, e inventariei: `public` com **zero tabelas**, **zero migrações**, só os esquemas próprios do Supabase. Sem herança nem risco de colisão. As migrações 0001–0005 estão aplicadas e verificadas | — |
 | **B-02** | **Plano do Supabase por confirmar** | No plano gratuito os projetos pausam por inatividade — foi o que os deixou a ambos `INACTIVE`. Com a captura de leads dependente da base, uma pausa derruba o funil em silêncio, que é exactamente o que este trabalho existe para eliminar |
-| **B-03** | **URL e autenticação do n8n na VPS desconhecidos** | Não posso verificar alcançabilidade a partir da Vercel nem desenhar a autenticação do consumidor |
+| **B-03** | **Autenticação do consumidor n8n** | *Parcialmente resolvido:* a instância é alcançável por MCP nesta sessão — um workflow, inactivo, e uma única credencial. O que falta não é o URL: é decidir como é que o n8n se autentica a ler a fila **sem receber a chave de serviço da base**. A hipótese a avaliar é um endpoint na Vercel com segredo partilhado, que mantém a chave num só sítio |
 | **B-04** | **Sem fornecedor de IA** | O n8n tem uma única credencial, do tipo `smtp`. Sem credencial de IA não há camada de redação. Implemento a interface e testes com mock; **não simulo integração real** |
-| **B-05** | **Sem acesso de escrita a produção** | Não executo migrações em produção sem acesso e autorização explícita |
+| **B-05** | ~~Sem acesso de escrita a produção~~ | **Resolvido.** Migrações 0001–0007 aplicadas ao AGORAMOZX com autorização explícita, e invariantes provadas por violação tentada em transações abortadas |
+| **B-06** | **Publicação automática parada** | Descoberto em 2026-09-24: `agoramoz.com` servia o commit `bdc9b59`, e os 19 commits seguintes nunca foram construídos — nenhum deployment existe para eles. Uma criação manual de deployment a partir do mesmo `ref` funciona, pelo que a ligação ao GitHub está viva e o que falha é o gatilho. **Enquanto não for reposto, cada push precisa de publicação manual** |
 
 ## 2. Divergências entre o pedido e o repositório
 
