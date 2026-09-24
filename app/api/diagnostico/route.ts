@@ -6,12 +6,17 @@ import {
   canonicalAnswers,
   idempotencyKey,
   inputFingerprint,
-  shortHash,
+  hashForStorage,
 } from '@/lib/diagnostic/normalize';
 import { runRules } from '@/lib/diagnostic/rules';
 import { SCORING_VERSION, scoreDiagnostic } from '@/lib/diagnostic/score';
 import { leadSchema, type LeadInput } from '@/lib/forms/lead-schema';
-import { clientKey, createMemoryRateLimiter, type RateLimiter } from '@/lib/http/rate-limit';
+import {
+  clientKey,
+  clientSource,
+  createMemoryRateLimiter,
+  type RateLimiter,
+} from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
 
 /**
@@ -273,8 +278,13 @@ export async function POST(request: Request) {
       consentText,
       consentVersion,
       correlationId,
-      ipHash: key,
-      userAgentHash: userAgent ? await shortHash(userAgent) : null,
+      /**
+       * SHA-256 completo, não a chave do limitador. As colunas `ip_hash` e
+       * `user_agent_hash` exigem 64 hexadecimais por CHECK; a chave do
+       * limitador é truncada a 32 e não serve para aqui.
+       */
+      ipHash: await hashForStorage(clientSource(request)),
+      userAgentHash: userAgent ? await hashForStorage(userAgent) : null,
     });
   } catch (erro) {
     /**

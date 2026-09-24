@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { COUNTRIES } from '@/content/registry';
 import type { IngestArgs, IngestResult } from '@/lib/db/client';
@@ -401,10 +402,34 @@ describe('o que é gravado', () => {
     await POST(pedido(VALIDO, { headers: { 'user-agent': 'Mozilla/5.0 (teste)' } }));
 
     const args = argsDaIngestao();
-    expect(args.ipHash).toMatch(/^[0-9a-f]{32}$/);
-    expect(args.userAgentHash).toMatch(/^[0-9a-f]{32}$/);
+    /**
+     * 64 e não 32. As colunas `ip_hash` e `user_agent_hash` têm
+     * `check (~ '^[0-9a-f]{64}$')` em 0002 e 0003; a primeira versão desta
+     * rota enviava a chave do limitador de taxa, truncada a 32, e TODA a
+     * submissão real teria falhado o CHECK e devolvido 503. O padrão é lido
+     * da própria migração no teste abaixo, para não voltar a divergir.
+     */
+    expect(args.ipHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(args.userAgentHash).toMatch(/^[0-9a-f]{64}$/);
     expect(JSON.stringify(args)).not.toContain('203.0.113');
     expect(JSON.stringify(args)).not.toContain('Mozilla');
+  });
+
+  it('os hashes cumprem o CHECK declarado na migração', async () => {
+    // Lê o padrão do SQL em vez de o repetir: se a coluna mudar de exigência,
+    // este teste muda de expectativa sozinho e apanha a divergência.
+    const sql = readFileSync('supabase/migrations/0003_questionnaires_diagnostics.sql', 'utf-8');
+    const padrao = /ip_hash text check \(ip_hash is null or ip_hash ~ '(\^\[0-9a-f\]\{\d+\}\$)'\)/
+      .exec(sql)?.[1];
+    expect(padrao).toBeDefined();
+
+    const POST = await comBase();
+    await POST(pedido(VALIDO, { headers: { 'user-agent': 'Mozilla/5.0 (teste)' } }));
+
+    const args = argsDaIngestao();
+    const re = new RegExp(padrao!);
+    expect(args.ipHash).toMatch(re);
+    expect(args.userAgentHash).toMatch(re);
   });
 
   it('nunca escreve nome, e-mail, telefone ou empresa nos logs', async () => {

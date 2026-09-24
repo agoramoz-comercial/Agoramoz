@@ -129,13 +129,17 @@ export async function idempotencyKey(
 }
 
 /**
- * Hash curto (128 bits) de um identificador técnico.
+ * Hash de um identificador técnico, para guardar em base.
  *
- * Serve o user-agent e serve o IP: guardar o hash permite reconhecer repetição
- * e abuso vindos da mesma origem, e não permite reconstituir a origem. É a
- * diferença entre ter um sinal operacional e ter um registo de quem visitou o
- * quê — a primeira coisa é precisa, a segunda não.
+ * SHA-256 completo, 64 caracteres hexadecimais — é o que as colunas `ip_hash`
+ * e `user_agent_hash` exigem por CHECK. Guardar o hash permite reconhecer
+ * repetição e abuso vindos da mesma origem, e não permite reconstituir a
+ * origem. É a diferença entre ter um sinal operacional e ter um registo de
+ * quem visitou o quê.
+ *
+ * Não confundir com a chave do limitador de taxa (`clientKey`), que é truncada
+ * a 128 bits: essa nunca é guardada, vive em memória e serve só para contar.
  */
-export async function shortHash(value: string): Promise<string> {
-  return (await sha256Hex(value)).slice(0, 32);
+export function hashForStorage(value: string): Promise<string> {
+  return sha256Hex(value);
 }

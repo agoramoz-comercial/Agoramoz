@@ -90,12 +90,25 @@ export function createMemoryRateLimiter(options: MemoryRateLimiterOptions): Rate
  * primeiro elemento é o do cliente, e é esse que se usa.
  */
 export async function clientKey(request: Request): Promise<string> {
-  const forwarded = request.headers.get('x-forwarded-for') ?? '';
-  const real = request.headers.get('x-real-ip') ?? '';
-  const source = forwarded.split(',')[0]?.trim() || real || 'desconhecido';
-
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(source));
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(clientSource(request)),
+  );
   return Array.from(new Uint8Array(digest).slice(0, 16))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
+}
+
+/**
+ * A origem em claro, para quem precisa de a processar de outra forma — por
+ * exemplo produzir um hash de comprimento diferente para guardar em base.
+ *
+ * Exportada para que não haja duas leituras destes cabeçalhos em sítios
+ * diferentes: quando a regra de qual elemento do `x-forwarded-for` conta mudar,
+ * muda aqui e muda em todo o lado.
+ */
+export function clientSource(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for') ?? '';
+  const real = request.headers.get('x-real-ip') ?? '';
+  return forwarded.split(',')[0]?.trim() || real || 'desconhecido';
 }
