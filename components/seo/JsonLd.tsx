@@ -2,12 +2,22 @@ import { FOUNDERS, SITE, SOCIAL } from '@/content/site';
 import { SITE_URL, absolute } from '@/lib/seo/site';
 
 function Script({ data }: { data: object }) {
+  /**
+   * A única excepção à regra `react/no-danger` em todo o repositório, e é
+   * inevitável: JSON-LD tem de ser texto dentro de `<script>`, e o React
+   * escaparia as aspas, produzindo JSON inválido.
+   *
+   * O que a torna segura não é o comentário, é o escape abaixo. O dado é
+   * conteúdo nosso, estático e conhecido em build — mas se algum dia alguém lhe
+   * passar texto de um cliente, uma sequência `</script>` fechava a etiqueta e
+   * o resto era executado. Escapar `<` como `\u003c` mantém o JSON válido e
+   * fecha essa porta antes de ela existir.
+   */
+  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+
   return (
-    <script
-      type="application/ld+json"
-      // Conteúdo próprio, estático e conhecido em build.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    // eslint-disable-next-line react/no-danger -- escapado acima; conteúdo próprio
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />
   );
 }
 

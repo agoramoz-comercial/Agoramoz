@@ -81,6 +81,22 @@ const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
 
   /**
+   * Chave anónima, sujeita a RLS. Serve a sessão de quem entra no admin.
+   *
+   * **Sem prefixo `NEXT_PUBLIC_`, de propósito.** A chave é desenhada para
+   * poder ser pública, mas mantê-la do lado do servidor significa que o browser
+   * nunca recebe um token, não há sessão no `localStorage`, e a CSP continua
+   * com `connect-src 'self'`.
+   */
+  SUPABASE_ANON_KEY: z.string().min(20).optional(),
+
+  /**
+   * Interruptor da área administrativa. `off` mantém `/admin` a devolver 404,
+   * exactamente como antes de existir autenticação.
+   */
+  ADMIN: z.enum(['on', 'off']).default('off'),
+
+  /**
    * Interruptor explícito da persistência.
    *
    * `required` — a rota exige base de dados e devolve 503 se ela falhar.
@@ -110,6 +126,15 @@ const serverSchema = z.object({
           path: [nome],
           message: 'é obrigatória quando DIAGNOSTIC_PERSISTENCE=required',
         });
+      }
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.ADMIN !== 'on') return;
+
+    for (const nome of ['SUPABASE_URL', 'SUPABASE_ANON_KEY'] as const) {
+      if (!env[nome]) {
+        ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando ADMIN=on' });
       }
     }
   });
@@ -165,6 +190,8 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       CSP_REPORT_ONLY: process.env.CSP_REPORT_ONLY,
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+      ADMIN: process.env.ADMIN,
       DIAGNOSTIC_PERSISTENCE: process.env.DIAGNOSTIC_PERSISTENCE,
       DIAGNOSTIC_QUESTIONNAIRE_SLUG: process.env.DIAGNOSTIC_QUESTIONNAIRE_SLUG,
     },

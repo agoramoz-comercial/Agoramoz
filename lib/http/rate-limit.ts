@@ -108,7 +108,15 @@ export async function clientKey(request: Request): Promise<string> {
  * muda aqui e muda em todo o lado.
  */
 export function clientSource(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for') ?? '';
-  const real = request.headers.get('x-real-ip') ?? '';
+  return sourceFromHeaders(request.headers);
+}
+
+/**
+ * A mesma leitura a partir de cabeçalhos soltos, para quem não tem um
+ * `Request` em mão — as Server Actions recebem `headers()`, não o pedido.
+ */
+export function sourceFromHeaders(headers: Headers): string {
+  const forwarded = headers.get('x-forwarded-for') ?? '';
+  const real = headers.get('x-real-ip') ?? '';
   return forwarded.split(',')[0]?.trim() || real || 'desconhecido';
 }
