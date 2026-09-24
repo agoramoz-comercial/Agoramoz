@@ -40,22 +40,28 @@ export function Breadcrumbs({ items, className }: { items: readonly Migalha[]; c
       <JsonLd graph={{ '@context': 'https://schema.org', '@graph': [breadcrumbNode(items[ultimo]!.path, items)] }} />
 
       <nav aria-label="Trilho" className={className}>
-        <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[length:var(--text-micro)] text-[color:var(--muted)]">
+        {/*
+          `-my-2` no contentor e `min-h-11` nos itens: a área de toque passa a
+          44px sem o trilho engordar visualmente. Medido com axe e com a
+          geometria real a 390px — a primeira versão tinha 18px de altura, que
+          é metade do mínimo e um alvo que falha em telemóvel.
+        */}
+        <ol className="-my-2 flex flex-wrap items-center gap-x-2 text-[length:var(--text-micro)] text-[color:var(--muted)]">
           {items.map((item, i) => (
-            <li key={item.path} className="flex items-center gap-x-2">
+            <li key={item.path} className="flex min-h-11 items-center gap-x-2">
               {i > 0 ? (
                 <span aria-hidden className="text-[color:var(--hairline)]">
                   /
                 </span>
               ) : null}
               {i === ultimo ? (
-                <span aria-current="page" className="text-[color:var(--on-surface)]">
+                <span aria-current="page" className="inline-flex min-h-11 items-center text-[color:var(--on-surface)]">
                   {item.name}
                 </span>
               ) : (
                 <Link
                   href={item.path}
-                  className="underline underline-offset-4 transition-colors hover:text-[color:var(--on-surface)]"
+                  className="inline-flex min-h-11 items-center underline underline-offset-4 transition-colors hover:text-[color:var(--on-surface)]"
                 >
                   {item.name}
                 </Link>
