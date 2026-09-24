@@ -133,3 +133,44 @@ quando se consentiu outra.
 se lembrar, e os três países guardam o texto que cada um mostrou — o de
 Portugal invoca o RGPD, o do Brasil a LGPD, o de Moçambique fica pelos direitos
 em termos gerais.
+
+## D-23 — O browser nunca recebe cliente Supabase nem token
+`SUPABASE_ANON_KEY` é variável de servidor, sem prefixo `NEXT_PUBLIC_`. A chave
+é desenhada para poder ser pública; não a publicar é o que permite que não
+exista sessão em `localStorage`, nem token em JavaScript, e que a CSP continue
+com `connect-src 'self'` — o admin não fala com domínio nenhum a partir do
+browser.
+**Consequência:** todo o ecrã administrativo é renderizado no servidor e toda a
+mutação é Server Action. Um componente de cliente que precisasse de ler a base
+não tem por onde; isso é a restrição a funcionar, não um obstáculo.
+
+## D-24 — A aplicação não escreve em tabela nenhuma
+Corrige T-15. Onze funções `security definer` (migração 0006) verificam o
+papel, derivam o autor de `auth.uid()` em vez de o aceitarem como argumento,
+verificam a revisão onde faz sentido e escrevem a auditoria na mesma transação.
+As políticas de escrita directa foram removidas.
+**Consequência:** um botão escondido deixa de ser um problema de segurança — o
+ecrã decide o que mostrar, a base decide o que acontece. E não existe caminho
+que altere estado sem deixar rasto.
+
+## D-25 — `/admin/entrar` deixa de devolver 404
+Reverte parte de uma decisão anterior. O argumento antigo — «um 401 confirma
+que existe ali uma área reservada» — era correcto enquanto não havia porta
+nenhuma; a partir do momento em que existe autenticação, alguma página tem de
+responder. O que o substitui: limite de tentativas por origem **e** por conta,
+erro único que não distingue conta inexistente de palavra-passe errada,
+`X-Robots-Tag: noindex`, e auditoria de cada entrada. Todo o resto de `/admin`
+continua a devolver 404 sem sessão.
+
+## D-26 — Estado da vista no URL, não em estado de cliente
+Filtros, ordenação e paginação do admin viajam em parâmetros de URL.
+**Consequência:** o admin carrega praticamente sem JavaScript — só a navegação
+é componente de cliente, e apenas porque `aria-current` precisa do caminho — e
+qualquer vista é uma ligação que se envia a um colega.
+
+## D-27 — Paginação sem contagem total
+`count: 'exact'` custa uma varredura completa por cada página vista. Pede-se um
+registo a mais do que cabe no ecrã, e a existência desse registo é o que revela
+a página seguinte.
+**Consequência:** não se mostra «página 3 de 47». Ninguém precisa de saber que
+há 4 812 contactos para ver os próximos vinte.

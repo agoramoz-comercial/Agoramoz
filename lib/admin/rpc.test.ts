@@ -56,3 +56,37 @@ describe('contrato das funções do admin', () => {
     }
   });
 });
+
+describe('endurecimento de 0007', () => {
+  const SQL7 = readFileSync('supabase/migrations/0007_endurecer_funcoes.sql', 'utf-8');
+
+  it('fixa o search_path das funções de gatilho', () => {
+    // A regra escrita em 0001 — «search_path fixo em todas as funções» — não
+    // tinha sido aplicada a estas. Uma regra que vale para metade dos casos
+    // não é uma regra.
+    for (const f of [
+      'set_updated_at',
+      'deny_mutation',
+      'bloquear_versao_publicada',
+      'bloquear_resposta_crua',
+      'validar_transicao_diagnostico',
+    ]) {
+      expect(SQL7).toContain(`alter function public.${f}() set search_path = public, pg_catalog`);
+    }
+  });
+
+  it('retira ao visitante anónimo as funções de autorização', () => {
+    // `current_role_of` com EXECUTE para `anon` deixava sondar, identificador
+    // a identificador, quem é da equipa e com que papel.
+    expect(SQL7).toContain('revoke all on function public.current_role_of(uuid) from public, anon');
+    expect(SQL7).toContain('revoke all on function public.is_staff() from public, anon');
+    expect(SQL7).toContain('revoke all on function public.is_admin() from public, anon');
+  });
+
+  it('mantém as funções de autorização para quem está autenticado', () => {
+    // Sem EXECUTE, as políticas de RLS que as chamam falhavam em vez de avaliar.
+    for (const f of ['current_role_of(uuid)', 'is_staff()', 'is_admin()']) {
+      expect(SQL7).toContain(`grant execute on function public.${f} to authenticated`);
+    }
+  });
+});
