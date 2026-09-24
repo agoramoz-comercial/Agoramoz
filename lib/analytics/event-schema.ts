@@ -46,7 +46,7 @@ const corpo = z.discriminatedUnion('name', [
   }),
   z.strictObject({ name: z.literal('diagnostic_submitted') }),
   z.strictObject({ name: z.literal('meeting_requested'), surface: superficie }),
-  z.strictObject({ name: z.literal('whatsapp_clicked'), country: pais, surface: superficie }),
+  z.strictObject({ name: z.literal('whatsapp_clicked'), country: pais.nullable(), surface: superficie }),
 ]);
 
 export const eventoRecebido = z.strictObject({

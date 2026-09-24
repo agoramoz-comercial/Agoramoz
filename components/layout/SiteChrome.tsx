@@ -9,6 +9,7 @@ import { TopBar } from '@/components/layout/TopBar';
 import { MobileCtaBar } from '@/components/layout/MobileCtaBar';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { AttributionBoot } from '@/components/analytics/AttributionBoot';
+import { OutboundTracker } from '@/components/analytics/OutboundTracker';
 import { SiteJsonLd } from '@/components/seo/JsonLd';
 
 /**
@@ -35,6 +36,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <SkipLink />
       <SiteJsonLd />
       <AttributionBoot />
+      <OutboundTracker />
       <MotionProvider>
         <ScrollProgress />
         <PageTransition />

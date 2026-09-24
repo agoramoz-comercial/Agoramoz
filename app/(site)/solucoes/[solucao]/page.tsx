@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { notFound } from 'next/navigation';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -10,7 +11,7 @@ import { OfferSection } from '@/components/sections/OfferSection';
 import { CountriesBand } from '@/components/sections/CountriesBand';
 import { FinalCta } from '@/components/sections/FinalCta';
 import { Reveal } from '@/components/motion/Reveal';
-import { BreadcrumbJsonLd, FaqJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
+import { FaqJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 import { ViewTracker } from '@/components/analytics/ViewTracker';
 import { getAllSolutionParams, getSolution } from '@/content/registry';
 import { buildMetadata } from '@/lib/seo/site';
@@ -41,15 +42,16 @@ export default async function SolucaoPage({ params }: Props) {
       <ViewTracker event={{ name: 'service_viewed', solution: s.slug }} />
       <ServiceJsonLd name={s.label} description={s.seo.description} path={`/solucoes/${s.slug}`} />
       <FaqJsonLd items={s.faq} />
-      <BreadcrumbJsonLd
-        items={[
-          { name: 'Início', path: '/' },
-          { name: 'Soluções', path: '/solucoes' },
-          { name: s.label, path: `/solucoes/${s.slug}` },
-        ]}
-      />
 
       <Section surface="deep" contour>
+        <Breadcrumbs
+          items={[
+            { name: 'Início', path: '/' },
+            { name: 'Soluções', path: '/solucoes' },
+            { name: s.label, path: `/solucoes/${s.slug}` },
+          ]}
+          className="mb-10"
+        />
         <div className="rule flex items-baseline gap-4 pt-6">
           <span className="rule-label text-[color:var(--muted)]">{s.hero.eyebrow}</span>
           <span className="rule-label text-[color:var(--accent)]">{s.label}</span>

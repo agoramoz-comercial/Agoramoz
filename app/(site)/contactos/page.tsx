@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import Link from 'next/link';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/Button';
-import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { COUNTRIES, COUNTRY_CODES } from '@/content/registry';
 import { CTA, SITE } from '@/content/site';
 import { SocialLinks } from '@/components/ui/SocialLinks';
@@ -19,9 +19,8 @@ export const metadata: Metadata = buildMetadata({
 export default function ContactosPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Contactos', path: '/contactos' }]} />
-
       <Section surface="deep" contour>
+        <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: 'Contactos', path: '/contactos' }]} className="mb-10" />
         <SectionHeading
           as="h1"
           eyebrow="Contactos"

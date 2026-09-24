@@ -129,6 +129,22 @@ export function SiteFooter() {
                   </Link>
                 </li>
               ))}
+              {/*
+                O rodapé é a única ligação interna para `/perfil`. É deliberado:
+                a página existe para receber tráfego do perfil do Google, não
+                para competir com `/mz` na navegação — mas uma página sem
+                nenhuma ligação interna é uma página que o rastreador alcança
+                só pelo sitemap, e isso enfraquece-a.
+              */}
+              <li>
+                <Link
+                  href="/perfil"
+                  aria-current={current('/perfil')}
+                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                >
+                  Quem somos, em resumo
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/diagnostico"

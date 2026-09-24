@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COUNTRY_CODES, RESERVED_TOP_LEVEL_SLUGS } from '@/content/registry';
@@ -45,5 +45,58 @@ describe('segmentos estáticos de topo', () => {
     // Sem isto, um erro no filtro fazia o teste acima passar por não ter nada
     // que comparar.
     expect(segmentosDeTopo().length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+describe('trilho de navegação', () => {
+  /**
+   * O `BreadcrumbList` era emitido em oito páginas e não havia trilho visível
+   * em nenhuma. São dois problemas: a Google exige que os dados estruturados
+   * descrevam conteúdo visível, e quem chega da pesquisa a uma página interna
+   * não tinha forma de subir um nível.
+   *
+   * `components/layout/Breadcrumbs` rende os dois do MESMO array, pelo que
+   * divergirem é impossível por construção. O que estes testes guardam é o
+   * passo anterior: que ninguém volte a emitir só o estruturado.
+   */
+  function paginas(): { caminho: string; fonte: string }[] {
+    const saida: { caminho: string; fonte: string }[] = [];
+    const andar = (raiz: string) => {
+      for (const nome of readdirSync(raiz)) {
+        const caminho = join(raiz, nome);
+        if (statSync(caminho).isDirectory()) andar(caminho);
+        else if (nome === 'page.tsx') saida.push({ caminho, fonte: readFileSync(caminho, 'utf-8') });
+      }
+    };
+    andar('app/(site)');
+    return saida;
+  }
+
+  it('toda a página de (site) excepto a inicial rende um trilho', () => {
+    const semTrilho = paginas()
+      .filter((p) => p.caminho !== 'app/(site)/page.tsx')
+      .filter((p) => !p.fonte.includes('<Breadcrumbs'))
+      .map((p) => p.caminho);
+
+    expect(semTrilho).toEqual([]);
+  });
+
+  it('a página inicial não rende trilho — é a raiz', () => {
+    const inicial = paginas().find((p) => p.caminho === 'app/(site)/page.tsx');
+    expect(inicial?.fonte).not.toContain('<Breadcrumbs');
+  });
+
+  it('ninguém emite um BreadcrumbList sem conteúdo visível', () => {
+    // O export foi removido. Este teste impede que volte por atalho.
+    for (const p of paginas()) {
+      expect(p.fonte, p.caminho).not.toContain('BreadcrumbJsonLd');
+    }
+    expect(readFileSync('components/seo/JsonLd.tsx', 'utf-8')).not.toContain(
+      'export function BreadcrumbJsonLd',
+    );
+  });
+
+  it('a verificação vê de facto as páginas', () => {
+    expect(paginas().length).toBeGreaterThanOrEqual(10);
   });
 });

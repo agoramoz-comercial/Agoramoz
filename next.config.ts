@@ -77,6 +77,27 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'no-store, max-age=0, must-revalidate' },
         ],
       },
+      {
+        /**
+         * Documentos de diagnóstico, endereçados por token.
+         *
+         * A rota ainda não existe — a camada de PDF está bloqueada em B-03 e
+         * B-04. O cabeçalho entra ANTES dela de propósito: é a única das três
+         * defesas que não depende de alguém se lembrar. Quando a rota for
+         * escrita, já está protegida.
+         *
+         * `Referrer-Policy: no-referrer` é a que ninguém se lembra. A política
+         * global é `strict-origin-when-cross-origin`, e o token viaja no
+         * CAMINHO — qualquer ligação externa clicada a partir da página do
+         * documento entregaria o token ao destino, no cabeçalho `Referer`.
+         */
+        source: '/documento/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nosnippet' },
+          { key: 'Cache-Control', value: 'no-store, max-age=0, must-revalidate' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+        ],
+      },
     ];
   },
 };

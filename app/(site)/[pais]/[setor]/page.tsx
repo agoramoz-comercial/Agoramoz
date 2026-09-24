@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { AlertTriangle, Check } from 'lucide-react';
@@ -16,7 +17,7 @@ import { ProofSection } from '@/components/sections/ProofSection';
 import { OfferSection } from '@/components/sections/OfferSection';
 import { FinalCta } from '@/components/sections/FinalCta';
 import { Reveal } from '@/components/motion/Reveal';
-import { BreadcrumbJsonLd, FaqJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
+import { FaqJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 import {
   COUNTRIES,
   SECTOR_LABELS,
@@ -74,16 +75,17 @@ export default async function SetorPage({ params }: Props) {
         areaServed={country.name}
       />
       <FaqJsonLd items={page.faq} />
-      <BreadcrumbJsonLd
-        items={[
-          { name: 'Início', path: '/' },
-          { name: country.name, path: `/${country.code}` },
-          { name: page.label, path: `/${pais}/${setor}` },
-        ]}
-      />
 
       {/* 1 + 2 — identificação e hero orientado ao resultado */}
       <Section surface="deep" contour>
+        <Breadcrumbs
+          items={[
+            { name: 'Início', path: '/' },
+            { name: country.name, path: `/${country.code}` },
+            { name: page.label, path: `/${pais}/${setor}` },
+          ]}
+          className="mb-10"
+        />
         <div className="rule flex flex-wrap items-baseline gap-x-4 gap-y-1 pt-6">
           <span className="rule-label text-[color:var(--muted)]">{country.name}</span>
           <Eyebrow>{SECTOR_LABELS[page.sector]}</Eyebrow>

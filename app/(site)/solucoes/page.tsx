@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { SolutionsGrid } from '@/components/sections/SolutionsGrid';
 import { FinalCta } from '@/components/sections/FinalCta';
-import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { buildMetadata } from '@/lib/seo/site';
 
 export const metadata: Metadata = buildMetadata({
@@ -16,8 +16,8 @@ export const metadata: Metadata = buildMetadata({
 export default function SolucoesPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Soluções', path: '/solucoes' }]} />
       <Section surface="deep" contour>
+        <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: 'Soluções', path: '/solucoes' }]} className="mb-10" />
         <SectionHeading
           as="h1"
           eyebrow="Soluções"

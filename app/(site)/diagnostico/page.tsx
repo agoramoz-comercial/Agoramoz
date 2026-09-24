@@ -1,11 +1,12 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { SplitHeading } from '@/components/motion/SplitHeading';
 import { Accordion } from '@/components/ui/Accordion';
 import { DiagnosticForm } from '@/components/form/DiagnosticForm';
-import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
+import { FaqJsonLd } from '@/components/seo/JsonLd';
 import { OFFER } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
 
@@ -39,9 +40,9 @@ export default function DiagnosticoPage() {
   return (
     <>
       <FaqJsonLd items={FAQ} />
-      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Diagnóstico', path: '/diagnostico' }]} />
 
       <Section surface="deep" contour>
+        <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: 'Diagnóstico', path: '/diagnostico' }]} className="mb-10" />
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
             <div className="rule flex items-baseline gap-4 pt-6">

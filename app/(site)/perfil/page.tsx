@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import Link from 'next/link';
 import { ViewTracker } from '@/components/analytics/ViewTracker';
 import { CountriesBand } from '@/components/sections/CountriesBand';
@@ -7,7 +8,7 @@ import { Founders } from '@/components/sections/Founders';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { ProofSection } from '@/components/sections/ProofSection';
 import { SolutionsGrid } from '@/components/sections/SolutionsGrid';
-import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
+import { FaqJsonLd } from '@/components/seo/JsonLd';
 import { Accordion } from '@/components/ui/Accordion';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -42,10 +43,10 @@ export default function PerfilPage() {
   return (
     <>
       <ViewTracker event={{ name: 'gbp_landing_view', landing: 'perfil' }} />
-      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Perfil', path: '/perfil' }]} />
       <FaqJsonLd items={PERFIL.faq} path="/perfil" />
 
       <Section surface="deep" contour>
+        <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: 'Perfil', path: '/perfil' }]} className="mb-10" />
         <SectionHeading
           as="h1"
           eyebrow={PERFIL.hero.eyebrow}

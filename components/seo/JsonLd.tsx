@@ -1,5 +1,5 @@
 import { siteGraph } from '@/lib/seo/schema/graph';
-import { breadcrumbNode, faqNode, serviceNode } from '@/lib/seo/schema/nodes';
+import { faqNode, serviceNode } from '@/lib/seo/schema/nodes';
 import type { SchemaGraph, SchemaNode } from '@/lib/seo/schema/types';
 
 /**
@@ -86,6 +86,14 @@ export function ServiceJsonLd(input: {
   return <Script data={grafo(serviceNode(input))} />;
 }
 
-export function BreadcrumbJsonLd({ items }: { items: readonly { name: string; path: string }[] }) {
-  return <Script data={grafo(breadcrumbNode(items.at(-1)?.path ?? '/', items))} />;
-}
+/**
+ * `BreadcrumbJsonLd` foi REMOVIDO de propósito.
+ *
+ * Emitia o `BreadcrumbList` sem nada visível na página, que é a marcação que a
+ * Google considera não corresponder ao conteúdo — e deixava quem chegasse da
+ * pesquisa a uma página interna sem forma de subir um nível.
+ *
+ * Quem quiser um trilho usa `components/layout/Breadcrumbs`, que rende o
+ * visível e o estruturado do mesmo array. Manter este export aqui seria deixar
+ * à mão a forma errada de o fazer.
+ */

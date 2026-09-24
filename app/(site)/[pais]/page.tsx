@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { notFound } from 'next/navigation';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -9,7 +10,6 @@ import { SolutionsGrid } from '@/components/sections/SolutionsGrid';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { OfferSection } from '@/components/sections/OfferSection';
 import { FinalCta } from '@/components/sections/FinalCta';
-import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { COUNTRY_CODES, getCountry } from '@/content/registry';
 import { PROCESS } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
@@ -44,9 +44,9 @@ export default async function PaisPage({ params }: Props) {
     /* `lang` no wrapper: só o layout raiz pode renderizar <html>, e o leitor
        de ecrã usa na mesma o valor mais próximo. */
     <div lang={c.locale}>
-      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: c.name, path: `/${c.code}` }]} />
 
       <Section surface="deep" contour>
+        <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: c.name, path: `/${c.code}` }]} className="mb-10" />
         <div className="rule flex items-baseline gap-4 pt-6">
           <span className="rule-label text-[color:var(--muted)]">{c.locale}</span>
           <span className="rule-label text-[color:var(--accent)]">{c.hero.eyebrow}</span>

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { FlowDiagram } from '@/components/home/FlowDiagram';
 import { ProofSection } from '@/components/sections/ProofSection';
 import { FinalCta } from '@/components/sections/FinalCta';
-import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { PROCESS, PROOF, PROOF_SECTION, RISK_REDUCTION } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
 
@@ -19,9 +19,8 @@ export const metadata: Metadata = buildMetadata({
 export default function ComoTrabalhamosPage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Como trabalhamos', path: '/como-trabalhamos' }]} />
-
       <Section surface="deep" contour>
+        <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: 'Como trabalhamos', path: '/como-trabalhamos' }]} className="mb-10" />
         <SectionHeading as="h1" eyebrow={PROCESS.eyebrow} title={PROCESS.title} lead={PROCESS.lead} max="wide" />
         <ProcessTimeline />
       </Section>

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { SplitHeading } from '@/components/motion/SplitHeading';
 import { Founders } from '@/components/sections/Founders';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { FinalCta } from '@/components/sections/FinalCta';
-import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { FOUNDERS, PROCESS, RISK_REDUCTION } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
 
@@ -19,9 +19,8 @@ export const metadata: Metadata = buildMetadata({
 export default function SobrePage() {
   return (
     <>
-      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Sobre', path: '/sobre' }]} />
-
       <Section surface="deep" contour>
+        <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: 'Sobre', path: '/sobre' }]} className="mb-10" />
         <div className="rule flex items-baseline gap-4 pt-6">
           <span className="rule-label text-[color:var(--muted)]">01</span>
           <span className="rule-label text-[color:var(--accent)]">Sobre</span>

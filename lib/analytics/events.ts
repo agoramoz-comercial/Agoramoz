@@ -37,8 +37,21 @@ export type AnalyticsEvent =
    * browser nem a uma tag de analytics. Fica no servidor. Ver D-15.
    */
   | { name: 'diagnostic_submitted' }
+  /**
+   * NÃO é disparado, e é deliberado.
+   *
+   * Este site não tem superfície de marcação de reunião: o caminho para falar
+   * connosco é o diagnóstico, e `diagnostic_submitted` já o mede. Disparar
+   * isto no clique de WhatsApp produziria um número com aparência de procura
+   * que na verdade duplicava `whatsapp_clicked`.
+   *
+   * Fica no vocabulário porque o dia em que existir uma marcação real — uma
+   * agenda, um formulário de reunião — o nome já está definido e o schema já
+   * o aceita. Registado em docs/GAPS.md.
+   */
   | { name: 'meeting_requested'; surface: string }
-  | { name: 'whatsapp_clicked'; country: CountryCode; surface: string }
+  /** `country` é nulo fora das páginas de país — inventá-lo falsearia o relatório. */
+  | { name: 'whatsapp_clicked'; country: CountryCode | null; surface: string }
   /**
    * Do SERVIDOR, não do browser.
    *

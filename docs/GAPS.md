@@ -26,6 +26,7 @@ resolvida por invenção.**
 | **B-12** | Sem clientes, depoimentos, casos ou métricas citáveis | Não bloqueia: `content/types.ts` já os torna irrepresentáveis. Limita permanentemente o que a prova pode dizer, e a página de perfil é construída para estar correcta sem eles |
 | **B-13** | Sem rota de documentos | `document_confirmed_view` fica definido sem emissor. A coluna `documents.confirmed_view_at` já existe desde 0003. Depende de B-03/B-04 |
 | **B-14** | Sem Facebook, YouTube, X, TikTok, sem certificações | `sameAs` e credenciais mais fracos do que podiam ser. O tipo já os aceita |
+| **B-16** | **Sem superfície de marcação de reunião** | `meeting_requested` fica definido e **não é disparado**. O caminho para falar connosco é o diagnóstico, e `diagnostic_submitted` já o mede; dispará-lo no clique de WhatsApp produziria um número com aparência de procura que duplicava `whatsapp_clicked`. O nome fica reservado para o dia em que existir uma agenda a sério |
 | **B-15** | **Primeiro toque entre sessões por decidir** | A atribuição usa `sessionStorage`, e portanto morre com o separador. `localStorage` daria primeiro toque a 90 dias — mas é um identificador persistente por dispositivo, e `/privacidade` promete hoje, por escrito, que «a medição de utilização é agregada e não identifica visitantes individualmente». Estender a janela exige essa decisão **e** a edição da política. Não foi assumido em silêncio |
 
 ## 2. Divergências entre o pedido e o repositório
