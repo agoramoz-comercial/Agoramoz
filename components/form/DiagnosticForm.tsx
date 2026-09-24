@@ -380,7 +380,7 @@ export function DiagnosticForm() {
                           form.setValue('processToImprove', nextVal, { shouldValidate: true });
                           markStarted();
                         }}
-                        className="size-4 shrink-0 accent-[color:var(--color-navy-800)]"
+                        className="size-4 shrink-0 accent-[color:var(--color-ink-900)]"
                       />
                       {g.label}
                     </label>
