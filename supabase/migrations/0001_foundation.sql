@@ -46,6 +46,36 @@ begin
 end;
 $$;
 
+-- `profiles` vem ANTES das funções de autorização, e não depois, porque elas
+-- leem-na. O Postgres valida o corpo de uma função `language sql` no momento
+-- em que ela é criada (`check_function_bodies`, ligado por omissão): com a
+-- ordem inversa, `create function current_role_of` falha com
+-- «relation "public.profiles" does not exist».
+--
+-- Isto passou despercebido porque a API de migrações da Supabase não faz essa
+-- validação, e foi por lá que estas migrações correram da primeira vez. No
+-- editor SQL — e em qualquer Postgres normal — falhava. Uma migração que só
+-- corre no sítio onde nasceu não é uma migração.
+
+-- ---------------------------------------------------------------------------
+-- profiles — quem tem acesso ao admin
+-- ---------------------------------------------------------------------------
+-- Não duplica `auth.users`: referencia-a. O Supabase é dono da autenticação;
+-- esta tabela só responde a «o que é que esta pessoa pode fazer».
+
+create table public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  role public.user_role not null default 'leitura',
+  display_name text not null check (length(trim(display_name)) between 1 and 120),
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create trigger profiles_set_updated_at
+  before update on public.profiles
+  for each row execute function public.set_updated_at();
+
 -- `search_path` fixo em todas as funções `security definer`: sem isto, um
 -- utilizador com direito a criar objetos pode antepor um esquema seu e
 -- sequestrar a resolução de nomes dentro da função privilegiada.
@@ -81,25 +111,6 @@ as $$
     where id = auth.uid() and active and role = 'admin'
   );
 $$;
-
--- ---------------------------------------------------------------------------
--- profiles — quem tem acesso ao admin
--- ---------------------------------------------------------------------------
--- Não duplica `auth.users`: referencia-a. O Supabase é dono da autenticação;
--- esta tabela só responde a «o que é que esta pessoa pode fazer».
-
-create table public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  role public.user_role not null default 'leitura',
-  display_name text not null check (length(trim(display_name)) between 1 and 120),
-  active boolean not null default true,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create trigger profiles_set_updated_at
-  before update on public.profiles
-  for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
 -- audit_log — o que aconteceu, por ordem, e por quem
