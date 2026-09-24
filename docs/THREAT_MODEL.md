@@ -9,7 +9,7 @@ não é uma classificação normativa.
 
 | # | Ameaça | Verificado em | Severidade | Estado |
 |---|---|---|---|---|
-| T-01 | **Perda silenciosa de submissões.** Nada persiste; um erro a jusante é indistinguível de sucesso para o utilizador | `route.ts` inteiro | **Crítica** | **Aberta** |
+| T-01 | **Perda silenciosa de submissões.** Nada persiste; um erro a jusante é indistinguível de sucesso para o utilizador | `route.ts` inteiro | **Crítica** | **Fechada** — a rota grava numa transação (`ingest_diagnostic_response`) e devolve 503, nunca 200, quando a gravação falha. Coberta por `app/api/diagnostico/route.test.ts`. Fica um resíduo: com `DIAGNOSTIC_PERSISTENCE=off` a rota aceita sem gravar, deliberadamente e com aviso em cada submissão |
 | T-02 | **Tier exposto ao cliente.** A rota devolve `tier` (`route.ts:43`) e o cliente publica-o em `window.dataLayer` (`DiagnosticForm.tsx:167`). Um prospeto vê em devtools que foi classificado `D` | `route.ts:43`, `DiagnosticForm.tsx:167` | **Alta** (reputacional/comercial) | **Aberta** |
 | T-03 | **Ausência de rate limit.** Sem limite por IP ou por identidade | `route.ts` | Alta | Aberta |
 | T-04 | **Sem limite de tamanho do corpo.** `problemImpact` está limitado pelo Zod, mas o parse acontece antes da validação | `route.ts:13` | Média | Aberta |

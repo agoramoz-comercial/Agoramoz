@@ -4,6 +4,14 @@ Levantamento por inspeção directa em 2026-09-24, no commit `2406f34`
 (branch `claude/sleepy-bell-593hi6`). Cada afirmação aqui tem origem num
 comando de leitura. O que não foi verificado está marcado como tal.
 
+> **Este documento é o retrato do ponto de partida e não é actualizado à medida
+> que o código muda.** Serve para se poder responder mais tarde a «como é que
+> isto estava antes?» — reescrevê-lo apagaria exactamente essa resposta. O que
+> mudou desde então está em `CHANGE_PLAN.md`, `DECISIONS.md` e no estado da
+> coluna «Estado» de `THREAT_MODEL.md`. A secção 5, em particular, já não
+> descreve `app/api/diagnostico/route.ts`: a rota passou a persistir numa
+> transação (T-01 fechada).
+
 ## 1. Stack
 
 | Item | Valor observado | Fonte |

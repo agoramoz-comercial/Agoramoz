@@ -82,3 +82,54 @@ Corrige T-02. A resposta passa a `{ ok, correlation_id }`.
 
 ## D-16 — Civicportal fora de escopo
 Não inspecionado, não alterado. Mantém-se assim até instrução explícita.
+
+## D-17 — A persistência é um interruptor explícito, não uma inferência
+`DIAGNOSTIC_PERSISTENCE` é `required` ou `off`. Não é inferido da presença das
+chaves do Supabase. Inferir tornaria a maior falha do sistema — aceitar um lead
+e perdê-lo — num acidente silencioso de configuração: bastava alguém apagar uma
+variável no painel para o formulário passar a descartar submissões devolvendo
+«obrigado». O valor por omissão é `off` para que um deploy sem chaves não parta
+o formulário, e o modo `off` regista um aviso a cada submissão.
+**Consequência:** passar a produção a `required` é uma edição consciente, e
+esquecer-se dela aparece no log em vez de aparecer na facturação do mês
+seguinte.
+
+## D-18 — Falha de gravação devolve 503, nunca 200
+O cliente vê erro e pode voltar a tentar. Repetir é seguro porque a chave de
+idempotência é derivada do conteúdo (D-12): a segunda submissão idêntica é
+reconhecida e não duplica o lead.
+**Consequência:** trocamos um «obrigado» falso por um erro verdadeiro. É a
+troca certa — um lead que a pessoa sabe que não passou é um lead que ela volta
+a enviar ou envia por outro canal.
+
+## D-19 — A resposta é idêntica para submissão nova e para repetição
+A função de ingestão distingue as duas, o log distingue as duas, a resposta HTTP
+não. Dizer «já tínhamos isto» não serve o utilizador e serve quem sonda:
+permitiria descobrir, e-mail a e-mail, quem já pediu um diagnóstico.
+
+## D-20 — `workEmail` não entra nas respostas normalizadas
+A identidade vive em `contacts`. `response_answers` existe para agregar
+respostas e não precisa de identificar ninguém, por isso o e-mail é removido
+antes de lá chegar. Continua a entrar na impressão digital e na chave de
+idempotência — aí é **usado**, não **guardado**.
+**Consequência:** uma consulta de análise sobre respostas não tem PII para
+vazar, e o apagamento de um contacto não deixa o e-mail espalhado por linhas de
+resposta.
+
+## D-21 — Os achados têm uma única fonte de verdade
+`diagnostics.findings` é a coluna de registo. `evidence_bundle` guarda o resto
+do pacote (evidência, versões, numerais admissíveis) e **não** repete os
+achados. Duas cópias do mesmo JSON são duas cópias que um dia discordam.
+**Consequência:** quem precisar do pacote completo recompõe-o com
+`{ ...evidence_bundle, findings }`.
+
+## D-22 — O texto de consentimento guardado vem da mesma fonte que o formulário
+`consentTextFor()` lê `content/countries/*.ts`, que é o que o formulário
+renderiza, e a versão é o SHA-256 do próprio texto em vez de um número escrito
+à mão. Uma versão manual é uma versão que alguém se esquece de subir: o texto
+muda, o número fica, e os registos passam a dizer que se consentiu uma coisa
+quando se consentiu outra.
+**Consequência:** mudar uma vírgula no texto muda a versão sem ninguém ter de
+se lembrar, e os três países guardam o texto que cada um mostrou — o de
+Portugal invoca o RGPD, o do Brasil a LGPD, o de Moçambique fica pelos direitos
+em termos gerais.

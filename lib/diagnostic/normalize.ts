@@ -127,3 +127,15 @@ export async function idempotencyKey(
   const fingerprint = await inputFingerprint(input);
   return sha256Hex(`${normalizeEmail(input.workEmail)}|${questionnaireVersion}|${fingerprint}`);
 }
+
+/**
+ * Hash curto (128 bits) de um identificador técnico.
+ *
+ * Serve o user-agent e serve o IP: guardar o hash permite reconhecer repetição
+ * e abuso vindos da mesma origem, e não permite reconstituir a origem. É a
+ * diferença entre ter um sinal operacional e ter um registo de quem visitou o
+ * quê — a primeira coisa é precisa, a segunda não.
+ */
+export async function shortHash(value: string): Promise<string> {
+  return (await sha256Hex(value)).slice(0, 32);
+}

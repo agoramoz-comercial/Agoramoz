@@ -71,7 +71,48 @@ const serverSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
-});
+
+  // ── Persistência ────────────────────────────────────────────────────────
+  SUPABASE_URL: z.string().url('deve ser o URL do projeto Supabase').optional(),
+  /**
+   * Ignora RLS. Só no servidor, nunca com prefixo `NEXT_PUBLIC_`. Se alguma
+   * vez aparecer num bundle de cliente, está comprometida e tem de ser rodada.
+   */
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+
+  /**
+   * Interruptor explícito da persistência.
+   *
+   * `required` — a rota exige base de dados e devolve 503 se ela falhar.
+   * `off`      — a rota valida, pontua e regista, mas NÃO persiste.
+   *
+   * Porque é que existe em vez de ser inferido da presença das chaves:
+   * inferir tornaria a maior falha do sistema — aceitar um lead e perdê-lo —
+   * num acidente silencioso de configuração. Assim é uma decisão escrita, e o
+   * modo `off` grita em cada submissão no log.
+   *
+   * O valor por omissão é `off` para que um deploy sem as chaves configuradas
+   * não parta o formulário em produção. Passar a `required` assim que as
+   * chaves estiverem na Vercel.
+   */
+  DIAGNOSTIC_PERSISTENCE: z.enum(['required', 'off']).default('off'),
+
+  /** Slug do questionário usado pela rota pública. */
+  DIAGNOSTIC_QUESTIONNAIRE_SLUG: z.string().min(1).default('diagnostico-estrategico'),
+})
+  .superRefine((env, ctx) => {
+    if (env.DIAGNOSTIC_PERSISTENCE !== 'required') return;
+
+    for (const nome of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const) {
+      if (!env[nome]) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [nome],
+          message: 'é obrigatória quando DIAGNOSTIC_PERSISTENCE=required',
+        });
+      }
+    }
+  });
 
 function format(error: z.ZodError): string {
   return error.issues
@@ -122,6 +163,10 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       DIAGNOSTIC_RATE_LIMIT_WINDOW_MS: process.env.DIAGNOSTIC_RATE_LIMIT_WINDOW_MS,
       DIAGNOSTIC_MAX_BODY_BYTES: process.env.DIAGNOSTIC_MAX_BODY_BYTES,
       CSP_REPORT_ONLY: process.env.CSP_REPORT_ONLY,
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      DIAGNOSTIC_PERSISTENCE: process.env.DIAGNOSTIC_PERSISTENCE,
+      DIAGNOSTIC_QUESTIONNAIRE_SLUG: process.env.DIAGNOSTIC_QUESTIONNAIRE_SLUG,
     },
     'servidor',
   );
