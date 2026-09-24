@@ -15,4 +15,11 @@ yarn-error.log*
 next-env.d.ts
 /playwright-report/
 /test-results/
-/.qa/
+
+# O arnês de QA (.mjs, .sh) fica versionado: foi o que apanhou as 300 falhas de
+# alvo de toque e as regressões de CLS, e perdê-lo obrigava a reescrevê-lo. O
+# que se ignora são os artefactos que ele produz — capturas de ecrã e relatórios
+# pesam dezenas de MB e regeneram-se a correr os scripts.
+.qa/*.png
+.qa/*.json
+.qa/*.txt
