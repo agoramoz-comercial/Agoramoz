@@ -1,16 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, Chakra_Petch, Inter } from 'next/font/google';
-import { MotionProvider } from '@/components/motion/MotionProvider';
-import { ScrollProgress } from '@/components/motion/ScrollProgress';
-import { CustomCursor } from '@/components/motion/CustomCursor';
-import { PageTransition } from '@/components/motion/PageTransition';
-import { SectionIndex } from '@/components/layout/SectionIndex';
-import { SiteHeader } from '@/components/layout/SiteHeader';
-import { SiteFooter } from '@/components/layout/SiteFooter';
-import { TopBar } from '@/components/layout/TopBar';
-import { MobileCtaBar } from '@/components/layout/MobileCtaBar';
-import { SkipLink } from '@/components/ui/SkipLink';
-import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd';
 import { SITE } from '@/content/site';
 import { SITE_URL } from '@/lib/seo/site';
 import './globals.css';
@@ -55,6 +44,13 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/**
+ * Layout raiz: `<html>`, `<body>`, as fontes e os metadados. Mais nada.
+ *
+ * A casca de marketing vive em `app/(site)/layout.tsx`, para que `/admin`
+ * possa ter casca própria — sem GSAP, sem Lenis, sem cabeçalho de marketing.
+ * Enquanto tudo isso esteve aqui, corria em cada rota do domínio.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt" className={`${archivo.variable} ${inter.variable} ${chakra.variable}`}>
@@ -64,22 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <style>{`[data-animate]{visibility:visible!important;opacity:1!important;transform:none!important}`}</style>
         </noscript>
       </head>
-      <body className="grain">
-        <SkipLink />
-        <OrganizationJsonLd />
-        <WebSiteJsonLd />
-        <MotionProvider>
-          <ScrollProgress />
-          <PageTransition />
-          <CustomCursor />
-          <SectionIndex />
-          <TopBar />
-          <SiteHeader />
-          <main id="conteudo">{children}</main>
-          <SiteFooter />
-          <MobileCtaBar />
-        </MotionProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
