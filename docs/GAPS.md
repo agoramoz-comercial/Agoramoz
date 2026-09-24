@@ -5,11 +5,12 @@
 | # | Lacuna | Porque bloqueia |
 |---|---|---|
 | ~~B-01~~ | **RESOLVIDO.** Restaurei o `AGORAMOZX` (`restore_project`), ficou `ACTIVE_HEALTHY`, e inventariei: `public` com **zero tabelas**, **zero migrações**, só os esquemas próprios do Supabase. Sem herança nem risco de colisão. As migrações 0001–0005 estão aplicadas e verificadas | — |
-| **B-02** | **Plano do Supabase por confirmar** | No plano gratuito os projetos pausam por inatividade — foi o que os deixou a ambos `INACTIVE`. Com a captura de leads dependente da base, uma pausa derruba o funil em silêncio, que é exactamente o que este trabalho existe para eliminar |
+| **B-02** | **Plano do Supabase por confirmar** | Migrou com a base. O projeto novo é `nixltrbdplqjadfytryd`, noutra conta; se estiver em plano gratuito, a pausa por inactividade viaja com ele. **Agora com a persistência ligada, uma pausa é o formulário a devolver 503 a toda a gente** — deixou de ser risco de perda silenciosa e passou a risco de indisponibilidade visível, que é melhor mas não é aceitável |
 | **B-03** | **Autenticação do consumidor n8n** | *Parcialmente resolvido:* a instância é alcançável por MCP nesta sessão — um workflow, inactivo, e uma única credencial. O que falta não é o URL: é decidir como é que o n8n se autentica a ler a fila **sem receber a chave de serviço da base**. A hipótese a avaliar é um endpoint na Vercel com segredo partilhado, que mantém a chave num só sítio |
 | **B-04** | **Sem fornecedor de IA** | O n8n tem uma única credencial, do tipo `smtp`. Sem credencial de IA não há camada de redação. Implemento a interface e testes com mock; **não simulo integração real** |
 | **B-05** | ~~Sem acesso de escrita a produção~~ | **Resolvido.** Migrações 0001–0007 aplicadas ao AGORAMOZX com autorização explícita, e invariantes provadas por violação tentada em transações abortadas |
 | **B-06** | **Publicação automática parada** | Descoberto em 2026-09-24: `agoramoz.com` servia o commit `bdc9b59`, e os 19 commits seguintes nunca foram construídos — nenhum deployment existe para eles. Uma criação manual de deployment a partir do mesmo `ref` funciona, pelo que a ligação ao GitHub está viva e o que falha é o gatilho. **Enquanto não for reposto, cada push precisa de publicação manual** |
+| **B-07** | **Verificação de ponta a ponta por fazer** | Nenhuma submissão real chegou a passar por HTTP até à base. Tudo o resto foi provado — esquema, invariantes, arranque da aplicação — mas o percurso completo do formulário só se prova submetendo |
 
 ## 2. Divergências entre o pedido e o repositório
 
