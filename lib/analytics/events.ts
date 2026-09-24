@@ -9,7 +9,11 @@ export type AnalyticsEvent =
   | { name: 'demo_started'; demoId: string }
   | { name: 'form_started'; formId: 'diagnostic'; entryPath: string }
   | { name: 'form_step_completed'; step: number; stepId: string }
-  | { name: 'form_completed'; tier: string }
+  /**
+   * Sem `tier`: a classificação do lead é interna e não pode chegar ao
+   * browser nem a uma tag de analytics. Fica no servidor. Ver D-15.
+   */
+  | { name: 'form_completed' }
   | { name: 'meeting_requested'; surface: string }
   | { name: 'whatsapp_clicked'; country: CountryCode; surface: string }
   /* Os três seguintes não são eventos de browser. Ficam no tipo para o

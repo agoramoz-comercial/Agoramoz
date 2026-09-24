@@ -163,8 +163,14 @@ export function DiagnosticForm() {
         body: JSON.stringify(values),
       });
       if (!res.ok) throw new Error('request failed');
-      const data = (await res.json()) as { tier?: string };
-      track({ name: 'form_completed', tier: data.tier ?? 'unknown' });
+      /**
+       * O servidor já não devolve a classificação do lead, e este evento já
+       * não a leva. Era um valor interno de priorização comercial que chegava
+       * ao browser e ia parar à dataLayer — visível em devtools para o próprio
+       * visitante que estava a ser classificado. A qualificação passa a viver
+       * só do lado do servidor. Ver D-15 em `docs/DECISIONS.md`.
+       */
+      track({ name: 'form_completed' });
       try {
         sessionStorage.removeItem(DRAFT_KEY);
       } catch {

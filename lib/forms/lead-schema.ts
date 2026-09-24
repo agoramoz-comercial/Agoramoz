@@ -5,6 +5,26 @@ import { z } from 'zod';
  * a validação do cliente e a do servidor não podem divergir.
  */
 
+/**
+ * Desliga a compilação JIT do Zod.
+ *
+ * Por omissão o Zod constrói validadores optimizados com `new Function(...)`,
+ * o que é avaliar uma string como JavaScript. Medido num browser real com a
+ * CSP em modo de relatório: era a ÚNICA violação em dez rotas e três ecrãs, e
+ * aparecia só em `/diagnostico` — a página onde um schema é validado do lado
+ * do cliente. Mantê-la obrigaria a abrir `'unsafe-eval'` em `script-src` para
+ * o site inteiro, que é a diretiva que impede um XSS de executar código
+ * arbitrário a partir de uma string.
+ *
+ * O custo é desprezável aqui: o formulário valida uma mão-cheia de vezes, na
+ * transição de passo e na submissão. Trocar microssegundos de validação por
+ * uma política que vale para todas as páginas é troca fácil.
+ *
+ * Fica ANTES da construção dos schemas de propósito, e neste ficheiro porque
+ * é o que cliente e servidor importam antes de qualquer validação.
+ */
+z.config({ jitless: true });
+
 export const COMPANY_SIZES = ['1-9', '10-49', '50-249', '250+'] as const;
 export const DECISION_ROLES = ['decisor', 'co-decisor', 'influenciador', 'pesquisa'] as const;
 export const TIMEFRAMES = ['imediato', '1-3-meses', '3-6-meses', 'sem-data'] as const;
