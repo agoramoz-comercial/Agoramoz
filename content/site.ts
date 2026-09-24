@@ -11,7 +11,17 @@ import {
 
 export const SITE = {
   name: 'AGORAMOZ',
-  /** Domínio-alvo. A presença pública atual ainda é agoramoz.online. */
+  /**
+   * O domínio canónico, e é o que está no ar.
+   *
+   * O comentário anterior dizia «a presença pública atual ainda é
+   * agoramoz.online» — deixou de ser verdade e ninguém o atualizou. Medido a
+   * 2026-09-24: `https://agoramoz.com/` responde 200, o canonical que serve
+   * aponta para si próprio e o sitemap publica 16 URL em `agoramoz.com`.
+   * Deixá-lo escrito importa porque é daqui que saem todos os canonical,
+   * hreflang e `@id` — um comentário errado sobre o domínio é a coisa mais
+   * fácil de alguém acreditar e a mais cara de desfazer depois de indexada.
+   */
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agoramoz.com',
   tagline: 'Infraestrutura digital para crescimento e produtividade',
   description:

@@ -96,7 +96,7 @@ export const automacaoDeProcessos: SolutionPage = {
   ],
 
   seo: {
-    title: 'Automação de processos empresariais | AGORAMOZ',
+    title: 'Automação de processos empresariais',
     description:
       'Ligamos tarefas, dados e plataformas para reduzir trabalho repetitivo, atrasos e erros de introdução manual. Diagnóstico do processo antes de qualquer automação.',
   },

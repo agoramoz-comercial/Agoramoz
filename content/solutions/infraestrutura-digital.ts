@@ -101,7 +101,7 @@ export const infraestruturaDigital: SolutionPage = {
   ],
 
   seo: {
-    title: 'Infraestrutura digital: integração, segurança e monitorização | AGORAMOZ',
+    title: 'Infraestrutura digital: integração, segurança e monitorização',
     description:
       'Arquitetura, integrações, gestão de acessos, monitorização, recuperação e documentação para que os seus sistemas continuem a funcionar e a ser manteníveis.',
   },

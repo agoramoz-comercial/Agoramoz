@@ -104,7 +104,7 @@ export const agentesIa: SolutionPage = {
   ],
 
   seo: {
-    title: 'Agentes de IA com fontes, permissões e supervisão humana | AGORAMOZ',
+    title: 'Agentes de IA com fontes, permissões e supervisão humana',
     description:
       'Assistentes com âmbito declarado, ancorados nas fontes da sua empresa, que citam a origem e escalam quando não sabem. Decisões críticas mantêm aprovação humana.',
   },

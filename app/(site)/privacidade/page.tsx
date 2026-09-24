@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { SITE } from '@/content/site';
@@ -40,6 +41,8 @@ const BLOCKS = [
 export default function PrivacidadePage() {
   return (
     <Section surface="light">
+      <BreadcrumbJsonLd items={[{ name: 'Início', path: '/' }, { name: 'Política de privacidade', path: '/privacidade' }]} />
+
       <SectionHeading
         as="h1"
         eyebrow="Privacidade"

@@ -35,6 +35,7 @@ export const metadata: Metadata = buildMetadata({
   description: SITE.description,
   path: '/',
   languages: { 'pt-MZ': '/mz', 'pt-PT': '/pt', 'pt-BR': '/br', 'x-default': '/' },
+  tituloAbsoluto: true,
 });
 
 export default function HomePage() {

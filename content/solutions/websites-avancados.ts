@@ -100,7 +100,7 @@ export const websitesAvancados: SolutionPage = {
   ],
 
   seo: {
-    title: 'Websites avançados orientados à conversão | AGORAMOZ',
+    title: 'Websites avançados orientados à conversão',
     description:
       'Websites que captam, qualificam e encaminham oportunidades: estratégia, copy, formulários condicionais, ligação ao CRM, SEO técnico e medição. Diagnóstico antes da proposta.',
   },

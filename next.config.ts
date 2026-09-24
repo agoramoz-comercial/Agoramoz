@@ -65,7 +65,17 @@ const nextConfig: NextConfig = {
          * `robots.txt` pede, o `X-Robots-Tag` impede.
          */
         source: '/admin/:path*',
-        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }],
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+          /**
+           * `no-store` além do `X-Robots-Tag`: um ecrã de CRM não pode ficar
+           * em cache de disco do browser nem em proxy intermédio. Sem isto,
+           * quem usar o computador a seguir alcança pelo botão «voltar» uma
+           * página que já devia exigir sessão — e o middleware nunca chega a
+           * ser consultado, porque não há pedido nenhum.
+           */
+          { key: 'Cache-Control', value: 'no-store, max-age=0, must-revalidate' },
+        ],
       },
     ];
   },
