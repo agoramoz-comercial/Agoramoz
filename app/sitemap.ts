@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { COUNTRIES, COUNTRY_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
+import { PERFIL } from '@/content/landing/perfil';
 import { absolute } from '@/lib/seo/site';
 
 /** Gerado a partir do registry: uma nova vertical entra aqui sozinha. */
@@ -9,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const statics: MetadataRoute.Sitemap = [
     { url: absolute('/'), lastModified: now, priority: 1 },
     { url: absolute('/diagnostico'), lastModified: now, priority: 0.9 },
+    { url: absolute('/perfil'), lastModified: new Date(PERFIL.updatedAt), priority: 0.8 },
     { url: absolute('/solucoes'), lastModified: now, priority: 0.8 },
     { url: absolute('/como-trabalhamos'), lastModified: now, priority: 0.6 },
     { url: absolute('/sobre'), lastModified: now, priority: 0.5 },

@@ -34,7 +34,7 @@ export const COUNTRY_CODES = ['mz', 'pt', 'br'] as const satisfies readonly Coun
  */
 export const RESERVED_TOP_LEVEL_SLUGS = [
   'solucoes', 'sobre', 'contactos', 'diagnostico', 'como-trabalhamos',
-  'privacidade', 'termos', 'obrigado', 'api', 'setores',
+  'privacidade', 'termos', 'obrigado', 'api', 'setores', 'perfil',
 ] as const;
 
 /**
