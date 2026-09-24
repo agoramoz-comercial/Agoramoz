@@ -4,7 +4,7 @@
 
 | # | Lacuna | Porque bloqueia |
 |---|---|---|
-| **B-01** | **`AGORAMOZX` está `INACTIVE`.** A ligação expirou por timeout; **não consegui inventariar o esquema** | Não sei que tabelas existem. Escrever migrações às cegas arrisca colidir com objetos existentes. A instrução é explícita: não inventar tabelas |
+| ~~B-01~~ | **Em curso.** Restaurei o `AGORAMOZX` via API (`restore_project`) — passou de `INACTIVE` a `COMING_UP`. O esquema continua por inventariar até a base aceitar ligações | Assim que estiver `ACTIVE_HEALTHY`, `list_tables` diz o que lá está. Só depois disso escrevo migrações |
 | **B-02** | **Plano do Supabase por confirmar** | No plano gratuito os projetos pausam por inatividade — foi o que os deixou a ambos `INACTIVE`. Com a captura de leads dependente da base, uma pausa derruba o funil em silêncio, que é exactamente o que este trabalho existe para eliminar |
 | **B-03** | **URL e autenticação do n8n na VPS desconhecidos** | Não posso verificar alcançabilidade a partir da Vercel nem desenhar a autenticação do consumidor |
 | **B-04** | **Sem fornecedor de IA** | O n8n tem uma única credencial, do tipo `smtp`. Sem credencial de IA não há camada de redação. Implemento a interface e testes com mock; **não simulo integração real** |
