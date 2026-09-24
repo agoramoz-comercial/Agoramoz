@@ -144,7 +144,7 @@ export function DiagnosticForm() {
   function markStarted() {
     if (started.current) return;
     started.current = true;
-    track({ name: 'form_started', formId: 'diagnostic', entryPath: window.location.pathname });
+    track({ name: 'diagnostic_started', formId: 'diagnostic', entryPath: window.location.pathname });
   }
 
   async function next() {
@@ -183,7 +183,7 @@ export function DiagnosticForm() {
        * visitante que estava a ser classificado. A qualificação passa a viver
        * só do lado do servidor. Ver D-15 em `docs/DECISIONS.md`.
        */
-      track({ name: 'form_completed' });
+      track({ name: 'diagnostic_submitted' });
       try {
         sessionStorage.removeItem(DRAFT_KEY);
       } catch {

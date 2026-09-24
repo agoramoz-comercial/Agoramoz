@@ -26,6 +26,7 @@ const ENTRADAS: readonly Entrada[] = [
   { href: '/admin/oportunidades', texto: 'Oportunidades' },
   { href: '/admin/contactos', texto: 'Contactos' },
   { href: '/admin/organizacoes', texto: 'Organizações' },
+  { href: '/admin/aquisicao', texto: 'Aquisição' },
   { href: '/admin/fila', texto: 'Fila' },
   { href: '/admin/equipa', texto: 'Equipa' },
 ];

@@ -113,6 +113,23 @@ const serverSchema = z.object({
    */
   DIAGNOSTIC_PERSISTENCE: z.enum(['required', 'off']).default('off'),
 
+  /**
+   * Persistência dos eventos analíticos.
+   *
+   * Explícita e por omissão desligada, pelo mesmo raciocínio de
+   * `DIAGNOSTIC_PERSISTENCE`: um sistema de medição que se liga sozinho por
+   * inferência é um sistema que ninguém decidiu ligar. Com `off`, a rota
+   * responde na mesma e não toca na base.
+   */
+  ANALYTICS_PERSISTENCE: z.enum(['on', 'off']).default('off'),
+
+  /**
+   * Um balde mais largo do que o do diagnóstico, e de propósito: uma visita
+   * normal produz vários eventos (entrada, passos do formulário, cliques),
+   * enquanto um diagnóstico legítimo é submetido uma vez.
+   */
+  ANALYTICS_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
+
   /** Slug do questionário usado pela rota pública. */
   DIAGNOSTIC_QUESTIONNAIRE_SLUG: z.string().min(1).default('diagnostico-estrategico'),
 })
@@ -184,6 +201,8 @@ export function serverEnv(): z.infer<typeof serverSchema> {
     {
       NODE_ENV: process.env.NODE_ENV,
       VERCEL_ENV: process.env.VERCEL_ENV,
+      ANALYTICS_PERSISTENCE: process.env.ANALYTICS_PERSISTENCE,
+      ANALYTICS_RATE_LIMIT_MAX: process.env.ANALYTICS_RATE_LIMIT_MAX,
       DIAGNOSTIC_RATE_LIMIT_MAX: process.env.DIAGNOSTIC_RATE_LIMIT_MAX,
       DIAGNOSTIC_RATE_LIMIT_WINDOW_MS: process.env.DIAGNOSTIC_RATE_LIMIT_WINDOW_MS,
       DIAGNOSTIC_MAX_BODY_BYTES: process.env.DIAGNOSTIC_MAX_BODY_BYTES,
