@@ -1,6 +1,14 @@
-import { FOUNDERS, SITE, SOCIAL } from '@/content/site';
-import { SITE_URL, absolute } from '@/lib/seo/site';
+import { siteGraph } from '@/lib/seo/schema/graph';
+import { breadcrumbNode, faqNode, serviceNode } from '@/lib/seo/schema/nodes';
+import type { SchemaGraph, SchemaNode } from '@/lib/seo/schema/types';
 
+/**
+ * O único renderizador de JSON-LD do repositório.
+ *
+ * Toda a construção dos nós vive em `lib/seo/schema/`, em funções puras que se
+ * testam sem React. Aqui fica só a serialização — que é a parte com risco de
+ * segurança, e por isso merece estar num sítio só.
+ */
 function Script({ data }: { data: object }) {
   /**
    * A única excepção à regra `react/no-danger` em todo o repositório, e é
@@ -10,10 +18,17 @@ function Script({ data }: { data: object }) {
    * O que a torna segura não é o comentário, é o escape abaixo. O dado é
    * conteúdo nosso, estático e conhecido em build — mas se algum dia alguém lhe
    * passar texto de um cliente, uma sequência `</script>` fechava a etiqueta e
-   * o resto era executado. Escapar `<` como `\u003c` mantém o JSON válido e
+   * o resto era executado. Escapar `<` como `<` mantém o JSON válido e
    * fecha essa porta antes de ela existir.
+   *
+   * `>` e `&` vão pelo mesmo caminho: sozinhos não fecham a etiqueta, mas
+   * escapá-los custa nada e tira o `<` da posição de única defesa. Com a
+   * atribuição a caminho, vai passar por aqui texto que veio de um URL.
    */
-  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  const json = JSON.stringify(data)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
 
   return (
     // eslint-disable-next-line react/no-danger -- escapado acima; conteúdo próprio
@@ -21,108 +36,56 @@ function Script({ data }: { data: object }) {
   );
 }
 
+const grafo = (...nos: SchemaNode[]): SchemaGraph => ({
+  '@context': 'https://schema.org',
+  '@graph': nos,
+});
+
+export function JsonLd({ graph }: { graph: SchemaGraph }) {
+  return <Script data={graph} />;
+}
+
+/** A entidade e o website. Sai do `SiteChrome`, igual em todas as páginas. */
+export function SiteJsonLd() {
+  return <Script data={siteGraph()} />;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Invólucros de compatibilidade                                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * As páginas continuam a chamar estes nomes. O que mudou por baixo: os nós
+ * passam a estar ligados por `@id` em vez de serem declarações independentes.
+ *
+ * Porquê manter os nomes neste lote: migrar as dez páginas no mesmo passo em
+ * que se muda a forma do JSON-LD misturaria duas alterações com modos de falha
+ * diferentes. Este lote muda o que é emitido; o seguinte troca as chamadas,
+ * com o formato já verificado.
+ */
+
 export function OrganizationJsonLd() {
-  return (
-    <Script
-      data={{
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: SITE.name,
-        url: SITE_URL,
-        description: SITE.description,
-        email: SITE.email,
-        logo: absolute('/brand/logo-light-bg.png'),
-        /* Perfis oficiais: é o que liga a entidade às redes nos motores de busca. */
-        sameAs: SOCIAL.filter((s) => s.id !== 'whatsapp').map((s) => s.href),
-        contactPoint: [
-          {
-            '@type': 'ContactPoint',
-            contactType: 'sales',
-            email: SITE.email,
-            telephone: `+${SITE.whatsapp.e164}`,
-            availableLanguage: ['pt'],
-            areaServed: ['MZ', 'PT', 'BR'],
-          },
-        ],
-        areaServed: [
-          { '@type': 'Country', name: 'Moçambique' },
-          { '@type': 'Country', name: 'Portugal' },
-          { '@type': 'Country', name: 'Brasil' },
-        ],
-        founder: FOUNDERS.people.map((p) => ({
-          '@type': 'Person',
-          name: p.name,
-          jobTitle: p.role,
-          sameAs: p.linkedin,
-        })),
-      }}
-    />
-  );
+  return <SiteJsonLd />;
 }
 
+/** Passou a fazer parte do grafo do site, emitido por `OrganizationJsonLd`. */
 export function WebSiteJsonLd() {
-  return (
-    <Script
-      data={{ '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.name, url: SITE_URL, inLanguage: 'pt' }}
-    />
-  );
+  return null;
 }
 
-export function FaqJsonLd({ items }: { items: { q: string; a: string }[] }) {
-  return (
-    <Script
-      data={{
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: items.map((i) => ({
-          '@type': 'Question',
-          name: i.q,
-          acceptedAnswer: { '@type': 'Answer', text: i.a },
-        })),
-      }}
-    />
-  );
+export function FaqJsonLd({ items, path = '/' }: { items: readonly { q: string; a: string }[]; path?: string }) {
+  return <Script data={grafo(faqNode(path, items))} />;
 }
 
-export function ServiceJsonLd({
-  name,
-  description,
-  path,
-  areaServed,
-}: {
+export function ServiceJsonLd(input: {
   name: string;
   description: string;
   path: string;
   areaServed?: string;
 }) {
-  return (
-    <Script
-      data={{
-        '@context': 'https://schema.org',
-        '@type': 'Service',
-        name,
-        description,
-        url: absolute(path),
-        provider: { '@type': 'Organization', name: SITE.name, url: SITE_URL },
-        ...(areaServed ? { areaServed: { '@type': 'Country', name: areaServed } } : {}),
-      }}
-    />
-  );
+  return <Script data={grafo(serviceNode(input))} />;
 }
 
-export function BreadcrumbJsonLd({ items }: { items: { name: string; path: string }[] }) {
-  return (
-    <Script
-      data={{
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: items.map((item, i) => ({
-          '@type': 'ListItem',
-          position: i + 1,
-          name: item.name,
-          item: absolute(item.path),
-        })),
-      }}
-    />
-  );
+export function BreadcrumbJsonLd({ items }: { items: readonly { name: string; path: string }[] }) {
+  return <Script data={grafo(breadcrumbNode(items.at(-1)?.path ?? '/', items))} />;
 }

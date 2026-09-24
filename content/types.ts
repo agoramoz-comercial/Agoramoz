@@ -218,3 +218,109 @@ export interface PhoneNumber {
   e164: string;
   display: string;
 }
+
+/* ========================================================================== */
+/* IDENTIDADE                                                                 */
+/* ========================================================================== */
+
+/**
+ * O nome comercial é um tipo literal, pela mesma razão que `CTA_PRIMARY` é:
+ * a regra passa a ser do compilador em vez de ser da disciplina de quem edita.
+ *
+ * A regra aqui é «não acrescentar palavras-chave ao nome da empresa». Não é
+ * uma preferência de estilo — é motivo de suspensão de um Perfil de Empresa no
+ * Google, e é a tentação óbvia quando alguém quiser subir na pesquisa local.
+ * `'AGORAMOZ — Software em Maputo'` não compila.
+ */
+export const BRAND_NAME = 'AGORAMOZ' as const;
+
+/**
+ * Quem confirmou o facto, quando, e com base em quê.
+ *
+ * Um facto sobre a empresa sem responsável não é um facto — é uma suposição
+ * que ninguém se lembra de ter feito. É a mesma exigência que `Certification`
+ * faz ao `issuer` e que `SourcedStat` faz à `source`.
+ */
+export interface FactProvenance {
+  readonly confirmedBy: string;
+  /** ISO, ao dia. */
+  readonly confirmedAt: string;
+  readonly source: string;
+}
+
+export type AddressCountry = 'MZ' | 'PT' | 'BR';
+
+/**
+ * Morada, coordenadas e horário como factos com estado explícito.
+ *
+ * `'unknown'` não é ausência de dados — é uma afirmação: procurámos e não
+ * temos. A diferença importa porque o gerador de `LocalBusiness` aceita
+ * apenas a variante `'confirmed'`, e portanto, enquanto estes três forem
+ * desconhecidos, **emitir um LocalBusiness não compila**. É assim que «apenas
+ * se elegível» deixa de ser um comentário.
+ */
+export type PostalAddressFact =
+  | { readonly status: 'unknown' }
+  | {
+      readonly status: 'confirmed';
+      readonly streetAddress: string;
+      readonly addressLocality: string;
+      readonly addressRegion?: string;
+      readonly postalCode?: string;
+      readonly addressCountry: AddressCountry;
+      readonly provenance: FactProvenance;
+    };
+
+export type GeoFact =
+  | { readonly status: 'unknown' }
+  | {
+      readonly status: 'confirmed';
+      readonly latitude: number;
+      readonly longitude: number;
+      readonly provenance: FactProvenance;
+    };
+
+export type DayOfWeek =
+  | 'Monday'
+  | 'Tuesday'
+  | 'Wednesday'
+  | 'Thursday'
+  | 'Friday'
+  | 'Saturday'
+  | 'Sunday';
+
+export interface OpeningHoursSpec {
+  readonly dayOfWeek: readonly DayOfWeek[];
+  readonly opens: string;
+  readonly closes: string;
+}
+
+export type OpeningHoursFact =
+  | { readonly status: 'unknown' }
+  | {
+      readonly status: 'confirmed';
+      readonly specification: readonly OpeningHoursSpec[];
+      readonly timeZone: string;
+      readonly provenance: FactProvenance;
+    };
+
+/** Onde a empresa presta serviço. Derivado do registry, nunca escrito à mão. */
+export interface ServiceArea {
+  readonly code: AddressCountry;
+  readonly name: string;
+}
+
+export interface Identity {
+  /** Nome registado. `null` enquanto ninguém o fornecer. Nunca inventado. */
+  readonly legalName: string | null;
+  readonly tradingName: typeof BRAND_NAME;
+  readonly url: string;
+  readonly logo: { readonly url: string; readonly width: number; readonly height: number };
+  readonly telephone: PhoneNumber;
+  readonly email: string;
+  readonly address: PostalAddressFact;
+  readonly geo: GeoFact;
+  readonly openingHours: OpeningHoursFact;
+  readonly serviceAreas: readonly ServiceArea[];
+  readonly socialProfiles: readonly SocialLink[];
+}

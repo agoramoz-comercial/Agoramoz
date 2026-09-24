@@ -1,9 +1,12 @@
+import { COUNTRIES, COUNTRY_CODES } from './registry';
 import {
+  BRAND_NAME,
   CTA_PRIMARY,
   CTA_SECONDARY,
   DEMO_DISCLAIMER,
   type Certification,
   type FaqItem,
+  type Identity,
   type Problem,
   type ProofItem,
   type SocialLink,
@@ -66,6 +69,47 @@ export const SOCIAL: readonly SocialLink[] = [
     href: `https://wa.me/${SITE.whatsapp.e164}`,
   },
 ] as const;
+
+/* ---------------------------------------------------------------- identidade */
+
+/**
+ * A identidade da empresa, numa fonte só.
+ *
+ * Não é um módulo novo de propósito. Este repositório já pagou por uma fonte
+ * dupla de verdade — o comentário em `registry.ts` regista as quatro ligações
+ * mortas que ela produziu — e uma segunda declaração do nome, do e-mail ou do
+ * telefone divergiria da primeira ao fim de uma edição. Aqui, `IDENTITY`
+ * **compõe** `SITE`, `SOCIAL` e o registry; não copia nada.
+ *
+ * Os três campos que a AGORAMOZ não tem — morada, coordenadas e horário —
+ * ficam `'unknown'`, que é uma afirmação e não uma omissão: a empresa é de
+ * área de serviço, sem morada pública, e foi isso que o fundador confirmou.
+ * Enquanto assim for, o gerador de `LocalBusiness` é inalcançável pelo
+ * compilador, não por um `if` que alguém possa apagar.
+ */
+export const IDENTITY: Identity = {
+  /** Por preencher: nome registado e NUIT. Ver B-11 em docs/GAPS.md. */
+  legalName: null,
+  tradingName: BRAND_NAME,
+  url: SITE.url,
+  /** 2000×2000, verificado com `file` — não estimado. */
+  logo: { url: `${SITE.url}/brand/logo-light-bg.png`, width: 2000, height: 2000 },
+  /**
+   * É a linha de WhatsApp, e é a única que existe. Não invento um fixo para
+   * o `contactPoint` ficar mais completo.
+   */
+  telephone: SITE.whatsapp,
+  email: SITE.email,
+  address: { status: 'unknown' },
+  geo: { status: 'unknown' },
+  openingHours: { status: 'unknown' },
+  /** Dos países publicados, não de uma lista à parte que envelheceria. */
+  serviceAreas: COUNTRY_CODES.map((c) => ({
+    code: c.toUpperCase() as 'MZ' | 'PT' | 'BR',
+    name: COUNTRIES[c].name,
+  })),
+  socialProfiles: SOCIAL,
+};
 
 export const CTA = { primary: CTA_PRIMARY, secondary: CTA_SECONDARY } as const;
 
