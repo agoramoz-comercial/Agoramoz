@@ -138,7 +138,7 @@ export const mzEnergiaMineracao: SectorPage = {
       kind: 'capability',
       title: 'Competência no setor dentro da própria empresa',
       body: 'A área de energia é acompanhada internamente pela Co-founder e Chief Energy Officer, responsável por parcerias estratégicas e desenvolvimento de oportunidades no setor.',
-      evidence: 'Sheinaz de Sousa Amisse, Co-founder & Chief Energy Officer da AGORAMOZ.',
+      evidence: 'Sheinaz Amisse, Co-founder & Chief Energy Officer da AGORAMOZ.',
     },
   ],
 

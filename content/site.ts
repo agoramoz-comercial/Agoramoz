@@ -287,7 +287,7 @@ export const FOUNDERS = {
       certifications: [] as readonly Certification[],
     },
     {
-      name: 'Sheinaz de Sousa Amisse',
+      name: 'Sheinaz Amisse',
       role: 'Co-founder & Chief Energy Officer',
       photo: 'sheinaz',
       body: 'Responsável por parcerias estratégicas, oportunidades, investimento e desenvolvimento no setor energético.',

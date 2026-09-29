@@ -196,6 +196,27 @@ export function DiagnosticForm() {
   });
 
   if (status === 'done') {
+    const enviado = form.getValues();
+    const faixa = activeCountry?.investmentBands.find((b) => b.id === enviado.investmentBand);
+    // `sector` é `string` no schema, não `SectorSlug`: procuro na lista do país
+    // em vez de indexar às cegas o `Record`, que aceitaria um valor inventado.
+    const setor = activeCountry?.sectors.find((s) => s === enviado.sector);
+
+    /**
+     * As faixas já vivem na moeda nativa de cada país — `Até 250 000 MZN`,
+     * `15 000 – 50 000 €`. O rótulo é mostrado tal como está, sem formatação
+     * adicional e sem conversão: converter obrigaria a uma taxa de câmbio no
+     * repositório, que envelhece e passa a mentir ao lead.
+     */
+    const resumo: [string, string][] = [
+      ...(activeCountry ? ([['Mercado', activeCountry.name]] as [string, string][]) : []),
+      ...(setor ? ([['Setor', SECTOR_LABELS[setor]]] as [string, string][]) : []),
+      ...(faixa ? ([['Faixa indicada', faixa.label]] as [string, string][]) : []),
+      ...(enviado.decisionTimeframe
+        ? ([['Prazo', TIME_LABELS[enviado.decisionTimeframe]]] as [string, string][])
+        : []),
+    ];
+
     /**
      * O momento mais valioso do site acabava numa caixa sem saída: sem próximo
      * passo, sem prazo, sem canal alternativo e sem forma de voltar. Quem
@@ -215,6 +236,27 @@ export function DiagnosticForm() {
           Vamos analisar o que descreveu e responder com os próximos passos. Se concluirmos que não há
           adequação, dizemos isso — é mais útil para si do que uma proposta que não faz sentido.
         </p>
+
+        {resumo.length > 0 && (
+          /**
+             O ecrã mais valioso do site não devolvia nada do que a pessoa
+             acabou de escrever. Devolver a faixa **na moeda do país** — e não
+             convertida, nunca convertida — faz duas coisas: confirma ao lead
+             que foi entendido, e ancora a conversa que vem a seguir no número
+             que ele próprio indicou.
+          */
+          <div className="rule mt-7 pt-6">
+            <p className="rule-label text-[color:var(--muted)]">O que recebemos</p>
+            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+              {resumo.map(([rotulo, valor]) => (
+                <div key={rotulo}>
+                  <dt className="rule-label text-[color:var(--muted)]">{rotulo}</dt>
+                  <dd className="mt-1 text-sm text-[color:var(--on-surface)]">{valor}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
 
         <div className="rule mt-7 pt-6">
           <p className="rule-label text-[color:var(--muted)]">O que acontece agora</p>
