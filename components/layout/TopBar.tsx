@@ -7,8 +7,10 @@ import type { Idioma } from '@/content/types';
 import { destinoNoOutroIdioma } from '@/lib/i18n/rotas';
 import { t } from '@/lib/i18n/texto';
 
+// `px-1` abaixo de `sm`: com `px-2`, mercados e idioma não cabiam na mesma
+// linha a 390px e a barra ganhava uma terceira linha (+44px, medido).
 const LIGACAO =
-  'rule-label inline-flex min-h-11 items-center px-2 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]';
+  'rule-label inline-flex min-h-11 items-center px-1 sm:px-2 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]';
 
 /**
  * §1 do documento. Sem descontos, sem contadores, sem urgência — apenas
@@ -38,7 +40,7 @@ export function TopBar({ idioma = 'pt' }: { idioma?: Idioma }) {
       >
         <p className="rule-label text-[color:var(--muted)]">{t(CHROME.topo, idioma)}</p>
         <div className="flex flex-wrap items-center gap-x-3">
-          <nav aria-label={t(CHROME.mercadosAria, idioma)} className="flex flex-wrap items-center gap-1">
+          <nav aria-label={t(CHROME.mercadosAria, idioma)} className="flex flex-wrap items-center sm:gap-1">
             {ENTRADAS_DE_MERCADO.map((e) => {
               const href = destinoDaEntrada(e.chave);
               return (
@@ -50,7 +52,17 @@ export function TopBar({ idioma = 'pt' }: { idioma?: Idioma }) {
                   aria-current={pathname === href ? 'page' : undefined}
                   className={LIGACAO}
                 >
-                  {e.chave === 'global' ? `${e.codigo} · Global` : e.codigo}
+                  {/* Em telemóvel, só «Global»: o nome acessível continua a
+                      começar por «EN · Global» e contém o texto visível (WCAG 2.5.3). */}
+                  {e.chave === 'global' ? (
+                    // Um só item flex: com o `span` solto dentro do `inline-flex`, o
+                    // espaço antes de «Global» desaparecia (medido: 5px a menos).
+                    <span>
+                      <span className="max-sm:hidden">{`${e.codigo} · `}</span>Global
+                    </span>
+                  ) : (
+                    e.codigo
+                  )}
                 </Link>
               );
             })}
