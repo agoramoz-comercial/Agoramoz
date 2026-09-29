@@ -3,13 +3,20 @@ import { Button } from '@/components/ui/Button';
 import { MagneticButton } from '@/components/motion/MagneticButton';
 import { SplitHeading } from '@/components/motion/SplitHeading';
 import { ChromeBlob } from '@/components/motion/ChromeBlob';
-import { CTA } from '@/content/site';
+import { CHROME } from '@/content/i18n/chrome';
+import { FINAL } from '@/content/i18n/paginas';
+import type { Idioma } from '@/content/types';
+import { ligacao } from '@/lib/i18n/rotas';
+import { t } from '@/lib/i18n/texto';
 
+/** Por omissão, no idioma da página; em português, o texto de sempre. */
 export function FinalCta({
-  title = 'Antes de comprar mais tecnologia, descubra qual sistema produzirá maior impacto.',
-  body = 'Partilhe o processo que pretende melhorar. A AGORAMOZ analisará o problema, a viabilidade e o próximo passo recomendado.',
-  href = '/diagnostico',
+  idioma = 'pt',
+  title = t(FINAL.titulo, idioma),
+  body = t(FINAL.corpo, idioma),
+  href = ligacao('/diagnostico', idioma).href,
 }: {
+  idioma?: Idioma;
   title?: string;
   body?: string;
   href?: string;
@@ -52,7 +59,7 @@ export function FinalCta({
           <MagneticButton>
             <Button asChild size="lg">
               <Link href={href}>
-                {CTA.primary}
+                {t(CHROME.ctaPrimario, idioma)}
                 <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
                   →
                 </span>
@@ -60,7 +67,7 @@ export function FinalCta({
             </Button>
           </MagneticButton>
           <p className="rule-label text-[color:var(--muted)] md:text-right">
-            Sem pressão comercial · Sem soluções genéricas · Sem promessas impossíveis
+            {t(FINAL.micro, idioma)}
           </p>
         </div>
       </div>

@@ -16,6 +16,8 @@ import { caminhoBase, caminhoNoIdioma } from './texto';
 export const ROTAS_BILINGUES: readonly string[] = [
   // Lote E2: o diagnóstico, com consentimento no idioma em que é mostrado.
   '/diagnostico',
+  // Lote E3: o índice de soluções.
+  '/solucoes',
   '/global',
   ...GLOBAL_CODES.map((c) => `/global/${c}`),
 ]

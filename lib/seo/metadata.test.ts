@@ -2,6 +2,9 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COUNTRIES, COUNTRY_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
+import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
+import { INDICE_SOLUCOES } from '@/content/i18n/paginas';
+import { IDIOMAS, caminhoNoIdioma } from '@/lib/i18n/texto';
 import { buildMetadata, OG_IMAGE_PADRAO, SITE_URL } from './site';
 
 /**
@@ -146,7 +149,26 @@ describe('títulos e descrições são únicos', () => {
       return titulo && descricao ? [{ rota: p.ficheiro, titulo, descricao }] : [];
     });
 
-    return [...doRegistry, ...estaticas];
+    /**
+     * As páginas bilingues leem o título de `content/i18n/*`, não de um literal
+     * na fonte — a expressão regular acima já não as vê. Entram aqui, nos dois
+     * idiomas: um título inglês igual a outro é o mesmo defeito que em
+     * português.
+     */
+    const bilingues = IDIOMAS.flatMap((i) => [
+      {
+        rota: caminhoNoIdioma('/diagnostico', i),
+        titulo: DIAGNOSTICO.metaTitulo[i],
+        descricao: DIAGNOSTICO.metaDescricao[i],
+      },
+      {
+        rota: caminhoNoIdioma('/solucoes', i),
+        titulo: INDICE_SOLUCOES.metaTitulo[i],
+        descricao: INDICE_SOLUCOES.metaDescricao[i],
+      },
+    ]);
+
+    return [...doRegistry, ...estaticas, ...bilingues];
   }
 
   function repetidos(valores: string[]): string[] {

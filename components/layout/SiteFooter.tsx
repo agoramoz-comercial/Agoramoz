@@ -218,7 +218,10 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
 
         <div className="rule mt-16 flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="rule-label text-[color:var(--muted)]">
-            © {new Date().getFullYear()} AGORAMOZ. {t(CHROME.direitos, idioma)}
+            {/* Os mesmos três nós de texto do original — «© », o ano e o resto —
+                para o português renderizar igual ao píxel. */}
+            © {new Date().getFullYear()}
+            {` AGORAMOZ. ${t(CHROME.direitos, idioma)}`}
           </p>
           <MotionToggle idioma={idioma} />
         </div>

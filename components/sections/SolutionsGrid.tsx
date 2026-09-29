@@ -1,14 +1,31 @@
 import Link from 'next/link';
 import { Reveal } from '@/components/motion/Reveal';
 import { getSolutionSummaries } from '@/content/registry';
+import { RESUMO_SOLUCAO } from '@/content/i18n/chrome';
+import type { Idioma } from '@/content/types';
+import { SoPortugues } from '@/components/ui/SoPortugues';
+import { ligacao } from '@/lib/i18n/rotas';
+import { t } from '@/lib/i18n/texto';
 
 /**
  * Índice editorial: cada capacidade é uma linha a toda a largura, com o
  * número, o nome em corpo display e o efeito a deslocar no hover. Substitui
  * a grelha de cartões — lê-se como sumário de publicação, não como catálogo.
+ *
+ * Em inglês, cada linha leva à página inglesa quando existe (`ligacao`) e à
+ * portuguesa, marcada, quando não existe.
  */
-export function SolutionsGrid() {
-  const solutions = getSolutionSummaries();
+export function SolutionsGrid({ idioma = 'pt' }: { idioma?: Idioma }) {
+  const solutions = getSolutionSummaries().map((s) => {
+    const l = ligacao(s.href, idioma);
+    return {
+      slug: s.slug,
+      label: t(RESUMO_SOLUCAO[s.slug].label, idioma),
+      short: t(RESUMO_SOLUCAO[s.slug].short, idioma),
+      href: l.href,
+      soPortugues: l.soPortugues,
+    };
+  });
 
   return (
     <Reveal className="mt-16">
@@ -17,6 +34,7 @@ export function SolutionsGrid() {
           <li key={s.slug} data-animate>
             <Link
               href={s.href}
+              hrefLang={s.soPortugues ? 'pt' : undefined}
               className="group relative flex items-baseline gap-6 border-t border-dashed border-[color:var(--hairline)] py-7 transition-colors duration-500 hover:border-[color:var(--accent)] md:gap-10 md:py-9"
             >
               <span className="numeral shrink-0 text-[1.75rem] text-[color:var(--muted)] transition-colors duration-500 group-hover:text-[color:var(--accent)] md:text-[2.25rem]">
@@ -26,6 +44,7 @@ export function SolutionsGrid() {
               <span className="min-w-0 flex-1">
                 <span className="block font-display text-[length:var(--text-h2)] leading-[1.05] font-bold tracking-[var(--tracking-heading)] transition-transform duration-500 ease-out group-hover:translate-x-2">
                   {s.label}
+                  {s.soPortugues && <SoPortugues idioma={idioma} />}
                 </span>
                 <span className="mt-2 block max-w-[46ch] text-[color:var(--muted)]">{s.short}</span>
               </span>
