@@ -1,7 +1,9 @@
 import { Linkedin, Instagram, MessageCircle, Facebook, Youtube, type LucideIcon } from 'lucide-react';
 import { SOCIAL } from '@/content/site';
+import { CHROME } from '@/content/i18n/chrome';
+import { t } from '@/lib/i18n/texto';
 import { cn } from '@/lib/utils/cn';
-import type { SocialLink } from '@/content/types';
+import type { Idioma, SocialLink } from '@/content/types';
 
 /**
  * Canais públicos, lidos de `SOCIAL`. Acrescentar uma rede é acrescentar uma
@@ -31,11 +33,13 @@ export function SocialLinks({
   variant = 'row',
   className,
   items = SOCIAL,
+  idioma = 'pt',
 }: {
   /** `row`: ícones lado a lado. `list`: uma linha por canal, com o handle. */
   variant?: 'row' | 'list';
   className?: string;
   items?: readonly SocialLink[];
+  idioma?: Idioma;
 }) {
   if (items.length === 0) return null;
 
@@ -58,7 +62,7 @@ export function SocialLinks({
                 <span aria-hidden className="text-[color:var(--muted)] transition-transform duration-300 group-hover:translate-x-0.5">
                   ↗
                 </span>
-                <span className="sr-only">(abre noutro separador)</span>
+                <span className="sr-only">{t(CHROME.novoSeparador, idioma)}</span>
               </a>
             </li>
           );
@@ -81,7 +85,7 @@ export function SocialLinks({
               className="inline-flex size-11 items-center justify-center border border-dashed border-[color:var(--hairline)] text-[color:var(--muted)] transition-colors hover:border-[color:var(--accent)] hover:text-[color:var(--on-surface)]"
             >
               <Icon aria-hidden className="size-[1.125rem]" />
-              <span className="sr-only">{s.label} da AGORAMOZ (abre noutro separador)</span>
+              <span className="sr-only">{`${t(CHROME.redeDa, idioma).replace('{rede}', s.label)} ${t(CHROME.novoSeparador, idioma)}`}</span>
             </a>
           </li>
         );

@@ -3,6 +3,10 @@ import { Linkedin } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { DitherMark } from '@/components/ui/DitherMark';
 import { FOUNDERS } from '@/content/site';
+import { CHROME } from '@/content/i18n/chrome';
+import { FUNDADORES, conteudoDoInicio } from '@/content/i18n/inicio';
+import type { Idioma } from '@/content/types';
+import { t } from '@/lib/i18n/texto';
 import gerson from '@/public/equipa/gerson.png';
 import sheinaz from '@/public/equipa/sheinaz.png';
 
@@ -49,7 +53,8 @@ const RETRATOS: Record<ChaveRetrato, StaticImageData> = { gerson, sheinaz };
  */
 const TAMANHOS = '(min-width: 1024px) 34rem, (min-width: 768px) 44vw, 92vw';
 
-export function Founders() {
+export function Founders({ idioma = 'pt' }: { idioma?: Idioma }) {
+  const { corpo } = conteudoDoInicio(idioma).fundadores;
   return (
     <Reveal className="mt-16">
       <ul className="grid gap-8 md:grid-cols-2 lg:gap-10">
@@ -72,7 +77,7 @@ export function Founders() {
               </div>
 
               <div className="perfil-chapa">
-                <p className="max-w-[42ch] text-sm leading-[var(--leading-body)]">{p.body}</p>
+                <p className="max-w-[42ch] text-sm leading-[var(--leading-body)]">{corpo(p.photo)}</p>
 
                 <a
                   href={p.linkedin}
@@ -81,14 +86,14 @@ export function Founders() {
                   className="group inline-flex min-h-11 items-center gap-2.5 transition-opacity hover:opacity-75"
                 >
                   <Linkedin aria-hidden className="size-4" />
-                  <span className="rule-label">Perfil público de {p.name} no LinkedIn</span>
+                  <span className="rule-label">{t(FUNDADORES.linkedin, idioma).replace('{nome}', p.name)}</span>
                   <span
                     aria-hidden
                     className="transition-transform duration-300 group-hover:translate-x-0.5"
                   >
                     ↗
                   </span>
-                  <span className="sr-only">(abre noutro separador)</span>
+                  <span className="sr-only">{t(CHROME.novoSeparador, idioma)}</span>
                 </a>
               </div>
 
@@ -111,7 +116,7 @@ export function Founders() {
 
             {p.certifications.length > 0 && (
               <div className="mt-6">
-                <p className="rule-label text-[color:var(--muted)]">Certificações</p>
+                <p className="rule-label text-[color:var(--muted)]">{t(FUNDADORES.certificacoes, idioma)}</p>
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {p.certifications.map((c) => (
                     <li

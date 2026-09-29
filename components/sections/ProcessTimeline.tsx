@@ -3,7 +3,8 @@
 import { useRef } from 'react';
 import { gsap, useGSAP } from '@/lib/motion/register';
 import { DEV, DUR, EASE, STAGGER } from '@/lib/motion/tokens';
-import { PROCESS } from '@/content/site';
+import { conteudoDoInicio } from '@/content/i18n/inicio';
+import type { Idioma } from '@/content/types';
 
 /**
  * Régua de progresso ligada ao scroll: `scaleY` com transformOrigin no topo,
@@ -12,7 +13,8 @@ import { PROCESS } from '@/content/site';
  * Um único ScrollTrigger, na timeline de topo. Em reduced-motion a régua é
  * estática e os passos entram sem deslocação.
  */
-export function ProcessTimeline() {
+export function ProcessTimeline({ idioma = 'pt' }: { idioma?: Idioma }) {
+  const PROCESS = conteudoDoInicio(idioma).processo;
   const scope = useRef<HTMLDivElement>(null);
 
   useGSAP(

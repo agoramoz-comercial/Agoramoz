@@ -5,6 +5,7 @@ import * as chrome from '@/content/i18n/chrome';
 import * as formulario from '@/content/i18n/formulario';
 import * as diagnostico from '@/content/i18n/diagnostico';
 import * as paginas from '@/content/i18n/paginas';
+import * as inicio from '@/content/i18n/inicio';
 import { buildMetadata } from '@/lib/seo/site';
 import { caminhoBase, caminhoNoIdioma, ehIdioma, IDIOMAS, paresDeIdioma, t } from './texto';
 
@@ -56,6 +57,7 @@ const textos = [
   ...recolher(formulario, 'formulario', [], new WeakSet()),
   ...recolher(diagnostico, 'diagnostico', [], new WeakSet()),
   ...recolher(paginas, 'paginas', [], new WeakSet()),
+  ...recolher(inicio, 'inicio', [], new WeakSet()),
 ];
 
 describe('texto bilingue', () => {

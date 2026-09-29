@@ -237,7 +237,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
                     <a href={`mailto:${SITE.email}`} className="flex min-h-11 items-center text-[0.9375rem]">
                       {SITE.email}
                     </a>
-                    <SocialLinks className="mt-3" />
+                    <SocialLinks className="mt-3" idioma={idioma} />
                   </div>
                 </nav>
               </Dialog.Content>

@@ -8,7 +8,11 @@ import { Button } from '@/components/ui/Button';
 import { MagneticButton } from '@/components/motion/MagneticButton';
 import { ContourField } from '@/components/ui/ContourField';
 import { DitherMark } from '@/components/ui/DitherMark';
-import { CTA } from '@/content/site';
+import { CHROME } from '@/content/i18n/chrome';
+import { HERO } from '@/content/i18n/inicio';
+import type { Idioma } from '@/content/types';
+import { ligacao } from '@/lib/i18n/rotas';
+import { t } from '@/lib/i18n/texto';
 
 /**
  * Declaração a toda a largura sobre malha de contorno. O título ocupa a linha
@@ -20,7 +24,7 @@ import { CTA } from '@/content/site';
  * assenta, e as métricas de fallback do next/font seguram a caixa. O crómio do
  * H1 é CSS puro, pelo que não acrescenta um único milissegundo ao LCP.
  */
-export function Hero() {
+export function Hero({ idioma = 'pt' }: { idioma?: Idioma }) {
   const scope = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLDivElement>(null);
 
@@ -151,7 +155,7 @@ export function Hero() {
         <span className="rule-label text-[color:var(--muted)]">01</span>
         <DitherMark size="sm" className="self-center" />
         <span className="rule-label text-[color:var(--accent)]">
-          Infraestrutura digital para crescimento e produtividade
+          {t(HERO.eyebrow, idioma)}
         </span>
       </div>
 
@@ -162,14 +166,12 @@ export function Hero() {
         data-split
         className="chrome-text mt-10 max-w-[23ch] text-[length:var(--text-display)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)] opacity-0"
       >
-        Transformamos processos lentos e oportunidades perdidas em sistemas digitais.
+        {t(HERO.titulo, idioma)}
       </h1>
 
       <div className="mt-12 grid gap-10 md:grid-cols-12 md:gap-8">
         <p data-animate className="text-[length:var(--text-lead)] text-[color:var(--muted)] md:col-span-7">
-          A AGORAMOZ desenvolve websites avançados, software, automações e agentes de IA adaptados
-          aos processos da sua empresa — desde o primeiro contacto comercial até à operação e à
-          análise de resultados.
+          {t(HERO.lead, idioma)}
         </p>
 
         <div data-animate className="flex flex-col gap-4 md:col-span-5 md:items-end">
@@ -182,8 +184,8 @@ export function Hero() {
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap md:justify-end [&>*]:sm:flex-1 [&>*]:sm:basis-[17rem]">
             <MagneticButton className="[&>*]:w-full">
               <Button asChild size="lg">
-                <Link href="/diagnostico">
-                  {CTA.primary}
+                <Link href={ligacao('/diagnostico', idioma).href}>
+                  {t(CHROME.ctaPrimario, idioma)}
                   <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
                     →
                   </span>
@@ -191,11 +193,11 @@ export function Hero() {
               </Button>
             </MagneticButton>
             <Button asChild size="lg" variant="outline" className="w-full">
-              <Link href="#setores">Explorar soluções por setor</Link>
+              <Link href="#setores">{t(HERO.secundario, idioma)}</Link>
             </Button>
           </div>
           <p className="rule-label text-[color:var(--muted)] md:text-right">
-            Conversa objetiva · Problema definido · Próximos passos claros
+            {t(HERO.micro, idioma)}
           </p>
         </div>
       </div>

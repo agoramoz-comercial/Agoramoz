@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { COUNTRIES, COUNTRY_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
 import { INDICE_SOLUCOES } from '@/content/i18n/paginas';
+import { INICIO } from '@/content/i18n/inicio';
 import { SOLUTIONS_EN } from '@/content/en/solutions';
 import { IDIOMAS, caminhoNoIdioma } from '@/lib/i18n/texto';
 import { buildMetadata, OG_IMAGE_PADRAO, SITE_URL } from './site';
@@ -161,6 +162,11 @@ describe('títulos e descrições são únicos', () => {
         rota: caminhoNoIdioma('/diagnostico', i),
         titulo: DIAGNOSTICO.metaTitulo[i],
         descricao: DIAGNOSTICO.metaDescricao[i],
+      },
+      {
+        rota: caminhoNoIdioma('/', i),
+        titulo: INICIO.metaTitulo[i],
+        descricao: INICIO.metaDescricao[i],
       },
       {
         rota: caminhoNoIdioma('/solucoes', i),

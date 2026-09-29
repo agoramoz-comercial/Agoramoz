@@ -47,6 +47,8 @@ export const CHROME = {
   mercadosGlobais: { pt: 'Mercados globais', en: 'Global markets' },
 
   novoSeparador: { pt: '(abre noutro separador)', en: '(opens in a new tab)' },
+  /** `{rede}` é substituído pelo nome da rede. */
+  redeDa: { pt: '{rede} da AGORAMOZ', en: 'AGORAMOZ on {rede}' },
   mercados: { pt: 'Mercados', en: 'Markets' },
   /** `{n}` é substituído pelo número de mercados. */
   globalN: { pt: 'Global · {n} mercados', en: 'Global · {n} markets' },

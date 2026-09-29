@@ -17,7 +17,10 @@ import { cn } from '@/lib/utils/cn';
  *   ficava sozinho numa linha e o parágrafo esticava-se por 700px, que é largo
  *   demais para ler. Três colunas a essa largura não é opção: foi o que
  *   provocou a colisão que obrigou a recuar de `md:grid-cols-3`.
- * - **Desktop**: uma coluna por entrada, separadas por régua vertical.
+ * - **Desktop**: uma coluna por entrada, separadas por régua vertical. Com
+ *   quatro entradas, 2×2: em quatro colunas o nome do país, no corpo `h2`,
+ *   não cabia — «Moçambique» colidia com «Portugal» a 1440px (medido). Reduzir
+ *   o corpo mudaria a escala tipográfica; a grelha muda, o desenho não.
  *
  * `comGlobal` acrescenta a quarta entrada pedida — PT-PT, PT-MZ, PT-BR e EN
  * num contexto global. Liga-se nas duas homes e nas páginas inglesas; nas
@@ -48,15 +51,29 @@ export function CountriesBand({ idioma = 'pt', comGlobal = false }: { idioma?: I
       : []),
   ];
 
+  const quatro = entradas.length > 3;
+
   return (
     <Reveal className="mt-16">
-      <ul className={cn('grid', entradas.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3')}>
+      <ul className={cn('grid', quatro ? 'lg:grid-cols-2' : 'lg:grid-cols-3')}>
         {entradas.map((e, i) => (
-          <li key={e.chave} data-animate className="lg:border-l lg:border-[color:var(--hairline)] lg:first:border-l-0">
+          <li
+            key={e.chave}
+            data-animate
+            className={
+              quatro
+                ? 'lg:odd:pr-8 lg:even:border-l lg:even:border-[color:var(--hairline)] lg:even:pl-8'
+                : 'lg:border-l lg:border-[color:var(--hairline)] lg:first:border-l-0'
+            }
+          >
             <Link
               href={e.href}
               hrefLang={e.soPortugues ? 'pt' : undefined}
-              className="group grid h-full gap-x-10 gap-y-5 border-t border-dashed border-[color:var(--hairline)] py-8 md:grid-cols-12 lg:flex lg:flex-col lg:justify-between lg:border-t-0 lg:px-8 lg:first:pl-0 lg:last:pr-0"
+              className={
+                quatro
+                  ? 'group grid h-full gap-x-10 gap-y-5 border-t border-dashed border-[color:var(--hairline)] py-8 md:grid-cols-12 lg:flex lg:flex-col lg:justify-between'
+                  : 'group grid h-full gap-x-10 gap-y-5 border-t border-dashed border-[color:var(--hairline)] py-8 md:grid-cols-12 lg:flex lg:flex-col lg:justify-between lg:border-t-0 lg:px-8 lg:first:pl-0 lg:last:pr-0'
+              }
             >
               <div className="md:col-span-5 lg:col-span-full">
                 <div className="flex items-baseline gap-4">

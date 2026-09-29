@@ -95,9 +95,10 @@ describe('trilho de navegação', () => {
     return saida;
   }
 
-  it('toda a página de (site) excepto a inicial rende um trilho', () => {
+  it('toda a página excepto as iniciais rende um trilho', () => {
     const semTrilho = paginas()
-      .filter((p) => p.caminho !== 'app/(site)/page.tsx')
+      // As duas iniciais — a portuguesa e a inglesa — são a raiz do trilho, não um nível dele.
+      .filter((p) => !['app/(site)/page.tsx', 'app/(en)/en/page.tsx'].includes(p.caminho))
       .filter((p) => !p.fonte.includes('<Breadcrumbs'))
       .map((p) => p.caminho);
 

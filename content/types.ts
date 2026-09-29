@@ -149,6 +149,10 @@ export interface CtaBlock {
 export const DEMO_DISCLAIMER =
   'Demonstração conceptual criada pela AGORAMOZ. Os dados e a organização apresentados são fictícios e não representam resultados de clientes.' as const;
 
+/** O mesmo aviso, na página inglesa. Também literal: a trava vale nos dois idiomas. */
+export const DEMO_DISCLAIMER_EN =
+  'Conceptual demonstration created by AGORAMOZ. The data and organisation shown are fictitious and do not represent client results.' as const;
+
 export type ProofItem =
   | { kind: 'methodology'; title: string; body: string }
   | { kind: 'capability'; title: string; body: string; evidence: string }
@@ -157,7 +161,7 @@ export type ProofItem =
       title: string;
       body: string;
       /** Literal: uma demonstração não pode ser publicada sem se identificar. */
-      disclaimer: typeof DEMO_DISCLAIMER;
+      disclaimer: typeof DEMO_DISCLAIMER | typeof DEMO_DISCLAIMER_EN;
     }
   | {
       kind: 'public-reference';

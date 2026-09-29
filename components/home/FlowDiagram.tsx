@@ -4,7 +4,8 @@ import { useRef } from 'react';
 import { gsap, useGSAP } from '@/lib/motion/register';
 import { DEV, DUR, EASE } from '@/lib/motion/tokens';
 import { Eyebrow } from '@/components/ui/Eyebrow';
-import { SYSTEM_FLOW } from '@/content/site';
+import { conteudoDoInicio } from '@/content/i18n/inicio';
+import type { Idioma } from '@/content/types';
 
 /**
  * Scroll horizontal sem pin.
@@ -22,7 +23,8 @@ import { SYSTEM_FLOW } from '@/content/site';
  * `end` depende do layout, por isso é função, com `invalidateOnRefresh` para
  * recalcular no resize. `ease: none` é obrigatório num scrub 1:1.
  */
-export function FlowDiagram() {
+export function FlowDiagram({ idioma = 'pt' }: { idioma?: Idioma }) {
+  const SYSTEM_FLOW = conteudoDoInicio(idioma).fluxo;
   const scope = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLOListElement>(null);
 

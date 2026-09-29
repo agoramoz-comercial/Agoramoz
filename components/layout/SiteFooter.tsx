@@ -69,7 +69,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
               </a>
             </div>
 
-            <SocialLinks className="mt-5" />
+            <SocialLinks className="mt-5" idioma={idioma} />
           </div>
 
           <nav aria-label={t(CHROME.solucoes, idioma)}>

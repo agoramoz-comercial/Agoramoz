@@ -14,6 +14,8 @@ import { caminhoBase, caminhoNoIdioma } from './texto';
  * Cresce por lote: uma rota só entra quando a página inglesa existe.
  */
 export const ROTAS_BILINGUES: readonly string[] = [
+  // Lote E3: a página inicial. Com ela, a entrada inglesa passa a ser `/en`.
+  '/',
   // Lote E2: o diagnóstico, com consentimento no idioma em que é mostrado.
   '/diagnostico',
   // Lote E3: o índice de soluções e as cinco soluções.

@@ -1,20 +1,15 @@
 import { Badge } from '@/components/ui/Badge';
 import { Reveal } from '@/components/motion/Reveal';
-import type { ProofItem } from '@/content/types';
-
-const KIND_LABEL = {
-  'conceptual-demo': 'Demonstração',
-  methodology: 'Método',
-  capability: 'Capacidade',
-  'public-reference': 'Referência',
-} as const;
+import { PROVA } from '@/content/i18n/inicio';
+import type { Idioma, ProofItem } from '@/content/types';
+import { t } from '@/lib/i18n/texto';
 
 /**
  * O disclaimer de uma demonstração conceptual é renderizado fora de qualquer
  * âmbito de animação e nunca é atrasado nem escondido. É uma obrigação de
  * integridade, não um elemento de design.
  */
-export function ProofSection({ items }: { items: ProofItem[] }) {
+export function ProofSection({ items, idioma = 'pt' }: { items: ProofItem[]; idioma?: Idioma }) {
   return (
     <Reveal className="mt-16">
       <ul className="grid md:grid-cols-2">
@@ -29,7 +24,7 @@ export function ProofSection({ items }: { items: ProofItem[] }) {
                 {String(i + 1).padStart(2, '0')}
               </span>
               <Badge variant={item.kind === 'conceptual-demo' ? 'conceptual' : 'neutral'}>
-                {KIND_LABEL[item.kind]}
+                {t(PROVA.tipo[item.kind], idioma)}
               </Badge>
             </div>
 
@@ -55,7 +50,7 @@ export function ProofSection({ items }: { items: ProofItem[] }) {
                 target="_blank"
                 className="rule-label rule mt-6 pt-4 text-[color:var(--accent)]"
               >
-                Fonte →
+                {t(PROVA.fonte, idioma)}
               </a>
             )}
           </li>
