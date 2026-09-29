@@ -16,11 +16,11 @@ export const ca: GlobalMarket = {
   },
   dataRegime: 'PIPEDA e regimes provinciais (Lei 25, Quebec)',
   investmentBands: [
-    { id: 'ca-1', label: 'Até 7 500 CAD', scoreWeight: 6 },
-    { id: 'ca-2', label: '7 500 – 22 000 CAD', scoreWeight: 14 },
-    { id: 'ca-3', label: '22 000 – 75 000 CAD', scoreWeight: 20 },
-    { id: 'ca-4', label: 'Acima de 75 000 CAD', scoreWeight: 25 },
-    { id: 'ca-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'ca-1', label: { pt: 'Até 7 500 CAD', en: 'Up to CAD 7,500' }, scoreWeight: 6 },
+    { id: 'ca-2', label: { pt: '7 500 – 22 000 CAD', en: 'CAD 7,500 – 22,000' }, scoreWeight: 14 },
+    { id: 'ca-3', label: { pt: '22 000 – 75 000 CAD', en: 'CAD 22,000 – 75,000' }, scoreWeight: 20 },
+    { id: 'ca-4', label: { pt: 'Acima de 75 000 CAD', en: 'Over CAD 75,000' }, scoreWeight: 25 },
+    { id: 'ca-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

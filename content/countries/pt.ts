@@ -18,15 +18,18 @@ export const pt: Country = {
   whatsapp: null,
   privacyRegime: 'RGPD',
   consent: {
-    text: 'Autorizo o tratamento dos meus dados pela AGORAMOZ para resposta a este pedido, nos termos do RGPD. Posso exercer os direitos de acesso, retificação, oposição e eliminação a qualquer momento.',
+    text: {
+      pt: 'Autorizo o tratamento dos meus dados pela AGORAMOZ para resposta a este pedido, nos termos do RGPD. Posso exercer os direitos de acesso, retificação, oposição e eliminação a qualquer momento.',
+      en: 'I authorise AGORAMOZ to process my data to answer this request, under the GDPR. I may exercise my rights of access, rectification, objection and erasure at any time.',
+    },
     policyHref: '/privacidade',
   },
   investmentBands: [
-    { id: 'pt-1', label: 'Até 5 000 €', scoreWeight: 6 },
-    { id: 'pt-2', label: '5 000 – 15 000 €', scoreWeight: 14 },
-    { id: 'pt-3', label: '15 000 – 50 000 €', scoreWeight: 20 },
-    { id: 'pt-4', label: 'Acima de 50 000 €', scoreWeight: 25 },
-    { id: 'pt-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'pt-1', label: { pt: 'Até 5 000 €', en: 'Up to €5,000' }, scoreWeight: 6 },
+    { id: 'pt-2', label: { pt: '5 000 – 15 000 €', en: '€5,000 – 15,000' }, scoreWeight: 14 },
+    { id: 'pt-3', label: { pt: '15 000 – 50 000 €', en: '€15,000 – 50,000' }, scoreWeight: 20 },
+    { id: 'pt-4', label: { pt: 'Acima de 50 000 €', en: 'Over €50,000' }, scoreWeight: 25 },
+    { id: 'pt-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   sectors: [
     'turismo-hotelaria',

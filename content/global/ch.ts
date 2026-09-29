@@ -16,11 +16,11 @@ export const ch: GlobalMarket = {
   },
   dataRegime: 'nLPD / revDSG',
   investmentBands: [
-    { id: 'ch-1', label: 'Até 5 000 CHF', scoreWeight: 6 },
-    { id: 'ch-2', label: '5 000 – 15 000 CHF', scoreWeight: 14 },
-    { id: 'ch-3', label: '15 000 – 50 000 CHF', scoreWeight: 20 },
-    { id: 'ch-4', label: 'Acima de 50 000 CHF', scoreWeight: 25 },
-    { id: 'ch-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'ch-1', label: { pt: 'Até 5 000 CHF', en: 'Up to CHF 5,000' }, scoreWeight: 6 },
+    { id: 'ch-2', label: { pt: '5 000 – 15 000 CHF', en: 'CHF 5,000 – 15,000' }, scoreWeight: 14 },
+    { id: 'ch-3', label: { pt: '15 000 – 50 000 CHF', en: 'CHF 15,000 – 50,000' }, scoreWeight: 20 },
+    { id: 'ch-4', label: { pt: 'Acima de 50 000 CHF', en: 'Over CHF 50,000' }, scoreWeight: 25 },
+    { id: 'ch-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

@@ -17,15 +17,18 @@ export const br: Country = {
   whatsapp: null,
   privacyRegime: 'LGPD',
   consent: {
-    text: 'Autorizo o tratamento dos meus dados pela AGORAMOZ para responder a esta solicitação, nos termos da LGPD. Posso solicitar acesso, correção ou exclusão dos meus dados a qualquer momento.',
+    text: {
+      pt: 'Autorizo o tratamento dos meus dados pela AGORAMOZ para responder a esta solicitação, nos termos da LGPD. Posso solicitar acesso, correção ou exclusão dos meus dados a qualquer momento.',
+      en: 'I authorise AGORAMOZ to process my data to answer this request, under the LGPD. I may request access to, correction of or deletion of my data at any time.',
+    },
     policyHref: '/privacidade',
   },
   investmentBands: [
-    { id: 'br-1', label: 'Até R$ 30 mil', scoreWeight: 6 },
-    { id: 'br-2', label: 'R$ 30 mil – R$ 80 mil', scoreWeight: 14 },
-    { id: 'br-3', label: 'R$ 80 mil – R$ 250 mil', scoreWeight: 20 },
-    { id: 'br-4', label: 'Acima de R$ 250 mil', scoreWeight: 25 },
-    { id: 'br-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'br-1', label: { pt: 'Até R$ 30 mil', en: 'Up to R$30,000' }, scoreWeight: 6 },
+    { id: 'br-2', label: { pt: 'R$ 30 mil – R$ 80 mil', en: 'R$30,000 – 80,000' }, scoreWeight: 14 },
+    { id: 'br-3', label: { pt: 'R$ 80 mil – R$ 250 mil', en: 'R$80,000 – 250,000' }, scoreWeight: 20 },
+    { id: 'br-4', label: { pt: 'Acima de R$ 250 mil', en: 'Over R$250,000' }, scoreWeight: 25 },
+    { id: 'br-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   sectors: [
     'agronegocio',

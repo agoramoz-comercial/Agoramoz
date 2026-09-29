@@ -16,11 +16,11 @@ export const sa: GlobalMarket = {
   },
   dataRegime: 'PDPL',
   investmentBands: [
-    { id: 'sa-1', label: 'Até 20 000 SAR', scoreWeight: 6 },
-    { id: 'sa-2', label: '20 000 – 60 000 SAR', scoreWeight: 14 },
-    { id: 'sa-3', label: '60 000 – 200 000 SAR', scoreWeight: 20 },
-    { id: 'sa-4', label: 'Acima de 200 000 SAR', scoreWeight: 25 },
-    { id: 'sa-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'sa-1', label: { pt: 'Até 20 000 SAR', en: 'Up to SAR 20,000' }, scoreWeight: 6 },
+    { id: 'sa-2', label: { pt: '20 000 – 60 000 SAR', en: 'SAR 20,000 – 60,000' }, scoreWeight: 14 },
+    { id: 'sa-3', label: { pt: '60 000 – 200 000 SAR', en: 'SAR 60,000 – 200,000' }, scoreWeight: 20 },
+    { id: 'sa-4', label: { pt: 'Acima de 200 000 SAR', en: 'Over SAR 200,000' }, scoreWeight: 25 },
+    { id: 'sa-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

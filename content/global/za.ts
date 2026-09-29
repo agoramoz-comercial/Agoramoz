@@ -16,11 +16,11 @@ export const za: GlobalMarket = {
   },
   dataRegime: 'POPIA',
   investmentBands: [
-    { id: 'za-1', label: 'Até 100 000 ZAR', scoreWeight: 6 },
-    { id: 'za-2', label: '100 000 – 300 000 ZAR', scoreWeight: 14 },
-    { id: 'za-3', label: '300 000 – 1 000 000 ZAR', scoreWeight: 20 },
-    { id: 'za-4', label: 'Acima de 1 000 000 ZAR', scoreWeight: 25 },
-    { id: 'za-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'za-1', label: { pt: 'Até 100 000 ZAR', en: 'Up to ZAR 100,000' }, scoreWeight: 6 },
+    { id: 'za-2', label: { pt: '100 000 – 300 000 ZAR', en: 'ZAR 100,000 – 300,000' }, scoreWeight: 14 },
+    { id: 'za-3', label: { pt: '300 000 – 1 000 000 ZAR', en: 'ZAR 300,000 – 1,000,000' }, scoreWeight: 20 },
+    { id: 'za-4', label: { pt: 'Acima de 1 000 000 ZAR', en: 'Over ZAR 1,000,000' }, scoreWeight: 25 },
+    { id: 'za-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

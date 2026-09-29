@@ -15,11 +15,11 @@ export const de: GlobalMarket = {
   },
   dataRegime: 'DSGVO / BDSG',
   investmentBands: [
-    { id: 'de-1', label: 'Até 5 000 EUR', scoreWeight: 6 },
-    { id: 'de-2', label: '5 000 – 15 000 EUR', scoreWeight: 14 },
-    { id: 'de-3', label: '15 000 – 50 000 EUR', scoreWeight: 20 },
-    { id: 'de-4', label: 'Acima de 50 000 EUR', scoreWeight: 25 },
-    { id: 'de-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'de-1', label: { pt: 'Até 5 000 EUR', en: 'Up to EUR 5,000' }, scoreWeight: 6 },
+    { id: 'de-2', label: { pt: '5 000 – 15 000 EUR', en: 'EUR 5,000 – 15,000' }, scoreWeight: 14 },
+    { id: 'de-3', label: { pt: '15 000 – 50 000 EUR', en: 'EUR 15,000 – 50,000' }, scoreWeight: 20 },
+    { id: 'de-4', label: { pt: 'Acima de 50 000 EUR', en: 'Over EUR 50,000' }, scoreWeight: 25 },
+    { id: 'de-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

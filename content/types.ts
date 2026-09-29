@@ -194,7 +194,12 @@ export interface Problem {
 
 export interface InvestmentBand {
   id: string;
-  label: string;
+  /**
+   * Nos dois idiomas, cada um com as suas convenções: `250 000 MZN` em
+   * português, `MZN 250,000` em inglês. Os números são os mesmos — só muda a
+   * forma de os escrever. Nunca convertido para outra moeda.
+   */
+  label: Texto;
   /** Faixas nativas da moeda do país. Nunca convertidas de outra. */
   scoreWeight: number;
 }
@@ -221,7 +226,11 @@ export interface Country {
    */
   whatsapp: PhoneNumber | null;
   privacyRegime: 'MZ' | 'RGPD' | 'LGPD';
-  consent: { text: string; policyHref: string };
+  /**
+   * O texto que a pessoa lê e aceita, em cada idioma do formulário. O que se
+   * guarda é o do idioma em que foi mostrado — ver `lib/diagnostic/consent.ts`.
+   */
+  consent: { text: Texto; policyHref: string };
   investmentBands: InvestmentBand[];
   sectors: SectorSlug[];
   voice: CountryVoice;

@@ -15,11 +15,11 @@ export const sg: GlobalMarket = {
   },
   dataRegime: 'PDPA',
   investmentBands: [
-    { id: 'sg-1', label: 'Até 7 500 SGD', scoreWeight: 6 },
-    { id: 'sg-2', label: '7 500 – 22 000 SGD', scoreWeight: 14 },
-    { id: 'sg-3', label: '22 000 – 75 000 SGD', scoreWeight: 20 },
-    { id: 'sg-4', label: 'Acima de 75 000 SGD', scoreWeight: 25 },
-    { id: 'sg-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'sg-1', label: { pt: 'Até 7 500 SGD', en: 'Up to SGD 7,500' }, scoreWeight: 6 },
+    { id: 'sg-2', label: { pt: '7 500 – 22 000 SGD', en: 'SGD 7,500 – 22,000' }, scoreWeight: 14 },
+    { id: 'sg-3', label: { pt: '22 000 – 75 000 SGD', en: 'SGD 22,000 – 75,000' }, scoreWeight: 20 },
+    { id: 'sg-4', label: { pt: 'Acima de 75 000 SGD', en: 'Over SGD 75,000' }, scoreWeight: 25 },
+    { id: 'sg-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

@@ -15,11 +15,11 @@ export const uk: GlobalMarket = {
   },
   dataRegime: 'UK GDPR / Data Protection Act',
   investmentBands: [
-    { id: 'uk-1', label: 'Até 4 000 GBP', scoreWeight: 6 },
-    { id: 'uk-2', label: '4 000 – 13 000 GBP', scoreWeight: 14 },
-    { id: 'uk-3', label: '13 000 – 45 000 GBP', scoreWeight: 20 },
-    { id: 'uk-4', label: 'Acima de 45 000 GBP', scoreWeight: 25 },
-    { id: 'uk-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'uk-1', label: { pt: 'Até 4 000 GBP', en: 'Up to GBP 4,000' }, scoreWeight: 6 },
+    { id: 'uk-2', label: { pt: '4 000 – 13 000 GBP', en: 'GBP 4,000 – 13,000' }, scoreWeight: 14 },
+    { id: 'uk-3', label: { pt: '13 000 – 45 000 GBP', en: 'GBP 13,000 – 45,000' }, scoreWeight: 20 },
+    { id: 'uk-4', label: { pt: 'Acima de 45 000 GBP', en: 'Over GBP 45,000' }, scoreWeight: 25 },
+    { id: 'uk-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

@@ -15,11 +15,11 @@ export const us: GlobalMarket = {
   },
   dataRegime: 'Regimes estaduais (CCPA/CPRA e equivalentes)',
   investmentBands: [
-    { id: 'us-1', label: 'Até 5 500 USD', scoreWeight: 6 },
-    { id: 'us-2', label: '5 500 – 16 000 USD', scoreWeight: 14 },
-    { id: 'us-3', label: '16 000 – 55 000 USD', scoreWeight: 20 },
-    { id: 'us-4', label: 'Acima de 55 000 USD', scoreWeight: 25 },
-    { id: 'us-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'us-1', label: { pt: 'Até 5 500 USD', en: 'Up to USD 5,500' }, scoreWeight: 6 },
+    { id: 'us-2', label: { pt: '5 500 – 16 000 USD', en: 'USD 5,500 – 16,000' }, scoreWeight: 14 },
+    { id: 'us-3', label: { pt: '16 000 – 55 000 USD', en: 'USD 16,000 – 55,000' }, scoreWeight: 20 },
+    { id: 'us-4', label: { pt: 'Acima de 55 000 USD', en: 'Over USD 55,000' }, scoreWeight: 25 },
+    { id: 'us-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

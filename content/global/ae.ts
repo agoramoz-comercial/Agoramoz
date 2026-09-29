@@ -15,11 +15,11 @@ export const ae: GlobalMarket = {
   },
   dataRegime: 'PDPL federal e regimes de zona franca (DIFC, ADGM)',
   investmentBands: [
-    { id: 'ae-1', label: 'Até 20 000 AED', scoreWeight: 6 },
-    { id: 'ae-2', label: '20 000 – 60 000 AED', scoreWeight: 14 },
-    { id: 'ae-3', label: '60 000 – 200 000 AED', scoreWeight: 20 },
-    { id: 'ae-4', label: 'Acima de 200 000 AED', scoreWeight: 25 },
-    { id: 'ae-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'ae-1', label: { pt: 'Até 20 000 AED', en: 'Up to AED 20,000' }, scoreWeight: 6 },
+    { id: 'ae-2', label: { pt: '20 000 – 60 000 AED', en: 'AED 20,000 – 60,000' }, scoreWeight: 14 },
+    { id: 'ae-3', label: { pt: '60 000 – 200 000 AED', en: 'AED 60,000 – 200,000' }, scoreWeight: 20 },
+    { id: 'ae-4', label: { pt: 'Acima de 200 000 AED', en: 'Over AED 200,000' }, scoreWeight: 25 },
+    { id: 'ae-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   consent: {
     text: {

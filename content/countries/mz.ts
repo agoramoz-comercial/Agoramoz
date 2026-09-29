@@ -22,15 +22,18 @@ export const mz: Country = {
   whatsapp: null,
   privacyRegime: 'MZ',
   consent: {
-    text: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico. Posso pedir a correção ou eliminação dos meus dados a qualquer momento.',
+    text: {
+      pt: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico. Posso pedir a correção ou eliminação dos meus dados a qualquer momento.',
+      en: 'I authorise AGORAMOZ to process the data in this form to answer my request and prepare the diagnostic. I may request the correction or erasure of my data at any time.',
+    },
     policyHref: '/privacidade',
   },
   investmentBands: [
-    { id: 'mz-1', label: 'Até 250 000 MZN', scoreWeight: 6 },
-    { id: 'mz-2', label: '250 000 – 750 000 MZN', scoreWeight: 14 },
-    { id: 'mz-3', label: '750 000 – 2 000 000 MZN', scoreWeight: 20 },
-    { id: 'mz-4', label: 'Acima de 2 000 000 MZN', scoreWeight: 25 },
-    { id: 'mz-0', label: 'Ainda a definir', scoreWeight: 4 },
+    { id: 'mz-1', label: { pt: 'Até 250 000 MZN', en: 'Up to MZN 250,000' }, scoreWeight: 6 },
+    { id: 'mz-2', label: { pt: '250 000 – 750 000 MZN', en: 'MZN 250,000 – 750,000' }, scoreWeight: 14 },
+    { id: 'mz-3', label: { pt: '750 000 – 2 000 000 MZN', en: 'MZN 750,000 – 2,000,000' }, scoreWeight: 20 },
+    { id: 'mz-4', label: { pt: 'Acima de 2 000 000 MZN', en: 'Over MZN 2,000,000' }, scoreWeight: 25 },
+    { id: 'mz-0', label: { pt: 'Ainda a definir', en: 'Not yet defined' }, scoreWeight: 4 },
   ],
   sectors: [
     'agronegocio',
