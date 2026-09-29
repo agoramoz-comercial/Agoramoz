@@ -1,5 +1,4 @@
-import { COUNTRIES, SECTOR_LABELS } from '@/content/registry';
-import type { SectorSlug } from '@/content/types';
+import { mercadoDoDiagnostico } from './mercado';
 import type { LeadInput } from '@/lib/forms/lead-schema';
 import { normalizeDomain, normalizeText } from './normalize';
 import type { Evidence } from './types';
@@ -30,7 +29,7 @@ export const EVIDENCE_PREFIX = {
  * humano que aprova, como citação do cliente, nunca ao motor como instrução.
  */
 export function buildEvidence(input: LeadInput): Evidence[] {
-  const country = COUNTRIES[input.country];
+  const country = mercadoDoDiagnostico(input.country);
   const band = country?.investmentBands.find((b) => b.id === input.investmentBand) ?? null;
   const impacto = normalizeText(input.problemImpact);
   const dominio = input.currentWebsite ? normalizeDomain(input.currentWebsite) : '';
@@ -83,7 +82,9 @@ export function buildEvidence(input: LeadInput): Evidence[] {
   ];
 
   // Catálogo: nosso conteúdo, não afirmação sobre o mundo.
-  const rotuloSetor = SECTOR_LABELS[input.sector as SectorSlug];
+  // Pela porta única: os setores dos mercados globais não são `SectorSlug`,
+  // e indexar `SECTOR_LABELS` com eles devolveria `undefined` em silêncio.
+  const rotuloSetor = country?.sectors.find((s) => s.slug === input.sector)?.label;
   if (rotuloSetor) {
     evidence.push({
       id: 'cat.sectorLabel',

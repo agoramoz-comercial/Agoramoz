@@ -99,11 +99,25 @@ function percentagesIn(text: string): number[] {
   );
 }
 
-/** Valores monetários com código de moeda. `250 000 MZN`, `1.500 EUR`. */
+/**
+ * Valores monetários com código de moeda. `250 000 MZN`, `1.500 EUR`, `15 000 CHF`.
+ *
+ * A lista cobre as moedas de TODOS os mercados do diagnóstico. Quando o
+ * formulário passou a aceitar os dez mercados globais, este detector só
+ * conhecia MZN/EUR/BRL/USD — e um «15 000 CHF» inventado num rascunho para um
+ * cliente suíço passaria sem ser visto, que é exactamente o que ele existe para
+ * apanhar.
+ *
+ * `(?![a-z])` depois do código: sem isso, «3 cada» casava com `cad` e um número
+ * legítimo era acusado de ser dinheiro inventado.
+ */
 function currenciesIn(text: string): number[] {
   const folded = fold(text);
-  return [...folded.matchAll(/((?:\d[\d.,\s ]*\d|\d))\s*(mzn|eur|brl|usd|mt|r\$|€|\$)/g)]
-    .flatMap((m) => numbersIn(m[1]!));
+  return [
+    ...folded.matchAll(
+      /((?:\d[\d.,\s ]*\d|\d))\s*(mzn|eur|brl|usd|chf|sgd|gbp|aed|sar|zar|cad|mt|r\$|€|£|\$)(?![a-z])/g,
+    ),
+  ].flatMap((m) => numbersIn(m[1]!));
 }
 
 /** Anos com quatro dígitos. Uma data é uma afirmação; não pode ser inventada. */

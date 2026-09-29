@@ -1,5 +1,4 @@
-import { COUNTRIES } from '@/content/registry';
-import type { CountryCode } from '@/content/types';
+import { mercadoDoDiagnostico, type DiagnosticCode } from './mercado';
 
 /**
  * Consentimento: o texto exacto que foi mostrado, e uma versão que o identifica.
@@ -22,7 +21,7 @@ import type { CountryCode } from '@/content/types';
  * quando se consentiu outra. Derivando do texto, mudar uma vírgula muda a
  * versão sem ninguém ter de se lembrar.
  */
-export async function consentVersionFor(country: CountryCode): Promise<string> {
+export async function consentVersionFor(country: DiagnosticCode): Promise<string> {
   const texto = consentTextFor(country);
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
   const hex = Array.from(new Uint8Array(digest).slice(0, 6))
@@ -31,8 +30,8 @@ export async function consentVersionFor(country: CountryCode): Promise<string> {
   return `consent.${country}.${hex}`;
 }
 
-export function consentTextFor(country: CountryCode): string {
-  const texto = COUNTRIES[country]?.consent.text;
+export function consentTextFor(country: DiagnosticCode): string {
+  const texto = mercadoDoDiagnostico(country)?.consentText;
   if (!texto) {
     // Um país sem texto de consentimento é um erro de conteúdo, não um caso a
     // contornar com um texto genérico: guardar um consentimento que ninguém

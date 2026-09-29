@@ -1,7 +1,20 @@
-import type { Country, CountryCode, SectorPage, SectorSlug, SolutionPage, SolutionSlug } from './types';
+import type {
+  Country, CountryCode, GlobalCountryCode, GlobalMarket,
+  SectorPage, SectorSlug, SolutionPage, SolutionSlug,
+} from './types';
 import { mz } from './countries/mz';
 import { pt } from './countries/pt';
 import { br } from './countries/br';
+import { ch } from './global/ch';
+import { sg } from './global/sg';
+import { us } from './global/us';
+import { uk } from './global/uk';
+import { de } from './global/de';
+import { fr } from './global/fr';
+import { ae } from './global/ae';
+import { sa } from './global/sa';
+import { za } from './global/za';
+import { ca } from './global/ca';
 import { mzEnergiaMineracao } from './sectors/mz/energia-mineracao';
 import { websitesAvancados } from './solutions/websites-avancados';
 import { softwareEmpresarial } from './solutions/software-empresarial';
@@ -26,6 +39,39 @@ export const SECTOR_LABELS: Record<SectorSlug, string> = {
 };
 
 export const COUNTRIES: Record<CountryCode, Country> = { mz, pt, br };
+
+/**
+ * Mercados de expansão. Separados de `COUNTRIES` de propósito: aqueles
+ * afirmam operação — consentimento redigido, faixas ligadas ao formulário,
+ * contacto —, estes afirmam intenção e competência. Misturá-los num só mapa
+ * seria a fonte dupla de verdade que D-13 existe para impedir, com o agravante
+ * de a diferença ser uma afirmação sobre a empresa.
+ *
+ * A ordem é a do scorecard da pesquisa de mercado, e é a ordem em que aparecem
+ * no índice de `/global`.
+ */
+export const GLOBAL_MARKETS: Record<GlobalCountryCode, GlobalMarket> = {
+  ch, sg, us, uk, de, fr, ae, sa, za, ca,
+};
+
+/**
+ * `Record` total e não `Partial`: acrescentar um código a `GlobalCountryCode`
+ * sem escrever o ficheiro do mercado deixa de compilar. É a mesma garantia que
+ * `RETRATOS` dá aos fundadores.
+ *
+ * A ordem é a do scorecard da pesquisa, e é a ordem do índice de `/global`.
+ */
+export const GLOBAL_CODES = [
+  'ch', 'sg', 'us', 'uk', 'de', 'fr', 'ae', 'sa', 'za', 'ca',
+] as const satisfies readonly GlobalCountryCode[];
+
+export function isGlobalCode(value: string): value is GlobalCountryCode {
+  return (GLOBAL_CODES as readonly string[]).includes(value);
+}
+
+export function getGlobalMarket(code: string): GlobalMarket | null {
+  return isGlobalCode(code) ? GLOBAL_MARKETS[code] : null;
+}
 export const COUNTRY_CODES = ['mz', 'pt', 'br'] as const satisfies readonly CountryCode[];
 
 /**

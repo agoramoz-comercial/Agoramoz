@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { ChipGroup } from '@/components/ui/ChipGroup';
 import { Field, inputClass } from './Field';
 import { COMPANY_SIZES, DECISION_ROLES, STEP_FIELDS, TIMEFRAMES, leadSchema, type LeadInput } from '@/lib/forms/lead-schema';
-import { COUNTRIES, COUNTRY_CODES, SECTOR_LABELS } from '@/content/registry';
+import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
+import { ehCodigoDeDiagnostico, mercadoDoDiagnostico } from '@/lib/diagnostic/mercado';
 import Link from 'next/link';
 import { IMPROVEMENT_GOALS, SITE } from '@/content/site';
-import type { CountryCode } from '@/content/types';
 import { track } from '@/lib/analytics/track';
 import { lerAtribuicao } from '@/lib/attribution/storage';
 import { cn } from '@/lib/utils/cn';
@@ -77,9 +77,7 @@ export function DiagnosticForm() {
     resolver: zodResolver(leadSchema) as Resolver<LeadInput>,
     mode: 'onBlur',
     defaultValues: {
-      country: (COUNTRY_CODES as readonly string[]).includes(presetCountry ?? '')
-        ? (presetCountry as CountryCode)
-        : undefined,
+      country: presetCountry && ehCodigoDeDiagnostico(presetCountry) ? presetCountry : undefined,
       sector: presetSector ?? '',
       processToImprove: [],
       currentWebsite: '',
@@ -90,7 +88,8 @@ export function DiagnosticForm() {
 
   const country = form.watch('country');
   const processes = form.watch('processToImprove') ?? [];
-  const activeCountry = country ? COUNTRIES[country] : null;
+  // Pela porta única: resolve os treze mercados com a mesma forma.
+  const activeCountry = country ? mercadoDoDiagnostico(country) : null;
 
   useEffect(() => {
     if (step > 0 && headingRef.current) headingRef.current.focus();
@@ -200,7 +199,7 @@ export function DiagnosticForm() {
     const faixa = activeCountry?.investmentBands.find((b) => b.id === enviado.investmentBand);
     // `sector` é `string` no schema, não `SectorSlug`: procuro na lista do país
     // em vez de indexar às cegas o `Record`, que aceitaria um valor inventado.
-    const setor = activeCountry?.sectors.find((s) => s === enviado.sector);
+    const setor = activeCountry?.sectors.find((s) => s.slug === enviado.sector)?.label;
 
     /**
      * As faixas já vivem na moeda nativa de cada país — `Até 250 000 MZN`,
@@ -210,7 +209,7 @@ export function DiagnosticForm() {
      */
     const resumo: [string, string][] = [
       ...(activeCountry ? ([['Mercado', activeCountry.name]] as [string, string][]) : []),
-      ...(setor ? ([['Setor', SECTOR_LABELS[setor]]] as [string, string][]) : []),
+      ...(setor ? ([['Setor', setor]] as [string, string][]) : []),
       ...(faixa ? ([['Faixa indicada', faixa.label]] as [string, string][]) : []),
       ...(enviado.decisionTimeframe
         ? ([['Prazo', TIME_LABELS[enviado.decisionTimeframe]]] as [string, string][])
@@ -344,17 +343,40 @@ export function DiagnosticForm() {
               control={form.control}
               name="country"
               render={({ field }) => (
-                <ChipGroup
-                  legend="País de operação"
-                  columns={3}
-                  value={field.value ?? null}
-                  onChange={(v) => {
-                    field.onChange(v);
-                    form.setValue('sector', '');
-                    markStarted();
-                  }}
-                  options={COUNTRY_CODES.map((c) => ({ value: c, label: COUNTRIES[c].name }))}
-                />
+                /*
+                  Dois grupos para o mesmo campo: primeiro os três mercados onde
+                  operamos, depois os dez de expansão — «depois dos três países
+                  aparece Global». Partilham o valor: escolher num deixa o
+                  outro sem selecção, que é o que se quer.
+                */
+                <div className="space-y-6">
+                  <ChipGroup
+                    legend="País de operação"
+                    showLegend
+                    columns={3}
+                    value={field.value ?? null}
+                    onChange={(v) => {
+                      field.onChange(v);
+                      form.setValue('sector', '');
+                      form.setValue('investmentBand', '');
+                      markStarted();
+                    }}
+                    options={COUNTRY_CODES.map((c) => ({ value: c, label: COUNTRIES[c].name }))}
+                  />
+                  <ChipGroup
+                    legend="Global"
+                    showLegend
+                    columns={3}
+                    value={field.value ?? null}
+                    onChange={(v) => {
+                      field.onChange(v);
+                      form.setValue('sector', '');
+                      form.setValue('investmentBand', '');
+                      markStarted();
+                    }}
+                    options={GLOBAL_CODES.map((c) => ({ value: c, label: GLOBAL_MARKETS[c].name.pt }))}
+                  />
+                </div>
               )}
             />
             {activeCountry && (
@@ -364,10 +386,11 @@ export function DiagnosticForm() {
                 render={({ field }) => (
                   <ChipGroup
                     legend="Setor"
+                    showLegend
                     columns={2}
                     value={field.value || null}
                     onChange={field.onChange}
-                    options={activeCountry.sectors.map((s) => ({ value: s, label: SECTOR_LABELS[s] }))}
+                    options={activeCountry.sectors.map((s) => ({ value: s.slug, label: s.label }))}
                   />
                 )}
               />
@@ -519,8 +542,8 @@ export function DiagnosticForm() {
             <label className="flex items-start gap-3 text-sm">
               <input type="checkbox" className="mt-1 size-4 shrink-0" {...form.register('consent')} />
               <span className="text-[color:var(--muted)]">
-                {activeCountry.consent.text}{' '}
-                <a href={activeCountry.consent.policyHref} className="text-[color:var(--accent)] underline underline-offset-4">
+                {activeCountry.consentText}{' '}
+                <a href={activeCountry.policyHref} className="text-[color:var(--accent)] underline underline-offset-4">
                   Política de privacidade
                 </a>
               </span>

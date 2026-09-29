@@ -20,7 +20,11 @@ import { scoreLead, type LeadTier } from '@/lib/forms/lead-score';
  * mudar. Nunca se reutiliza uma versão com regras diferentes: é a data da
  * alteração mais um contador, para duas alterações no mesmo dia não colidirem.
  */
-export const SCORING_VERSION = '2026-09-24.1';
+// 2026-09-29.1 — os pesos e fronteiras NÃO mudaram. Passaram a existir faixas
+// de dez mercados novos, na moeda de cada um, com a mesma escala 6/14/20/25/4.
+// A versão sobe para que a auditoria saiba a partir de quando um diagnóstico
+// pode ser de um mercado global.
+export const SCORING_VERSION = '2026-09-29.1';
 
 export interface ScoreResult {
   readonly score: number;

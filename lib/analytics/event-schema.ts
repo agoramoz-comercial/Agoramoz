@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { COUNTRY_CODES } from '@/content/registry';
+import { DIAGNOSTIC_CODES } from '@/lib/diagnostic/mercado';
 import { CANAIS } from '@/lib/attribution/types';
 import { EVENTOS_DE_BROWSER } from './events';
 
@@ -21,7 +21,10 @@ import { EVENTOS_DE_BROWSER } from './events';
 const texto = (max: number) => z.string().trim().min(1).max(max);
 
 const nomes = z.enum(EVENTOS_DE_BROWSER);
-const pais = z.enum(COUNTRY_CODES);
+// Os treze mercados do diagnóstico. Com só os três de operação, um
+// `country_selected` de um mercado global era recusado — e esta rota responde
+// 204 a tudo, pelo que a perda seria silenciosa.
+const pais = z.enum(DIAGNOSTIC_CODES);
 const superficie = texto(40);
 
 const corpo = z.discriminatedUnion('name', [

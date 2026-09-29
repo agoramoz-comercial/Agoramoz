@@ -15,6 +15,7 @@ export function ChipGroup({
   value,
   onChange,
   columns = 2,
+  showLegend = false,
   className,
 }: {
   legend: string;
@@ -22,6 +23,13 @@ export function ChipGroup({
   value: string | null;
   onChange: (value: string) => void;
   columns?: 1 | 2 | 3;
+  /**
+   * Mostra a legenda. Por omissão fica só para leitores de ecrã, porque o
+   * título do passo já diz o que se escolhe. Quando um passo tem mais de um
+   * grupo — país de operação, Global e setor —, quem vê precisa de saber onde
+   * um acaba e o outro começa.
+   */
+  showLegend?: boolean;
   className?: string;
 }) {
   const name = useId();
@@ -47,7 +55,9 @@ export function ChipGroup({
 
   return (
     <fieldset className={cn('min-w-0 border-0 p-0', className)}>
-      <legend className="sr-only">{legend}</legend>
+      <legend className={showLegend ? 'rule-label mb-3 text-[color:var(--muted)]' : 'sr-only'}>
+        {legend}
+      </legend>
       <div
         role="radiogroup"
         aria-label={legend}

@@ -8,7 +8,8 @@
 -- resultado da última, e numa versão anterior deste ficheiro as três linhas
 -- que decidem o deploy ficavam escondidas atrás de uma contagem de colunas.
 --
--- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas.
+-- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
+-- para 0009/0010; a linha 21 para 0011.
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -84,4 +85,13 @@ select 20, 'função', 'ingest_diagnostic_response — tem p_attribution',
                              then 'SIM - pode publicar' else 'NAO - nao publicar' end
                  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                  where n.nspname = 'public' and p.proname = 'ingest_diagnostic_response'), 'NAO EXISTE')
+-- 0011: a restrição de país aceita os treze mercados. Procura 'ca', o último
+-- código acrescentado — se estiver, a restrição é a nova.
+union all
+select 21, 'restrição', 'organisations — aceita os 13 mercados (0011)',
+       case when exists (
+         select 1 from pg_constraint
+         where conname = 'organisations_country_code_check'
+           and pg_get_constraintdef(oid) like '%''ca''%'
+       ) then 'ok' else 'EM FALTA - correr aplicar-0011.sql' end
 order by ordem;

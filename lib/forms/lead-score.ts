@@ -1,4 +1,4 @@
-import { COUNTRIES } from '@/content/registry';
+import { mercadoDoDiagnostico } from '@/lib/diagnostic/mercado';
 import type { LeadInput } from './lead-schema';
 
 export type LeadTier = 'A' | 'B' | 'C' | 'D';
@@ -14,7 +14,7 @@ export function scoreLead(input: LeadInput): { score: number; tier: LeadTier; re
   const reasons: string[] = [];
   let score = 0;
 
-  const band = COUNTRIES[input.country]?.investmentBands.find((b) => b.id === input.investmentBand);
+  const band = mercadoDoDiagnostico(input.country)?.investmentBands.find((b) => b.id === input.investmentBand);
   if (band) {
     score += band.scoreWeight;
     reasons.push(`Faixa de investimento: ${band.label} (+${band.scoreWeight})`);

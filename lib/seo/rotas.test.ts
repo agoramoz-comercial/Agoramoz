@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COUNTRY_CODES, RESERVED_TOP_LEVEL_SLUGS } from '@/content/registry';
@@ -98,5 +98,38 @@ describe('trilho de navegação', () => {
 
   it('a verificação vê de facto as páginas', () => {
     expect(paginas().length).toBeGreaterThanOrEqual(10);
+  });
+
+  /**
+   * As páginas inglesas chegaram antes da home inglesa (lote E). O trilho de
+   * `/en/global` apontava o «Home» a `/en`: 404 para quem clica, e uma URL
+   * morta no `BreadcrumbList` que o Google lê. O build não o apanha — `/en` é
+   * só uma string. Este teste lê cada `caminhoNoIdioma('…', IDIOMA)` das páginas
+   * em `app/(site)/en` e exige que a página exista.
+   */
+  it('toda a ligação feita por caminhoNoIdioma nas páginas inglesas tem página', () => {
+    const raizEn = join('app/(site)', 'en');
+    const alvos = paginas()
+      .filter((p) => p.caminho.startsWith(raizEn))
+      // O literal até ao primeiro `${`: `/global/${m.code}` dá `/global/`.
+      .flatMap((p) => [...p.fonte.matchAll(/caminhoNoIdioma\([`'](\/[^`'$]*)/g)].map((m) => m[1]!));
+
+    const existe = (alvo: string): boolean => {
+      const dir = join(raizEn, alvo);
+      if (!alvo.endsWith('/') || alvo === '/') return existsSync(join(dir, 'page.tsx'));
+      // Segmento dinâmico a seguir: basta uma rota `[…]` com página.
+      return (
+        existsSync(dir) &&
+        readdirSync(dir).some((n) => n.startsWith('[') && existsSync(join(dir, n, 'page.tsx')))
+      );
+    };
+
+    expect(alvos.length).toBeGreaterThan(0);
+    expect(alvos.filter((a) => !existe(a))).toEqual([]);
+  });
+
+  it('a verificação de ligações inglesas recusa a home inglesa enquanto não existir', () => {
+    // Prova de que o teste acima vê o defeito que o motivou.
+    expect(existsSync(join('app/(site)', 'en', 'page.tsx'))).toBe(false);
   });
 });

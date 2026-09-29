@@ -31,7 +31,79 @@ export type Idioma = 'pt' | 'en';
  * existe mas é português copiado.
  */
 export type Texto = { readonly pt: string; readonly en: string };
-export type Currency = 'MZN' | 'EUR' | 'BRL';
+export type Currency =
+  | 'MZN' | 'EUR' | 'BRL'
+  // Moedas dos mercados do nível global. Cada uma existe porque um país a usa;
+  // um país sem moeda declarada não compila. NUNCA convertidas entre si — uma
+  // taxa de câmbio escrita no repositório envelhece e passa a mentir.
+  | 'CHF' | 'SGD' | 'USD' | 'GBP' | 'AED' | 'SAR' | 'ZAR' | 'CAD';
+
+/**
+ * Mercados de EXPANSÃO, distintos dos três onde operamos.
+ *
+ * A separação não é cosmética: `/mz`, `/pt` e `/br` afirmam operação — têm
+ * consentimento redigido, faixas de investimento ligadas ao formulário e uma
+ * linha de contacto. Estes afirmam intenção e competência, e não podem afirmar
+ * mais do que isso sem inventar um cliente. A estrutura de URLs guarda a
+ * diferença: `/global/<pais>`.
+ */
+export type GlobalCountryCode =
+  | 'ch' | 'sg' | 'us' | 'uk' | 'de' | 'fr' | 'ae' | 'sa' | 'za' | 'ca';
+
+/**
+ * Um setor dentro de um mercado global.
+ *
+ * Os três campos são obrigatórios de propósito. Uma entrada sem `dor` é uma
+ * lista de palavras; sem `resultado` é uma queixa. É a regra que impede a
+ * repetição do que hoje se vê em quatro dos cinco setores de Moçambique —
+ * «Página em preparação», que o diagnóstico de conversão descreve como «sinal
+ * de empresa incompleta no momento de decisão».
+ */
+export interface GlobalSector {
+  /** ASCII, sem acentos. Usado no `?setor=` do diagnóstico. */
+  readonly slug: string;
+  readonly name: Texto;
+  /** O dia mau de quem lá trabalha, em linguagem do cliente. */
+  readonly pain: Texto;
+  /** O que passa a ser verdade quando o problema deixa de existir. */
+  readonly outcome: Texto;
+}
+
+export interface GlobalMarket {
+  readonly code: GlobalCountryCode;
+  readonly name: Texto;
+  readonly currency: Currency;
+  /** Indicativo telefónico, para o exemplo do campo de telefone. */
+  readonly dialCode: string;
+  /** Etiqueta BCP-47 da página, para o atributo `lang` e o JSON-LD. */
+  readonly htmlLang: string;
+  /**
+   * Porque este mercado, dito a partir da evidência e não da vontade. O texto
+   * cita o que a pesquisa mede; não promete presença nem cliente.
+   */
+  readonly why: Texto;
+  /**
+   * O regime de proteção de dados que se aplica a um cliente deste mercado.
+   * É o NOME do regime, não uma declaração de conformidade — essa exige
+   * revisão qualificada e não é feita aqui.
+   */
+  readonly dataRegime: string;
+  /** Exactamente dez. Verificado em teste. */
+  readonly sectors: readonly GlobalSector[];
+  /**
+   * Faixas NA MOEDA NATIVA, escritas como constantes — nunca calculadas por
+   * taxa de câmbio. Os pesos seguem a escala dos mercados de operação
+   * (6/14/20/25/4), para que a pontuação signifique o mesmo em todo o lado. Os
+   * valores são uma decisão comercial por validar: ver GAPS.md.
+   */
+  readonly investmentBands: readonly InvestmentBand[];
+  /**
+   * O texto que a pessoa aceita no formulário. Nomeia o regime; não declara
+   * conformidade, que exige revisão qualificada.
+   */
+  readonly consent: { readonly text: Texto; readonly policyHref: string };
+  readonly seo: { readonly title: Texto; readonly description: Texto };
+}
 
 export type SectorSlug =
   | 'agronegocio'

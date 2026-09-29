@@ -1,3 +1,4 @@
+import { DIAGNOSTIC_CODES } from '@/lib/diagnostic/mercado';
 import { z } from 'zod';
 
 /**
@@ -42,7 +43,9 @@ export const TIMEFRAMES = ['imediato', '1-3-meses', '3-6-meses', 'sem-data'] as 
  */
 
 export const stepContext = z.object({
-  country: z.enum(['mz', 'pt', 'br'], { message: 'Selecione o país.' }),
+  // Os três mercados de operação e os dez de expansão. A lista vive em
+  // `lib/diagnostic/mercado.ts`, não aqui: um código novo entra uma vez.
+  country: z.enum(DIAGNOSTIC_CODES, { message: 'Selecione o país.' }),
   sector: z.string().min(1, 'Selecione o setor.'),
 });
 

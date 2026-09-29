@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next';
-import { COUNTRIES, COUNTRY_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
+import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
 import { PERFIL } from '@/content/landing/perfil';
 import { absolute } from '@/lib/seo/site';
+import { caminhoNoIdioma, IDIOMAS } from '@/lib/i18n/texto';
 
 /** Gerado a partir do registry: uma nova vertical entra aqui sozinha. */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -17,6 +18,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absolute('/contactos'), lastModified: now, priority: 0.5 },
     { url: absolute('/privacidade'), lastModified: now, priority: 0.2 },
   ];
+
+  /**
+   * Nível de expansão, nos dois idiomas. Índice e dez mercados × PT/EN = 22
+   * URLs. Prioridade abaixo dos mercados de operação de propósito: estas
+   * páginas afirmam intenção, aquelas afirmam operação.
+   */
+  const globais: MetadataRoute.Sitemap = IDIOMAS.flatMap((idioma) => [
+    { url: absolute(caminhoNoIdioma('/global', idioma)), lastModified: now, priority: 0.6 },
+    ...GLOBAL_CODES.map((code) => ({
+      url: absolute(caminhoNoIdioma(`/global/${code}`, idioma)),
+      lastModified: now,
+      priority: 0.5,
+    })),
+  ]);
 
   const countries: MetadataRoute.Sitemap = COUNTRY_CODES.map((code) => ({
     url: absolute(`/${code}`),
@@ -36,5 +51,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  return [...statics, ...countries, ...solutions, ...sectors];
+  return [...statics, ...countries, ...solutions, ...sectors, ...globais];
 }

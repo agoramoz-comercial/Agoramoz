@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3124';
-const PAGINAS = ['/', '/perfil', '/diagnostico', '/solucoes/agentes-ia', '/mz', '/sobre'];
+const PAGINAS = process.env.PAGINAS?.split(',') ?? ['/', '/perfil', '/diagnostico', '/solucoes/agentes-ia', '/mz', '/sobre'];
 
 const falhas = [];
 const ok = (cond, msg) => { console.log(`  ${cond ? '✓' : '✗'} ${msg}`); if (!cond) falhas.push(msg); };
@@ -30,7 +30,7 @@ await semJs.close();
 /* ------------------------------------------- 2. acessibilidade (axe) ------- */
 console.log('\n=== Acessibilidade (axe, wcag2a+wcag2aa) ===');
 const ctx = await navegador.newContext();
-for (const rota of ['/perfil', '/diagnostico', '/']) {
+for (const rota of process.env.PAGINAS ? PAGINAS : ['/perfil', '/diagnostico', '/']) {
   const p = await ctx.newPage();
   await p.goto(BASE + rota, { waitUntil: 'networkidle' });
   const r = await new AxeBuilder({ page: p }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();

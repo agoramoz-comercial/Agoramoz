@@ -12,16 +12,32 @@ import { chromium } from '@playwright/test';
 const b = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args:['--no-sandbox','--disable-dev-shm-usage'] });
 let falhas = 0;
 
-for (const [pais, moeda] of [['mz','MZN'], ['pt','€'], ['br','R$']]) {
+// Os três mercados de operação e três dos dez globais (lote D): um em moeda
+// europeia não-euro, um em dólar, um africano. O país chega pelo `?pais=` —
+// o mesmo caminho que o CTA de cada página /global/<pais> usa.
+const MERCADOS = [['mz','MZN','Moçambique'], ['pt','€','Portugal'], ['br','R$','Brasil'],
+                  ['ch','CHF','Suíça'], ['us','USD','Estados Unidos'], ['za','ZAR','África do Sul']];
+
+for (const [pais, moeda, nome] of MERCADOS) {
   const ctx = await b.newContext({ viewport:{width:1440,height:1100} });
   const p = await ctx.newPage();
   await p.route('**/api/diagnostico', (r) => r.fulfill({ status:200, contentType:'application/json', body:'{"ok":true}' }));
   await p.goto(`http://127.0.0.1:3000/diagnostico?pais=${pais}`, { waitUntil:'networkidle' });
   await p.waitForTimeout(700);
 
+  // O país tem de chegar escolhido, e no grupo certo.
+  const escolhido = await p.locator('[role=radio][aria-checked=true]').first().innerText().catch(() => '');
+  const preSel = escolhido.includes(nome);
+  if (!preSel) falhas++;
+  console.log(`${pais}: pré-selecção «${nome}» ${preSel ? '✓' : '✗ (' + escolhido + ')'}`);
+
   for (let passo = 0; passo < 8; passo++) {
     // Uma escolha por grupo de chips ainda sem selecção.
     for (const fs of await p.locator('fieldset:visible').all()) {
+      // Os dois grupos de país partilham o mesmo campo: escolher no que está
+      // vazio trocaria o mercado pré-selecionado. O país vem do URL.
+      const grupo = await fs.locator('[role=radiogroup]').first().getAttribute('aria-label', { timeout: 300 }).catch(() => null);
+      if (grupo === 'País de operação' || grupo === 'Global') continue;
       const radios = fs.locator('[role=radio]');
       if (!(await radios.count())) continue;
       if (await fs.locator('[role=radio][aria-checked=true]').count()) continue;

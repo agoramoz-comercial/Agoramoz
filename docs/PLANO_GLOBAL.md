@@ -69,8 +69,12 @@ Já existe: `Country.currency` e `investmentBands` nativas nos três mercados
 faixa **na moeda do país** e prazo. Verificado nos três: `Até 250 000 MZN`,
 `Até 5 000 €`, `Até R$ 30 mil`.
 
-Falta: moeda e bandas para os dez países novos. **Nunca converter entre moedas**
-— uma taxa de câmbio no repositório envelhece e passa a mentir.
+**Feito no lote D:** os dez mercados globais têm moeda e faixas nativas,
+escritas como constantes — **nunca convertidas**; uma taxa de câmbio no
+repositório envelhece e passa a mentir. O diagnóstico aceita os treze códigos
+por uma só porta, `lib/diagnostic/mercado.ts`. Verificado de ponta a ponta:
+`Até 5 000 CHF`, `Até 5 500 USD`, `Até 100 000 ZAR`, e os três originais sem
+mudança. Valores por validar comercialmente (GAPS B-20).
 
 ## Copy e conversão
 
@@ -97,10 +101,10 @@ humana em cada decisão.
 | Lote | Conteúdo | Estado |
 |---|---|---|
 | **A** | Nome da co-fundadora · moeda na confirmação · registo em GAPS | **feito** |
-| **B** | `Texto` bilingue + leitor + teste-guarda | por fazer |
-| **C** | Copy da pista 1 — homepage e `/mz/energia-mineracao` | por fazer |
-| **D** | `/global` + 10 países + 100 setores, PT e EN | por fazer |
-| **E** | EN nas páginas PT existentes | por fazer |
+| **B** | `Texto` bilingue + leitor + teste-guarda | **feito** |
+| **C** | Copy da pista 1 — homepage e `/mz/energia-mineracao` | **retido** até 10 conversas, como o diagnóstico manda |
+| **D** | `/global` + 10 países + 100 setores, PT e EN · diagnóstico nos 13 mercados · migração 0011 | **feito** |
+| **E** | EN nas páginas PT existentes · home inglesa · formulário em inglês · `lang` por documento | por fazer |
 | **F** | Formulário de 5 para 2 passos + subir `SCORING_VERSION` | por fazer |
 
 O lote F mexe em `lead-schema.ts`, `STEP_FIELDS` e `lead-score.ts` e obriga a
@@ -113,8 +117,14 @@ subir `SCORING_VERSION`. Vai sozinho.
 depois. hreflang recíproco verificado por HTTP. A medida que diz se o lote C
 resultou: **altura da homepage em telemóvel abaixo de 8 000 px**.
 
-## Bloqueio activo — não publicar
+## Ordem de publicação do lote D
 
-`lib/db/client.ts` envia `p_attribution`; a base de produção ainda tem a função
-de 16 parâmetros. Um deploy agora parte o formulário de diagnóstico em
-produção. Ordem: aplicar `supabase/aplicar-0009-0010.sql` → deploy.
+A migração 0011 **só alarga** a restrição `organisations_country_code_check`
+de 3 para 13 códigos. Não há janela de indisponibilidade em nenhuma ordem:
+
+1. `supabase/aplicar-0011.sql` no SQL Editor — repetível;
+2. `supabase/verificar-estado.sql` — a linha 21 tem de dizer `ok`;
+3. deploy.
+
+Se o deploy chegar antes da migração, só os leads dos dez mercados globais
+falham; os três de operação continuam a funcionar.
