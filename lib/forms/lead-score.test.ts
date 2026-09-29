@@ -35,6 +35,7 @@ function lead(overrides: Partial<LeadInput> = {}): LeadInput {
     workEmail: 'nome@exemplo.co.mz',
     phone: '+258840000000',
     consent: true,
+    idioma: 'pt',
     ...overrides,
   };
 }

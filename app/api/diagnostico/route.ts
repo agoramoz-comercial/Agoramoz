@@ -273,8 +273,9 @@ export async function POST(request: Request) {
   let resultado: IngestResult;
   try {
     const fingerprint = await inputFingerprint(input);
-    const consentText = consentTextFor(input.country);
-    const consentVersion = await consentVersionFor(input.country);
+    // No idioma em que o formulário foi mostrado: é esse o texto que a pessoa leu.
+    const consentText = consentTextFor(input.country, input.idioma);
+    const consentVersion = await consentVersionFor(input.country, input.idioma);
     const userAgent = request.headers.get('user-agent') ?? '';
 
     resultado = await ingestDiagnosticResponse(client, {

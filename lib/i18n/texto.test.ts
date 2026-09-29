@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as registry from '@/content/registry';
 import * as site from '@/content/site';
 import * as chrome from '@/content/i18n/chrome';
+import * as formulario from '@/content/i18n/formulario';
 import { buildMetadata } from '@/lib/seo/site';
 import { caminhoBase, caminhoNoIdioma, ehIdioma, IDIOMAS, paresDeIdioma, t } from './texto';
 
@@ -50,6 +51,7 @@ const textos = [
   ...recolher(site, 'site', [], new WeakSet()),
   // O chrome vive fora do registry: sem esta linha, o guarda não o via.
   ...recolher(chrome, 'chrome', [], new WeakSet()),
+  ...recolher(formulario, 'formulario', [], new WeakSet()),
 ];
 
 describe('texto bilingue', () => {

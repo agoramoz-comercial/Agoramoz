@@ -370,8 +370,28 @@ describe('o que é gravado', () => {
     await POST(pedido({ ...VALIDO, country: 'pt', investmentBand: 'pt-2' }));
 
     const args = argsDaIngestao();
-    expect(args.consentText).toBe(COUNTRIES.pt.consent.text);
+    expect(args.consentText).toBe(COUNTRIES.pt.consent.text.pt);
     expect(args.consentVersion).toMatch(/^consent\.pt\.[0-9a-f]{12}$/);
+  });
+
+  /**
+   * O defeito que o lote E2 existe para impedir: um formulário inglês a gravar
+   * o consentimento português. O texto guardado é o que a pessoa leu.
+   */
+  it('um pedido em inglês guarda o consentimento em inglês, com versão própria', async () => {
+    const POST = await comBase();
+    await POST(pedido({ ...VALIDO, country: 'pt', investmentBand: 'pt-2', idioma: 'en' }));
+
+    const args = argsDaIngestao();
+    expect(args.consentText).toBe(COUNTRIES.pt.consent.text.en);
+    expect(args.consentVersion).toMatch(/^consent\.pt\.en\.[0-9a-f]{12}$/);
+  });
+
+  it('sem idioma no pedido, o consentimento é o português — como antes deste campo', async () => {
+    const POST = await comBase();
+    await POST(pedido({ ...VALIDO, country: 'pt', investmentBand: 'pt-2' }));
+
+    expect(argsDaIngestao().consentText).toBe(COUNTRIES.pt.consent.text.pt);
   });
 
   it('países diferentes não partilham texto nem versão de consentimento', async () => {

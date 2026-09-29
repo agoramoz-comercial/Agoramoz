@@ -52,7 +52,9 @@ describe('mercadoDoDiagnostico', () => {
       const m = GLOBAL_MARKETS[c];
       for (const b of m.investmentBands) {
         if (b.id.endsWith('-0')) continue; // «Ainda a definir»
-        expect(b.label, `${c}/${b.id}`).toContain(m.currency);
+        // Nos dois idiomas: «5 000 CHF» e «CHF 5,000».
+        expect(b.label.pt, `${c}/${b.id}/pt`).toContain(m.currency);
+        expect(b.label.en, `${c}/${b.id}/en`).toContain(m.currency);
       }
     }
   });
@@ -93,5 +95,35 @@ describe('rótulos para o painel interno', () => {
     expect(nomeDoMercado('xx')).toBe('xx');
     expect(nomeDoMercado(null)).toBe('—');
     expect(nomeDoMercado('ch')).toBe('Suíça');
+  });
+});
+
+describe('o consentimento guardado é o mostrado', () => {
+  /**
+   * O formulário mostra `mercadoDoDiagnostico(c, idioma).consentText`; o
+   * servidor guarda `consentTextFor(c, idioma)`. Têm de ser o mesmo texto,
+   * byte a byte, nos treze mercados e nos dois idiomas — e os dois idiomas têm
+   * de ser textos diferentes, senão o inglês é português copiado.
+   */
+  it('13 mercados × 2 idiomas', () => {
+    for (const c of DIAGNOSTIC_CODES) {
+      for (const idioma of ['pt', 'en'] as const) {
+        expect(consentTextFor(c, idioma), `${c}/${idioma}`).toBe(mercadoDoDiagnostico(c, idioma)!.consentText);
+      }
+      expect(consentTextFor(c, 'en'), c).not.toBe(consentTextFor(c, 'pt'));
+    }
+  });
+
+  it('em inglês, nomes, setores e faixas saem em inglês', () => {
+    const mz = mercadoDoDiagnostico('mz', 'en')!;
+    expect(mz.name).toBe('Mozambique');
+    expect(mz.sectors.find((s) => s.slug === 'energia-mineracao')?.label).toBe('Energy, mining and industrial services');
+    expect(mz.investmentBands[0]!.label).toBe('Up to MZN 250,000');
+    expect(mercadoDoDiagnostico('ch', 'en')!.name).toBe('Switzerland');
+  });
+
+  it('por omissão, português — nada do que já existia muda', () => {
+    expect(mercadoDoDiagnostico('mz')!.investmentBands[0]!.label).toBe('Até 250 000 MZN');
+    expect(mercadoDoDiagnostico('mz')!.name).toBe('Moçambique');
   });
 });

@@ -137,6 +137,9 @@ describe('formulário por passos', () => {
     const nosPassos = new Set(STEP_FIELDS.flat());
 
     noSchema.delete('fax');
+    // Não é uma pergunta: é o idioma em que o formulário foi mostrado, e é o
+    // formulário que o preenche. Não pertence a nenhum passo.
+    noSchema.delete('idioma');
 
     const emFalta = [...noSchema].filter((campo) => !nosPassos.has(campo as never));
     expect(emFalta).toEqual([]);

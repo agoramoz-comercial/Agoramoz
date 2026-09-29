@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STEP_FIELDS, STEP_SCHEMAS, leadSchema } from './lead-schema';
+import { STEP_FIELDS, STEP_SCHEMAS, leadSchema, leadSchemaPara } from './lead-schema';
 
 /**
  * Nenhuma mensagem de validação pode ser a do Zod.
@@ -88,4 +88,27 @@ describe('mensagens de validação', () => {
     const declarados = STEP_FIELDS.flat().length;
     expect(declarados).toBeGreaterThan(10);
   });
+
+  /**
+   * O formulário inglês tem as mesmas regras e mensagens próprias. «Required»
+   * e «Invalid input» são o texto do Zod, não o nosso — o mesmo detector
+   * serve nos dois idiomas.
+   */
+  it('o schema inglês tem mensagem própria em todos os campos, e em inglês', () => {
+    const r = leadSchemaPara('en').safeParse(VAZIO);
+    expect(r.success).toBe(false);
+    const doZod = r.error!.issues.filter((i) => DO_ZOD.test(i.message)).map((i) => `${i.path.join('.')}: ${i.message}`);
+    expect(doZod).toEqual([]);
+
+    // As mensagens são de facto as inglesas, não as portuguesas.
+    const pt = new Set(leadSchema.safeParse(VAZIO).error!.issues.map((i) => i.message));
+    const iguais = r.error!.issues.filter((i) => pt.has(i.message)).map((i) => i.message);
+    expect(iguais).toEqual([]);
+  });
+
+  it('as regras são as mesmas nos dois idiomas: o mesmo pedido falha nos mesmos campos', () => {
+    const campos = (x: typeof leadSchema) => x.safeParse(VAZIO).error!.issues.map((i) => i.path.join('.')).sort();
+    expect(campos(leadSchemaPara('en'))).toEqual(campos(leadSchemaPara('pt')));
+  });
 });
+

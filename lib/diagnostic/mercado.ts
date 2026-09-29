@@ -7,7 +7,9 @@ import {
   isCountryCode,
   isGlobalCode,
 } from '@/content/registry';
-import type { Currency, InvestmentBand } from '@/content/types';
+import { NOME_PAIS } from '@/content/i18n/chrome';
+import { ROTULO_SETOR } from '@/content/i18n/formulario';
+import type { Currency, Idioma } from '@/content/types';
 
 /**
  * A porta única do diagnóstico para qualquer mercado.
@@ -21,8 +23,11 @@ import type { Currency, InvestmentBand } from '@/content/types';
  * dois registos, e o dia em que um deles se esquecesse de um lado seria o dia
  * em que um lead suíço dava erro no servidor.
  *
- * Os textos saem em português porque o formulário é, por agora, português. O
- * consentimento guardado tem de ser o que a pessoa VIU.
+ * Os textos saem no idioma pedido — o do formulário que a pessoa tem à frente.
+ * O servidor pede-os no MESMO idioma que o formulário mostrou (o campo
+ * `idioma` viaja com o pedido), porque o consentimento guardado tem de ser o
+ * que a pessoa VIU. Por omissão, português: tudo o que já existia continua a
+ * receber exactamente o que recebia.
  */
 
 export const DIAGNOSTIC_CODES = [...COUNTRY_CODES, ...GLOBAL_CODES] as const;
@@ -35,7 +40,8 @@ export interface MercadoDiagnostico {
   readonly dialCode: string;
   readonly consentText: string;
   readonly policyHref: string;
-  readonly investmentBands: readonly InvestmentBand[];
+  /** O rótulo já no idioma pedido; `id` e `scoreWeight` não mudam com o idioma. */
+  readonly investmentBands: readonly { readonly id: string; readonly label: string; readonly scoreWeight: number }[];
   readonly sectors: readonly { readonly slug: string; readonly label: string }[];
   /** Mercado onde operamos (`true`) ou de expansão (`false`). */
   readonly operacao: boolean;
@@ -45,18 +51,19 @@ export function ehCodigoDeDiagnostico(valor: string): valor is DiagnosticCode {
   return (DIAGNOSTIC_CODES as readonly string[]).includes(valor);
 }
 
-export function mercadoDoDiagnostico(code: string): MercadoDiagnostico | null {
+export function mercadoDoDiagnostico(code: string, idioma: Idioma = 'pt'): MercadoDiagnostico | null {
   if (isCountryCode(code)) {
     const c = COUNTRIES[code];
     return {
       code,
-      name: c.name,
+      // O nome português vive em `COUNTRIES`; o par bilingue, no chrome.
+      name: idioma === 'pt' ? c.name : NOME_PAIS[code][idioma],
       currency: c.currency,
       dialCode: c.dialCode,
-      consentText: c.consent.text,
+      consentText: c.consent.text[idioma],
       policyHref: c.consent.policyHref,
-      investmentBands: c.investmentBands,
-      sectors: c.sectors.map((s) => ({ slug: s, label: SECTOR_LABELS[s] })),
+      investmentBands: c.investmentBands.map((b) => ({ id: b.id, label: b.label[idioma], scoreWeight: b.scoreWeight })),
+      sectors: c.sectors.map((s) => ({ slug: s, label: idioma === 'pt' ? SECTOR_LABELS[s] : ROTULO_SETOR[s][idioma] })),
       operacao: true,
     };
   }
@@ -64,13 +71,13 @@ export function mercadoDoDiagnostico(code: string): MercadoDiagnostico | null {
     const m = GLOBAL_MARKETS[code];
     return {
       code,
-      name: m.name.pt,
+      name: m.name[idioma],
       currency: m.currency,
       dialCode: m.dialCode,
-      consentText: m.consent.text.pt,
+      consentText: m.consent.text[idioma],
       policyHref: m.consent.policyHref,
-      investmentBands: m.investmentBands,
-      sectors: m.sectors.map((s) => ({ slug: s.slug, label: s.name.pt })),
+      investmentBands: m.investmentBands.map((b) => ({ id: b.id, label: b.label[idioma], scoreWeight: b.scoreWeight })),
+      sectors: m.sectors.map((s) => ({ slug: s.slug, label: s.name[idioma] })),
       operacao: false,
     };
   }

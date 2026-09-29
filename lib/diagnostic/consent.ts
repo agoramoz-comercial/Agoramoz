@@ -1,3 +1,4 @@
+import type { Idioma } from '@/content/types';
 import { mercadoDoDiagnostico, type DiagnosticCode } from './mercado';
 
 /**
@@ -21,17 +22,25 @@ import { mercadoDoDiagnostico, type DiagnosticCode } from './mercado';
  * quando se consentiu outra. Derivando do texto, mudar uma vírgula muda a
  * versão sem ninguém ter de se lembrar.
  */
-export async function consentVersionFor(country: DiagnosticCode): Promise<string> {
-  const texto = consentTextFor(country);
+export async function consentVersionFor(country: DiagnosticCode, idioma: Idioma = 'pt'): Promise<string> {
+  const texto = consentTextFor(country, idioma);
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
   const hex = Array.from(new Uint8Array(digest).slice(0, 6))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
-  return `consent.${country}.${hex}`;
+  // O formato português fica exactamente como estava: as versões já guardadas
+  // continuam a identificar o mesmo texto. O inglês ganha a marca do idioma —
+  // o hash já seria outro, mas assim um registo lê-se sem o recalcular.
+  return idioma === 'pt' ? `consent.${country}.${hex}` : `consent.${country}.${idioma}.${hex}`;
 }
 
-export function consentTextFor(country: DiagnosticCode): string {
-  const texto = mercadoDoDiagnostico(country)?.consentText;
+/**
+ * O texto de consentimento no idioma em que o formulário o MOSTROU. Um
+ * formulário inglês que gravasse o texto português guardaria uma coisa que a
+ * pessoa não leu — que é o que um registo de consentimento existe para impedir.
+ */
+export function consentTextFor(country: DiagnosticCode, idioma: Idioma = 'pt'): string {
+  const texto = mercadoDoDiagnostico(country, idioma)?.consentText;
   if (!texto) {
     // Um país sem texto de consentimento é um erro de conteúdo, não um caso a
     // contornar com um texto genérico: guardar um consentimento que ninguém

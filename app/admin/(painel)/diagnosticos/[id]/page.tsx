@@ -72,6 +72,7 @@ const ROTULO_RESPOSTA: Record<string, string> = {
   workEmail: 'Correio',
   phone: 'Telefone',
   consent: 'Consentimento',
+  idioma: 'Idioma do formulário',
 };
 
 function mostrarValor(chave: string, valor: unknown, pais: string | null): string {
