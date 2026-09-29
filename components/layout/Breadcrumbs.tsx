@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { breadcrumbNode } from '@/lib/seo/schema/nodes';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { CHROME } from '@/content/i18n/chrome';
+import type { Idioma } from '@/content/types';
+import { t } from '@/lib/i18n/texto';
 
 export interface Migalha {
   readonly name: string;
@@ -30,7 +33,15 @@ export interface Migalha {
  * di-lo a quem usa leitor de ecrã, e o `<nav>` tem nome próprio porque uma
  * página pode ter mais do que uma zona de navegação.
  */
-export function Breadcrumbs({ items, className }: { items: readonly Migalha[]; className?: string }) {
+export function Breadcrumbs({
+  items,
+  className,
+  idioma = 'pt',
+}: {
+  items: readonly Migalha[];
+  className?: string;
+  idioma?: Idioma;
+}) {
   if (items.length < 2) return null;
 
   const ultimo = items.length - 1;
@@ -39,7 +50,7 @@ export function Breadcrumbs({ items, className }: { items: readonly Migalha[]; c
     <>
       <JsonLd graph={{ '@context': 'https://schema.org', '@graph': [breadcrumbNode(items[ultimo]!.path, items)] }} />
 
-      <nav aria-label="Trilho" className={className}>
+      <nav aria-label={t(CHROME.trilho, idioma)} className={className}>
         {/*
           `-my-2` no contentor e `min-h-11` nos itens: a área de toque passa a
           44px sem o trilho engordar visualmente. Medido com axe e com a

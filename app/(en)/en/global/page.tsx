@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
+import { ligacao } from '@/lib/i18n/rotas';
 import { Reveal } from '@/components/motion/Reveal';
 import { GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
 import { buildMetadata } from '@/lib/seo/site';
@@ -41,12 +42,11 @@ export default function Page() {
     <div lang={LANG}>
       <Section surface="deep" contour>
         <Breadcrumbs
+            idioma={IDIOMA}
           className="mb-10"
           items={[
-            // A home inglesa ainda não existe (lote E): `/en` dá 404, e o trilho — que
-            // também sai em JSON-LD — mandaria o Google a uma URL morta. Até lá, o
-            // início é a home em português.
-            { name: INICIO, path: '/' },
+            // Pela lista de rotas bilingues: `/` enquanto a home inglesa não existir, `/en` quando existir.
+            { name: INICIO, path: ligacao('/', IDIOMA).href },
             { name: t(COPIA.eyebrow, IDIOMA), path: caminhoNoIdioma('/global', IDIOMA) },
           ]}
         />

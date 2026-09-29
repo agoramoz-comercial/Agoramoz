@@ -11,6 +11,7 @@ import { SkipLink } from '@/components/ui/SkipLink';
 import { AttributionBoot } from '@/components/analytics/AttributionBoot';
 import { OutboundTracker } from '@/components/analytics/OutboundTracker';
 import { SiteJsonLd } from '@/components/seo/JsonLd';
+import type { Idioma } from '@/content/types';
 
 /**
  * A casca do site público.
@@ -29,11 +30,18 @@ import { SiteJsonLd } from '@/components/seo/JsonLd';
  * A classe `grain` mudou de `<body>` para aqui. O pseudo-elemento é
  * `position: fixed` e continua a cobrir o ecrã todo; o que muda é que deixa de
  * cobrir o admin.
+ *
+ * `idioma` vem do layout do grupo — `(site)` passa `pt`, `(en)` passa `en` — e
+ * marca o `lang` de tudo o que está dentro. O `<html lang="pt">` do documento
+ * fica: trocá-lo exigiria um layout-raiz por idioma, o que parte o
+ * `not-found`/`global-error` da raiz e obriga a recarregar a página a cada
+ * troca. O WCAG 3.1.2 (idioma das partes) é cumprido aqui, e o hreflang diz
+ * aos motores de busca o que cada URL é.
  */
-export function SiteChrome({ children }: { children: React.ReactNode }) {
+export function SiteChrome({ children, idioma }: { children: React.ReactNode; idioma: Idioma }) {
   return (
-    <div className="grain">
-      <SkipLink />
+    <div className="grain" lang={idioma === 'en' ? 'en' : undefined}>
+      <SkipLink idioma={idioma} />
       <SiteJsonLd />
       <AttributionBoot />
       <OutboundTracker />
@@ -42,11 +50,11 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
         <PageTransition />
         <CustomCursor />
         <SectionIndex />
-        <TopBar />
-        <SiteHeader />
+        <TopBar idioma={idioma} />
+        <SiteHeader idioma={idioma} />
         <main id="conteudo">{children}</main>
-        <SiteFooter />
-        <MobileCtaBar />
+        <SiteFooter idioma={idioma} />
+        <MobileCtaBar idioma={idioma} />
       </MotionProvider>
     </div>
   );

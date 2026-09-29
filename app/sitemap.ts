@@ -2,7 +2,8 @@ import type { MetadataRoute } from 'next';
 import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
 import { PERFIL } from '@/content/landing/perfil';
 import { absolute } from '@/lib/seo/site';
-import { caminhoNoIdioma, IDIOMAS } from '@/lib/i18n/texto';
+import { caminhoNoIdioma } from '@/lib/i18n/texto';
+import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
 
 /** Gerado a partir do registry: uma nova vertical entra aqui sozinha. */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -20,18 +21,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   /**
-   * Nível de expansão, nos dois idiomas. Índice e dez mercados × PT/EN = 22
-   * URLs. Prioridade abaixo dos mercados de operação de propósito: estas
-   * páginas afirmam intenção, aquelas afirmam operação.
+   * Nível de expansão: índice e dez mercados. Prioridade abaixo dos mercados de
+   * operação de propósito — estas páginas afirmam intenção, aquelas afirmam
+   * operação.
    */
-  const globais: MetadataRoute.Sitemap = IDIOMAS.flatMap((idioma) => [
-    { url: absolute(caminhoNoIdioma('/global', idioma)), lastModified: now, priority: 0.6 },
-    ...GLOBAL_CODES.map((code) => ({
-      url: absolute(caminhoNoIdioma(`/global/${code}`, idioma)),
-      lastModified: now,
-      priority: 0.5,
-    })),
-  ]);
+  const globais: MetadataRoute.Sitemap = [
+    { url: absolute('/global'), lastModified: now, priority: 0.6 },
+    ...GLOBAL_CODES.map((code) => ({ url: absolute(`/global/${code}`), lastModified: now, priority: 0.5 })),
+  ];
 
   const countries: MetadataRoute.Sitemap = COUNTRY_CODES.map((code) => ({
     url: absolute(`/${code}`),
@@ -51,5 +48,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  return [...statics, ...countries, ...solutions, ...sectors, ...globais];
+  const portugues = [...statics, ...countries, ...solutions, ...sectors, ...globais];
+
+  /**
+   * As versões inglesas saem de `ROTAS_BILINGUES` — a lista que o seletor de
+   * idioma e o hreflang também leem. Uma rota traduzida entra aqui sozinha, e
+   * uma que não o esteja não pode entrar por engano. Cada uma herda a
+   * prioridade e a data do seu par português.
+   */
+  const porUrl = new Map(portugues.map((e) => [e.url, e]));
+  const ingles: MetadataRoute.Sitemap = ROTAS_BILINGUES.map((rota) => {
+    const par = porUrl.get(absolute(rota));
+    return {
+      url: absolute(caminhoNoIdioma(rota, 'en')),
+      lastModified: par?.lastModified ?? now,
+      priority: par?.priority ?? 0.5,
+    };
+  });
+
+  return [...portugues, ...ingles];
 }

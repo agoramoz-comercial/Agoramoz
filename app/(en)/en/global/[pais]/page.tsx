@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { MercadoGlobal } from '@/components/global/MercadoGlobal';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
+import { ligacao } from '@/lib/i18n/rotas';
 import { GLOBAL_CODES, getGlobalMarket } from '@/content/registry';
 import { buildMetadata } from '@/lib/seo/site';
 import { caminhoNoIdioma, t } from '@/lib/i18n/texto';
@@ -44,12 +45,11 @@ export default async function Page({ params }: Props) {
         idioma={IDIOMA}
         trilho={
           <Breadcrumbs
+            idioma={IDIOMA}
             className="mb-10"
             items={[
-              // A home inglesa ainda não existe (lote E): `/en` dá 404, e o trilho — que
-              // também sai em JSON-LD — mandaria o Google a uma URL morta. Até lá, o
-              // início é a home em português.
-              { name: INICIO, path: '/' },
+              // Pela lista de rotas bilingues: `/` enquanto a home inglesa não existir, `/en` quando existir.
+              { name: INICIO, path: ligacao('/', IDIOMA).href },
               { name: 'Markets', path: caminhoNoIdioma('/global', IDIOMA) },
               { name: t(m.name, IDIOMA), path: caminhoNoIdioma(`/global/${m.code}`, IDIOMA) },
             ]}

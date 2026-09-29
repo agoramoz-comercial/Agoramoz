@@ -5,9 +5,14 @@ import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/brand/Logo';
 import { NAV, SITE } from '@/content/site';
 import { SocialLinks } from '@/components/ui/SocialLinks';
+import { SoPortugues } from '@/components/ui/SoPortugues';
 import { getSolutionSummaries } from '@/content/registry';
-import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, getSectorsForCountry } from '@/content/registry';
+import { COUNTRY_CODES, GLOBAL_CODES, getSectorsForCountry } from '@/content/registry';
 import { MotionToggle } from '@/components/motion/MotionToggle';
+import { CHROME, NAV_TEXTO, NOME_PAIS, RESUMO_SOLUCAO } from '@/content/i18n/chrome';
+import type { Idioma } from '@/content/types';
+import { ligacao } from '@/lib/i18n/rotas';
+import { caminhoNoIdioma, t } from '@/lib/i18n/texto';
 
 /**
  * Duas correções que só um teste por ecrã apanha:
@@ -18,8 +23,17 @@ import { MotionToggle } from '@/components/motion/MotionToggle';
  *    a conformidade.
  * 2. **`aria-current`.** Nenhuma navegação do site marcava a página atual.
  */
-export function SiteFooter() {
-  const solutions = getSolutionSummaries();
+export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
+  // A regra do cabeçalho: página inglesa quando existe, portuguesa marcada
+  // «(PT)» quando não existe.
+  const solutions = getSolutionSummaries().map((s) => {
+    const l = ligacao(s.href, idioma);
+    return { slug: s.slug, label: t(RESUMO_SOLUCAO[s.slug].label, idioma), href: l.href, soPortugues: l.soPortugues };
+  });
+  const indiceSolucoes = ligacao('/solucoes', idioma);
+  const diagnostico = ligacao('/diagnostico', idioma);
+  const globalHref = caminhoNoIdioma('/global', idioma);
+  const pt = idioma === 'en' ? ('pt' as const) : undefined;
   const pathname = usePathname();
   const current = (href: string) => (pathname === href ? 'page' : undefined);
 
@@ -35,7 +49,7 @@ export function SiteFooter() {
         <div className="rule grid gap-x-10 gap-y-12 pt-10 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <Logo href={null} />
-            <p className="mt-4 max-w-xs text-sm text-[color:var(--muted)]">{SITE.tagline}.</p>
+            <p className="mt-4 max-w-xs text-sm text-[color:var(--muted)]">{t(CHROME.tagline, idioma)}.</p>
 
             <div className="mt-6 flex flex-col gap-2">
               <a
@@ -51,17 +65,22 @@ export function SiteFooter() {
                 className="inline-flex min-h-11 items-center rounded-xs text-sm text-[color:var(--on-surface)] underline-offset-4 hover:underline"
               >
                 WhatsApp {SITE.whatsapp.display}
-                <span className="sr-only"> (abre noutro separador)</span>
+                <span className="sr-only"> {t(CHROME.novoSeparador, idioma)}</span>
               </a>
             </div>
 
             <SocialLinks className="mt-5" />
           </div>
 
-          <nav aria-label="Soluções">
+          <nav aria-label={t(CHROME.solucoes, idioma)}>
             <h2 className="rule-label text-[color:var(--muted)]">
-              <Link href="/solucoes" className="flex min-h-11 items-center hover:text-[color:var(--on-surface)]">
-                Soluções
+              <Link
+                href={indiceSolucoes.href}
+                hrefLang={indiceSolucoes.soPortugues ? 'pt' : undefined}
+                className="flex min-h-11 items-center hover:text-[color:var(--on-surface)]"
+              >
+                {t(CHROME.solucoes, idioma)}
+                {indiceSolucoes.soPortugues && <SoPortugues idioma={idioma} />}
               </Link>
             </h2>
             <ul className="mt-2">
@@ -69,30 +88,36 @@ export function SiteFooter() {
                 <li key={s.slug}>
                   <Link
                     href={s.href}
+                    hrefLang={s.soPortugues ? 'pt' : undefined}
                     aria-current={current(s.href)}
                     className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                   >
                     {s.label}
+                    {s.soPortugues && <SoPortugues idioma={idioma} />}
                   </Link>
                 </li>
               ))}
             </ul>
           </nav>
 
-          <nav aria-label="Mercados">
+          <nav aria-label={t(CHROME.mercados, idioma)}>
             <h2 className="rule-label text-[color:var(--muted)]">
-              Mercados
+              {t(CHROME.mercados, idioma)}
             </h2>
             <ul className="mt-2">
               {COUNTRY_CODES.map((code) => (
                 <li key={code}>
                   <Link
                     href={`/${code}`}
+                    hrefLang={pt}
                     aria-current={current(`/${code}`)}
                     className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                   >
-                    {COUNTRIES[code].name}
+                    {t(NOME_PAIS[code], idioma)}
+                    <SoPortugues idioma={idioma} />
                   </Link>
+                  {/* Os setores são páginas em português, com título português: em inglês, só o país. */}
+                  {idioma === 'pt' && (
                   <ul className="mt-0.5 mb-2 pl-3">
                     {getSectorsForCountry(code)
                       .filter((s) => s.published)
@@ -108,6 +133,7 @@ export function SiteFooter() {
                         </li>
                       ))}
                   </ul>
+                  )}
                 </li>
               ))}
               {/*
@@ -117,29 +143,31 @@ export function SiteFooter() {
               */}
               <li>
                 <Link
-                  href="/global"
-                  aria-current={current('/global')}
+                  href={globalHref}
+                  aria-current={current(globalHref)}
                   className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                 >
-                  Global · {GLOBAL_CODES.length} mercados
+                  {t(CHROME.globalN, idioma).replace('{n}', String(GLOBAL_CODES.length))}
                 </Link>
               </li>
             </ul>
           </nav>
 
-          <nav aria-label="Empresa">
+          <nav aria-label={t(CHROME.empresa, idioma)}>
             <h2 className="rule-label text-[color:var(--muted)]">
-              Empresa
+              {t(CHROME.empresa, idioma)}
             </h2>
             <ul className="mt-2">
               {NAV.primary.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    hrefLang={pt}
                     aria-current={current(item.href)}
                     className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                   >
-                    {item.label}
+                    {t(NAV_TEXTO[item.href], idioma)}
+                    <SoPortugues idioma={idioma} />
                   </Link>
                 </li>
               ))}
@@ -150,31 +178,38 @@ export function SiteFooter() {
                 nenhuma ligação interna é uma página que o rastreador alcança
                 só pelo sitemap, e isso enfraquece-a.
               */}
+              {/* `/perfil` fica só em português, por decisão: é a página do Google Business Profile. */}
+              {idioma === 'pt' && (
+                <li>
+                  <Link
+                    href="/perfil"
+                    aria-current={current('/perfil')}
+                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  >
+                    {t(CHROME.perfilResumo, idioma)}
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
-                  href="/perfil"
-                  aria-current={current('/perfil')}
+                  href={diagnostico.href}
+                  hrefLang={diagnostico.soPortugues ? 'pt' : undefined}
+                  aria-current={current(diagnostico.href)}
                   className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                 >
-                  Quem somos, em resumo
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/diagnostico"
-                  aria-current={current('/diagnostico')}
-                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
-                >
-                  Solicitar diagnóstico
+                  {t(CHROME.solicitarDiagnostico, idioma)}
+                  {diagnostico.soPortugues && <SoPortugues idioma={idioma} />}
                 </Link>
               </li>
               <li>
                 <Link
                   href="/privacidade"
+                  hrefLang={pt}
                   aria-current={current('/privacidade')}
                   className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                 >
-                  Privacidade
+                  {t(CHROME.privacidade, idioma)}
+                  <SoPortugues idioma={idioma} />
                 </Link>
               </li>
             </ul>
@@ -183,9 +218,9 @@ export function SiteFooter() {
 
         <div className="rule mt-16 flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="rule-label text-[color:var(--muted)]">
-            © {new Date().getFullYear()} AGORAMOZ. Todos os direitos reservados.
+            © {new Date().getFullYear()} AGORAMOZ. {t(CHROME.direitos, idioma)}
           </p>
-          <MotionToggle />
+          <MotionToggle idioma={idioma} />
         </div>
       </div>
     </footer>

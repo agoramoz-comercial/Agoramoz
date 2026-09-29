@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/content/site';
 import { caminhoBase, paresDeIdioma } from '@/lib/i18n/texto';
+import { temPar } from '@/lib/i18n/rotas';
 
 export const SITE_URL = SITE.url.replace(/\/$/, '');
 
@@ -81,7 +82,11 @@ export function buildMetadata({
   description: string;
   path: string;
   languages?: Record<string, string>;
-  /** A rota existe nos dois idiomas. Acrescenta `pt`/`en` aos alternates. */
+  /**
+   * A rota existe nos dois idiomas. Acrescenta `pt`/`en` aos alternates.
+   * Por omissão, deduzido de `ROTAS_BILINGUES` — a mesma lista que o seletor
+   * e o sitemap leem. Passar `false` explicitamente desliga.
+   */
   bilingue?: boolean;
   noindex?: boolean;
   image?: ImagemSocial;
@@ -128,7 +133,7 @@ export function buildMetadata({
     alternates: {
       canonical: absolute(path),
       ...(() => {
-        const juntos = { ...(bilingue ? alternativasDeIdioma(path) : {}), ...(languages ?? {}) };
+        const juntos = { ...((bilingue ?? temPar(path)) ? alternativasDeIdioma(path) : {}), ...(languages ?? {}) };
         return Object.keys(juntos).length > 0 ? { languages: juntos } : {};
       })(),
     },
@@ -140,7 +145,7 @@ export function buildMetadata({
       // `/en/…` é inglês; o resto é português. `caminhoBase` é o mesmo teste
       // que decide o hreflang, pelo que os dois não divergem.
       locale: caminhoBase(path) !== path ? 'en_GB' : 'pt_PT',
-      ...(bilingue ? { alternateLocale: caminhoBase(path) !== path ? 'pt_PT' : 'en_GB' } : {}),
+      ...((bilingue ?? temPar(path)) ? { alternateLocale: caminhoBase(path) !== path ? 'pt_PT' : 'en_GB' } : {}),
       type: 'website',
       ...partilha,
     },

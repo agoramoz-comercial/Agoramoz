@@ -4,7 +4,11 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MessageCircle } from 'lucide-react';
-import { CTA, SITE } from '@/content/site';
+import { SITE } from '@/content/site';
+import { CHROME } from '@/content/i18n/chrome';
+import type { Idioma } from '@/content/types';
+import { ligacao } from '@/lib/i18n/rotas';
+import { caminhoBase, t } from '@/lib/i18n/texto';
 
 /**
  * Barra de conversão em telemóvel e tablet.
@@ -30,10 +34,12 @@ import { CTA, SITE } from '@/content/site';
  * atributo não tem ciclo de vida para correr mal, é composta na GPU na mesma, e
  * continua a funcionar se o GSAP falhar a carregar.
  */
-export function MobileCtaBar() {
+export function MobileCtaBar({ idioma = 'pt' }: { idioma?: Idioma }) {
   const bar = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const hidden = pathname === '/diagnostico';
+  // Nas duas versões da página de diagnóstico, não só na portuguesa.
+  const hidden = caminhoBase(pathname) === '/diagnostico';
+  const diagnostico = ligacao('/diagnostico', idioma);
 
   useEffect(() => {
     if (hidden) return;
@@ -83,10 +89,11 @@ export function MobileCtaBar() {
     >
       <div className="flex items-center gap-2.5 px-4 py-3">
         <Link
-          href="/diagnostico"
+          href={diagnostico.href}
+          hrefLang={diagnostico.soPortugues ? 'pt' : undefined}
           className="flex min-h-12 flex-1 items-center justify-center bg-[color:var(--color-signal-600)] px-4 text-center font-display text-[0.9375rem] font-semibold text-white"
         >
-          {CTA.primary}
+          {t(CHROME.ctaPrimario, idioma)}
         </Link>
         <a
           href={`https://wa.me/${SITE.whatsapp.e164}`}
@@ -95,7 +102,9 @@ export function MobileCtaBar() {
           className="inline-flex size-12 shrink-0 items-center justify-center border border-[color:var(--border)] text-[color:var(--on-surface)]"
         >
           <MessageCircle aria-hidden className="size-5" />
-          <span className="sr-only">WhatsApp {SITE.whatsapp.display} (abre noutro separador)</span>
+          <span className="sr-only">
+            WhatsApp {SITE.whatsapp.display} {t(CHROME.novoSeparador, idioma)}
+          </span>
         </a>
       </div>
     </div>

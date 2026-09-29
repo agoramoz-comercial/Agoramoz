@@ -47,7 +47,12 @@ export default async function SolucaoPage({ params }: Props) {
     <>
       <ViewTracker event={{ name: 'service_viewed', solution: s.slug }} />
       <ServiceJsonLd name={s.label} description={s.seo.description} path={`/solucoes/${s.slug}`} />
-      <FaqJsonLd items={s.faq} />
+      {/*
+        Com o caminho da página. Sem ele, `path` caía no `'/'` por omissão e o
+        `@id` da FAQ saía `…/#faq` — o mesmo da FAQ da página inicial. Cinco
+        páginas a declarar o mesmo nó com perguntas diferentes.
+      */}
+      <FaqJsonLd items={s.faq} path={`/solucoes/${s.slug}`} />
 
       <Section surface="deep" contour>
         <Breadcrumbs

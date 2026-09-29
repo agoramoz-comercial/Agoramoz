@@ -1,6 +1,9 @@
 'use client';
 
 import { useCallback, useSyncExternalStore } from 'react';
+import { CHROME } from '@/content/i18n/chrome';
+import type { Idioma } from '@/content/types';
+import { t } from '@/lib/i18n/texto';
 
 const KEY = 'agoramoz:motion';
 const EVENT = 'agoramoz:motion-change';
@@ -33,7 +36,7 @@ function subscribe(onChange: () => void) {
  * hidratação. O snapshot do servidor é sempre `false`, que é o valor com que
  * o HTML é gerado.
  */
-export function MotionToggle() {
+export function MotionToggle({ idioma = 'pt' }: { idioma?: Idioma }) {
   const reduced = useSyncExternalStore(subscribe, read, () => false);
 
   const toggle = useCallback(() => {
@@ -66,7 +69,7 @@ export function MotionToggle() {
           className="absolute top-0.5 left-0.5 size-2.5 rounded-full bg-current transition-transform data-[on=true]:translate-x-3"
         />
       </span>
-      Reduzir movimento
+      {t(CHROME.reduzirMovimento, idioma)}
     </button>
   );
 }

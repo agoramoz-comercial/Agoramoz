@@ -6,5 +6,5 @@ import { SiteChrome } from '@/components/layout/SiteChrome';
  * do que não tem — hoje, `/admin`.
  */
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
-  return <SiteChrome>{children}</SiteChrome>;
+  return <SiteChrome idioma="pt">{children}</SiteChrome>;
 }

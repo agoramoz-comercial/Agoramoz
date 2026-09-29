@@ -23,7 +23,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function NaoEncontrado() {
   return (
-    <SiteChrome>
+    <SiteChrome idioma="pt">
       <NotFoundContent />
     </SiteChrome>
   );

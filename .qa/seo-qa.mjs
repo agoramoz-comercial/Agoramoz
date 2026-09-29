@@ -17,7 +17,7 @@ for (const rota of PAGINAS) {
   const res = await p.goto(BASE + rota, { waitUntil: 'domcontentloaded' });
   const h1 = (await p.locator('h1').first().textContent().catch(() => null))?.trim() ?? '';
   const visivel = await p.locator('h1').first().isVisible().catch(() => false);
-  const trilho = rota === '/' ? true : (await p.locator('nav[aria-label="Trilho"]').count()) > 0;
+  const trilho = rota === '/' ? true : (await p.locator('nav[aria-label="Trilho"], nav[aria-label="Breadcrumb"]').count()) > 0;
   console.log(` ${rota}`);
   ok(res?.status() === 200, `  200`);
   ok(h1.length > 0, `  h1 presente: "${h1.slice(0, 48)}"`);

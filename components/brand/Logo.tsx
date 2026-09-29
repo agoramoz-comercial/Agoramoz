@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
+import { CHROME } from '@/content/i18n/chrome';
+import type { Idioma } from '@/content/types';
+import { t } from '@/lib/i18n/texto';
 import { Mark } from './Mark';
 
 /**
@@ -13,9 +16,11 @@ type LogoProps = {
   className?: string;
   /** Envolve num link para a raiz. Desligar no footer se já houver um. */
   href?: string | null;
+  /** Só muda o nome acessível da ligação. */
+  idioma?: Idioma;
 };
 
-export function Logo({ variant = 'full', className, href = '/' }: LogoProps) {
+export function Logo({ variant = 'full', className, href = '/', idioma = 'pt' }: LogoProps) {
   const content = (
     <span className={cn('inline-flex items-center gap-2.5 text-[color:var(--on-surface)]', className)}>
       <Mark className="h-6 w-auto shrink-0" />
@@ -30,7 +35,7 @@ export function Logo({ variant = 'full', className, href = '/' }: LogoProps) {
   if (!href) return content;
 
   return (
-    <Link href={href} aria-label="AGORAMOZ — página inicial" className="inline-flex rounded-xs">
+    <Link href={href} aria-label={t(CHROME.logo, idioma)} className="inline-flex rounded-xs">
       {content}
     </Link>
   );

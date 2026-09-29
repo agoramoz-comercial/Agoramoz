@@ -13,7 +13,7 @@ import { SiteChrome } from '@/components/layout/SiteChrome';
  */
 export default function NotFound() {
   return (
-    <SiteChrome>
+    <SiteChrome idioma="pt">
       <NotFoundContent />
     </SiteChrome>
   );

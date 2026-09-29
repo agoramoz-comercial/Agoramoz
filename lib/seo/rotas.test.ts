@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COUNTRY_CODES, RESERVED_TOP_LEVEL_SLUGS } from '@/content/registry';
+import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
 
 /**
  * `RESERVED_TOP_LEVEL_SLUGS` diz de si próprio, em comentário: «Verificado em
@@ -14,13 +15,35 @@ import { COUNTRY_CODES, RESERVED_TOP_LEVEL_SLUGS } from '@/content/registry';
  * ou em runtime. É uma página de mercado inteira a evaporar-se em silêncio.
  */
 
+/** Os grupos de rotas do site público. `(en)` guarda as páginas em `/en/…`. */
+const GRUPOS = ['app/(site)', 'app/(en)'] as const;
+
 function segmentosDeTopo(): string[] {
-  const raiz = 'app/(site)';
-  return readdirSync(raiz)
-    .filter((nome) => statSync(join(raiz, nome)).isDirectory())
-    // `[pais]` é a rota dinâmica que estes segmentos podem sombrear; não é um
-    // segmento estático e não se compara consigo própria.
-    .filter((nome) => !nome.startsWith('[') && !nome.startsWith('('));
+  return GRUPOS.flatMap((raiz) =>
+    readdirSync(raiz)
+      .filter((nome) => statSync(join(raiz, nome)).isDirectory())
+      // `[pais]` é a rota dinâmica que estes segmentos podem sombrear; não é um
+      // segmento estático e não se compara consigo própria.
+      .filter((nome) => !nome.startsWith('[') && !nome.startsWith('(')),
+  );
+}
+
+/**
+ * Há página para este caminho debaixo desta raiz? Resolve como o Next: um
+ * segmento estático com o nome exacto ganha; senão serve um `[…]` dinâmico.
+ */
+function temPagina(raiz: string, caminho: string): boolean {
+  let dir = raiz;
+  for (const seg of caminho.split('/').filter(Boolean)) {
+    if (existsSync(join(dir, seg))) {
+      dir = join(dir, seg);
+      continue;
+    }
+    const dinamico = existsSync(dir) ? readdirSync(dir).find((n) => n.startsWith('[')) : undefined;
+    if (!dinamico) return false;
+    dir = join(dir, dinamico);
+  }
+  return existsSync(join(dir, 'page.tsx'));
 }
 
 describe('segmentos estáticos de topo', () => {
@@ -31,7 +54,7 @@ describe('segmentos estáticos de topo', () => {
     expect(colisoes).toEqual([]);
   });
 
-  it('todo o directório estático de (site) está declarado como reservado', () => {
+  it('todo o directório estático de (site) e (en) está declarado como reservado', () => {
     // Este é o lado que faltava. A lista podia estar correcta e alguém criar
     // `app/(site)/notas/` sem a actualizar — e a colisão voltava a ser possível
     // sem nada a assinalá-la.
@@ -68,7 +91,7 @@ describe('trilho de navegação', () => {
         else if (nome === 'page.tsx') saida.push({ caminho, fonte: readFileSync(caminho, 'utf-8') });
       }
     };
-    andar('app/(site)');
+    for (const g of GRUPOS) andar(g);
     return saida;
   }
 
@@ -108,7 +131,7 @@ describe('trilho de navegação', () => {
    * em `app/(site)/en` e exige que a página exista.
    */
   it('toda a ligação feita por caminhoNoIdioma nas páginas inglesas tem página', () => {
-    const raizEn = join('app/(site)', 'en');
+    const raizEn = join('app/(en)', 'en');
     const alvos = paginas()
       .filter((p) => p.caminho.startsWith(raizEn))
       // O literal até ao primeiro `${`: `/global/${m.code}` dá `/global/`.
@@ -128,8 +151,23 @@ describe('trilho de navegação', () => {
     expect(alvos.filter((a) => !existe(a))).toEqual([]);
   });
 
-  it('a verificação de ligações inglesas recusa a home inglesa enquanto não existir', () => {
-    // Prova de que o teste acima vê o defeito que o motivou.
-    expect(existsSync(join('app/(site)', 'en', 'page.tsx'))).toBe(false);
+  /**
+   * `ROTAS_BILINGUES` alimenta o seletor de idioma, o hreflang e o sitemap. Uma
+   * entrada sem página num dos lados é um 404 com hreflang a apontar-lhe —
+   * exactamente o que esta lista existe para impedir. Os dois lados, sempre.
+   */
+  it('toda a rota bilingue tem página nas duas árvores', () => {
+    const semPt = ROTAS_BILINGUES.filter((r) => !temPagina('app/(site)', r));
+    const semEn = ROTAS_BILINGUES.filter((r) => !temPagina(join('app/(en)', 'en'), r));
+
+    expect(semPt).toEqual([]);
+    expect(semEn).toEqual([]);
+  });
+
+  it('o resolvedor de páginas distingue o que existe do que não existe', () => {
+    expect(temPagina('app/(site)', '/global/ch')).toBe(true);
+    // `/x/y` corresponderia a `[pais]/[setor]`; três níveis debaixo de `/global` não correspondem a nada.
+    expect(temPagina('app/(site)', '/global/ch/extra')).toBe(false);
+    expect(temPagina(join('app/(en)', 'en'), '/perfil')).toBe(false);
   });
 });
