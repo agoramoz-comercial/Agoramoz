@@ -243,6 +243,7 @@ describe('imagem de partilha por página', () => {
       }
     };
     andar('app/(site)');
+    andar('app/(en)');
     return saida;
   }
 
@@ -277,7 +278,16 @@ describe('imagem de partilha genérica no idioma da página', () => {
     expect(imagens('/en')).toEqual([OG_IMAGE_PADRAO_EN]);
     expect(imagens('/en/global')).toEqual([OG_IMAGE_PADRAO_EN]);
     expect(imagens('/solucoes')).toEqual([OG_IMAGE_PADRAO]);
-    expect(OG_IMAGE_PADRAO_EN.url).toBe(OG_IMAGE_PADRAO.url);
+    expect(OG_IMAGE_PADRAO_EN.url).not.toBe(OG_IMAGE_PADRAO.url);
     expect(OG_IMAGE_PADRAO_EN.alt).not.toBe(OG_IMAGE_PADRAO.alt);
+  });
+
+  it('as imagens por omissão são o Hero capturado, e o ficheiro existe', () => {
+    // Um URL para um ficheiro que não está em `public/` dava cartão partido em todas as partilhas.
+    for (const img of [OG_IMAGE_PADRAO, OG_IMAGE_PADRAO_EN]) {
+      const caminho = img.url.slice(SITE_URL.length);
+      expect(caminho).toMatch(/^\/og\/hero-(pt|en)\.png$/);
+      expect(statSync(join('public', caminho)).size).toBeGreaterThan(10_000);
+    }
   });
 });

@@ -35,6 +35,7 @@ export const metadata: Metadata = buildMetadata({
   description: t(COPIA.lead, IDIOMA),
   path: caminhoNoIdioma('/global', IDIOMA),
   bilingue: true,
+  imagemPropria: true,
 });
 
 export default function Page() {

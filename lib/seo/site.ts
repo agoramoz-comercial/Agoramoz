@@ -31,17 +31,22 @@ export interface ImagemSocial {
  * Declarar aqui torna o resultado independente da resolução de convenções do
  * Next, e abre a porta a uma imagem própria por página, que era impossível
  * enquanto a herança era implícita.
+ *
+ * Desde o lote F0 a imagem por omissão é o Hero, capturado da própria página
+ * por `.qa/og-hero.mjs` para `public/og/`. Voltar a correr o script quando o
+ * Hero mudar.
  */
 export const OG_IMAGE_PADRAO: ImagemSocial = {
-  url: absolute('/opengraph-image'),
+  url: absolute('/og/hero-pt.png'),
   width: 1200,
   height: 630,
   alt: `AGORAMOZ — ${SITE.tagline}`,
 };
 
-/** A mesma imagem, descrita em inglês nas páginas `/en/…` que não têm imagem própria. */
+/** O Hero inglês, nas páginas `/en/…` que não têm imagem própria. */
 export const OG_IMAGE_PADRAO_EN: ImagemSocial = {
   ...OG_IMAGE_PADRAO,
+  url: absolute('/og/hero-en.png'),
   alt: 'AGORAMOZ — Digital infrastructure for growth and productivity',
 };
 

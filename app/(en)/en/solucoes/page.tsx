@@ -12,6 +12,7 @@ export const metadata: Metadata = buildMetadata({
   title: t(INDICE_SOLUCOES.metaTitulo, IDIOMA),
   description: t(INDICE_SOLUCOES.metaDescricao, IDIOMA),
   path: caminhoNoIdioma('/solucoes', IDIOMA),
+  imagemPropria: true,
 });
 
 export default function SolutionsEnPage() {

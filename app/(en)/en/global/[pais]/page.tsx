@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: t(m.seo.description, IDIOMA),
     path: caminhoNoIdioma(`/global/${m.code}`, IDIOMA),
     bilingue: true,
+    imagemPropria: true,
   });
 }
 
