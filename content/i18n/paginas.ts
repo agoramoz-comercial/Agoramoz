@@ -63,7 +63,8 @@ export const FINAL = {
 } as const;
 
 export const INDICE_SOLUCOES = {
-  metaTitulo: { pt: 'Soluções', en: 'Solutions' },
+  // O que se pesquisa primeiro, a marca no fim (pelo template): 50–60 caracteres.
+  metaTitulo: { pt: 'Websites, software, automação e agentes de IA', en: 'Websites, software, automation and AI agents' },
   metaDescricao: {
     pt: 'Websites avançados, software empresarial, automação de processos, agentes de IA e infraestrutura digital. Cinco capacidades, um sistema.',
     en: 'Advanced websites, business software, process automation, AI agents and digital infrastructure. Five capabilities, one system.',

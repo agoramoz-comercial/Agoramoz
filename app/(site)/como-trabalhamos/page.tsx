@@ -10,7 +10,7 @@ import { PROCESS, PROOF, PROOF_SECTION, RISK_REDUCTION } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Como trabalhamos',
+  title: 'Como trabalhamos: diagnóstico antes da tecnologia',
   description:
     'Diagnóstico, arquitetura, protótipo, implementação, ativação e evolução. A ferramenta é uma decisão técnica — vem depois de compreender o processo.',
   path: '/como-trabalhamos',

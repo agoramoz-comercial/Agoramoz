@@ -10,7 +10,7 @@ import { SocialLinks } from '@/components/ui/SocialLinks';
 import { buildMetadata } from '@/lib/seo/site';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Contactos',
+  title: 'Contactos: fale connosco por email ou WhatsApp',
   description:
     'Fale com a AGORAMOZ sobre o processo que pretende melhorar. Respondemos com o problema, a viabilidade e o próximo passo recomendado.',
   path: '/contactos',

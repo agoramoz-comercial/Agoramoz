@@ -15,6 +15,11 @@ const LANG = 'pt-PT';
 
 const COPIA = {
   eyebrow: { pt: 'Mercados', en: 'Markets' },
+  /** Só o <title>: o H1 continua a ser `title`. O que se pesquisa, não a frase. */
+  metaTitulo: {
+    pt: 'Automação documental e agentes de IA em dez mercados',
+    en: 'Document automation and AI agents in ten markets',
+  },
   title: {
     pt: 'Onde entramos a seguir, e porquê.',
     en: 'Where we go next, and why.',
@@ -30,7 +35,7 @@ const COPIA = {
 } as const;
 
 export const metadata: Metadata = buildMetadata({
-  title: t(COPIA.title, IDIOMA),
+  title: t(COPIA.metaTitulo, IDIOMA),
   description: t(COPIA.lead, IDIOMA),
   path: caminhoNoIdioma('/global', IDIOMA),
   bilingue: true,

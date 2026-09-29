@@ -10,7 +10,7 @@ import { FOUNDERS, PROCESS, RISK_REDUCTION } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Quem somos',
+  title: 'Quem somos: fundadores e método de trabalho',
   description:
     'A AGORAMOZ constrói infraestrutura digital orientada a crescimento, produtividade e controlo operacional para empresas em Moçambique, Portugal e Brasil.',
   path: '/sobre',
