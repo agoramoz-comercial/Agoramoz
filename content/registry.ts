@@ -35,6 +35,10 @@ export const COUNTRY_CODES = ['mz', 'pt', 'br'] as const satisfies readonly Coun
 export const RESERVED_TOP_LEVEL_SLUGS = [
   'solucoes', 'sobre', 'contactos', 'diagnostico', 'como-trabalhamos',
   'privacidade', 'termos', 'obrigado', 'api', 'setores', 'perfil',
+  // `en` é o prefixo de idioma e `global` o nível de expansão. Ambos são
+  // segmentos de topo e, sem estarem aqui, um código de país futuro com o
+  // mesmo nome ganharia em silêncio à rota estática.
+  'en', 'global',
 ] as const;
 
 /**

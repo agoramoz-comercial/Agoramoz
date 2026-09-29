@@ -9,6 +9,28 @@
 
 export type CountryCode = 'mz' | 'pt' | 'br';
 export type Locale = 'pt-MZ' | 'pt-PT' | 'pt-BR';
+
+/**
+ * Idioma da INTERFACE, que é coisa diferente de `Locale`.
+ *
+ * `Locale` é a localidade de conteúdo de um mercado — `pt-MZ` não é `pt-BR`,
+ * e é por isso que existem três ficheiros de país em vez de um traduzido. O
+ * `Idioma` é a língua em que a página é servida. Um visitante suíço lê `en`
+ * numa página cuja localidade continua a ser a do mercado que descreve.
+ *
+ * Confundir os dois levaria ao erro clássico: traduzir `pt-BR` para `pt-PT` e
+ * chamar-lhe internacionalização.
+ */
+export type Idioma = 'pt' | 'en';
+
+/**
+ * Um texto que existe nas duas línguas. Não é `string | { pt, en }`: a união
+ * permitiria acrescentar conteúdo só em português e adiar o inglês para
+ * sempre. Aqui, um campo bilingue sem inglês **não compila** — e o
+ * teste-guarda em `lib/i18n/texto.test.ts` apanha o resto, que é o inglês que
+ * existe mas é português copiado.
+ */
+export type Texto = { readonly pt: string; readonly en: string };
 export type Currency = 'MZN' | 'EUR' | 'BRL';
 
 export type SectorSlug =

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SITE } from '@/content/site';
+import { caminhoBase, paresDeIdioma } from '@/lib/i18n/texto';
 
 export const SITE_URL = SITE.url.replace(/\/$/, '');
 
@@ -38,6 +39,29 @@ export const OG_IMAGE_PADRAO: ImagemSocial = {
 };
 
 /**
+ * Alternativas de IDIOMA, que se somam às de MERCADO.
+ *
+ * `languages` já é usado para o hreflang por país — `pt-MZ`, `pt-PT`, `pt-BR`,
+ * `x-default`. O inglês entra por cima disso, nunca em vez disso: substituir
+ * apagaria em silêncio a correspondência entre os três mercados, que existe
+ * desde a primeira versão do site.
+ *
+ * Funciona a partir de qualquer um dos lados — `caminhoBase` reduz `/en/perfil`
+ * a `/perfil` antes de reconstruir o par, pelo que a página inglesa e a
+ * portuguesa produzem o MESMO conjunto e a reciprocidade é automática em vez de
+ * ser uma coisa que alguém tem de se lembrar de manter.
+ */
+export function alternativasDeIdioma(path: string): Record<string, string> {
+  const par = paresDeIdioma(caminhoBase(path));
+  // `x-default` aponta ao português. É o que o Google serve a quem não
+  // corresponde a nenhum dos idiomas declarados, e omiti-lo deixa essa escolha
+  // ao acaso. Nas rotas que já declaram alternates de mercado, o `x-default`
+  // explícito dessas rotas ganha — a junção em `buildMetadata` põe o de
+  // mercado por cima.
+  return { pt: par.pt, en: par.en, 'x-default': par.pt };
+}
+
+/**
  * hreflang recíproco. Só emitimos alternates para páginas que existem de
  * facto — um hreflang para uma página inexistente é, na melhor das hipóteses,
  * ignorado pelos motores de busca.
@@ -47,6 +71,7 @@ export function buildMetadata({
   description,
   path,
   languages,
+  bilingue,
   noindex,
   image,
   imagemPropria,
@@ -56,6 +81,8 @@ export function buildMetadata({
   description: string;
   path: string;
   languages?: Record<string, string>;
+  /** A rota existe nos dois idiomas. Acrescenta `pt`/`en` aos alternates. */
+  bilingue?: boolean;
   noindex?: boolean;
   image?: ImagemSocial;
   /**
@@ -100,7 +127,10 @@ export function buildMetadata({
     description,
     alternates: {
       canonical: absolute(path),
-      ...(languages ? { languages } : {}),
+      ...(() => {
+        const juntos = { ...(bilingue ? alternativasDeIdioma(path) : {}), ...(languages ?? {}) };
+        return Object.keys(juntos).length > 0 ? { languages: juntos } : {};
+      })(),
     },
     openGraph: {
       title,
