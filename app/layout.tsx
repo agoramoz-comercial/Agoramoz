@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Archivo, Chakra_Petch, Inter } from 'next/font/google';
 import { SITE } from '@/content/site';
 import { SITE_URL } from '@/lib/seo/site';
+import { verificacaoDosMotores } from '@/lib/seo/verificacao';
 import './globals.css';
 
 /**
@@ -36,6 +37,8 @@ export const metadata: Metadata = {
   description: SITE.description,
   openGraph: { siteName: 'AGORAMOZ', locale: 'pt_PT', type: 'website' },
   formatDetection: { telephone: false },
+  // Search Console e Bing: só existe quando a variável de ambiente tem um token válido.
+  verification: verificacaoDosMotores(),
 };
 
 export const viewport: Viewport = {

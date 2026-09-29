@@ -108,19 +108,39 @@ que o website já diz:
 ## 3. Search Console
 
 Não existe nenhuma propriedade. Sem ela, não há forma de saber que consultas
-trazem visitas — estamos a otimizar às cegas.
+trazem visitas, nem de pedir ao Google que volte a ler o site.
 
-1. `search.google.com/search-console` → **Adicionar propriedade** → **Prefixo
-   de URL** → `https://agoramoz.com`.
-2. Verificação: escolha **Registo DNS** se o domínio está na Vercel (é o mais
-   robusto, não depende de o site estar no ar). Se preferir a meta-tag,
-   mande-me o token: já existe encaixe por variável de ambiente
-   (`GOOGLE_SITE_VERIFICATION`) e eu ligo-o — **não está ligado ainda**, porque
-   não invento um token.
-3. Submeta o sitemap: `https://agoramoz.com/sitemap.xml` — já responde, com 17
-   URL.
-4. Em **Páginas**, confirme daqui a uns dias que `/admin` e `/api` **não**
+**Porque é urgente (medido a 2026-09-29, lote G).** `site:agoramoz.com`
+devolve **uma só** URL — a página inicial — com «No information is available
+for this page». É o que o Google mostra quando o `robots.txt` bloqueava o
+rastreio no momento em que viu a URL. Hoje o `robots.txt` permite (`Allow: /`,
+só `/api/` e `/admin/` fechados), o site responde 200 em HTTPS, `www` e `http`
+redirecionam permanentemente para `https://agoramoz.com`. A cópia do Google é
+antiga; só um novo rastreio a substitui — e é o Search Console que o pede.
+
+1. `search.google.com/search-console` → **Adicionar propriedade** →
+   **Domínio** → `agoramoz.com` (cobre `www`, `http` e subdomínios de uma vez).
+2. Verificação, por uma de duas vias:
+   - **Registo TXT** (recomendado): o Google mostra um valor
+     `google-site-verification=…`. Mande-me esse valor e eu crio o registo na
+     zona DNS, que está na Vercel.
+   - **Meta-tag** (só serve para propriedade «Prefixo de URL»): na Vercel →
+     Settings → Environment Variables → Production, crie
+     `GOOGLE_SITE_VERIFICATION` com **só o token** (o `content` da meta-tag,
+     não a tag inteira) e peça um novo deploy. O encaixe existe desde o lote G
+     (`lib/seo/verificacao.ts`); um valor com forma impossível é ignorado em vez
+     de publicado. `BING_SITE_VERIFICATION` faz o mesmo para o Bing.
+3. Submeta o sitemap: `https://agoramoz.com/sitemap.xml` (48 URL).
+4. **Inspecção de URL → Pedir indexação**, por esta ordem: `/`, `/solucoes`,
+   `/mz`, `/diagnostico`, `/en`. A quota diária é pequena; o resto vem pelo
+   sitemap.
+5. Em **Páginas**, confirme daqui a uns dias que `/admin` e `/api` **não**
    aparecem. Se aparecerem, avise-me.
+
+**O que não usar.** A Indexing API da Google serve só para ofertas de emprego
+(`JobPosting`) e transmissões em directo (`BroadcastEvent`); usá-la para
+páginas comuns arrisca a revogação do projecto. Sitemap de notícias,
+`NewsArticle` e Publisher Center são para órgãos de informação — não é o caso.
 
 Vale também criar a propriedade no **Bing Webmaster Tools**: importa a do
 Google em dois cliques e cobre o Copilot e o DuckDuckGo.
