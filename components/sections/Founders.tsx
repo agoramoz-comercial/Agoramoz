@@ -1,78 +1,133 @@
+import Image, { type StaticImageData } from 'next/image';
 import { Linkedin } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { DitherMark } from '@/components/ui/DitherMark';
 import { FOUNDERS } from '@/content/site';
+import gerson from '@/public/equipa/gerson.png';
+import sheinaz from '@/public/equipa/sheinaz.png';
 
 /**
- * Perfis de quem lidera. Numeral techno em escala de estatística, cargo em
- * rótulo, responsabilidade em texto, LinkedIn com nome e ícone.
+ * Perfis de quem lidera.
  *
- * O bloco de credenciais só existe quando há credenciais. Um cabeçalho
- * "Certificações" sobre uma lista vazia diz ao visitante que não há nenhuma —
- * é pior do que não mostrar nada. Ver a nota em `content/site.ts` sobre porque
- * é que este array está vazio de propósito.
+ * Em repouso: retrato monocromático numa janela quadrada, numeral techno, nome
+ * e cargo. No estado activo: chapa de sinal sobre o retrato, com a
+ * responsabilidade e a ligação ao LinkedIn.
+ *
+ * Três decisões que não são de gosto:
+ *
+ * 1. A revelação é CSS, não GSAP. A verificação de QA carrega as páginas sem
+ *    JavaScript; um estado de sobreposição dependente do GSAP deixaria a
+ *    biografia inalcançável nesse cenário. O `Reveal` continua a tratar da
+ *    entrada, que é ornamento e pode faltar.
+ *
+ * 2. A sobreposição só existe onde há rato — `@media (hover: hover) and
+ *    (pointer: fine)` em `globals.css`. Em toque, o mesmo texto fica no fluxo,
+ *    sempre visível. É onde a referência visual falha: lá, quem usa telemóvel
+ *    ou teclado nunca lê a biografia.
+ *
+ * 3. O retrato não tem `priority`. A secção está abaixo da dobra nas três
+ *    páginas onde aparece — `/`, `/perfil` e `/sobre` — e marcá-la como
+ *    prioritária competiria com o LCP real de cada uma delas.
+ *
+ * O bloco de credenciais só existe quando há credenciais. Ver a nota em
+ * `content/site.ts` sobre porque é que esse array está vazio de propósito.
  */
+
+/**
+ * Retrato por pessoa. O `Record` sobre os literais de `photo` é o que impede,
+ * em tempo de compilação, acrescentar um fundador e esquecer o retrato: falta
+ * uma chave, o `pnpm build` reprova. Não é um teste que alguém possa apagar.
+ */
+type ChaveRetrato = (typeof FOUNDERS.people)[number]['photo'];
+
+const RETRATOS: Record<ChaveRetrato, StaticImageData> = { gerson, sheinaz };
+
+/**
+ * O cartão ocupa metade da largura útil a partir de `md`. O contentor máximo é
+ * 88rem com goteira, pelo que 34rem é o tecto real de cada coluna — pedir mais
+ * ao `next/image` seria servir píxeis que ninguém vê.
+ */
+const TAMANHOS = '(min-width: 1024px) 34rem, (min-width: 768px) 44vw, 92vw';
+
 export function Founders() {
   return (
     <Reveal className="mt-16">
-      <ul>
+      <ul className="grid gap-8 md:grid-cols-2 lg:gap-10">
         {FOUNDERS.people.map((p, i) => (
-          <li
-            key={p.name}
-            data-animate
-            className="grid gap-6 border-t border-dashed border-[color:var(--hairline)] py-10 md:grid-cols-12 md:gap-10"
-          >
-            <span className="numeral text-[length:var(--text-numeral)] text-[color:var(--muted)] md:col-span-2 lg:col-span-1">
-              {String(i + 1).padStart(2, '0')}
-            </span>
+          <li key={p.name} data-animate>
+            <article className="perfil-cartao">
+              <div className="perfil-janela">
+                {/*
+                  `alt` vazio de propósito: o nome está imediatamente a seguir,
+                  no mesmo cartão. Repeti-lo aqui faria um leitor de ecrã
+                  anunciar a mesma pessoa duas vezes seguidas.
+                */}
+                <Image
+                  src={RETRATOS[p.photo]}
+                  alt=""
+                  sizes={TAMANHOS}
+                  fill
+                  className="perfil-retrato"
+                />
+              </div>
 
-            <div className="md:col-span-10 lg:col-span-4">
-              <h3 className="font-display text-[length:var(--text-h2)] leading-[1.02] font-bold tracking-[var(--tracking-heading)]">
-                {p.name}
-              </h3>
-              <p className="mt-3 flex items-center gap-2.5">
-                <DitherMark size="sm" />
-                <span className="rule-label text-[color:var(--accent)]">{p.role}</span>
-              </p>
-            </div>
+              <div className="perfil-chapa">
+                <p className="max-w-[42ch] text-sm leading-[var(--leading-body)]">{p.body}</p>
 
-            <div className="md:col-span-12 lg:col-span-7">
-              <p className="max-w-[46ch] text-[color:var(--muted)]">{p.body}</p>
+                <a
+                  href={p.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex min-h-11 items-center gap-2.5 transition-opacity hover:opacity-75"
+                >
+                  <Linkedin aria-hidden className="size-4" />
+                  <span className="rule-label">Perfil público de {p.name} no LinkedIn</span>
+                  <span
+                    aria-hidden
+                    className="transition-transform duration-300 group-hover:translate-x-0.5"
+                  >
+                    ↗
+                  </span>
+                  <span className="sr-only">(abre noutro separador)</span>
+                </a>
+              </div>
 
-              {p.certifications.length > 0 && (
-                <div className="mt-7">
-                  <p className="rule-label text-[color:var(--muted)]">Certificações</p>
-                  <ul className="mt-3 flex flex-wrap gap-2">
-                    {p.certifications.map((c) => (
-                      <li
-                        key={`${c.issuer}-${c.name}`}
-                        className="border border-dashed border-[color:var(--hairline)] px-3 py-2"
-                      >
-                        <span className="block text-sm text-[color:var(--on-surface)]">{c.name}</span>
-                        <span className="rule-label mt-0.5 block text-[color:var(--muted)]">
-                          {c.issuer}
-                          {c.year ? ` · ${c.year}` : ''}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <a
-                href={p.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group mt-7 inline-flex min-h-11 items-center gap-2.5 text-[color:var(--accent)] transition-opacity hover:opacity-70"
-              >
-                <Linkedin aria-hidden className="size-4" />
-                <span className="rule-label">Perfil público de {p.name} no LinkedIn</span>
-                <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">
-                  ↗
+              <div className="flex items-start gap-4 border-t border-dashed border-[color:var(--hairline)] p-6 md:p-7">
+                <span className="numeral text-[length:var(--text-h3)] text-[color:var(--muted)]">
+                  {String(i + 1).padStart(2, '0')}
                 </span>
-                <span className="sr-only">(abre noutro separador)</span>
-              </a>
-            </div>
+
+                <div className="min-w-0">
+                  <h3 className="font-display text-[length:var(--text-h3)] leading-[var(--leading-heading)] font-bold tracking-[var(--tracking-heading)]">
+                    {p.name}
+                  </h3>
+                  <p className="mt-2 flex items-center gap-2.5">
+                    <DitherMark size="sm" />
+                    <span className="rule-label text-[color:var(--accent)]">{p.role}</span>
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            {p.certifications.length > 0 && (
+              <div className="mt-6">
+                <p className="rule-label text-[color:var(--muted)]">Certificações</p>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {p.certifications.map((c) => (
+                    <li
+                      key={`${c.issuer}-${c.name}`}
+                      className="border border-dashed border-[color:var(--hairline)] px-3 py-2"
+                    >
+                      <span className="block text-sm text-[color:var(--on-surface)]">{c.name}</span>
+                      <span className="rule-label mt-0.5 block text-[color:var(--muted)]">
+                        {c.issuer}
+                        {c.year ? ` · ${c.year}` : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </li>
         ))}
       </ul>

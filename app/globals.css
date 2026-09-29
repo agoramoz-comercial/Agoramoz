@@ -420,6 +420,113 @@
   }
 }
 
+/* -------------------------------------------------------------------------
+   Cartão de fundador.
+
+   Repouso: retrato monocromático numa janela quadrada, nome e cargo na
+   faixa por baixo. Estado activo: chapa de sinal por cima do retrato, com a
+   responsabilidade e o LinkedIn.
+
+   A cor é legítima aqui pela regra que já existe no topo deste ficheiro —
+   «o CTA primário e o estado ativo». O cartão activo é o estado activo.
+
+   `--color-signal-700` FIXO e não `var(--signal)`: o token semântico muda com
+   a superfície (#b82200 em claro, #ff3b10 em escuro) e a secção aparece em
+   três páginas. Giz sobre #b82200 dá 5,48:1 — AA, calculado, não estimado.
+   Giz sobre #ff3b10 daria 2,6:1 e reprovaria. A chapa fixa é o que torna o
+   contraste independente da superfície onde o cartão for colocado.
+   ------------------------------------------------------------------------- */
+.perfil-cartao {
+  position: relative;
+  overflow: hidden;
+  border: 1px dashed var(--hairline);
+  background: var(--surface-raised);
+}
+
+.perfil-janela {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  /* Sem isto o retrato recortado flutua sobre a superfície do cartão; com
+     isto assenta num plano ligeiramente mais fundo, que é o que dá ao
+     recorte a leitura de retrato e não de autocolante. */
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--motif) 0%, transparent 62%),
+    var(--surface);
+}
+
+.perfil-retrato {
+  object-fit: cover;
+  object-position: center top;
+  transition:
+    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Em toque e em ponteiro grosseiro a chapa fica no fluxo: retrato, nome,
+   texto. Nada depende de passar o rato, que é precisamente onde a referência
+   falha — quem usa telemóvel ou teclado nunca chega a ler a biografia. */
+.perfil-chapa {
+  display: flex;
+  flex-direction: column;
+  /* `flex-start` e não o `stretch` por omissão: sem isto a ligação do LinkedIn
+     é esticada à largura da chapa e a seta ↗ afasta-se do texto até à margem
+     oposta, como se fosse outro elemento. */
+  align-items: flex-start;
+  gap: 1rem;
+  background: var(--color-signal-700);
+  color: var(--color-chalk);
+  padding: 1.5rem;
+}
+
+.perfil-chapa a {
+  color: var(--color-chalk);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .perfil-chapa {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    aspect-ratio: 1;
+    justify-content: flex-end;
+    opacity: 0;
+    transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Opaca onde há texto, translúcida no topo: o retrato atravessa a chapa
+       como fantasma e o cartão activo continua a ser uma pessoa, não um
+       rectângulo vermelho.
+
+       O corte a 54% não é estético. Giz sobre o vermelho puro dá 5,48:1 — AA.
+       Sobre o vermelho com um píxel BRANCO do retrato por baixo a 14% já dá
+       4,40:1 e reprovaria. Como o texto vive nos 40% de baixo mesmo no cartão
+       mais estreito, deixar essa faixa opaca garante que nenhum brilho da pele
+       pode chegar ao texto — a garantia é geométrica, não uma aposta sobre
+       onde a linha vai cair. */
+    background: linear-gradient(
+      to top,
+      var(--color-signal-700) 0%,
+      var(--color-signal-700) 54%,
+      color-mix(in srgb, var(--color-signal-700) 62%, transparent) 100%
+    );
+  }
+
+  /* `focus-within` e não só `hover`: o teclado tem de ver o que o rato vê.
+     A ligação do LinkedIn vive dentro da chapa, logo ao receber foco a chapa
+     revela-se e a ligação fica visível antes de poder ser activada. */
+  .perfil-cartao:hover .perfil-chapa,
+  .perfil-cartao:focus-within .perfil-chapa {
+    opacity: 1;
+  }
+
+  .perfil-cartao:hover .perfil-retrato,
+  .perfil-cartao:focus-within .perfil-retrato {
+    opacity: 0.55;
+    transform: scale(1.04);
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Malha de contorno. Deriva de --motif e desliza com uma única transformação
    composta. O ContourField desenha os caminhos; isto governa o movimento.
@@ -489,6 +596,31 @@
 :root[data-motion='reduced'] .chrome-loop,
 :root[data-motion='reduced'] [data-contour-drift] {
   animation: none;
+}
+
+/* A revelação do cartão de fundador é opacidade e escala. Com movimento
+   reduzido a troca continua a acontecer — a informação não se perde — mas
+   sem transição e sem a escala do retrato. */
+@media (prefers-reduced-motion: reduce) {
+  .perfil-retrato,
+  .perfil-chapa {
+    transition: none;
+  }
+
+  .perfil-cartao:hover .perfil-retrato,
+  .perfil-cartao:focus-within .perfil-retrato {
+    transform: none;
+  }
+}
+
+:root[data-motion='reduced'] .perfil-retrato,
+:root[data-motion='reduced'] .perfil-chapa {
+  transition: none;
+}
+
+:root[data-motion='reduced'] .perfil-cartao:hover .perfil-retrato,
+:root[data-motion='reduced'] .perfil-cartao:focus-within .perfil-retrato {
+  transform: none;
 }
 
 /* O SplitText envolve cada linha; o wrapper precisa de recortar para a máscara

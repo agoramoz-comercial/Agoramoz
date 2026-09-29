@@ -28,6 +28,7 @@ resolvida por invenção.**
 | **B-14** | Sem Facebook, YouTube, X, TikTok, sem certificações | `sameAs` e credenciais mais fracos do que podiam ser. O tipo já os aceita |
 | **B-16** | **Sem superfície de marcação de reunião** | `meeting_requested` fica definido e **não é disparado**. O caminho para falar connosco é o diagnóstico, e `diagnostic_submitted` já o mede; dispará-lo no clique de WhatsApp produziria um número com aparência de procura que duplicava `whatsapp_clicked`. O nome fica reservado para o dia em que existir uma agenda a sério |
 | **B-15** | **Primeiro toque entre sessões por decidir** | A atribuição usa `sessionStorage`, e portanto morre com o separador. `localStorage` daria primeiro toque a 90 dias — mas é um identificador persistente por dispositivo, e `/privacidade` promete hoje, por escrito, que «a medição de utilização é agregada e não identifica visitantes individualmente». Estender a janela exige essa decisão **e** a edição da política. Não foi assumido em silêncio |
+| **B-17** | **Os dois retratos dos fundadores estão em registos diferentes** | A fotografia de Gerson é de interior, com chapéu e óculos de sol; a de Sheinaz é um retrato de estúdio. O tratamento monocromático com níveis emparelhados — gama calculada a partir da mediana do rosto, não do sujeito — aproxima-os o suficiente para lerem como um par, e o enquadramento comum alinha a linha dos olhos. **Não os iguala.** Resolve-se com uma fotografia no mesmo registo da segunda, não em código. Registado, não bloqueante |
 
 ## 2. Divergências entre o pedido e o repositório
 

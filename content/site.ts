@@ -266,6 +266,13 @@ export const PROOF_SECTION = {
  * Para preencher, uma entrada por credencial:
  *   { name: 'Nome da certificação', issuer: 'Entidade emissora', year: '2024' }
  * `issuer` é obrigatório — ver a nota em `content/types.ts`.
+ *
+ * `photo` é um IDENTIFICADOR, não um caminho. O ficheiro é importado em
+ * `components/sections/Founders.tsx`, onde um `Record` sobre estes literais
+ * obriga o compilador a ter uma entrada para cada pessoa: acrescentar um
+ * fundador sem retrato deixa de compilar. Um caminho escrito aqui não daria
+ * essa garantia — e este módulo é lido por testes que correm sem loader de
+ * imagens, pelo que a importação não pode viver neste ficheiro.
  */
 export const FOUNDERS = {
   eyebrow: 'Quem lidera',
@@ -274,6 +281,7 @@ export const FOUNDERS = {
     {
       name: 'Gerson Samussene',
       role: 'Founder & CEO',
+      photo: 'gerson',
       body: 'Responsável por estratégia digital, sistemas de crescimento, automação e inteligência artificial.',
       linkedin: 'https://mz.linkedin.com/in/gerson-samussene-95b7a322b',
       certifications: [] as readonly Certification[],
@@ -281,6 +289,7 @@ export const FOUNDERS = {
     {
       name: 'Sheinaz de Sousa Amisse',
       role: 'Co-founder & Chief Energy Officer',
+      photo: 'sheinaz',
       body: 'Responsável por parcerias estratégicas, oportunidades, investimento e desenvolvimento no setor energético.',
       linkedin: 'https://mz.linkedin.com/in/sheinaz-amisse',
       certifications: [] as readonly Certification[],

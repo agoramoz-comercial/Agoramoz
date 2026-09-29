@@ -42,18 +42,18 @@ Postgres. Não existe estado intermédio em que um lead foi aceite e perdido.
 | Variáveis de design (CSS) | 98 |
 | Migrações | 10 |
 | Testes automatizados | **455**, em 25 ficheiros |
-| Scripts de QA | 48 — 45 em Node, 3 em shell |
+| Scripts de QA | 52 — 49 em Node, 3 em shell |
 
 ### Linhas por camada
 
 | Camada | Linhas | Ficheiros | O que é |
 |---|---|---|---|
 | `lib/` | 6 985 | 66 | Lógica pura: diagnóstico, atribuição, SEO, auth, base |
-| `app/` | 5 984 | 45 | Rotas, páginas, API |
+| `app/` | 6 116 | 45 | Rotas, páginas, API |
 | `components/` | 4 677 | 54 | Interface |
 | `supabase/` | 3 156 | 11 | Esquema e migrações |
-| `.qa/` | 2 034 | 48 | Arnês de verificação |
-| `content/` | 1 824 | 13 | Conteúdo editorial tipado |
+| `.qa/` | 2 174 | 52 | Arnês de verificação |
+| `content/` | 1 833 | 13 | Conteúdo editorial tipado |
 | `docs/` | 894 | 7 | Decisões, lacunas, ameaças |
 
 A camada maior é `lib/`, e é deliberado: a lógica que decide coisas vive fora
@@ -171,6 +171,27 @@ invisível exactamente para quem usa teclado.
 
 Todo o movimento respeita `prefers-reduced-motion`, e existe um interruptor
 manual. Sem JavaScript, **o conteúdo aparece** — verificado em seis páginas.
+
+### As únicas fotografias do site
+
+`public/equipa/` tem os dois retratos dos fundadores, e são as **únicas**
+fotografias em todo o `agoramoz.com`. Aparecem na secção «Quem lidera», que é o
+mesmo componente em três páginas: `/`, `/perfil` e `/sobre`.
+
+| Decisão | Porquê |
+|---|---|
+| Fundo recortado, mestre em **PNG** com alfa | Com mestre em WebP, o `next/image` devolvia **JPEG** a quem não anuncia `avif`/`webp`, e o JPEG achata o alfa **a preto** — o retrato dentro de um quadrado preto. Medido: `Accept: */*` dava `image/jpeg`, canto `(0,0,0)`. Com mestre PNG dá `image/png` com transparência. Os modernos continuam a receber AVIF (~30 KB) |
+| Monocromia com níveis emparelhados | As duas fotografias vêm de contextos diferentes (B-17). A gama sai da **mediana do rosto**, não do sujeito: os dois vestem preto, o preto dominava a mediana, e emparelhar por aí lavava ambas |
+| Moldura quadrada, rosto a 43% da largura, olhos a 46% da altura | É o alinhamento que faz dois retratos diferentes lerem como um par — e o único formato que as duas fontes preenchem até à margem inferior |
+| Chapa activa em `--color-signal-700` **fixo** | O token semântico `--signal` muda com a superfície (`#ff3b10` em escuro) e a secção vive em três páginas. Giz sobre `#b82200` dá **5,48:1** — AA, calculado. Sobre `#ff3b10` daria 2,6:1 |
+| Chapa opaca só nos 54% de baixo | O retrato atravessa-a no topo. O corte é geométrico: o texto vive nos 40% inferiores mesmo no cartão mais estreito, logo nenhum brilho da pele pode chegar-lhe. Com o retrato a 14% por baixo do texto, o contraste cairia a 4,40:1 e reprovaria |
+| Revelação em CSS, não em GSAP | A verificação sem JavaScript carrega estas páginas; um estado dependente do GSAP deixaria a biografia inalcançável |
+| Sobreposição só em `(hover: hover) and (pointer: fine)` | Em toque, retrato e texto ficam empilhados e ambos visíveis. `:focus-within` dá ao teclado o que o rato tem |
+| Sem `priority` | A secção está abaixo da dobra nas três páginas. Confirmado: o elemento de LCP é um `<p>` em todas, e as imagens saem com `loading="lazy"` |
+
+Acrescentar um fundador sem retrato **não compila**: `Founders.tsx` detém um
+`Record` sobre os literais de `photo` em `content/site.ts`, e a falta de uma
+chave é `TS2741`.
 
 ---
 
@@ -667,7 +688,7 @@ invenção.**
 
 ```
 agoramoz/
-├── app/                        rotas e API — 45 ficheiros, 5 984 linhas
+├── app/                        rotas e API — 45 ficheiros, 6 116 linhas
 │   ├── (site)/                 as 11 rotas públicas
 │   │   ├── page.tsx            inicial, 24 secções
 │   │   ├── perfil/             destino do perfil do Google + imagem própria
@@ -707,7 +728,7 @@ agoramoz/
 │   ├── brand/        (2)       logótipo e marca
 │   └── seo/          (1)       o único renderizador de JSON-LD
 │
-├── content/                    conteúdo tipado — 13 ficheiros, 1 824 linhas
+├── content/                    conteúdo tipado — 13 ficheiros, 1 833 linhas
 │   ├── types.ts                os contratos de integridade
 │   ├── site.ts                 identidade · navegação · oferta · prova
 │   ├── registry.ts             o registry, fonte única de rotas
@@ -749,12 +770,16 @@ agoramoz/
 │   ├── DECISIONS.md  GAPS.md  THREAT_MODEL.md  DATA_FLOW.md
 │   └── SEO_ACTIVACAO.md  CURRENT_STATE.md  CHANGE_PLAN.md
 │
-├── .qa/                        48 scripts de verificação
+├── .qa/                        52 scripts de verificação
 │   ├── seo-qa.mjs              sem-JS · axe · móvel · alvos táteis
 │   ├── lcp-rota.mjs            LCP por rota e viewport
 │   └── links · shots · cls · perf · contrast · csp · kbd · …
 │
-├── public/brand/               2 logótipos, 2000×2000
+├── public/
+│   ├── brand/                  2 logótipos, 2000×2000
+│   └── equipa/                 2 retratos recortados, 1280×1280 com alfa
+│
+├── .claude/settings.json       marketplace e plugin ECC, âmbito projecto
 ├── middleware.ts               a guarda do /admin
 ├── next.config.ts              CSP e cabeçalhos
 ├── vitest.config.ts            455 testes, ambiente Node
