@@ -36,8 +36,11 @@ const p = await b.newPage();
 
 const saida = await p.evaluate(
   async ({ gerson, sheinaz, L }) => {
-    const carregar = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
+    const carregar = (src) => new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => falha(new Error('imagem ilegível')); i.src = src; });
     const [ig, is] = await Promise.all([carregar(gerson), carregar(sheinaz)]);
+    // As constantes de enquadramento só valem para ESTES recortes. Outro ficheiro seria composto em silêncio.
+    if (ig.width !== 768 || ig.height !== 1364) throw new Error(`gerson-cru.png: ${ig.width}×${ig.height}, esperado 768×1364`);
+    if (is.width !== 1254 || is.height !== 1254) throw new Error(`sheinaz-cru.png: ${is.width}×${is.height}, esperado 1254×1254`);
 
     /** Primeira linha com alfa relevante, num canvas já desenhado. */
     const topo = (g) => {
@@ -88,5 +91,7 @@ const saida = await p.evaluate(
 for (const nome of ['gerson', 'sheinaz']) {
   writeFileSync(`public/equipa/${nome}.png`, Buffer.from(saida[nome], 'base64'));
 }
+// Na janela havia 2751 píxeis do fundo (medido). Muito fora disso: janela ou entrada erradas.
+if (saida.apagados < 1000 || saida.apagados > 6000) throw new Error(`limpeza anómala: ${saida.apagados} píxeis`);
 console.log(`topo da cabeça da Sheinaz: y=${saida.topoSheinaz}; escala do Gerson: ${saida.escalaGerson.toFixed(4)}; píxeis do fundo apagados: ${saida.apagados}`);
 await b.close();

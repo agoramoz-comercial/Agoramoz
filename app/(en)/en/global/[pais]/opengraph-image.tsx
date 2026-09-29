@@ -6,6 +6,9 @@ export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = 'AGORAMOZ global market';
 
+// Como a página: um código fora da lista é 404, não um cartão genérico.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return GLOBAL_CODES.map((pais) => ({ pais }));
 }

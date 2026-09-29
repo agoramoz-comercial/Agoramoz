@@ -309,3 +309,29 @@ describe('locale de Open Graph por mercado', () => {
     expect(m.twitter?.images).toEqual([{ url: OG_IMAGE_PADRAO.url, alt: OG_IMAGE_PADRAO.alt }]);
   });
 });
+
+describe('imagens de partilha geradas', () => {
+  /** Largura e altura do cabeçalho IHDR de um PNG (bytes 16–23). */
+  function dimensoes(ficheiro: string) {
+    const b = readFileSync(ficheiro);
+    expect(b.subarray(1, 4).toString('latin1')).toBe('PNG');
+    return { largura: b.readUInt32BE(16), altura: b.readUInt32BE(20) };
+  }
+
+  it('as capturas do Hero têm o tamanho que o metadata declara', () => {
+    for (const img of [OG_IMAGE_PADRAO, OG_IMAGE_PADRAO_EN]) {
+      expect(dimensoes(join('public', img.url.slice(SITE_URL.length)))).toEqual({
+        largura: img.width,
+        altura: img.height,
+      });
+    }
+  });
+
+  it('o título do cartão de /en/global é o título da página', () => {
+    // O título vive como constante na página, que o Next não deixa exportar: este teste impede a divergência.
+    const cartao = readFileSync('app/(en)/en/global/opengraph-image.tsx', 'utf-8');
+    const titulo = /const TITULO = '([^']+)'/.exec(cartao)?.[1];
+    expect(titulo).toBeDefined();
+    expect(readFileSync('app/(en)/en/global/page.tsx', 'utf-8')).toContain(`en: '${titulo}'`);
+  });
+});
