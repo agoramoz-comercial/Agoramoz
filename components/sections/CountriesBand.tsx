@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { Reveal } from '@/components/motion/Reveal';
 import { SoPortugues } from '@/components/ui/SoPortugues';
 import { COUNTRIES, COUNTRY_CODES } from '@/content/registry';
-import { NOME_PAIS } from '@/content/i18n/chrome';
+import { NOME_PAIS, destinoDaEntrada } from '@/content/i18n/chrome';
 import { CARTAO_GLOBAL, MERCADOS, POSICIONAMENTO } from '@/content/i18n/paginas';
 import type { Idioma } from '@/content/types';
-import { caminhoNoIdioma, t } from '@/lib/i18n/texto';
+import { t } from '@/lib/i18n/texto';
 import { cn } from '@/lib/utils/cn';
 
 /**
@@ -36,6 +36,7 @@ export function CountriesBand({ idioma = 'pt', comGlobal = false }: { idioma?: I
       href: `/${code}`,
       // As páginas de país só existem em português.
       soPortugues: idioma === 'en',
+      hrefLang: idioma === 'en' ? 'pt' : undefined,
     })),
     ...(comGlobal
       ? [
@@ -44,8 +45,10 @@ export function CountriesBand({ idioma = 'pt', comGlobal = false }: { idioma?: I
             locale: 'EN',
             nome: t(CARTAO_GLOBAL.nome, idioma),
             posicionamento: t(CARTAO_GLOBAL.posicionamento, idioma),
-            href: caminhoNoIdioma('/global', idioma),
+            // O selo diz EN: leva ao global inglês, como o seletor e a barra de topo.
+            href: destinoDaEntrada('global'),
             soPortugues: false,
+            hrefLang: idioma === 'en' ? undefined : 'en',
           },
         ]
       : []),
@@ -68,7 +71,7 @@ export function CountriesBand({ idioma = 'pt', comGlobal = false }: { idioma?: I
           >
             <Link
               href={e.href}
-              hrefLang={e.soPortugues ? 'pt' : undefined}
+              hrefLang={e.hrefLang}
               className={
                 quatro
                   ? 'group grid h-full gap-x-10 gap-y-5 border-t border-dashed border-[color:var(--hairline)] py-8 md:grid-cols-12 lg:flex lg:flex-col lg:justify-between'

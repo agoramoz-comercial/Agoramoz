@@ -39,6 +39,12 @@ export const OG_IMAGE_PADRAO: ImagemSocial = {
   alt: `AGORAMOZ — ${SITE.tagline}`,
 };
 
+/** A mesma imagem, descrita em inglês nas páginas `/en/…` que não têm imagem própria. */
+export const OG_IMAGE_PADRAO_EN: ImagemSocial = {
+  ...OG_IMAGE_PADRAO,
+  alt: 'AGORAMOZ — Digital infrastructure for growth and productivity',
+};
+
 /**
  * Alternativas de IDIOMA, que se somam às de MERCADO.
  *
@@ -110,7 +116,7 @@ export function buildMetadata({
    */
   tituloAbsoluto?: boolean;
 }): Metadata {
-  const imagem = image ?? OG_IMAGE_PADRAO;
+  const imagem = image ?? (caminhoBase(path) !== path ? OG_IMAGE_PADRAO_EN : OG_IMAGE_PADRAO);
 
   /**
    * A causa-raiz do defeito original, medida a 2026-09-24.

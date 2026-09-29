@@ -7,7 +7,7 @@ import { INDICE_SOLUCOES } from '@/content/i18n/paginas';
 import { INICIO } from '@/content/i18n/inicio';
 import { SOLUTIONS_EN } from '@/content/en/solutions';
 import { IDIOMAS, caminhoNoIdioma } from '@/lib/i18n/texto';
-import { buildMetadata, OG_IMAGE_PADRAO, SITE_URL } from './site';
+import { buildMetadata, OG_IMAGE_PADRAO, OG_IMAGE_PADRAO_EN, SITE_URL } from './site';
 
 /**
  * Três defeitos medidos em produção a 2026-09-24, e os guardas que impedem
@@ -267,5 +267,17 @@ describe('imagem de partilha por página', () => {
     const s = segmentos();
     expect(s.length).toBeGreaterThanOrEqual(10);
     expect(s.filter((x) => x.temFicheiro).length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('imagem de partilha genérica no idioma da página', () => {
+  it('as páginas inglesas descrevem a imagem em inglês; as portuguesas, em português', () => {
+    const imagens = (path: string) =>
+      (buildMetadata({ title: 't', description: 'd', path }).openGraph as { images?: unknown[] }).images;
+    expect(imagens('/en')).toEqual([OG_IMAGE_PADRAO_EN]);
+    expect(imagens('/en/global')).toEqual([OG_IMAGE_PADRAO_EN]);
+    expect(imagens('/solucoes')).toEqual([OG_IMAGE_PADRAO]);
+    expect(OG_IMAGE_PADRAO_EN.url).toBe(OG_IMAGE_PADRAO.url);
+    expect(OG_IMAGE_PADRAO_EN.alt).not.toBe(OG_IMAGE_PADRAO.alt);
   });
 });

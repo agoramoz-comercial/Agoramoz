@@ -10,8 +10,6 @@ export const metadata: Metadata = buildMetadata({
   title: t(INICIO.metaTitulo, IDIOMA),
   description: t(INICIO.metaDescricao, IDIOMA),
   path: '/en',
-  // Os mesmos alternates de mercado da inicial portuguesa: o hreflang tem de ser recíproco.
-  languages: { 'pt-MZ': '/mz', 'pt-PT': '/pt', 'pt-BR': '/br', 'x-default': '/' },
   tituloAbsoluto: true,
 });
 

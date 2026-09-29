@@ -33,7 +33,7 @@ export const INICIO = {
   metaTitulo: { pt: `AGORAMOZ — ${SITE.tagline}`, en: 'AGORAMOZ — Digital infrastructure for growth and productivity' },
   metaDescricao: {
     pt: SITE.description,
-    en: 'AGORAMOZ builds advanced websites, software, automations and AI agents fitted to your company’s processes — in Mozambique, Portugal and Brazil, and in ten expansion markets.',
+    en: 'AGORAMOZ builds advanced websites, software, automations and AI agents fitted to your company’s processes — in Mozambique, Portugal and Brazil.',
   },
 
   /* Rótulos do índice lateral e nomes acessíveis das secções. */

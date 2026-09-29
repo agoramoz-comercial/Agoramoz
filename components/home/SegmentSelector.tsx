@@ -91,7 +91,8 @@ export function SegmentSelector({ idioma = 'pt' }: { idioma?: Idioma }) {
     if (!country) return;
     if (country === 'global') return router.push(destinoDaEntrada('global'));
     const sectorEntry = sector ? getSectorsForCountry(country).find((s) => s.sector === sector) : null;
-    if (sectorEntry?.published) return router.push(sectorEntry.href);
+    // A página de setor só existe em português: em inglês, a recomendação é a solução, na página inglesa.
+    if (sectorEntry?.published && idioma === 'pt') return router.push(sectorEntry.href);
 
     const goalEntry = IMPROVEMENT_GOALS.find((g) => g.value === goal);
     if (goalEntry) return router.push(ligacao(`/solucoes/${goalEntry.solution}`, idioma).href);
