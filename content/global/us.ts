@@ -9,7 +9,6 @@ export const us: GlobalMarket = {
   name: { pt: 'Estados Unidos', en: 'United States' },
   currency: 'USD',
   dialCode: '+1',
-  htmlLang: 'en-US',
   why: {
     pt: 'O maior poder de compra do scorecard. O que o torna interessante não é o tamanho — é a repetição: processos documentais idênticos corridos milhares de vezes por mês.',
     en: 'The largest purchasing power in the scorecard. What makes it interesting is not size but repetition: identical document processes run thousands of times a month.',

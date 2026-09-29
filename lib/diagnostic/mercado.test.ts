@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
 import { leadSchema } from '@/lib/forms/lead-schema';
 import { consentTextFor } from './consent';
-import { DIAGNOSTIC_CODES, ehCodigoDeDiagnostico, mercadoDoDiagnostico } from './mercado';
+import {
+  DIAGNOSTIC_CODES,
+  ehCodigoDeDiagnostico,
+  mercadoDoDiagnostico,
+  nomeDoMercado,
+  rotuloDoSetor,
+} from './mercado';
 
 /**
  * A porta única tem de responder pelos treze mercados, com a mesma forma. Se
@@ -67,5 +73,25 @@ describe('mercadoDoDiagnostico', () => {
     const r = leadSchema.shape.country.safeParse('ch');
     expect(r.success).toBe(true);
     expect(leadSchema.shape.country.safeParse('xx').success).toBe(false);
+  });
+});
+
+describe('rótulos para o painel interno', () => {
+  it('o setor lê-se no mercado do lead, não no rótulo genérico', () => {
+    // `logistica` existe no registo genérico e nos EAU com nomes diferentes.
+    expect(rotuloDoSetor('ae', 'logistica')).toBe('Logística e aviação');
+    expect(rotuloDoSetor(null, 'logistica')).toBe('Logística e transportes');
+  });
+
+  it('um setor global aparece com nome, não com slug', () => {
+    const slug = GLOBAL_MARKETS.ch.sectors[0]!.slug;
+    expect(rotuloDoSetor('ch', slug)).toBe(GLOBAL_MARKETS.ch.sectors[0]!.name.pt);
+  });
+
+  it('nada desconhecido lança: devolve o que foi guardado', () => {
+    expect(rotuloDoSetor('xx', 'inventado')).toBe('inventado');
+    expect(nomeDoMercado('xx')).toBe('xx');
+    expect(nomeDoMercado(null)).toBe('—');
+    expect(nomeDoMercado('ch')).toBe('Suíça');
   });
 });

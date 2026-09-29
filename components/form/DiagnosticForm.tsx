@@ -115,7 +115,15 @@ export function DiagnosticForm() {
       const raw = sessionStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       const draft = JSON.parse(raw) as Partial<LeadInput>;
+      // O link manda sobre o rascunho. Quem preencheu o passo 1 como
+      // Moçambique e a seguir clica no CTA de /global/ch quer a Suíça — os CTA
+      // globais dependem só do `?pais=`. E um setor guardado para outro
+      // mercado não pertence à lista deste.
+      const paisDoLink = presetCountry && ehCodigoDeDiagnostico(presetCountry) ? presetCountry : null;
+      const outroMercado = paisDoLink !== null && draft.country !== paisDoLink;
       for (const key of DRAFT_FIELDS) {
+        if (key === 'country' && paisDoLink) continue;
+        if (key === 'sector' && (presetSector || outroMercado)) continue;
         const value = draft[key];
         if (value !== undefined && value !== null && value !== '') {
           form.setValue(key, value as never, { shouldValidate: false });

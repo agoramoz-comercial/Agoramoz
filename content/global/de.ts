@@ -9,7 +9,6 @@ export const de: GlobalMarket = {
   name: { pt: 'Alemanha', en: 'Germany' },
   currency: 'EUR',
   dialCode: '+49',
-  htmlLang: 'de-DE',
   why: {
     pt: 'A indústria média exportadora é o perfil onde o trabalho documental é mais denso e menos automatizado: quem responde a cotações e fichas técnicas é a mesma pessoa que conhece o produto.',
     en: 'Mid-sized export manufacturing is the profile where document work is densest and least automated: the person answering quotes and datasheets is the same person who knows the product.',

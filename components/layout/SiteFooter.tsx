@@ -6,7 +6,7 @@ import { Logo } from '@/components/brand/Logo';
 import { NAV, SITE } from '@/content/site';
 import { SocialLinks } from '@/components/ui/SocialLinks';
 import { getSolutionSummaries } from '@/content/registry';
-import { COUNTRIES, COUNTRY_CODES, getSectorsForCountry } from '@/content/registry';
+import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, getSectorsForCountry } from '@/content/registry';
 import { MotionToggle } from '@/components/motion/MotionToggle';
 
 /**
@@ -110,6 +110,20 @@ export function SiteFooter() {
                   </ul>
                 </li>
               ))}
+              {/*
+                Depois dos três mercados de operação, o nível global. É a única
+                ligação permanente para /global: sem ela, as 22 páginas só
+                existiam no sitemap.
+              */}
+              <li>
+                <Link
+                  href="/global"
+                  aria-current={current('/global')}
+                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                >
+                  Global · {GLOBAL_CODES.length} mercados
+                </Link>
+              </li>
             </ul>
           </nav>
 

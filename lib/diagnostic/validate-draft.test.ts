@@ -133,11 +133,21 @@ describe('percentagens, moeda e datas', () => {
     ['percentagem', 'Aumento de 34% nas oportunidades.', 'PERCENTAGEM_INVENTADA'],
     ['percentagem por extenso', 'Aumento de 34 por cento.', 'PERCENTAGEM_INVENTADA'],
     ['moeda', 'Retorno de 1 250 000 MZN no primeiro ano.', 'MOEDA_INVENTADA'],
+    ['moeda por extenso', 'Poupança de 15 000 euros por ano.', 'MOEDA_INVENTADA'],
+    ['moeda antes do número', 'Retorno de CHF 15 000 no primeiro ano.', 'MOEDA_INVENTADA'],
+    ['libra antes do número', 'Savings of £15,000 a year.', 'MOEDA_INVENTADA'],
+    ['dólar americano prefixado', 'Savings of US$ 5,000 a year.', 'MOEDA_INVENTADA'],
+    ['rand por extenso', 'Retorno de 90 000 rands.', 'MOEDA_INVENTADA'],
     ['ano', 'Desde 2019 que o setor mudou.', 'DATA_INVENTADA'],
   ])('rejeita %s inventada', (_rotulo, texto, codigo) => {
     const r = validateDraft(draft({ resumo: texto }), pacote);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.issues.some((i) => i.code === codigo)).toBe(true);
+  });
+
+  it('«3 cada» não é dinheiro: o código CAD só casa como palavra', () => {
+    const r = validateDraft(draft({ resumo: 'Revimos 3 cada semana.' }), pacote);
+    if (!r.ok) expect(r.issues.some((i) => i.code === 'MOEDA_INVENTADA')).toBe(false);
   });
 
   it('aceita um valor monetário que vem da faixa que o cliente escolheu', () => {

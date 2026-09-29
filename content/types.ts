@@ -75,8 +75,6 @@ export interface GlobalMarket {
   readonly currency: Currency;
   /** Indicativo telefónico, para o exemplo do campo de telefone. */
   readonly dialCode: string;
-  /** Etiqueta BCP-47 da página, para o atributo `lang` e o JSON-LD. */
-  readonly htmlLang: string;
   /**
    * Porque este mercado, dito a partir da evidência e não da vontade. O texto
    * cita o que a pesquisa mede; não promete presença nem cliente.

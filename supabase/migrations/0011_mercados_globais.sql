@@ -6,8 +6,14 @@
 -- país da organização, e a restrição recusava-o.
 --
 -- ESTA MIGRAÇÃO SÓ ALARGA. Todos os valores que eram válidos continuam
--- válidos. Pode correr antes do deploy, depois do deploy, ou duas vezes: nenhum
--- desses casos parte os três mercados actuais.
+-- válidos, e pode correr duas vezes.
+--
+-- ORDEM: aplicar ANTES do deploy do formulário alargado. Com o deploy primeiro,
+-- os três mercados actuais continuam a funcionar, mas um lead global com
+-- domínio de email empresarial falha dentro da RPC — a inserção da
+-- organização viola a restrição antiga, a transacção aborta, e a pessoa vê um
+-- 503. Com email de domínio público não se cria organização e passa. Falha
+-- inconsistente é pior do que falha: correr isto primeiro.
 --
 -- REPETÍVEL: `drop constraint if exists` antes de criar. O nome é o que o
 -- PostgreSQL gera para uma CHECK em linha — `<tabela>_<coluna>_check` —,

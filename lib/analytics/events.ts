@@ -1,4 +1,5 @@
-import type { CountryCode, SectorSlug, SolutionSlug } from '@/content/types';
+import type { SectorSlug, SolutionSlug } from '@/content/types';
+import type { DiagnosticCode } from '@/lib/diagnostic/mercado';
 import type { Canal } from '@/lib/attribution/types';
 
 /**
@@ -26,8 +27,8 @@ import type { Canal } from '@/lib/attribution/types';
  * sempre com relatórios a contar metade de cada.
  */
 export type AnalyticsEvent =
-  | { name: 'country_selected'; country: CountryCode; surface: string }
-  | { name: 'sector_selected'; country: CountryCode; sector: SectorSlug; surface: string }
+  | { name: 'country_selected'; country: DiagnosticCode; surface: string }
+  | { name: 'sector_selected'; country: DiagnosticCode; sector: SectorSlug; surface: string }
   | { name: 'service_viewed'; solution: SolutionSlug }
   | { name: 'gbp_landing_view'; landing: string }
   | { name: 'diagnostic_started'; formId: 'diagnostic'; entryPath: string }
@@ -51,7 +52,7 @@ export type AnalyticsEvent =
    */
   | { name: 'meeting_requested'; surface: string }
   /** `country` é nulo fora das páginas de país — inventá-lo falsearia o relatório. */
-  | { name: 'whatsapp_clicked'; country: CountryCode | null; surface: string }
+  | { name: 'whatsapp_clicked'; country: DiagnosticCode | null; surface: string }
   /**
    * Do SERVIDOR, não do browser.
    *

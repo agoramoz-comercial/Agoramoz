@@ -207,6 +207,15 @@ describe('hreflang', () => {
     expect(en).toEqual(pt);
   });
 
+  it('og:locale segue o idioma da página', () => {
+    const og = (path: string) =>
+      buildMetadata({ title: 'x', description: 'y', path, bilingue: true }).openGraph as Record<string, unknown>;
+    expect(og('/en/global').locale).toBe('en_GB');
+    expect(og('/en/global').alternateLocale).toBe('pt_PT');
+    expect(og('/global').locale).toBe('pt_PT');
+    expect(og('/energia').locale).toBe('pt_PT');
+  });
+
   it('caminhoBase reduz de qualquer lado', () => {
     expect(caminhoBase('/perfil')).toBe('/perfil');
     expect(caminhoBase('/en/perfil')).toBe('/perfil');

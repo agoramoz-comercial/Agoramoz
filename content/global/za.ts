@@ -10,7 +10,6 @@ export const za: GlobalMarket = {
   name: { pt: 'África do Sul', en: 'South Africa' },
   currency: 'ZAR',
   dialCode: '+27',
-  htmlLang: 'en-ZA',
   why: {
     pt: 'A âncora africana lógica: vizinha, mesmo fuso horário, inglês de trabalho, e ligada à mesma cadeia de energia que já servimos em Moçambique.',
     en: 'The logical African anchor: neighbouring, same time zone, working in English, and connected to the same energy chain we already serve in Mozambique.',

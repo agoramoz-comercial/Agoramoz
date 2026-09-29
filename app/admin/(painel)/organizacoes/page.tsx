@@ -6,7 +6,7 @@ import {
   EmptyState,
   Pagination,
 } from '@/components/admin/primitives';
-import { SECTOR_LABELS } from '@/content/registry';
+import { rotuloDoSetor } from '@/lib/diagnostic/mercado';
 import { fatiar, intervalo } from '@/lib/admin/paginacao';
 import { createSessionClient } from '@/lib/auth/client';
 
@@ -69,7 +69,7 @@ export default async function OrganizacoesPage({
             chave: 'setor',
             cabecalho: 'Setor',
             render: (l) =>
-              l.sector ? (SECTOR_LABELS[l.sector as keyof typeof SECTOR_LABELS] ?? l.sector) : '—',
+              l.sector ? rotuloDoSetor(l.country_code, l.sector) : '—',
           },
           {
             chave: 'pais',

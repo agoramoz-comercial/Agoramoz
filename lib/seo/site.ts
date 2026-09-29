@@ -137,7 +137,10 @@ export function buildMetadata({
       description,
       url: absolute(path),
       siteName: 'AGORAMOZ',
-      locale: 'pt_PT',
+      // `/en/…` é inglês; o resto é português. `caminhoBase` é o mesmo teste
+      // que decide o hreflang, pelo que os dois não divergem.
+      locale: caminhoBase(path) !== path ? 'en_GB' : 'pt_PT',
+      ...(bilingue ? { alternateLocale: caminhoBase(path) !== path ? 'pt_PT' : 'en_GB' } : {}),
       type: 'website',
       ...partilha,
     },

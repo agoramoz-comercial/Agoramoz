@@ -10,7 +10,6 @@ export const ch: GlobalMarket = {
   name: { pt: 'Suíça', en: 'Switzerland' },
   currency: 'CHF',
   dialCode: '+41',
-  htmlLang: 'de-CH',
   why: {
     pt: 'Primeiro lugar no nosso scorecard de 27 países. O trabalho documental é caro porque as horas qualificadas são caras — e é exactamente isso que torna a automação rentável no primeiro ano, não no terceiro.',
     en: 'First place in our 27-country scorecard. Document work is expensive here because qualified hours are expensive — which is precisely what makes automation pay back in year one rather than year three.',

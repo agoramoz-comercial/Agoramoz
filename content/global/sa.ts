@@ -10,7 +10,6 @@ export const sa: GlobalMarket = {
   name: { pt: 'Arábia Saudita', en: 'Saudi Arabia' },
   currency: 'SAR',
   dialCode: '+966',
-  htmlLang: 'ar-SA',
   why: {
     pt: 'Grandes projectos de energia e infraestrutura com exigência documental pesada sobre fornecedores — o mesmo mecanismo que conhecemos em Moçambique, noutra escala. É a nossa competência actual, transferida.',
     en: 'Large energy and infrastructure projects with heavy documentary demands on suppliers — the same mechanism we know from Mozambique, at another scale. It is our current capability, transferred.',

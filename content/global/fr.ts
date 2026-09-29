@@ -9,7 +9,6 @@ export const fr: GlobalMarket = {
   name: { pt: 'França', en: 'France' },
   currency: 'EUR',
   dialCode: '+33',
-  htmlLang: 'fr-FR',
   why: {
     pt: 'Mercado da UE onde a exigência de governação demonstrável é mais visível: automatizar sem poder explicar a decisão não serve. É exactamente o desenho que praticamos — aprovação humana em cada passo.',
     en: 'The EU market where demonstrable governance is most visible: automating without being able to explain the decision is not enough. That is exactly how we build — human approval at every step.',

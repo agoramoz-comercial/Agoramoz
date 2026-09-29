@@ -8,7 +8,6 @@ import {
   StateBadge,
 } from '@/components/admin/primitives';
 import { Button } from '@/components/ui/Button';
-import { COUNTRIES, SECTOR_LABELS } from '@/content/registry';
 import {
   ACHADO,
   CLASSIFICACAO,
@@ -16,6 +15,7 @@ import {
   ORIGEM_EVIDENCIA,
   SEVERIDADE,
 } from '@/lib/admin/labels';
+import { nomeDoMercado, rotuloDoSetor } from '@/lib/diagnostic/mercado';
 import { aprovarDiagnostico, enviarParaRevisao, rejeitarDiagnostico } from '@/lib/admin/actions';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
@@ -74,14 +74,14 @@ const ROTULO_RESPOSTA: Record<string, string> = {
   consent: 'Consentimento',
 };
 
-function mostrarValor(chave: string, valor: unknown): string {
+function mostrarValor(chave: string, valor: unknown, pais: string | null): string {
   if (valor === null || valor === undefined || valor === '') return '—';
   if (Array.isArray(valor)) return valor.join(', ');
   if (typeof valor === 'boolean') return valor ? 'Sim' : 'Não';
 
   const texto = String(valor);
-  if (chave === 'sector') return SECTOR_LABELS[texto as keyof typeof SECTOR_LABELS] ?? texto;
-  if (chave === 'country') return COUNTRIES[texto as keyof typeof COUNTRIES]?.name ?? texto;
+  if (chave === 'sector') return rotuloDoSetor(pais, texto);
+  if (chave === 'country') return nomeDoMercado(texto);
   return texto;
 }
 
@@ -252,7 +252,7 @@ export default async function RevisaoPage({
             .filter(([k]) => k !== 'problemImpact' && k !== 'fax')
             .map(([k, v]) => ({
               termo: ROTULO_RESPOSTA[k] ?? k,
-              valor: mostrarValor(k, v),
+              valor: mostrarValor(k, v, typeof bruto.country === 'string' ? bruto.country : null),
             }))}
         />
 

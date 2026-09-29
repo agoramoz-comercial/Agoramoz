@@ -108,16 +108,28 @@ function percentagesIn(text: string): number[] {
  * cliente suíço passaria sem ser visto, que é exactamente o que ele existe para
  * apanhar.
  *
- * `(?![a-z])` depois do código: sem isso, «3 cada» casava com `cad` e um número
- * legítimo era acusado de ser dinheiro inventado.
+ * Duas ordens, porque as duas se escrevem: número antes («15 000 CHF», «20 mil
+ * euros») e moeda antes («CHF 15 000», «£15,000», «US$ 5,000» — a forma normal
+ * em inglês). E a moeda por extenso, não só o código.
+ *
+ * Fronteiras de palavra dos dois lados do código: sem elas, «3 cada» casava
+ * com `cad` e um número legítimo era acusado de ser dinheiro inventado.
+ *
+ * O que escapa aqui não passa: `numbersIn` rejeita à mesma qualquer número sem
+ * evidência. Isto só dá o código de erro certo.
  */
+const MOEDA =
+  '(?:meticais|euros?|reais|d[oó]lares|dollars?|francos?|francs?|libras?|pounds?|rands?|dirhams?|riyals?|mzn|eur|brl|usd|chf|sgd|gbp|aed|sar|zar|cad|mt|us\\$|r\\$|€|£|\\$)';
+const VALOR = '(\\d[\\d.,\\s\u00a0]*\\d|\\d)';
+const MOEDA_DEPOIS = new RegExp(`${VALOR}\\s*(?:mil\\s+)?${MOEDA}(?![a-z])`, 'g');
+const MOEDA_ANTES = new RegExp(`(?<![a-z])${MOEDA}\\s*${VALOR}`, 'g');
+
 function currenciesIn(text: string): number[] {
   const folded = fold(text);
-  return [
-    ...folded.matchAll(
-      /((?:\d[\d.,\s ]*\d|\d))\s*(mzn|eur|brl|usd|chf|sgd|gbp|aed|sar|zar|cad|mt|r\$|€|£|\$)(?![a-z])/g,
-    ),
-  ].flatMap((m) => numbersIn(m[1]!));
+  const valores = [...folded.matchAll(MOEDA_DEPOIS), ...folded.matchAll(MOEDA_ANTES)].flatMap((m) =>
+    numbersIn(m[1]!),
+  );
+  return [...new Set(valores)];
 }
 
 /** Anos com quatro dígitos. Uma data é uma afirmação; não pode ser inventada. */

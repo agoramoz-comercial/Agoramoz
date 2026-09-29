@@ -9,7 +9,6 @@ export const uk: GlobalMarket = {
   name: { pt: 'Reino Unido', en: 'United Kingdom' },
   currency: 'GBP',
   dialCode: '+44',
-  htmlLang: 'en-GB',
   why: {
     pt: 'Quarto lugar no nosso scorecard, e o mercado onde o ICP de serviços profissionais é mais denso. Quem vende horas é quem mais perde ao gastá-las a formatar documentos.',
     en: 'Fourth in our scorecard, and the market where the professional-services ICP is densest. Those who sell hours lose most by spending them formatting documents.',

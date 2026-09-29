@@ -10,7 +10,6 @@ export const ca: GlobalMarket = {
   name: { pt: 'Canadá', en: 'Canada' },
   currency: 'CAD',
   dialCode: '+1',
-  htmlLang: 'en-CA',
   why: {
     pt: 'Entra no nível global no lugar que Portugal deixou vago — Portugal é mercado de operação, não de expansão. Consta do scorecard dos 27 países, e é bilingue de raiz, o que torna a nossa camada PT/EN útil em vez de decorativa.',
     en: 'It takes the place Portugal left open at the global tier — Portugal is a market we operate in, not one we expand into. It is in the 27-country scorecard, and it is natively bilingual, which makes our PT/EN layer useful rather than decorative.',

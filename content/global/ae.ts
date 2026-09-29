@@ -9,7 +9,6 @@ export const ae: GlobalMarket = {
   name: { pt: 'Emirados Árabes Unidos', en: 'United Arab Emirates' },
   currency: 'AED',
   dialCode: '+971',
-  htmlLang: 'en-AE',
   why: {
     pt: 'Centro onde grupos familiares e holdings concentram estruturas de várias jurisdições. Fuso horário próximo do nosso e inglês de trabalho — o que torna a colaboração diária possível, não teórica.',
     en: 'A hub where family groups and holdings concentrate structures from several jurisdictions. Close to our time zone and working in English — which makes daily collaboration practical, not theoretical.',

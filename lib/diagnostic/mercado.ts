@@ -76,3 +76,21 @@ export function mercadoDoDiagnostico(code: string): MercadoDiagnostico | null {
   }
   return null;
 }
+
+/**
+ * Para ecrãs internos que mostram o que está na base: nome do mercado e
+ * rótulo do setor NO mercado do lead. Nunca lança — um valor desconhecido
+ * volta tal como está, para a equipa ver o que foi guardado.
+ *
+ * O setor precisa do país: `logistica` existe nos três mercados de operação e
+ * em vários globais com nomes diferentes. Sem país, cai no rótulo genérico.
+ */
+export function nomeDoMercado(code: string | null | undefined): string {
+  if (!code) return '—';
+  return mercadoDoDiagnostico(code)?.name ?? code;
+}
+
+export function rotuloDoSetor(code: string | null | undefined, slug: string): string {
+  const doMercado = code ? mercadoDoDiagnostico(code)?.sectors.find((s) => s.slug === slug) : undefined;
+  return doMercado?.label ?? SECTOR_LABELS[slug as keyof typeof SECTOR_LABELS] ?? slug;
+}

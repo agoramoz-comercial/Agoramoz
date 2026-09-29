@@ -9,7 +9,6 @@ export const sg: GlobalMarket = {
   name: { pt: 'Singapura', en: 'Singapore' },
   currency: 'SGD',
   dialCode: '+65',
-  htmlLang: 'en-SG',
   why: {
     pt: 'Segundo lugar no nosso scorecard. Concentra estruturas de várias jurisdições num só fuso horário — e é aí que a consolidação manual de dados se torna o custo invisível maior.',
     en: 'Second place in our scorecard. It concentrates structures from several jurisdictions in a single time zone — which is where manual data consolidation becomes the largest invisible cost.',

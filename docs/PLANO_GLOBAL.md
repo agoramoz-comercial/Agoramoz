@@ -120,11 +120,13 @@ resultou: **altura da homepage em telemóvel abaixo de 8 000 px**.
 ## Ordem de publicação do lote D
 
 A migração 0011 **só alarga** a restrição `organisations_country_code_check`
-de 3 para 13 códigos. Não há janela de indisponibilidade em nenhuma ordem:
+de 3 para 13 códigos. **Corre antes do deploy:**
 
 1. `supabase/aplicar-0011.sql` no SQL Editor — repetível;
 2. `supabase/verificar-estado.sql` — a linha 21 tem de dizer `ok`;
 3. deploy.
 
-Se o deploy chegar antes da migração, só os leads dos dez mercados globais
-falham; os três de operação continuam a funcionar.
+Se o deploy chegar antes da migração, os três mercados de operação continuam
+a funcionar, mas um lead global com email empresarial recebe 503 — a
+organização viola a restrição antiga e a transacção aborta. Com email de
+domínio público passa. É por essa inconsistência que a ordem importa.

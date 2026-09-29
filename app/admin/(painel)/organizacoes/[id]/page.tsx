@@ -7,7 +7,7 @@ import {
   EmptyState,
   StateBadge,
 } from '@/components/admin/primitives';
-import { SECTOR_LABELS } from '@/content/registry';
+import { rotuloDoSetor } from '@/lib/diagnostic/mercado';
 import { FASE_OPORTUNIDADE } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
 
@@ -58,7 +58,7 @@ export default async function OrganizacaoPage({ params }: { params: Promise<{ id
             {
               termo: 'Setor',
               valor: o.sector
-                ? (SECTOR_LABELS[o.sector as keyof typeof SECTOR_LABELS] ?? o.sector)
+                ? rotuloDoSetor(o.country_code, o.sector)
                 : '—',
             },
             { termo: 'País', valor: (o.country_code ?? '—').toUpperCase() },

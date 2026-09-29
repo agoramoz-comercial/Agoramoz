@@ -2,7 +2,10 @@
 -- APLICAR NO SQL EDITOR DO SUPABASE — projecto nixltrbdplqjadfytryd
 -- ============================================================================
 -- Conteúdo igual a migrations/0011_mercados_globais.sql. Repetível: pode
--- correr as vezes que quiser. Só alarga — não há janela de indisponibilidade.
+-- correr as vezes que quiser. Só alarga.
+--
+-- CORRER ANTES DO DEPLOY. Com o deploy primeiro, os três mercados actuais
+-- funcionam, mas um lead global com email empresarial recebe 503.
 --
 -- Depois, corra verificar-estado.sql: a linha 21 tem de dizer «ok».
 -- ============================================================================
