@@ -26,6 +26,8 @@ const SAFE_FIELDS = [
   'errorCode',
   'status',
   'country',
+  // `pt` ou `en`: o idioma em que o formulário foi mostrado. Não identifica ninguém.
+  'idioma',
   'sector',
   'companySize',
   'decisionTimeframe',

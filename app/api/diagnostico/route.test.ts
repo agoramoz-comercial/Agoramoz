@@ -470,6 +470,20 @@ describe('o que é gravado', () => {
   });
 });
 
+describe('idioma no registo', () => {
+  it('diagnostic.accepted leva o idioma do pedido, e «pt» quando o pedido não o traz', async () => {
+    const POST = await comBase();
+
+    const emIngles = capturarLogs();
+    await POST(pedido({ ...VALIDO, idioma: 'en' }));
+    expect(emIngles.find((l) => l.event === 'diagnostic.accepted')?.idioma).toBe('en');
+
+    const semIdioma = capturarLogs();
+    await POST(pedido(VALIDO));
+    expect(semIdioma.find((l) => l.event === 'diagnostic.accepted')?.idioma).toBe('pt');
+  });
+});
+
 describe('repetição', () => {
   it('é indistinguível de uma submissão nova para quem está do outro lado', async () => {
     const POST = await comBase();

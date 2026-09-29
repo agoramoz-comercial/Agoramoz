@@ -230,6 +230,9 @@ export async function POST(request: Request) {
   const baseLog = {
     correlationId,
     country: input.country,
+    // O idioma em que o formulário foi mostrado. Não é dado pessoal, e é o que
+    // permite ler a procura por idioma sem abrir a base.
+    idioma: input.idioma,
     sector: input.sector,
     companySize: input.companySize,
     decisionTimeframe: input.decisionTimeframe,
