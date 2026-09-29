@@ -14,6 +14,8 @@ export interface ImagemSocial {
   width: number;
   height: number;
   alt: string;
+  /** Sem ele, `og:image:type` não é emitido; as redes inferem do ficheiro, mas declarar é mais seguro. */
+  type?: string;
 }
 
 /**
@@ -32,7 +34,8 @@ export interface ImagemSocial {
  * Next, e abre a porta a uma imagem própria por página, que era impossível
  * enquanto a herança era implícita.
  *
- * Desde o lote F0 a imagem por omissão é o Hero, capturado da própria página
+ * (Esse `app/opengraph-image.tsx` foi removido no lote F0: nenhuma página o
+ * herdava.) Desde o lote F0 a imagem por omissão é o Hero, capturado da própria página
  * por `.qa/og-hero.mjs` para `public/og/`. Voltar a correr o script quando o
  * Hero mudar.
  */
@@ -40,6 +43,7 @@ export const OG_IMAGE_PADRAO: ImagemSocial = {
   url: absolute('/og/hero-pt.png'),
   width: 1200,
   height: 630,
+  type: 'image/png',
   alt: `AGORAMOZ — ${SITE.tagline}`,
 };
 
@@ -155,7 +159,9 @@ export function buildMetadata({
       siteName: 'AGORAMOZ',
       // `/en/…` é inglês; o resto é português. `caminhoBase` é o mesmo teste
       // que decide o hreflang, pelo que os dois não divergem.
-      locale: caminhoBase(path) !== path ? 'en_GB' : 'pt_PT',
+      // `/br` é português do Brasil — o único outro locale português que o Facebook reconhece.
+      locale:
+        caminhoBase(path) !== path ? 'en_GB' : path === '/br' || path.startsWith('/br/') ? 'pt_BR' : 'pt_PT',
       ...((bilingue ?? temPar(path)) ? { alternateLocale: caminhoBase(path) !== path ? 'pt_PT' : 'en_GB' } : {}),
       type: 'website',
       ...partilha,
@@ -164,7 +170,7 @@ export function buildMetadata({
       card: 'summary_large_image',
       title,
       description,
-      ...(imagemPropria ? {} : { images: [imagem.url] }),
+      ...(imagemPropria ? {} : { images: [{ url: imagem.url, alt: imagem.alt }] }),
     },
     ...(noindex ? { robots: { index: false, follow: false } } : {}),
   };

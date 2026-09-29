@@ -291,3 +291,21 @@ describe('imagem de partilha genérica no idioma da página', () => {
     }
   });
 });
+
+describe('locale de Open Graph por mercado', () => {
+  const locale = (path: string) => (buildMetadata({ title: 't', description: 'd', path }).openGraph as { locale?: string }).locale;
+  it('en_GB em inglês, pt_BR no Brasil, pt_PT no resto', () => {
+    expect(locale('/en')).toBe('en_GB');
+    expect(locale('/br')).toBe('pt_BR');
+    expect(locale('/br/logistica')).toBe('pt_BR');
+    expect(locale('/brasil-nao-existe')).toBe('pt_PT');
+    expect(locale('/mz')).toBe('pt_PT');
+    expect(locale('/')).toBe('pt_PT');
+  });
+
+  it('a imagem por omissão declara o tipo, e o Twitter leva o texto alternativo', () => {
+    const m = buildMetadata({ title: 't', description: 'd', path: '/sobre' });
+    expect(OG_IMAGE_PADRAO.type).toBe('image/png');
+    expect(m.twitter?.images).toEqual([{ url: OG_IMAGE_PADRAO.url, alt: OG_IMAGE_PADRAO.alt }]);
+  });
+});
