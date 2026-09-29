@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { COUNTRIES, COUNTRY_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
 import { INDICE_SOLUCOES } from '@/content/i18n/paginas';
+import { SOLUTIONS_EN } from '@/content/en/solutions';
 import { IDIOMAS, caminhoNoIdioma } from '@/lib/i18n/texto';
 import { buildMetadata, OG_IMAGE_PADRAO, SITE_URL } from './site';
 
@@ -168,7 +169,14 @@ describe('títulos e descrições são únicos', () => {
       },
     ]);
 
-    return [...doRegistry, ...estaticas, ...bilingues];
+    // As soluções inglesas vêm de `content/en/solutions`, não do registry português.
+    const solucoesEn = Object.values(SOLUTIONS_EN).map((s) => ({
+      rota: caminhoNoIdioma(`/solucoes/${s.slug}`, 'en'),
+      titulo: s.seo.title,
+      descricao: s.seo.description,
+    }));
+
+    return [...doRegistry, ...estaticas, ...bilingues, ...solucoesEn];
   }
 
   function repetidos(valores: string[]): string[] {

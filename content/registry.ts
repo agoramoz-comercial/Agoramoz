@@ -1,6 +1,6 @@
 import type {
   Country, CountryCode, GlobalCountryCode, GlobalMarket,
-  SectorPage, SectorSlug, SolutionPage, SolutionSlug,
+  Idioma, SectorPage, SectorSlug, SolutionPage, SolutionSlug,
 } from './types';
 import { mz } from './countries/mz';
 import { pt } from './countries/pt';
@@ -21,6 +21,7 @@ import { softwareEmpresarial } from './solutions/software-empresarial';
 import { automacaoDeProcessos } from './solutions/automacao-de-processos';
 import { agentesIa } from './solutions/agentes-ia';
 import { infraestruturaDigital } from './solutions/infraestrutura-digital';
+import { SOLUTIONS_EN } from './en/solutions';
 
 /** Rótulos legíveis dos setores. Os slugs são sempre ASCII sem acentos. */
 export const SECTOR_LABELS: Record<SectorSlug, string> = {
@@ -124,6 +125,13 @@ export function getSectorPage(country: string, sector: string): SectorPage | nul
 
 export function getSolution(slug: string): SolutionPage | null {
   return SOLUTIONS[slug] ?? null;
+}
+
+/** A solução no idioma pedido. O slug é o mesmo nas duas árvores. */
+export function getSolucao(slug: string, idioma: Idioma): SolutionPage | null {
+  const s = getSolution(slug);
+  if (!s) return null;
+  return idioma === 'en' ? SOLUTIONS_EN[s.slug] : s;
 }
 
 export function hasSectorPage(country: CountryCode, sector: SectorSlug): boolean {

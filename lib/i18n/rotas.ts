@@ -1,4 +1,4 @@
-import { GLOBAL_CODES } from '@/content/registry';
+import { GLOBAL_CODES, getAllSolutionParams } from '@/content/registry';
 import type { Idioma } from '@/content/types';
 import { caminhoBase, caminhoNoIdioma } from './texto';
 
@@ -16,8 +16,9 @@ import { caminhoBase, caminhoNoIdioma } from './texto';
 export const ROTAS_BILINGUES: readonly string[] = [
   // Lote E2: o diagnóstico, com consentimento no idioma em que é mostrado.
   '/diagnostico',
-  // Lote E3: o índice de soluções.
+  // Lote E3: o índice de soluções e as cinco soluções.
   '/solucoes',
+  ...getAllSolutionParams().map((p) => `/solucoes/${p.solucao}`),
   '/global',
   ...GLOBAL_CODES.map((c) => `/global/${c}`),
 ]
