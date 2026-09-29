@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ligacao } from '@/lib/i18n/rotas';
 import { ArrowRight } from 'lucide-react';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -121,10 +122,10 @@ export function MercadoGlobal({
         <SectionHeading id="h-cta" title={lang('cta')} lead={lang('ctaLead')} />
         <div className="mt-10">
           <Button asChild>
-            {/* Os dois idiomas vão ao MESMO formulário: `/en/diagnostico` não
-                existe, e ligar-lhe dava 404. `?pais=` é o parâmetro que o
-                formulário já lê para pré-selecionar o mercado. */}
-            <Link href={`/diagnostico?pais=${mercado.code}`}>
+            {/* O formulário no idioma da página, com o mercado pré-selecionado
+                pelo `?pais=`. `ligacao` só leva a `/en/diagnostico` se a rota
+                estiver na lista bilingue — nunca a um 404. */}
+            <Link href={`${ligacao('/diagnostico', idioma).href}?pais=${mercado.code}`}>
               {lang('cta')}
               <ArrowRight aria-hidden className="size-4" />
             </Link>

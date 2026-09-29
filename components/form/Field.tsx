@@ -2,6 +2,9 @@
 
 import { useId } from 'react';
 import { cn } from '@/lib/utils/cn';
+import { FORM } from '@/content/i18n/formulario';
+import type { Idioma } from '@/content/types';
+import { t } from '@/lib/i18n/texto';
 
 /** Label real sempre — o placeholder nunca faz de label. */
 export function Field({
@@ -11,6 +14,7 @@ export function Field({
   required,
   children,
   className,
+  idioma = 'pt',
 }: {
   label: string;
   hint?: string;
@@ -18,6 +22,8 @@ export function Field({
   required?: boolean;
   children: (props: { id: string; describedBy?: string; invalid: boolean }) => React.ReactNode;
   className?: string;
+  /** Só muda a marca «(opcional)». */
+  idioma?: Idioma;
 }) {
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
@@ -29,7 +35,7 @@ export function Field({
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
         {required && <span className="ml-1 text-[color:var(--accent)]" aria-hidden>*</span>}
-        {!required && <span className="ml-2 text-[color:var(--muted)]">(opcional)</span>}
+        {!required && <span className="ml-2 text-[color:var(--muted)]">{t(FORM.opcional, idioma)}</span>}
       </label>
       {hint && (
         <p id={hintId} className="mt-1 text-[length:var(--text-micro)] text-[color:var(--muted)]">

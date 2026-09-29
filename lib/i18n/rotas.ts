@@ -13,7 +13,12 @@ import { caminhoBase, caminhoNoIdioma } from './texto';
  *
  * Cresce por lote: uma rota só entra quando a página inglesa existe.
  */
-export const ROTAS_BILINGUES: readonly string[] = ['/global', ...GLOBAL_CODES.map((c) => `/global/${c}`)];
+export const ROTAS_BILINGUES: readonly string[] = [
+  // Lote E2: o diagnóstico, com consentimento no idioma em que é mostrado.
+  '/diagnostico',
+  '/global',
+  ...GLOBAL_CODES.map((c) => `/global/${c}`),
+]
 
 /** A rota existe nos dois idiomas. Aceita o caminho de qualquer lado. */
 export function temPar(caminho: string): boolean {

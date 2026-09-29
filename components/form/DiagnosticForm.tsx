@@ -8,8 +8,14 @@ import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ChipGroup } from '@/components/ui/ChipGroup';
 import { Field, inputClass } from './Field';
-import { COMPANY_SIZES, DECISION_ROLES, STEP_FIELDS, TIMEFRAMES, leadSchema, type LeadInput } from '@/lib/forms/lead-schema';
-import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
+import { COMPANY_SIZES, DECISION_ROLES, STEP_FIELDS, TIMEFRAMES, leadSchemaPara, type LeadInput } from '@/lib/forms/lead-schema';
+import { COUNTRY_CODES, GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
+import { NOME_PAIS } from '@/content/i18n/chrome';
+import { FORM, OBJETIVOS, PAPEIS, PASSOS, PRAZOS, TAMANHOS } from '@/content/i18n/formulario';
+import type { Idioma } from '@/content/types';
+import { SoPortugues } from '@/components/ui/SoPortugues';
+import { ligacao } from '@/lib/i18n/rotas';
+import { t } from '@/lib/i18n/texto';
 import { ehCodigoDeDiagnostico, mercadoDoDiagnostico } from '@/lib/diagnostic/mercado';
 import Link from 'next/link';
 import { IMPROVEMENT_GOALS, SITE } from '@/content/site';
@@ -35,34 +41,20 @@ const DRAFT_FIELDS = [
 // `investmentBand` fica de fora de propósito: não identifica ninguém, mas é o
 // campo comercialmente mais sensível do formulário e não vale o risco.
 
-const STEP_TITLES = [
-  'Onde opera a sua empresa',
-  'A sua empresa',
-  'O processo a melhorar',
-  'A decisão',
-  'Como o contactamos',
-];
+/** Os textos vivem em `content/i18n/formulario.ts`, nos dois idiomas. */
+const TOTAL_PASSOS = PASSOS.length;
 
-const SIZE_LABELS: Record<(typeof COMPANY_SIZES)[number], string> = {
-  '1-9': '1 a 9 colaboradores',
-  '10-49': '10 a 49',
-  '50-249': '50 a 249',
-  '250+': '250 ou mais',
-};
-const TIME_LABELS: Record<(typeof TIMEFRAMES)[number], string> = {
-  imediato: 'Imediato',
-  '1-3-meses': 'Nos próximos 1 a 3 meses',
-  '3-6-meses': 'Em 3 a 6 meses',
-  'sem-data': 'Ainda sem data',
-};
-const ROLE_LABELS: Record<(typeof DECISION_ROLES)[number], string> = {
-  decisor: 'Decido',
-  'co-decisor': 'Decido em conjunto',
-  influenciador: 'Influencio a decisão',
-  pesquisa: 'Estou a recolher informação',
-};
-
-export function DiagnosticForm() {
+/**
+ * Nos dois idiomas, com as mesmas regras. O que muda com `idioma`: os textos,
+ * as mensagens de validação (`leadSchemaPara`), os nomes, setores e faixas do
+ * mercado — e o campo `idioma` que viaja com o pedido, para o servidor guardar
+ * o consentimento que a pessoa LEU.
+ *
+ * O que NÃO muda: os valores guardados (`imediato`, `decisor`, `mz-2`…) e o
+ * `stepId` da analítica, que fica o título português. Mudá-lo partiria cada
+ * relatório de funil em dois, um por idioma, sem nenhuma diferença real.
+ */
+export function DiagnosticForm({ idioma = 'pt' }: { idioma?: Idioma }) {
   const params = useSearchParams();
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
@@ -74,7 +66,7 @@ export function DiagnosticForm() {
   const presetSector = params.get('setor');
 
   const form = useForm<LeadInput>({
-    resolver: zodResolver(leadSchema) as Resolver<LeadInput>,
+    resolver: zodResolver(leadSchemaPara(idioma)) as Resolver<LeadInput>,
     mode: 'onBlur',
     defaultValues: {
       country: presetCountry && ehCodigoDeDiagnostico(presetCountry) ? presetCountry : undefined,
@@ -83,13 +75,14 @@ export function DiagnosticForm() {
       currentWebsite: '',
       problemImpact: '',
       fax: '',
+      idioma,
     },
   });
 
   const country = form.watch('country');
   const processes = form.watch('processToImprove') ?? [];
   // Pela porta única: resolve os treze mercados com a mesma forma.
-  const activeCountry = country ? mercadoDoDiagnostico(country) : null;
+  const activeCountry = country ? mercadoDoDiagnostico(country, idioma) : null;
 
   useEffect(() => {
     if (step > 0 && headingRef.current) headingRef.current.focus();
@@ -157,9 +150,9 @@ export function DiagnosticForm() {
   async function next() {
     const ok = await form.trigger(STEP_FIELDS[step] as unknown as (keyof LeadInput)[]);
     if (!ok) return errorRef.current?.focus();
-    track({ name: 'form_step_completed', step: step + 1, stepId: STEP_TITLES[step]! });
+    track({ name: 'form_step_completed', step: step + 1, stepId: PASSOS[step]!.pt });
     saveDraft();
-    setStep((s) => Math.min(s + 1, STEP_TITLES.length - 1));
+    setStep((s) => Math.min(s + 1, TOTAL_PASSOS - 1));
   }
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -202,6 +195,9 @@ export function DiagnosticForm() {
     }
   });
 
+  const solucoes = ligacao('/solucoes', idioma);
+  const politica = ligacao('/privacidade', idioma);
+
   if (status === 'done') {
     const enviado = form.getValues();
     const faixa = activeCountry?.investmentBands.find((b) => b.id === enviado.investmentBand);
@@ -216,11 +212,11 @@ export function DiagnosticForm() {
      * repositório, que envelhece e passa a mentir ao lead.
      */
     const resumo: [string, string][] = [
-      ...(activeCountry ? ([['Mercado', activeCountry.name]] as [string, string][]) : []),
-      ...(setor ? ([['Setor', setor]] as [string, string][]) : []),
-      ...(faixa ? ([['Faixa indicada', faixa.label]] as [string, string][]) : []),
+      ...(activeCountry ? ([[t(FORM.mercado, idioma), activeCountry.name]] as [string, string][]) : []),
+      ...(setor ? ([[t(FORM.setor, idioma), setor]] as [string, string][]) : []),
+      ...(faixa ? ([[t(FORM.faixaIndicada, idioma), faixa.label]] as [string, string][]) : []),
       ...(enviado.decisionTimeframe
-        ? ([['Prazo', TIME_LABELS[enviado.decisionTimeframe]]] as [string, string][])
+        ? ([[t(FORM.prazoCurto, idioma), t(PRAZOS[enviado.decisionTimeframe], idioma)]] as [string, string][])
         : []),
     ];
 
@@ -238,11 +234,8 @@ export function DiagnosticForm() {
         <span className="grid size-12 place-items-center rounded-full bg-[color:var(--ok)]">
           <Check aria-hidden className="size-6 text-[color:var(--surface)]" />
         </span>
-        <h2 className="mt-5 font-display text-[length:var(--text-h3)]">Pedido recebido.</h2>
-        <p className="mt-3 max-w-md text-[color:var(--muted)]">
-          Vamos analisar o que descreveu e responder com os próximos passos. Se concluirmos que não há
-          adequação, dizemos isso — é mais útil para si do que uma proposta que não faz sentido.
-        </p>
+        <h2 className="mt-5 font-display text-[length:var(--text-h3)]">{t(FORM.recebido, idioma)}</h2>
+        <p className="mt-3 max-w-md text-[color:var(--muted)]">{t(FORM.recebidoCorpo, idioma)}</p>
 
         {resumo.length > 0 && (
           /**
@@ -253,7 +246,7 @@ export function DiagnosticForm() {
              que ele próprio indicou.
           */
           <div className="rule mt-7 pt-6">
-            <p className="rule-label text-[color:var(--muted)]">O que recebemos</p>
+            <p className="rule-label text-[color:var(--muted)]">{t(FORM.oQueRecebemos, idioma)}</p>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
               {resumo.map(([rotulo, valor]) => (
                 <div key={rotulo}>
@@ -266,18 +259,14 @@ export function DiagnosticForm() {
         )}
 
         <div className="rule mt-7 pt-6">
-          <p className="rule-label text-[color:var(--muted)]">O que acontece agora</p>
+          <p className="rule-label text-[color:var(--muted)]">{t(FORM.agora, idioma)}</p>
           <ol className="mt-4 space-y-3">
-            {[
-              'Lemos o que descreveu e identificamos o bloqueio principal.',
-              'Respondemos por email com o problema, a viabilidade e o próximo passo.',
-              'Se fizer sentido avançar, marcamos uma conversa objetiva.',
-            ].map((t, i) => (
-              <li key={t} className="flex items-baseline gap-4 text-sm text-[color:var(--muted)]">
+            {[FORM.agora1, FORM.agora2, FORM.agora3].map((passo, i) => (
+              <li key={passo.pt} className="flex items-baseline gap-4 text-sm text-[color:var(--muted)]">
                 <span className="rule-label shrink-0 text-[color:var(--accent)]">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                {t}
+                {t(passo, idioma)}
               </li>
             ))}
           </ol>
@@ -286,11 +275,14 @@ export function DiagnosticForm() {
         <div className="rule mt-7 flex flex-col gap-3 pt-6 sm:flex-row sm:flex-wrap">
           <Button asChild variant="outline">
             <a href={`https://wa.me/${SITE.whatsapp.e164}`} target="_blank" rel="noopener noreferrer">
-              Acrescentar algo por WhatsApp
+              {t(FORM.whatsapp, idioma)}
             </a>
           </Button>
           <Button asChild variant="ghost">
-            <Link href="/solucoes">Ver as soluções entretanto</Link>
+            <Link href={solucoes.href} hrefLang={solucoes.soPortugues ? 'pt' : undefined}>
+              {t(FORM.verSolucoes, idioma)}
+              {solucoes.soPortugues && <SoPortugues idioma={idioma} />}
+            </Link>
           </Button>
         </div>
       </div>
@@ -309,12 +301,12 @@ export function DiagnosticForm() {
     >
       <div className="flex items-center justify-between gap-4">
         <p className="font-techno font-medium text-[length:var(--text-micro)] tracking-[var(--tracking-techno)] text-[color:var(--accent)] uppercase">
-          Passo {step + 1} de {STEP_TITLES.length}
+          {t(FORM.passo, idioma).replace('{n}', String(step + 1)).replace('{total}', String(TOTAL_PASSOS))}
         </p>
         <div className="h-1 w-32 overflow-hidden rounded-full bg-[color:var(--border)]">
           <div
             className="h-full bg-[color:var(--accent)] transition-[width] duration-300"
-            style={{ width: `${((step + 1) / STEP_TITLES.length) * 100}%` }}
+            style={{ width: `${((step + 1) / TOTAL_PASSOS) * 100}%` }}
           />
         </div>
       </div>
@@ -325,7 +317,7 @@ export function DiagnosticForm() {
         aria-live="polite"
         className="mt-4 font-display text-[length:var(--text-h3)] outline-none"
       >
-        {STEP_TITLES[step]}
+        {t(PASSOS[step]!, idioma)}
       </h2>
 
       {stepErrors.length > 0 && (
@@ -335,7 +327,7 @@ export function DiagnosticForm() {
           role="alert"
           className="mt-5 rounded-[--radius-sm] border border-[color:var(--color-signal-600)] p-4 outline-none"
         >
-          <p className="text-sm font-medium">Corrija os seguintes campos:</p>
+          <p className="text-sm font-medium">{t(FORM.corrija, idioma)}</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--muted)]">
             {stepErrors.map((f) => (
               <li key={String(f)}>{String(errors[f]?.message)}</li>
@@ -359,7 +351,7 @@ export function DiagnosticForm() {
                 */
                 <div className="space-y-6">
                   <ChipGroup
-                    legend="País de operação"
+                    legend={t(FORM.paisOperacao, idioma)}
                     showLegend
                     columns={3}
                     value={field.value ?? null}
@@ -369,10 +361,10 @@ export function DiagnosticForm() {
                       form.setValue('investmentBand', '');
                       markStarted();
                     }}
-                    options={COUNTRY_CODES.map((c) => ({ value: c, label: COUNTRIES[c].name }))}
+                    options={COUNTRY_CODES.map((c) => ({ value: c, label: t(NOME_PAIS[c], idioma) }))}
                   />
                   <ChipGroup
-                    legend="Global"
+                    legend={t(FORM.global, idioma)}
                     showLegend
                     columns={3}
                     value={field.value ?? null}
@@ -382,7 +374,7 @@ export function DiagnosticForm() {
                       form.setValue('investmentBand', '');
                       markStarted();
                     }}
-                    options={GLOBAL_CODES.map((c) => ({ value: c, label: GLOBAL_MARKETS[c].name.pt }))}
+                    options={GLOBAL_CODES.map((c) => ({ value: c, label: t(GLOBAL_MARKETS[c].name, idioma) }))}
                   />
                 </div>
               )}
@@ -393,7 +385,7 @@ export function DiagnosticForm() {
                 name="sector"
                 render={({ field }) => (
                   <ChipGroup
-                    legend="Setor"
+                    legend={t(FORM.setor, idioma)}
                     showLegend
                     columns={2}
                     value={field.value || null}
@@ -408,7 +400,7 @@ export function DiagnosticForm() {
 
         {step === 1 && (
           <>
-            <Field label="Nome da empresa" required error={errors.company?.message}>
+            <Field label={t(FORM.nomeEmpresa, idioma)} required idioma={idioma} error={errors.company?.message}>
               {({ id, describedBy, invalid }) => (
                 <input id={id} aria-describedby={describedBy} aria-invalid={invalid} autoComplete="organization" className={inputClass} {...form.register('company')} />
               )}
@@ -418,17 +410,17 @@ export function DiagnosticForm() {
               name="companySize"
               render={({ field }) => (
                 <ChipGroup
-                  legend="Número de colaboradores"
+                  legend={t(FORM.colaboradores, idioma)}
                   columns={2}
                   value={field.value ?? null}
                   onChange={field.onChange}
-                  options={COMPANY_SIZES.map((s) => ({ value: s, label: SIZE_LABELS[s] }))}
+                  options={COMPANY_SIZES.map((s) => ({ value: s, label: t(TAMANHOS[s], idioma) }))}
                 />
               )}
             />
-            <Field label="Website atual" hint="Se ainda não tiver, deixe em branco." error={errors.currentWebsite?.message}>
+            <Field label={t(FORM.website, idioma)} hint={t(FORM.websiteDica, idioma)} idioma={idioma} error={errors.currentWebsite?.message}>
               {({ id, describedBy, invalid }) => (
-                <input id={id} aria-describedby={describedBy} aria-invalid={invalid} inputMode="url" autoComplete="url" placeholder="exemplo.com" className={inputClass} {...form.register('currentWebsite')} />
+                <input id={id} aria-describedby={describedBy} aria-invalid={invalid} inputMode="url" autoComplete="url" placeholder={t(FORM.websiteExemplo, idioma)} className={inputClass} {...form.register('currentWebsite')} />
               )}
             </Field>
           </>
@@ -438,10 +430,10 @@ export function DiagnosticForm() {
           <>
             <fieldset className="border-0 p-0">
               <legend className="text-sm font-medium">
-                O que pretende melhorar? <span className="text-[color:var(--accent)]" aria-hidden>*</span>
+                {t(FORM.melhorar, idioma)} <span className="text-[color:var(--accent)]" aria-hidden>*</span>
               </legend>
               <p className="mt-1 text-[length:var(--text-micro)] text-[color:var(--muted)]">
-                Pode escolher mais do que um.
+                {t(FORM.melhorarDica, idioma)}
               </p>
               <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                 {IMPROVEMENT_GOALS.map((g) => {
@@ -468,7 +460,7 @@ export function DiagnosticForm() {
                         }}
                         className="size-4 shrink-0 accent-[color:var(--color-ink-900)]"
                       />
-                      {g.label}
+                      {t(OBJETIVOS[g.value], idioma)}
                     </label>
                   );
                 })}
@@ -476,9 +468,10 @@ export function DiagnosticForm() {
             </fieldset>
 
             <Field
-              label="Qual é o impacto atual deste problema?"
+              label={t(FORM.impacto, idioma)}
               required
-              hint="Tempo perdido, erros, atrasos, oportunidades que não foram acompanhadas."
+              idioma={idioma}
+              hint={t(FORM.impactoDica, idioma)}
               error={errors.problemImpact?.message}
             >
               {({ id, describedBy, invalid }) => (
@@ -494,7 +487,7 @@ export function DiagnosticForm() {
               control={form.control}
               name="decisionTimeframe"
               render={({ field }) => (
-                <ChipGroup legend="Prazo da decisão" columns={2} value={field.value ?? null} onChange={field.onChange} options={TIMEFRAMES.map((t) => ({ value: t, label: TIME_LABELS[t] }))} />
+                <ChipGroup legend={t(FORM.prazo, idioma)} columns={2} value={field.value ?? null} onChange={field.onChange} options={TIMEFRAMES.map((p) => ({ value: p, label: t(PRAZOS[p], idioma) }))} />
               )}
             />
             <Controller
@@ -502,7 +495,7 @@ export function DiagnosticForm() {
               name="investmentBand"
               render={({ field }) => (
                 <ChipGroup
-                  legend={`Faixa de investimento (${activeCountry.currency})`}
+                  legend={t(FORM.faixa, idioma).replace('{moeda}', activeCountry.currency)}
                   columns={2}
                   value={field.value || null}
                   onChange={field.onChange}
@@ -514,7 +507,7 @@ export function DiagnosticForm() {
               control={form.control}
               name="decisionRole"
               render={({ field }) => (
-                <ChipGroup legend="O seu papel na decisão" columns={2} value={field.value ?? null} onChange={field.onChange} options={DECISION_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))} />
+                <ChipGroup legend={t(FORM.papel, idioma)} columns={2} value={field.value ?? null} onChange={field.onChange} options={DECISION_ROLES.map((r) => ({ value: r, label: t(PAPEIS[r], idioma) }))} />
               )}
             />
           </>
@@ -523,19 +516,19 @@ export function DiagnosticForm() {
         {step === 4 && activeCountry && (
           <>
             <div className="grid gap-6 sm:grid-cols-2">
-              <Field label="Nome" required error={errors.name?.message}>
+              <Field label={t(FORM.nome, idioma)} required idioma={idioma} error={errors.name?.message}>
                 {({ id, describedBy, invalid }) => (
                   <input id={id} aria-describedby={describedBy} aria-invalid={invalid} autoComplete="name" className={inputClass} {...form.register('name')} />
                 )}
               </Field>
-              <Field label="Email profissional" required error={errors.workEmail?.message}>
+              <Field label={t(FORM.email, idioma)} required idioma={idioma} error={errors.workEmail?.message}>
                 {({ id, describedBy, invalid }) => (
                   <input id={id} type="email" aria-describedby={describedBy} aria-invalid={invalid} autoComplete="email" className={inputClass} {...form.register('workEmail')} />
                 )}
               </Field>
             </div>
 
-            <Field label="Telefone ou WhatsApp" required hint={`Indicativo ${activeCountry.dialCode}`} error={errors.phone?.message}>
+            <Field label={t(FORM.telefone, idioma)} required idioma={idioma} hint={t(FORM.indicativo, idioma).replace('{indicativo}', activeCountry.dialCode)} error={errors.phone?.message}>
               {({ id, describedBy, invalid }) => (
                 <input id={id} type="tel" inputMode="tel" aria-describedby={describedBy} aria-invalid={invalid} autoComplete="tel" className={inputClass} {...form.register('phone')} />
               )}
@@ -551,8 +544,14 @@ export function DiagnosticForm() {
               <input type="checkbox" className="mt-1 size-4 shrink-0" {...form.register('consent')} />
               <span className="text-[color:var(--muted)]">
                 {activeCountry.consentText}{' '}
-                <a href={activeCountry.policyHref} className="text-[color:var(--accent)] underline underline-offset-4">
-                  Política de privacidade
+                {/* A política só existe em português: em inglês, a ligação diz para onde vai. */}
+                <a
+                  href={politica.href}
+                  hrefLang={politica.soPortugues ? 'pt' : undefined}
+                  className="text-[color:var(--accent)] underline underline-offset-4"
+                >
+                  {t(FORM.politica, idioma)}
+                  {politica.soPortugues && <SoPortugues idioma={idioma} />}
                 </a>
               </span>
             </label>
@@ -566,10 +565,9 @@ export function DiagnosticForm() {
            é a recuperação mais rápida — quem acabou de perder cinco passos de
            formulário não quer abrir o cliente de email. */
         <div role="alert" className="mt-6 border border-[color:var(--color-signal-600)] p-4">
-          <p className="text-sm">Não foi possível enviar o pedido.</p>
+          <p className="text-sm">{t(FORM.erroTitulo, idioma)}</p>
           <p className="mt-1.5 text-sm text-[color:var(--muted)]">
-            As suas respostas continuam aqui — carregue outra vez em enviar. Se voltar a falhar,
-            fale connosco por{' '}
+            {t(FORM.erroCorpo, idioma)}{' '}
             <a
               href={`https://wa.me/${SITE.whatsapp.e164}`}
               target="_blank"
@@ -578,7 +576,7 @@ export function DiagnosticForm() {
             >
               WhatsApp
             </a>{' '}
-            ou{' '}
+            {t(FORM.ou, idioma)}{' '}
             <a
               href={`mailto:${SITE.email}`}
               className="text-[color:var(--accent)] underline underline-offset-4"
@@ -593,18 +591,18 @@ export function DiagnosticForm() {
       <div className="mt-8 flex items-center justify-between gap-3">
         <Button type="button" variant="ghost" size="sm" disabled={step === 0} onClick={() => setStep((s) => s - 1)} className="gap-1.5">
           <ArrowLeft aria-hidden className="size-4" />
-          Voltar
+          {t(FORM.voltar, idioma)}
         </Button>
 
-        {step < STEP_TITLES.length - 1 ? (
+        {step < TOTAL_PASSOS - 1 ? (
           <Button type="button" onClick={next} className="gap-1.5">
-            Continuar
+            {t(FORM.continuar, idioma)}
             <ArrowRight aria-hidden className="size-4" />
           </Button>
         ) : (
           <Button type="submit" disabled={status === 'sending'} className="gap-1.5">
             {status === 'sending' && <Loader2 aria-hidden className="size-4 animate-spin" />}
-            Enviar pedido
+            {t(FORM.enviar, idioma)}
           </Button>
         )}
       </div>
