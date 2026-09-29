@@ -172,6 +172,14 @@ export function buildMetadata({
       description,
       ...(imagemPropria ? {} : { images: [{ url: imagem.url, alt: imagem.alt }] }),
     },
-    ...(noindex ? { robots: { index: false, follow: false } } : {}),
+    robots: noindex
+      ? { index: false, follow: false }
+      : {
+          index: true,
+          follow: true,
+          // Sem isto, o Google pode reduzir a imagem do resultado (e do Discover) a
+          // uma miniatura. As imagens de partilha têm 1200px, que é o mínimo pedido.
+          googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
+        },
   };
 }

@@ -335,3 +335,19 @@ describe('imagens de partilha geradas', () => {
     expect(readFileSync('app/(en)/en/global/page.tsx', 'utf-8')).toContain(`en: '${titulo}'`);
   });
 });
+
+describe('directivas de robots', () => {
+  it('as páginas indexáveis autorizam a pré-visualização grande', () => {
+    const m = buildMetadata({ title: 't', description: 'd', path: '/solucoes' });
+    expect(m.robots).toMatchObject({
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+    });
+  });
+
+  it('noindex continua a ser noindex, sem directivas de pré-visualização', () => {
+    const m = buildMetadata({ title: 't', description: 'd', path: '/x', noindex: true });
+    expect(m.robots).toEqual({ index: false, follow: false });
+  });
+});
