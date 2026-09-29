@@ -104,7 +104,7 @@ humana em cada decisão.
 | **B** | `Texto` bilingue + leitor + teste-guarda | **feito** |
 | **C** | Copy da pista 1 — homepage e `/mz/energia-mineracao` | **retido** até 10 conversas, como o diagnóstico manda |
 | **D** | `/global` + 10 países + 100 setores, PT e EN · diagnóstico nos 13 mercados · migração 0011 | **feito** |
-| **E** | EN nas páginas PT existentes · home inglesa · formulário em inglês · `lang` por documento | por fazer |
+| **E** | E1 infra bilingue e chrome · E2 diagnóstico em inglês com consentimento no idioma mostrado · E3 home e soluções em inglês | E1 e E2 **feitos**; E3 por fazer |
 | **F** | Formulário de 5 para 2 passos + subir `SCORING_VERSION` | por fazer |
 
 O lote F mexe em `lead-schema.ts`, `STEP_FIELDS` e `lead-score.ts` e obriga a

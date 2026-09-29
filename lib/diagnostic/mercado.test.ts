@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
 import { leadSchema } from '@/lib/forms/lead-schema';
-import { consentTextFor } from './consent';
+import { consentTextFor, consentVersionFor } from './consent';
 import {
   DIAGNOSTIC_CODES,
   ehCodigoDeDiagnostico,
@@ -125,5 +125,26 @@ describe('o consentimento guardado é o mostrado', () => {
   it('por omissão, português — nada do que já existia muda', () => {
     expect(mercadoDoDiagnostico('mz')!.investmentBands[0]!.label).toBe('Até 250 000 MZN');
     expect(mercadoDoDiagnostico('mz')!.name).toBe('Moçambique');
+  });
+});
+
+describe('o consentimento cabe na base', () => {
+  /**
+   * `consent_records` só aceita texto de 1 a 4000 caracteres e versão até 40
+   * (`0002_crm.sql`). Um texto ou versão fora disso é uma transacção abortada e
+   * um 503 para quem acabou de preencher cinco passos — nos 13 mercados e nos
+   * dois idiomas, sem excepção.
+   */
+  it('13 mercados × 2 idiomas dentro dos limites de consent_records', async () => {
+    for (const c of DIAGNOSTIC_CODES) {
+      for (const idioma of ['pt', 'en'] as const) {
+        const texto = consentTextFor(c, idioma);
+        const versao = await consentVersionFor(c, idioma);
+        expect(texto.length, `${c}/${idioma}`).toBeGreaterThan(0);
+        expect(texto.length, `${c}/${idioma}`).toBeLessThanOrEqual(4000);
+        expect(versao.length, `${c}/${idioma}: ${versao}`).toBeLessThanOrEqual(40);
+      }
+      expect(await consentVersionFor(c, 'en')).not.toBe(await consentVersionFor(c, 'pt'));
+    }
   });
 });

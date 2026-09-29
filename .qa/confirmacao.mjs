@@ -15,14 +15,27 @@ let falhas = 0;
 // Os três mercados de operação e três dos dez globais (lote D): um em moeda
 // europeia não-euro, um em dólar, um africano. O país chega pelo `?pais=` —
 // o mesmo caminho que o CTA de cada página /global/<pais> usa.
-const MERCADOS = [['mz','MZN','Moçambique'], ['pt','€','Portugal'], ['br','R$','Brasil'],
-                  ['ch','CHF','Suíça'], ['us','USD','Estados Unidos'], ['za','ZAR','África do Sul']];
+//
+// IDIOMA=en corre a versão inglesa (lote E2): /en/diagnostico, textos
+// ingleses, e o corpo do pedido tem de levar `idioma: "en"` — é isso que faz
+// o servidor guardar o consentimento que a pessoa leu.
+const EN = process.env.IDIOMA === 'en';
+const TXT = EN
+  ? { rota: '/en/diagnostico', continuar: 'Continue', enviar: 'Send request', recebido: 'Request received',
+      grupos: ['Countries where we operate', 'Global'] }
+  : { rota: '/diagnostico', continuar: 'Continuar', enviar: 'Enviar pedido', recebido: 'Pedido recebido',
+      grupos: ['País de operação', 'Global'] };
+const MERCADOS = EN
+  ? [['mz','MZN','Mozambique'], ['ch','CHF','Switzerland'], ['us','USD','United States'], ['br','R$','Brazil']]
+  : [['mz','MZN','Moçambique'], ['pt','€','Portugal'], ['br','R$','Brasil'],
+     ['ch','CHF','Suíça'], ['us','USD','Estados Unidos'], ['za','ZAR','África do Sul']];
 
 for (const [pais, moeda, nome] of MERCADOS) {
   const ctx = await b.newContext({ viewport:{width:1440,height:1100} });
   const p = await ctx.newPage();
-  await p.route('**/api/diagnostico', (r) => r.fulfill({ status:200, contentType:'application/json', body:'{"ok":true}' }));
-  await p.goto(`http://127.0.0.1:3000/diagnostico?pais=${pais}`, { waitUntil:'networkidle' });
+  let corpo = null;
+  await p.route('**/api/diagnostico', (r) => { corpo = JSON.parse(r.request().postData() ?? '{}'); return r.fulfill({ status:200, contentType:'application/json', body:'{"ok":true}' }); });
+  await p.goto(`http://127.0.0.1:3000${TXT.rota}?pais=${pais}`, { waitUntil:'networkidle' });
   await p.waitForTimeout(700);
 
   // O país tem de chegar escolhido, e no grupo certo.
@@ -37,7 +50,7 @@ for (const [pais, moeda, nome] of MERCADOS) {
       // Os dois grupos de país partilham o mesmo campo: escolher no que está
       // vazio trocaria o mercado pré-selecionado. O país vem do URL.
       const grupo = await fs.locator('[role=radiogroup]').first().getAttribute('aria-label', { timeout: 300 }).catch(() => null);
-      if (grupo === 'País de operação' || grupo === 'Global') continue;
+      if (TXT.grupos.includes(grupo)) continue;
       const radios = fs.locator('[role=radio]');
       if (!(await radios.count())) continue;
       if (await fs.locator('[role=radio][aria-checked=true]').count()) continue;
@@ -63,9 +76,9 @@ for (const [pais, moeda, nome] of MERCADOS) {
     // do FAQ «Preciso de ter tudo definido antes de submeter?» e dava o
     // formulário por enviado no primeiro passo — erro do teste, não do site.
     const formulario = p.locator('form');
-    const enviar = formulario.getByRole('button', { name: 'Enviar pedido' });
+    const enviar = formulario.getByRole('button', { name: TXT.enviar });
     if (await enviar.count() && await enviar.first().isVisible()) { await enviar.first().click(); break; }
-    const seguinte = formulario.getByRole('button', { name: 'Continuar' });
+    const seguinte = formulario.getByRole('button', { name: TXT.continuar });
     if (!(await seguinte.count())) break;
     await seguinte.first().click();
     await p.waitForTimeout(350);
@@ -73,13 +86,15 @@ for (const [pais, moeda, nome] of MERCADOS) {
 
   await p.getByRole('status').waitFor({ timeout: 8000 }).catch(()=>{});
   const txt = await p.getByRole('status').innerText().catch(() => '(sem ecrã de confirmação)');
-  const ok = txt.includes('Pedido recebido');
+  const ok = txt.includes(TXT.recebido);
   const temMoeda = txt.includes(moeda);
-  if (!ok || !temMoeda) falhas++;
+  const idiomaOk = (corpo?.idioma ?? 'pt') === (EN ? 'en' : 'pt');
+  if (!ok || !temMoeda || !idiomaOk) falhas++;
+  console.log(`${pais}: idioma no pedido «${corpo?.idioma}» ${idiomaOk ? '✓' : '✗'}`);
   console.log(`${pais}: confirmação ${ok ? '✓' : '✗'} | faixa na moeda ${moeda}: ${temMoeda ? '✓' : '✗'}`);
   const linha = txt.split('\n').find((l) => l.includes(moeda));
   if (linha) console.log(`   → ${linha}`);
-  await p.screenshot({ path: `.qa/v6-confirmacao-${pais}.png` });
+  await p.screenshot({ path: `.qa/v6-confirmacao-${EN ? 'en-' : ''}${pais}.png` });
   await ctx.close();
 }
 await b.close();
