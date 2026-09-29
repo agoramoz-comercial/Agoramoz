@@ -1,23 +1,44 @@
 import type { MetadataRoute } from 'next';
 import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
 import { PERFIL } from '@/content/landing/perfil';
+import { SOLUTIONS_EN } from '@/content/en/solutions';
 import { absolute } from '@/lib/seo/site';
 import { caminhoNoIdioma } from '@/lib/i18n/texto';
 import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
 
+/**
+ * A data da última alteração de CONTEÚDO de cada página sem data própria no
+ * registry. Actualizar à mão quando o texto da página muda.
+ *
+ * Até ao lote G estas páginas levavam a hora do build: cada deploy declarava
+ * todas como alteradas. O Google só confia no `lastmod` quando ele é
+ * verídico — um que mente sempre ensina-o a ignorá-lo em todas as URL,
+ * incluindo as que têm datas certas. Datas medidas no histórico do git.
+ */
+const REVISTO_EM = {
+  '/': '2026-09-29',
+  '/diagnostico': '2026-09-29',
+  '/solucoes': '2026-09-29',
+  '/como-trabalhamos': '2026-09-29',
+  '/sobre': '2026-09-29',
+  '/contactos': '2026-09-29',
+  '/privacidade': '2026-09-24',
+  '/global': '2026-09-29',
+} as const;
+
+const em = (rota: keyof typeof REVISTO_EM) => new Date(REVISTO_EM[rota]);
+
 /** Gerado a partir do registry: uma nova vertical entra aqui sozinha. */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   const statics: MetadataRoute.Sitemap = [
-    { url: absolute('/'), lastModified: now, priority: 1 },
-    { url: absolute('/diagnostico'), lastModified: now, priority: 0.9 },
+    { url: absolute('/'), lastModified: em('/'), priority: 1 },
+    { url: absolute('/diagnostico'), lastModified: em('/diagnostico'), priority: 0.9 },
     { url: absolute('/perfil'), lastModified: new Date(PERFIL.updatedAt), priority: 0.8 },
-    { url: absolute('/solucoes'), lastModified: now, priority: 0.8 },
-    { url: absolute('/como-trabalhamos'), lastModified: now, priority: 0.6 },
-    { url: absolute('/sobre'), lastModified: now, priority: 0.5 },
-    { url: absolute('/contactos'), lastModified: now, priority: 0.5 },
-    { url: absolute('/privacidade'), lastModified: now, priority: 0.2 },
+    { url: absolute('/solucoes'), lastModified: em('/solucoes'), priority: 0.8 },
+    { url: absolute('/como-trabalhamos'), lastModified: em('/como-trabalhamos'), priority: 0.6 },
+    { url: absolute('/sobre'), lastModified: em('/sobre'), priority: 0.5 },
+    { url: absolute('/contactos'), lastModified: em('/contactos'), priority: 0.5 },
+    { url: absolute('/privacidade'), lastModified: em('/privacidade'), priority: 0.2 },
   ];
 
   /**
@@ -26,8 +47,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
    * operação.
    */
   const globais: MetadataRoute.Sitemap = [
-    { url: absolute('/global'), lastModified: now, priority: 0.6 },
-    ...GLOBAL_CODES.map((code) => ({ url: absolute(`/global/${code}`), lastModified: now, priority: 0.5 })),
+    { url: absolute('/global'), lastModified: em('/global'), priority: 0.6 },
+    ...GLOBAL_CODES.map((code) => ({ url: absolute(`/global/${code}`), lastModified: em('/global'), priority: 0.5 })),
   ];
 
   const countries: MetadataRoute.Sitemap = COUNTRY_CODES.map((code) => ({
@@ -59,9 +80,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const porUrl = new Map(portugues.map((e) => [e.url, e]));
   const ingles: MetadataRoute.Sitemap = ROTAS_BILINGUES.map((rota) => {
     const par = porUrl.get(absolute(rota));
+    // As soluções inglesas têm data própria (foram escritas depois das portuguesas).
+    const solucaoEn = rota.startsWith('/solucoes/')
+      ? SOLUTIONS_EN[rota.slice('/solucoes/'.length) as keyof typeof SOLUTIONS_EN]
+      : undefined;
     return {
       url: absolute(caminhoNoIdioma(rota, 'en')),
-      lastModified: par?.lastModified ?? now,
+      lastModified: solucaoEn ? new Date(solucaoEn.updatedAt) : (par?.lastModified ?? em('/')),
       priority: par?.priority ?? 0.5,
     };
   });
