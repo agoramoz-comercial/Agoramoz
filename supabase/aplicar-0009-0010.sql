@@ -1,4 +1,27 @@
 -- ============================================================================
+-- REPETÍVEL. Este guião pode correr as vezes que for preciso.
+-- ============================================================================
+-- A primeira versão não era, e falhou a meio: `create table` sem `if not
+-- exists` na linha 88 de 624, deixando as 536 seguintes por aplicar e sem
+-- forma de saber quais. Não está dentro de uma transacção — a criação de
+-- índices e a substituição de funções não pertencem todas ao mesmo lote — pelo
+-- que a defesa tem de ser objecto a objecto, e é o que está feito:
+--
+--   tabelas e colunas   `if not exists`
+--   índices             `if not exists`
+--   políticas           `drop policy if exists` antes de criar
+--   gatilhos            `drop trigger if exists` antes de criar
+--   funções e vista     `create or replace`
+--
+-- Correr isto uma segunda vez não apaga uma única linha de dados: nada aqui é
+-- `drop table`, `truncate` ou `delete`. O que se larga são definições —
+-- políticas e gatilhos — que a instrução seguinte volta a criar iguais.
+--
+-- ANTES de correr, se já houve uma tentativa: `verificar-estado.sql` diz o que
+-- existe. Não é obrigatório, mas evita perguntar depois.
+-- ============================================================================
+
+-- ============================================================================
 -- AGORAMOZ — aplicar 0009 e 0010 ao projeto nixltrbdplqjadfytryd
 -- ============================================================================
 -- Correr INTEIRO, de uma vez, no SQL Editor do Supabase.
@@ -85,7 +108,7 @@ revoke all on function public.utm_limpo(text) from public, anon, authenticated;
 -- response_attribution
 -- ---------------------------------------------------------------------------
 
-create table public.response_attribution (
+create table if not exists public.response_attribution (
   response_id uuid primary key references public.responses(id) on delete cascade,
 
   utm_source   text check (utm_source   is null or utm_source   ~ '^[a-z0-9._-]{1,64}$'),
@@ -117,13 +140,14 @@ create table public.response_attribution (
     check (first_touch_at is null or first_touch_at <= last_touch_at)
 );
 
-create index response_attribution_canal_idx
+create index if not exists response_attribution_canal_idx
   on public.response_attribution (channel, created_at desc);
-create index response_attribution_campanha_idx
+create index if not exists response_attribution_campanha_idx
   on public.response_attribution (utm_campaign) where utm_campaign is not null;
 
 alter table public.response_attribution enable row level security;
 
+drop policy if exists response_attribution_select on public.response_attribution;
 create policy response_attribution_select on public.response_attribution
   for select to authenticated using (public.is_staff());
 
@@ -133,13 +157,13 @@ create policy response_attribution_select on public.response_attribution
 -- ---------------------------------------------------------------------------
 
 alter table public.deals
-  add column acquisition_channel text not null default 'desconhecido'
+  add column if not exists acquisition_channel text not null default 'desconhecido'
     check (acquisition_channel in ('gbp','organico','directo','social','referencia','campanha','desconhecido')),
-  add column acquisition_campaign text
+  add column if not exists acquisition_campaign text
     check (acquisition_campaign is null or acquisition_campaign ~ '^[a-z0-9._-]{1,64}$');
 
-create index deals_canal_idx on public.deals (acquisition_channel, created_at desc);
-create index deals_campanha_idx on public.deals (acquisition_campaign)
+create index if not exists deals_canal_idx on public.deals (acquisition_channel, created_at desc);
+create index if not exists deals_campanha_idx on public.deals (acquisition_campaign)
   where acquisition_campaign is not null;
 
 -- A origem de uma oportunidade é um facto histórico. Deixá-la editável
@@ -163,6 +187,7 @@ $$;
 
 revoke all on function public.bloquear_atribuicao_da_oportunidade() from public, anon, authenticated;
 
+drop trigger if exists deals_atribuicao_imutavel on public.deals;
 create trigger deals_atribuicao_imutavel
   before update of acquisition_channel, acquisition_campaign on public.deals
   for each row execute function public.bloquear_atribuicao_da_oportunidade();
@@ -466,7 +491,7 @@ revoke all on function public.ingest_diagnostic_response(
 -- analytics_events
 -- ---------------------------------------------------------------------------
 
-create table public.analytics_events (
+create table if not exists public.analytics_events (
   id bigint generated always as identity primary key,
 
   name text not null check (name ~ '^[a-z][a-z0-9_]{2,59}$'),
@@ -486,13 +511,14 @@ create table public.analytics_events (
   created_at timestamptz not null default now()
 );
 
-create index analytics_events_nome_idx on public.analytics_events (name, occurred_at desc);
-create index analytics_events_canal_idx on public.analytics_events (channel, name, occurred_at desc);
+create index if not exists analytics_events_nome_idx on public.analytics_events (name, occurred_at desc);
+create index if not exists analytics_events_canal_idx on public.analytics_events (channel, name, occurred_at desc);
 
 alter table public.analytics_events enable row level security;
 
 -- Leitura para a equipa. **Sem política de inserção**: só a chave de serviço e
 -- as funções `security definer` escrevem, exactamente como em `responses`.
+drop policy if exists analytics_events_select on public.analytics_events;
 create policy analytics_events_select on public.analytics_events
   for select to authenticated using (public.is_staff());
 
@@ -517,6 +543,7 @@ begin
 end;
 $$;
 
+drop trigger if exists deals_evento_criada on public.deals;
 create trigger deals_evento_criada
   after insert on public.deals
   for each row execute function public.registar_oportunidade_criada();
@@ -540,6 +567,7 @@ begin
 end;
 $$;
 
+drop trigger if exists deals_evento_ganha on public.deals;
 create trigger deals_evento_ganha
   after update of stage on public.deals
   for each row execute function public.registar_oportunidade_ganha();
@@ -568,6 +596,7 @@ begin
 end;
 $$;
 
+drop trigger if exists documents_evento_visto on public.documents;
 create trigger documents_evento_visto
   after update of confirmed_view_at on public.documents
   for each row execute function public.registar_documento_visto();
@@ -594,7 +623,7 @@ revoke all on function public.registar_documento_visto() from public, anon, auth
 -- JavaScript falhar, submissões, oportunidades e ganhos continuam certos e só
 -- as duas primeiras ficam subcontadas. O ecrã diz isto.
 
-create view public.funil_aquisicao with (security_invoker = true) as
+create or replace view public.funil_aquisicao with (security_invoker = true) as
 select canal, mes,
        sum(vistas)        as vistas,
        sum(iniciados)     as iniciados,
