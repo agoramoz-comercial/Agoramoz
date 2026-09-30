@@ -46,10 +46,18 @@ Quando houver Search Console com dados, os volumes reais substituem esta tabela.
 | 1 | automação de processos empresariais (Moçambique) | `/solucoes/automacao-de-processos` | Automação de processos empresariais em Moçambique |
 | 1 | software para energia / mineração (Moçambique) | `/mz/energia-mineracao` | já existente: «Sistemas digitais para energia, mineração e serviços industriais em Moçambique» |
 | 2 | software à medida / desenvolvimento de software (Moçambique) | `/solucoes/software-empresarial` | Software à medida para empresas em Moçambique |
-| 2 | integração de sistemas, cibersegurança (Moçambique) | `/solucoes/infraestrutura-digital` | Integração de sistemas e segurança em Moçambique |
+| 2 | integração de sistemas, gestão de acessos e recuperação (Moçambique) | `/solucoes/infraestrutura-digital` | Integração de sistemas e segurança em Moçambique |
 | 2 | AI agents / process automation / custom software (Mozambique, EN) | `/en/solucoes/*` | «… in Mozambique» |
 | 3 | criação de sites / websites (Maputo, Moçambique) | `/solucoes/websites-avancados` | Criação de websites para empresas em Moçambique |
 | — | AGORAMOZ (marca) | `/` | inalterado: «AGORAMOZ — …» |
+
+**Trade-off assumido — «em Moçambique» só no título.** As páginas de solução
+servem também Portugal e Brasil, e o H1 e o corpo não nomeiam o país; o Google
+pode reescrever um título que não corresponde ao conteúdo visível. Aceite
+porque Moçambique é o mercado de operação e as SERP medidas são fracas lá. Se
+o Search Console mostrar o título reescrito ou impressões PT/BR a cair, o
+passo seguinte é uma linha visível de contexto por país no início da página
+(mudança de conteúdo, a decidir com o fundador).
 
 **Regras mantidas:** o H1 e o corpo das páginas não mudaram (só `<title>` e
 meta description); a marca não leva palavras-chave; nenhuma afirmação nova —
@@ -60,8 +68,10 @@ fixa comprimentos (≤ 60 com a marca; descrição 120–160) e o país no títu
 
 - **hreflang no sitemap** (`app/sitemap.ts`): cada par PT/EN declara o mesmo
   conjunto recíproco que o `<head>` da página, com `x-default` em português; a
-  home e os países mantêm `pt-MZ`, `pt-PT`, `pt-BR`. Testado
-  (`app/sitemap.test.ts`): reciprocidade e nenhum alternate fora do sitemap.
+  home e os países mantêm `pt-MZ`, `pt-PT`, `pt-BR`; as páginas de sector usam
+  `mercadosDoSector`, a mesma função da página. Testado
+  (`app/sitemap.test.ts`): reciprocidade, nenhum alternate fora do sitemap e
+  sector igual ao `<head>`.
 - **Ícone de pesquisa** (P1): logo sobre preto, 480 px (múltiplo de 48),
   `favicon.ico`, `apple-icon`, manifesto e `Organization.logo`.
 

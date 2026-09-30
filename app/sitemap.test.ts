@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import sitemap from './sitemap';
+import { SECTOR_PAGES, mercadosDoSector } from '@/content/registry';
 
 afterEach(() => vi.useRealTimers());
 
@@ -69,6 +70,15 @@ describe('hreflang no sitemap', () => {
       expect(l['pt-MZ'], rota).toBe(`${SITE}/mz`);
       expect(l['pt-PT'], rota).toBe(`${SITE}/pt`);
       expect(l['pt-BR'], rota).toBe(`${SITE}/br`);
+    }
+  });
+
+  it('as páginas de sector declaram no sitemap o mesmo que no <head> (mercadosDoSector)', () => {
+    for (const p of Object.values(SECTOR_PAGES)) {
+      const esperado = Object.fromEntries(
+        Object.entries(mercadosDoSector(p.sector) ?? {}).map(([k, v]) => [k, `${SITE}${v}`]),
+      );
+      expect(idiomas(`${SITE}/${p.country}/${p.sector}`), p.sector).toEqual(esperado);
     }
   });
 });

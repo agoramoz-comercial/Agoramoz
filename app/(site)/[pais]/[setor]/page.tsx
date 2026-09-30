@@ -22,7 +22,7 @@ import {
   COUNTRIES,
   SECTOR_LABELS,
   getAllSectorParams,
-  getCountriesForSector,
+  mercadosDoSector,
   getSectorPage,
   renderSectorFormula,
 } from '@/content/registry';
@@ -47,15 +47,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
    * alternate para uma página que não existe é, na melhor das hipóteses,
    * ignorado pelos motores de busca.
    */
-  const languages = Object.fromEntries(
-    getCountriesForSector(setor as SectorSlug).map((code) => [COUNTRIES[code].locale, `/${code}/${setor}`]),
-  );
-
   return buildMetadata({
     title: page.seo.title,
     description: page.seo.description,
     path: `/${pais}/${setor}`,
-    languages: Object.keys(languages).length > 1 ? languages : undefined,
+    languages: mercadosDoSector(setor as SectorSlug),
   });
 }
 

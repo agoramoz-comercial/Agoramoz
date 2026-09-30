@@ -1,5 +1,12 @@
 import type { MetadataRoute } from 'next';
-import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
+import {
+  COUNTRIES,
+  COUNTRY_CODES,
+  GLOBAL_CODES,
+  SECTOR_PAGES,
+  SOLUTIONS,
+  mercadosDoSector,
+} from '@/content/registry';
 import { PERFIL } from '@/content/landing/perfil';
 import { SOLUTIONS_EN } from '@/content/en/solutions';
 import { absolute, alternativasDeIdioma } from '@/lib/seo/site';
@@ -103,11 +110,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const absolutos = (l: Record<string, string>) =>
     Object.fromEntries(Object.entries(l).map(([k, v]) => [k, absolute(v)]));
   const bilingues = new Set(ROTAS_BILINGUES);
+  const sectores = new Map(Object.values(SECTOR_PAGES).map((p) => [`/${p.country}/${p.sector}`, p.sector]));
 
   const hreflang = (rota: string, emIngles: boolean) => {
     const l: Record<string, string> = {};
     if (bilingues.has(rota)) Object.assign(l, alternativasDeIdioma(rota));
     if (!emIngles && comMercados.has(rota)) Object.assign(l, MERCADOS);
+    const sector = !emIngles ? sectores.get(rota) : undefined;
+    if (sector) Object.assign(l, mercadosDoSector(sector) ?? {});
     return Object.keys(l).length ? { alternates: { languages: absolutos(l) } } : {};
   };
 

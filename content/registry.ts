@@ -155,6 +155,18 @@ export function getCountriesForSector(sector: SectorSlug): CountryCode[] {
   return COUNTRY_CODES.filter((code) => hasSectorPage(code, sector));
 }
 
+/**
+ * hreflang de uma página de sector: os países que publicam ESTE sector, pelo
+ * locale de cada um. `undefined` quando só um país o publica — um alternate
+ * sozinho não diz nada. A página (`generateMetadata`) e o sitemap leem daqui,
+ * para que as duas declarações nunca divirjam.
+ */
+export function mercadosDoSector(sector: SectorSlug): Record<string, string> | undefined {
+  const paises = getCountriesForSector(sector);
+  if (paises.length < 2) return undefined;
+  return Object.fromEntries(paises.map((code) => [COUNTRIES[code].locale, `/${code}/${sector}`]));
+}
+
 export function getAllSectorParams(): { pais: CountryCode; setor: SectorSlug }[] {
   return Object.values(SECTOR_PAGES).map((p) => ({ pais: p.country, setor: p.sector }));
 }
