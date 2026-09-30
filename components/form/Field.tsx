@@ -44,7 +44,9 @@ export function Field({
       )}
       <div className="mt-2">{children({ id, describedBy, invalid: Boolean(error) })}</div>
       {error && (
-        <p id={errorId} className="mt-1.5 text-sm text-[color:var(--color-signal-600)]">
+        /* `--signal` e não `--color-signal-600`: o token segue a superfície. O
+           600 fixo dava 4,13:1 sobre o fundo escuro do diagnóstico (axe). */
+        <p id={errorId} className="mt-1.5 text-sm text-[color:var(--signal)]">
           {error}
         </p>
       )}

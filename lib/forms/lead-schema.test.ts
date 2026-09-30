@@ -39,14 +39,26 @@ describe('leadSchema — caso base', () => {
 });
 
 describe('leadSchema — fronteiras do texto de impacto', () => {
+  /**
+   * Opcional desde o carrossel (P2): o mínimo de 20 caracteres saiu, o máximo
+   * de 1500 ficou — é ele que limita o que entra na base.
+   */
   it.each([
-    [19, false],
-    [20, true],
+    [0, true],
+    [19, true],
     [1500, true],
     [1501, false],
   ])('%i caracteres → aceite: %s', (comprimento, esperado) => {
     const r = leadSchema.safeParse({ ...valido, problemImpact: 'x'.repeat(comprimento) });
     expect(r.success).toBe(esperado);
+  });
+
+  it('ausente, vale texto vazio — as regras e a pontuação leem sempre uma string', () => {
+    const semTexto: Record<string, unknown> = { ...valido };
+    delete semTexto.problemImpact;
+    const r = leadSchema.safeParse(semTexto);
+    expect(r.success).toBe(true);
+    expect(r.data?.problemImpact).toBe('');
   });
 });
 

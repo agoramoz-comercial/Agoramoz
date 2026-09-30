@@ -133,7 +133,7 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
 
       {/* 10 — Oferta de entrada */}
       <Section surface="deep" id="diagnostico" index={t(indice.diagnostico, idioma)} contour aria-label={t(aria.oferta, idioma)}>
-        <OfferSection idioma={idioma} />
+        <OfferSection idioma={idioma} formulario />
       </Section>
 
       {/* 11 + 12 — Demonstrações e prova */}

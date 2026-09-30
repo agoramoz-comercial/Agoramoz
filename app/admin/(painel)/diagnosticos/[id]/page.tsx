@@ -263,7 +263,8 @@ export default async function RevisaoPage({
         {/* Citação, nunca instrução. É o único campo de texto livre e por isso
             o vetor de injeção conhecido: o motor só leu o seu comprimento. */}
         <blockquote className="border-l-2 border-[color:var(--border)] py-2 pl-4 text-sm whitespace-pre-wrap italic">
-          {String(bruto.problemImpact ?? '—')}
+          {/* Opcional desde o carrossel (D-28): vazio mostra «—», não um bloco em branco. */}
+          {String(bruto.problemImpact || '—')}
         </blockquote>
       </section>
 

@@ -40,6 +40,19 @@ function lead(overrides: Partial<LeadInput> = {}): LeadInput {
   };
 }
 
+describe('scoreLead — texto livre opcional (carrossel)', () => {
+  it('sem texto pontua como um texto curto: +2, nem penaliza nem premeia', () => {
+    const vazio = scoreLead(lead({ problemImpact: '' }));
+    const curto = scoreLead(lead({ problemImpact: 'x'.repeat(59) }));
+    expect(vazio.score).toBe(curto.score);
+    expect(vazio.reasons).toContain('Clareza do problema (+2)');
+  });
+
+  it('só espaços vale o mesmo que vazio', () => {
+    expect(scoreLead(lead({ problemImpact: '     ' })).score).toBe(scoreLead(lead({ problemImpact: '' })).score);
+  });
+});
+
 describe('scoreLead — extremos', () => {
   it('soma 100 e devolve A no cenário máximo', () => {
     const { score, tier } = scoreLead(

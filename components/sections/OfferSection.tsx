@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { MagneticButton } from '@/components/motion/MagneticButton';
 import { SplitHeading } from '@/components/motion/SplitHeading';
 import { Reveal } from '@/components/motion/Reveal';
+import { DiagnosticoEmbutido } from '@/components/form/DiagnosticoEmbutido';
 import { OFFER } from '@/content/site';
 import { CHROME } from '@/content/i18n/chrome';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
@@ -19,10 +20,62 @@ import { t } from '@/lib/i18n/texto';
 export function OfferSection({
   idioma = 'pt',
   href = ligacao('/diagnostico', idioma).href,
+  formulario = false,
 }: {
   idioma?: Idioma;
   href?: string;
+  /**
+   * O carrossel do diagnóstico na própria secção, em vez da ligação. Só na
+   * página inicial: nas de país, setor e solução a ligação leva o `?pais=` e
+   * o `?setor=` que já pré-preenchem o formulário na página dele.
+   */
+  formulario?: boolean;
 }) {
+  if (formulario) {
+    return (
+      <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-5">
+          <div className="flex items-baseline gap-4">
+            <span className="rule-label text-[color:var(--muted)]">{t(DIAGNOSTICO.eyebrow, idioma)}</span>
+            <span className="rule-label text-[color:var(--accent)]">{OFFER.name}</span>
+          </div>
+
+          <SplitHeading
+            as="h2"
+            className="mt-8 max-w-[15ch] text-[length:var(--text-h1)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)]"
+          >
+            {t(DIAGNOSTICO.titulo, idioma)}
+          </SplitHeading>
+
+          <p className="mt-8 max-w-[44ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
+            {t(DIAGNOSTICO.promessa, idioma)}
+          </p>
+
+          <p className="rule-label mt-10 text-[color:var(--muted)]">{t(OFERTA.recebe, idioma)}</p>
+          <ol className="mt-4">
+            {DIAGNOSTICO.entregas.map((entrega, i) => (
+              <li
+                key={entrega.pt}
+                className="flex items-baseline gap-6 border-t border-dashed border-[color:var(--hairline)] py-3"
+              >
+                <span className="rule-label shrink-0 text-[color:var(--accent)]">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="text-sm text-[color:var(--muted)]">{t(entrega, idioma)}</span>
+              </li>
+            ))}
+          </ol>
+
+          <p className="rule-label mt-5 text-[color:var(--muted)]">{t(OFERTA.nota, idioma)}</p>
+        </div>
+
+        <div className="lg:col-span-7">
+          <DiagnosticoEmbutido idioma={idioma} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
       <div className="lg:col-span-6">

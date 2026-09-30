@@ -34,6 +34,12 @@ export type AnalyticsEvent =
   | { name: 'diagnostic_started'; formId: 'diagnostic'; entryPath: string }
   | { name: 'form_step_completed'; step: number; stepId: string }
   /**
+   * Um cartão do carrossel ficou à vista. Com `form_step_completed`, diz em que
+   * pergunta as pessoas desistem — vista sem conclusão é a desistência. Só o
+   * número e o id do cartão (`pais`, `faixa`…), nunca a resposta.
+   */
+  | { name: 'step_viewed'; step: number; stepId: string }
+  /**
    * Sem `tier`: a classificação do lead é interna e não pode chegar ao
    * browser nem a uma tag de analytics. Fica no servidor. Ver D-15.
    */
@@ -76,6 +82,7 @@ export const EVENTOS_DE_BROWSER = [
   'gbp_landing_view',
   'diagnostic_started',
   'form_step_completed',
+  'step_viewed',
   'diagnostic_submitted',
   'meeting_requested',
   'whatsapp_clicked',

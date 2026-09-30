@@ -683,3 +683,34 @@
     break-inside: avoid;
   }
 }
+
+/* Carrossel do diagnóstico: o cartão novo entra do lado para onde se anda.
+   Curto (220 ms) — o que conta é a pergunta seguinte, não a transição. Com
+   movimento reduzido, troca sem animação. */
+@keyframes cartao-da-direita {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+@keyframes cartao-da-esquerda {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-cartao='frente'] {
+    animation: cartao-da-direita 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  [data-cartao='tras'] {
+    animation: cartao-da-esquerda 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+}
+
+:root[data-motion='reduced'] [data-cartao] {
+  animation: none;
+}

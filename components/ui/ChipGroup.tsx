@@ -6,14 +6,20 @@ import { cn } from '@/lib/utils/cn';
 export type ChipOption = { value: string; label: string; hint?: string };
 
 /**
- * Radiogroup com roving tabindex. Não avança sozinho ao selecionar
- * (WCAG 3.2.2 On Input) — o utilizador carrega em "Continuar".
+ * Radiogroup com roving tabindex. Por si só não avança ao selecionar
+ * (WCAG 3.2.2 On Input).
+ *
+ * `onEscolha` é o gesto deliberado — clique, Enter ou Espaço num botão — e
+ * nunca as setas, que só percorrem as opções. É o que o carrossel do
+ * diagnóstico usa para avançar, depois de o anunciar por escrito.
  */
 export function ChipGroup({
   legend,
   options,
   value,
   onChange,
+  onEscolha,
+  describedBy,
   columns = 2,
   showLegend = false,
   className,
@@ -22,6 +28,9 @@ export function ChipGroup({
   options: ChipOption[];
   value: string | null;
   onChange: (value: string) => void;
+  onEscolha?: (value: string) => void;
+  /** Id de um texto que explica o grupo — por exemplo, que escolher avança. */
+  describedBy?: string;
   columns?: 1 | 2 | 3;
   /**
    * Mostra a legenda. Por omissão fica só para leitores de ecrã, porque o
@@ -61,6 +70,7 @@ export function ChipGroup({
       <div
         role="radiogroup"
         aria-label={legend}
+        aria-describedby={describedBy}
         className={cn(
           'grid gap-2.5',
           columns === 1 && 'grid-cols-1',
@@ -81,7 +91,10 @@ export function ChipGroup({
               aria-checked={checked}
               tabIndex={i === activeIndex ? 0 : -1}
               name={name}
-              onClick={() => onChange(opt.value)}
+              onClick={() => {
+                onChange(opt.value);
+                onEscolha?.(opt.value);
+              }}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={cn(
                 'min-h-12 border px-4 py-3 text-left text-[0.9375rem] transition-colors duration-300',

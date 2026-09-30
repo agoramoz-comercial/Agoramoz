@@ -108,6 +108,16 @@ describe('contexto.problema-pouco-detalhado', () => {
   ])('impacto com %i caracteres → dispara: %s', (n, esperado) => {
     expect(codigos({ problemImpact: 'x'.repeat(n) }).includes('CONTEXTO_INSUFICIENTE')).toBe(esperado);
   });
+
+  /**
+   * Com o texto opcional (P2), quem o salta continua a gerar este achado — de
+   * propósito. Sem texto, o contexto É insuficiente e a conversa seguinte
+   * precisa de levantamento; calar o achado tirava à equipa uma informação
+   * verdadeira. A regra fica na versão 1, sem uma linha alterada.
+   */
+  it('sem texto nenhum → dispara, e é verdade', () => {
+    expect(codigos({ problemImpact: '' })).toContain('CONTEXTO_INSUFICIENTE');
+  });
 });
 
 describe('determinismo e ordenação', () => {

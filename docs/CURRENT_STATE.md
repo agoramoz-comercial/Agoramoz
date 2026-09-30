@@ -91,12 +91,13 @@ Schema Zod partilhado entre cliente e servidor (o ficheiro não tem
 divergirem).
 
 Campos: `country` (`mz|pt|br`), `sector`, `company`, `companySize`,
-`currentWebsite?`, `processToImprove[]`, `problemImpact` (20–1500),
+`currentWebsite?`, `processToImprove[]`, `problemImpact` (opcional, até 1500),
 `decisionTimeframe`, `investmentBand`, `decisionRole`, `name`, `workEmail`,
 `phone`, `consent` (literal `true`), `fax?` (honeypot, sem limite de
 comprimento por decisão documentada).
 
-Exporta também `STEP_SCHEMAS` e `STEP_FIELDS` para o formulário por passos.
+Exporta também `CARTOES`, `STEP_SCHEMAS` e `STEP_FIELDS` (nove cartões) para o
+carrossel — ver D-28 e `lib/forms/carrossel.ts`.
 
 ## 7. Scoring — `lib/forms/lead-score.ts`
 

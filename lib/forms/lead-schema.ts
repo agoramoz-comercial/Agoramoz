@@ -53,49 +53,56 @@ export const TIMEFRAMES = ['imediato', '1-3-meses', '3-6-meses', 'sem-data'] as 
 function construir(idioma: Idioma) {
   const m = (k: keyof typeof VALIDACAO) => VALIDACAO[k][idioma];
 
-  const stepContext = z.object({
-    // Os três mercados de operação e os dez de expansão. A lista vive em
-    // `lib/diagnostic/mercado.ts`, não aqui: um código novo entra uma vez.
-    country: z.enum(DIAGNOSTIC_CODES, { message: m('pais') }),
-    sector: z.string().min(1, m('setor')),
-  });
-
-  const stepCompany = z.object({
-    company: z.string().min(2, m('empresa')),
-    companySize: z.enum(COMPANY_SIZES, { message: m('dimensao') }),
-    currentWebsite: z.string().max(200, m('websiteLongo')).optional().or(z.literal('')),
-  });
-
-  const stepProblem = z.object({
-    processToImprove: z.array(z.string()).min(1, m('processo')),
-    problemImpact: z.string().min(20, m('impactoCurto')).max(1500, m('impactoLongo')),
-  });
-
-  const stepDecision = z.object({
-    decisionTimeframe: z.enum(TIMEFRAMES, { message: m('prazo') }),
-    investmentBand: z.string().min(1, m('faixa')),
-    decisionRole: z.enum(DECISION_ROLES, { message: m('papel') }),
-  });
-
-  const stepContact = z.object({
-    name: z.string().min(2, m('nome')),
-    workEmail: z.string().email(m('email')),
-    phone: z.string().min(6, m('telefone')),
-    consent: z.literal(true, { message: m('consentimento') }),
+  /**
+   * Um schema por cartão do carrossel, pela ordem em que aparecem. Uma
+   * pergunta por cartão: a de escolha única avança sozinha, e só o contacto
+   * junta vários campos — é o único momento em que se escreve.
+   */
+  const cartoes = {
+    pais: z.object({
+      // Os três mercados de operação e os dez de expansão. A lista vive em
+      // `lib/diagnostic/mercado.ts`, não aqui: um código novo entra uma vez.
+      country: z.enum(DIAGNOSTIC_CODES, { message: m('pais') }),
+    }),
+    setor: z.object({ sector: z.string().min(1, m('setor')) }),
+    processos: z.object({ processToImprove: z.array(z.string()).min(1, m('processo')) }),
+    dimensao: z.object({ companySize: z.enum(COMPANY_SIZES, { message: m('dimensao') }) }),
+    prazo: z.object({ decisionTimeframe: z.enum(TIMEFRAMES, { message: m('prazo') }) }),
+    papel: z.object({ decisionRole: z.enum(DECISION_ROLES, { message: m('papel') }) }),
+    faixa: z.object({ investmentBand: z.string().min(1, m('faixa')) }),
     /**
-     * Honeypot. Deliberadamente SEM restrição de comprimento: se o schema o
-     * rejeitasse, o pedido devolvia 400 e o bot aprendia que falhou. Aceitamos
-     * a validação e descartamos silenciosamente no route handler, devolvendo
-     * um sucesso indistinguível.
+     * Opcional desde o carrossel. Era a única área de texto obrigatória, com
+     * mínimo de 20 caracteres, a meio do formulário — o ponto onde mais se
+     * desiste. Quem a preenche dá contexto que a pontuação e a regra
+     * CONTEXTO_INSUFICIENTE continuam a ler; quem a salta não é bloqueado.
      */
-    fax: z.string().optional(),
-  });
+    impacto: z.object({ problemImpact: z.string().max(1500, m('impactoLongo')).default('') }),
+    contacto: z.object({
+      name: z.string().min(2, m('nome')),
+      workEmail: z.string().email(m('email')),
+      phone: z.string().min(6, m('telefone')),
+      company: z.string().min(2, m('empresa')),
+      currentWebsite: z.string().max(200, m('websiteLongo')).optional().or(z.literal('')),
+      consent: z.literal(true, { message: m('consentimento') }),
+      /**
+       * Honeypot. Deliberadamente SEM restrição de comprimento: se o schema o
+       * rejeitasse, o pedido devolvia 400 e o bot aprendia que falhou.
+       * Aceitamos a validação e descartamos silenciosamente no route handler,
+       * devolvendo um sucesso indistinguível.
+       */
+      fax: z.string().optional(),
+    }),
+  } as const;
 
-  const leadSchema = stepContext
-    .merge(stepCompany)
-    .merge(stepProblem)
-    .merge(stepDecision)
-    .merge(stepContact)
+  const leadSchema = cartoes.pais
+    .merge(cartoes.setor)
+    .merge(cartoes.processos)
+    .merge(cartoes.dimensao)
+    .merge(cartoes.prazo)
+    .merge(cartoes.papel)
+    .merge(cartoes.faixa)
+    .merge(cartoes.impacto)
+    .merge(cartoes.contacto)
     .extend({
       /**
        * O idioma em que o formulário foi MOSTRADO. Não é uma preferência: é o
@@ -108,17 +115,11 @@ function construir(idioma: Idioma) {
       idioma: z.enum(IDIOMAS).default('pt'),
     });
 
-  return { stepContext, stepCompany, stepProblem, stepDecision, stepContact, leadSchema };
+  return { cartoes, leadSchema };
 }
 
 const PT = construir('pt');
 const EN = construir('en');
-
-export const stepContext = PT.stepContext;
-export const stepCompany = PT.stepCompany;
-export const stepProblem = PT.stepProblem;
-export const stepDecision = PT.stepDecision;
-export const stepContact = PT.stepContact;
 
 /** O schema do servidor. As mensagens não saem daqui: a rota responde sempre a mesma mensagem genérica. */
 export const leadSchema = PT.leadSchema;
@@ -130,12 +131,36 @@ export function leadSchemaPara(idioma: Idioma) {
 
 export type LeadInput = z.infer<typeof leadSchema>;
 
-export const STEP_SCHEMAS = [stepContext, stepCompany, stepProblem, stepDecision, stepContact] as const;
-
-export const STEP_FIELDS = [
-  ['country', 'sector'],
-  ['company', 'companySize', 'currentWebsite'],
-  ['processToImprove', 'problemImpact'],
-  ['decisionTimeframe', 'investmentBand', 'decisionRole'],
-  ['name', 'workEmail', 'phone', 'consent'],
+/**
+ * Os cartões do carrossel, pela ordem. O id é estável: é o `stepId` da
+ * analítica (`step_viewed`, `form_step_completed`) e a chave dos textos.
+ * A ordem vai do mais fácil ao mais pessoal — mercado e processo primeiro,
+ * orçamento depois de o papel estar dito, contacto no fim.
+ */
+export const CARTOES = [
+  'pais',
+  'setor',
+  'processos',
+  'dimensao',
+  'prazo',
+  'papel',
+  'faixa',
+  'impacto',
+  'contacto',
 ] as const;
+export type CartaoId = (typeof CARTOES)[number];
+
+export const STEP_SCHEMAS = CARTOES.map((c) => PT.cartoes[c]);
+
+/** Os campos que cada cartão valida antes de avançar. */
+export const STEP_FIELDS = [
+  ['country'],
+  ['sector'],
+  ['processToImprove'],
+  ['companySize'],
+  ['decisionTimeframe'],
+  ['decisionRole'],
+  ['investmentBand'],
+  ['problemImpact'],
+  ['name', 'workEmail', 'phone', 'company', 'currentWebsite', 'consent'],
+] as const satisfies readonly (readonly (keyof LeadInput)[])[];

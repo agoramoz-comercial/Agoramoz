@@ -1,4 +1,5 @@
 import type { SectorSlug, Texto } from '@/content/types';
+import type { CartaoId } from '@/lib/forms/lead-schema';
 
 /**
  * O formulário de diagnóstico nos dois idiomas: a interface, as mensagens de
@@ -13,13 +14,22 @@ import type { SectorSlug, Texto } from '@/content/types';
  * britânico ou americano usaria.
  */
 
-export const PASSOS = [
-  { pt: 'Onde opera a sua empresa', en: 'Where your company operates' },
-  { pt: 'A sua empresa', en: 'Your company' },
-  { pt: 'O processo a melhorar', en: 'The process to improve' },
-  { pt: 'A decisão', en: 'The decision' },
-  { pt: 'Como o contactamos', en: 'How we reach you' },
-] as const satisfies readonly Texto[];
+/**
+ * A pergunta de cada cartão do carrossel. Uma pergunta, na segunda pessoa de
+ * cortesia, curta o bastante para caber numa linha de telemóvel.
+ * `{moeda}` é substituído no componente.
+ */
+export const PERGUNTAS: Record<CartaoId, Texto> = {
+  pais: { pt: 'Onde opera a sua empresa?', en: 'Where does your company operate?' },
+  setor: { pt: 'Em que setor?', en: 'In which sector?' },
+  processos: { pt: 'O que pretende melhorar?', en: 'What do you want to improve?' },
+  dimensao: { pt: 'Quantas pessoas trabalham na empresa?', en: 'How many people work at the company?' },
+  prazo: { pt: 'Quando quer decidir?', en: 'When do you want to decide?' },
+  papel: { pt: 'Qual é o seu papel na decisão?', en: 'What is your role in the decision?' },
+  faixa: { pt: 'Que investimento tem em mente? ({moeda})', en: 'What investment do you have in mind? ({moeda})' },
+  impacto: { pt: 'Quer contar-nos o impacto de hoje?', en: 'Want to tell us what it costs you today?' },
+  contacto: { pt: 'Como o contactamos?', en: 'How do we reach you?' },
+};
 
 export const TAMANHOS = {
   '1-9': { pt: '1 a 9 colaboradores', en: '1 to 9 employees' },
@@ -72,7 +82,20 @@ export const ROTULO_SETOR: Record<SectorSlug, Texto> = {
 
 /** `{n}`, `{total}`, `{moeda}` e `{indicativo}` são substituídos no componente. */
 export const FORM = {
-  passo: { pt: 'Passo {n} de {total}', en: 'Step {n} of {total}' },
+  pergunta: { pt: 'Pergunta {n} de {total}', en: 'Question {n} of {total}' },
+  minutos: { pt: 'cerca de {min} min', en: 'about {min} min' },
+  avancaSozinho: {
+    pt: 'Escolha uma opção e avançamos para a pergunta seguinte.',
+    en: 'Pick an option and we move on to the next question.',
+  },
+  impactoOpcionalDica: {
+    pt: 'Opcional. Duas ou três linhas ajudam-nos a chegar preparados: tempo perdido, erros, atrasos.',
+    en: 'Optional. Two or three lines help us arrive prepared: lost time, errors, delays.',
+  },
+  saltar: { pt: 'Saltar', en: 'Skip' },
+  irPara: { pt: 'Ir para a pergunta {n}: {pergunta}', en: 'Go to question {n}: {pergunta}' },
+  progresso: { pt: 'Progresso do diagnóstico', en: 'Diagnostic progress' },
+  carregando: { pt: 'A carregar o diagnóstico…', en: 'Loading the diagnostic…' },
   corrija: { pt: 'Corrija os seguintes campos:', en: 'Please correct the following fields:' },
   paisOperacao: { pt: 'País de operação', en: 'Countries where we operate' },
   global: { pt: 'Global', en: 'Global' },
@@ -85,10 +108,6 @@ export const FORM = {
   melhorar: { pt: 'O que pretende melhorar?', en: 'What do you want to improve?' },
   melhorarDica: { pt: 'Pode escolher mais do que um.', en: 'You can choose more than one.' },
   impacto: { pt: 'Qual é o impacto atual deste problema?', en: 'What is this problem costing you today?' },
-  impactoDica: {
-    pt: 'Tempo perdido, erros, atrasos, oportunidades que não foram acompanhadas.',
-    en: 'Lost time, errors, delays, opportunities that were not followed up.',
-  },
   prazo: { pt: 'Prazo da decisão', en: 'Decision timeframe' },
   faixa: { pt: 'Faixa de investimento ({moeda})', en: 'Investment range ({moeda})' },
   papel: { pt: 'O seu papel na decisão', en: 'Your role in the decision' },
@@ -148,10 +167,6 @@ export const VALIDACAO = {
   dimensao: { pt: 'Selecione a dimensão da equipa.', en: 'Choose the size of the team.' },
   websiteLongo: { pt: 'O endereço é demasiado longo.', en: 'That address is too long.' },
   processo: { pt: 'Selecione pelo menos um processo.', en: 'Choose at least one process.' },
-  impactoCurto: {
-    pt: 'Descreva o impacto em pelo menos 20 caracteres.',
-    en: 'Describe the impact in at least 20 characters.',
-  },
   impactoLongo: {
     pt: 'A descrição não pode passar de 1500 caracteres.',
     en: 'The description cannot be longer than 1500 characters.',

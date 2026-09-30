@@ -174,3 +174,28 @@ registo a mais do que cabe no ecrã, e a existência desse registo é o que reve
 a página seguinte.
 **Consequência:** não se mostra «página 3 de 47». Ninguém precisa de saber que
 há 4 812 contactos para ver os próximos vinte.
+
+## D-28 — Diagnóstico em carrossel: uma pergunta por cartão
+Pedido do fundador: que o público-alvo «não se canse». O formulário de cinco
+passos (14 campos, 13 obrigatórios, uma área de texto obrigatória a meio)
+passou a nove cartões, sete de toque único, com o contacto no fim.
+- **Avanço automático** só no gesto deliberado (clique, Enter, Espaço) e
+  anunciado por escrito antes — nunca nas setas, que percorrem as opções.
+  Cumpre a excepção do WCAG 3.2.2 em vez de a ignorar.
+- **O texto livre passou a opcional** (máximo 1500, sem mínimo). A pontuação
+  NÃO mudou: vazio vale o mesmo que curto (+2). `SCORING_VERSION` sobe na
+  mesma, porque «clareza +2» passa a poder querer dizer «não escreveu».
+- **A regra `CONTEXTO_INSUFICIENTE` fica na versão 1**, e continua a disparar
+  sem texto. O plano previa calá-la sem texto; recusado: sem texto o contexto
+  É insuficiente, e esconder isso à equipa seria tirar-lhe informação verdadeira.
+- **A faixa de investimento continua sempre perguntada.** O plano previa
+  saltá-la para quem «está a recolher informação» e gravar «a definir»;
+  recusado: seria gravar uma resposta que a pessoa não deu.
+- **Começa onde a pessoa está**: `?pais=`/`?setor=` válidos ou rascunho levam
+  ao primeiro cartão por responder; um setor que não é do mercado é recusado.
+- **Medição:** `step_viewed` novo, uma vez por cartão; o `stepId` passa a ser
+  o id do cartão (`pais`, `faixa`…). Relatórios de funil anteriores a
+  2026-09-30 usam os títulos antigos dos cinco passos e não se comparam
+  passo a passo com os novos.
+**Consequência:** o pedido à API, o rascunho sem PII e o ecrã final não
+mudaram; a rota do servidor não precisou de uma linha.
