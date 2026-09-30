@@ -285,7 +285,8 @@ export function Relatorio({
             {a.matriz.length > 0 && (
               <div className="mt-10">
                 <p className="rule-label text-[color:var(--muted)]">{t(RELATORIO.matrizTitulo, idioma)}</p>
-                <dl className="mt-4 grid gap-px bg-[color:var(--border)] sm:grid-cols-2">
+                {/* Um número ímpar de dimensões deixava uma célula vazia: a última ocupa as duas colunas. */}
+                <dl className="mt-4 grid gap-px bg-[color:var(--border)] sm:grid-cols-2 sm:[&>*:last-child:nth-child(odd)]:col-span-2">
                   {a.matriz.map((m) => (
                     <div key={m.dimensao} className="bg-[color:var(--surface)] p-4">
                       <dt className="flex items-baseline gap-2 font-semibold">

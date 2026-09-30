@@ -634,25 +634,31 @@
    Moz News — imprimir ou guardar em PDF.
 
    O relatório é o PDF: `window.print()` sobre a própria página, sem janelas
-   escritas à mão. Só age quando há um relatório na página (`:has`), e aí
-   esconde tudo o que não é o relatório e força papel branco e tinta preta —
-   uma superfície escura impressa gasta tinteiro e lê-se mal.
+   escritas à mão. Só age quando há um relatório na página (`:has`):
+   - tudo o que é irmão de `<main>` (barra de topo, cabeçalho, rodapé, barras
+     fixas, transições) sai com `display: none`, antes e depois de `<main>`;
+   - dentro de `<main>`, as secções que não são o relatório já levam
+     `print:hidden` no próprio componente;
+   - papel branco e tinta preta — uma superfície escura impressa gasta
+     tinteiro e lê-se mal.
+
+   `display` e não `visibility`: com `visibility` o espaço dos elementos
+   escondidos fica em branco no papel, e o relatório teria de ser tirado do
+   fluxo com posição absoluta.
    =========================================================================== */
 @media print {
   body:has([data-news-imprimir]) {
     background: #fff !important;
   }
-  body:has([data-news-imprimir]) * {
-    visibility: hidden;
+  body:has([data-news-imprimir]) main ~ *,
+  body:has([data-news-imprimir]) :has(~ main) {
+    display: none !important;
   }
-  [data-news-imprimir],
-  [data-news-imprimir] * {
-    visibility: visible;
+  body:has([data-news-imprimir]) .grain::after {
+    display: none;
   }
-  [data-news-imprimir] {
-    position: absolute;
-    inset: 0 0 auto 0;
-    display: block !important;
+  body:has([data-news-imprimir]) main [data-surface] {
+    padding-block: 0 !important;
     --surface: #fff;
     --surface-raised: #f1f1f1;
     --on-surface: #000;
@@ -663,6 +669,14 @@
     --signal: #b01e00;
     color: #000;
     background: #fff;
+  }
+  /* O índice lateral sai (`print:hidden`), mas a grelha de duas colunas
+     ficava: o relatório imprimia numa coluna estreita ao lado de um vazio. */
+  [data-news-imprimir] {
+    display: block !important;
+  }
+  [data-news-imprimir] #news-veredicto dl {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   }
   [data-news-imprimir] section,
   [data-news-imprimir] li {
