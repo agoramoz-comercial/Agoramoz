@@ -10,8 +10,8 @@ servidor em `app/api/news/analisar/route.ts`.
 | Peça | Estado |
 |---|---|
 | Páginas, relatório, navegação, sitemap, OG | No ar |
-| Rota `/api/news/analisar` | No ar; responde **503** enquanto `NEWS_ENGINE=off` |
-| Motor real (Lovable) | **Por ligar** — faltam as variáveis abaixo |
+| Rota `/api/news/analisar` | No ar |
+| Motor real (Lovable) | **Ligado em 2026-09-30** (projecto `aqmetakutmbyqzahzhyz`). Primeira análise real: notícia da AIM sobre o Porto de Maputo, HTTP 200 em ~29 s, todas as secções presentes, 0 itens descartados |
 | Feed de análises publicadas (fase 2) | Por fazer; precisa de migração e aprovação humana por análise |
 
 ## Ligar o motor (passo do responsável pela conta Lovable)
