@@ -41,6 +41,10 @@ const SAFE_FIELDS = [
   'bytes',
   'entityType',
   'entityId',
+  // News: `url` ou `texto`, e o nível de prioridade que o motor deu. Nunca o
+  // URL nem o texto analisado — dizem o que alguém anda a ler.
+  'modo',
+  'prioridade',
 ] as const;
 
 type SafeField = (typeof SAFE_FIELDS)[number];

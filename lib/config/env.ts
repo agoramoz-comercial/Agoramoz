@@ -132,6 +132,37 @@ const serverSchema = z.object({
 
   /** Slug do questionário usado pela rota pública. */
   DIAGNOSTIC_QUESTIONNAIRE_SLUG: z.string().min(1).default('diagnostico-estrategico'),
+
+  // ── AGORAMOZ Moz News ───────────────────────────────────────────────────
+  /**
+   * Motor de análise de notícias. `off` mantém a página de apresentação e faz
+   * a rota responder 503 — honesto, sem simular análise nenhuma. `lovable`
+   * usa a função `analyze-news` do projecto Lovable, chamada só daqui.
+   */
+  NEWS_ENGINE: z.enum(['off', 'lovable']).default('off'),
+  /** URL completo da função, p. ex. `https://<ref>.supabase.co/functions/v1/analyze-news`. */
+  LOVABLE_NEWS_FUNCTION_URL: z
+    .string()
+    .url('deve ser o URL completo da função analyze-news')
+    // `http://` só em loopback: é o motor simulado de QA (`.qa/news-motor-simulado.mjs`).
+    // Em produção não aponta para nada e não abre porta nenhuma.
+    .refine(
+      (v) => v.startsWith('https://') || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(v),
+      'deve usar https',
+    )
+    .optional(),
+  /**
+   * Chave anónima do projecto Lovable. É pública por desenho do Supabase, mas
+   * fica no servidor na mesma: o browser nunca fala com o motor, e é por isso
+   * que o limitador abaixo tem significado.
+   */
+  LOVABLE_NEWS_API_KEY: z.string().min(20).optional(),
+  /**
+   * Cada análise gasta créditos de IA na conta Lovable. Tecto por origem
+   * apertado de propósito: uma pessoa lê poucas notícias em dez minutos.
+   */
+  NEWS_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
+  NEWS_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(600_000),
 })
   .superRefine((env, ctx) => {
     if (env.DIAGNOSTIC_PERSISTENCE !== 'required') return;
@@ -143,6 +174,15 @@ const serverSchema = z.object({
           path: [nome],
           message: 'é obrigatória quando DIAGNOSTIC_PERSISTENCE=required',
         });
+      }
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.NEWS_ENGINE !== 'lovable') return;
+
+    for (const nome of ['LOVABLE_NEWS_FUNCTION_URL', 'LOVABLE_NEWS_API_KEY'] as const) {
+      if (!env[nome]) {
+        ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando NEWS_ENGINE=lovable' });
       }
     }
   })
@@ -213,6 +253,11 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       ADMIN: process.env.ADMIN,
       DIAGNOSTIC_PERSISTENCE: process.env.DIAGNOSTIC_PERSISTENCE,
       DIAGNOSTIC_QUESTIONNAIRE_SLUG: process.env.DIAGNOSTIC_QUESTIONNAIRE_SLUG,
+      NEWS_ENGINE: process.env.NEWS_ENGINE,
+      LOVABLE_NEWS_FUNCTION_URL: process.env.LOVABLE_NEWS_FUNCTION_URL,
+      LOVABLE_NEWS_API_KEY: process.env.LOVABLE_NEWS_API_KEY,
+      NEWS_RATE_LIMIT_MAX: process.env.NEWS_RATE_LIMIT_MAX,
+      NEWS_RATE_LIMIT_WINDOW_MS: process.env.NEWS_RATE_LIMIT_WINDOW_MS,
     },
     'servidor',
   );
