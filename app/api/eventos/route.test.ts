@@ -21,7 +21,12 @@ vi.mock('@/lib/db/client', () => ({
 
 async function carregarRota(env: Record<string, string> = {}) {
   vi.resetModules();
-  for (const [k, v] of Object.entries(env)) vi.stubEnv(k, v);
+  // Medição ligada exige a base configurada (env.ts); o cliente é simulado.
+  const base =
+    env.ANALYTICS_PERSISTENCE === 'on'
+      ? { SUPABASE_URL: 'https://projecto.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'chave-de-teste-suficientemente-longa' }
+      : {};
+  for (const [k, v] of Object.entries({ ...base, ...env })) vi.stubEnv(k, v);
   const mod = await import('./route');
   return mod.POST;
 }

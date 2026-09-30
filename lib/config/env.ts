@@ -163,6 +163,31 @@ const serverSchema = z.object({
    */
   NEWS_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
   NEWS_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(600_000),
+
+  // ── Agendamento (Cal.com) ───────────────────────────────────────────────
+  /**
+   * `off` — o diagnóstico acaba como sempre, sem ligação de marcação, e o
+   * webhook responde 503. `cal` — o fim do diagnóstico oferece a marcação e o
+   * webhook grava as reuniões. Explícito, pelo mesmo motivo dos outros
+   * interruptores: ninguém liga agendamentos por acidente de configuração.
+   */
+  SCHEDULING: z.enum(['off', 'cal']).default('off'),
+  /** `https://cal.com` na conta alojada; o domínio próprio numa instalação do código aberto. */
+  CAL_ORIGIN: z
+    .string()
+    .url('deve ser um URL')
+    .refine((v) => {
+      const u = new URL(v);
+      return u.protocol === 'https:' && !u.username && !u.password && !u.search && !u.hash && u.pathname === '/';
+    }, 'deve ser só a origem https, sem caminho, credenciais nem parâmetros')
+    .default('https://cal.com'),
+  /** `utilizador/evento`, tal como aparece no link de marcação do Cal. */
+  CAL_LINK: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{1,64}\/[A-Za-z0-9_-]{1,64}$/, 'deve ser utilizador/evento')
+    .optional(),
+  /** O segredo do webhook no Cal. Assina cada entrega (`X-Cal-Signature-256`). */
+  CAL_WEBHOOK_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres').optional(),
 })
   .superRefine((env, ctx) => {
     if (env.DIAGNOSTIC_PERSISTENCE !== 'required') return;
@@ -183,6 +208,26 @@ const serverSchema = z.object({
     for (const nome of ['LOVABLE_NEWS_FUNCTION_URL', 'LOVABLE_NEWS_API_KEY'] as const) {
       if (!env[nome]) {
         ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando NEWS_ENGINE=lovable' });
+      }
+    }
+  })
+  .superRefine((env, ctx) => {
+    // Medição ligada sem base: cada evento seria deitado fora sem ninguém saber.
+    if (env.ANALYTICS_PERSISTENCE !== 'on') return;
+    for (const nome of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const) {
+      if (!env[nome]) {
+        ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando ANALYTICS_PERSISTENCE=on' });
+      }
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.SCHEDULING !== 'cal') return;
+
+    // Sem base não há onde ligar a marcação à oportunidade: o webhook
+    // aceitaria entregas para as deitar fora.
+    for (const nome of ['CAL_LINK', 'CAL_WEBHOOK_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const) {
+      if (!env[nome]) {
+        ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando SCHEDULING=cal' });
       }
     }
   })
@@ -258,6 +303,10 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       LOVABLE_NEWS_API_KEY: process.env.LOVABLE_NEWS_API_KEY,
       NEWS_RATE_LIMIT_MAX: process.env.NEWS_RATE_LIMIT_MAX,
       NEWS_RATE_LIMIT_WINDOW_MS: process.env.NEWS_RATE_LIMIT_WINDOW_MS,
+      SCHEDULING: process.env.SCHEDULING,
+      CAL_ORIGIN: process.env.CAL_ORIGIN,
+      CAL_LINK: process.env.CAL_LINK,
+      CAL_WEBHOOK_SECRET: process.env.CAL_WEBHOOK_SECRET,
     },
     'servidor',
   );

@@ -199,3 +199,19 @@ passou a nove cartões, sete de toque único, com o contacto no fim.
   passo a passo com os novos.
 **Consequência:** o pedido à API, o rascunho sem PII e o ecrã final não
 mudaram; a rota do servidor não precisou de uma linha.
+
+## D-29 — Cal.com por link e webhook assinado, não pelo embed
+A marcação é uma ligação para `CAL_ORIGIN/CAL_LINK?metadata[ref]=…`, aberta
+noutro separador, em vez do script de embed do Cal.
+- **Porquê:** o embed obrigava a abrir a CSP (`script-src`, `frame-src`) a
+  JavaScript de terceiros em todas as páginas do diagnóstico; o link não abre
+  nada. E funciona igual no Cal alojado e numa instalação própria.
+- **Ligação à oportunidade por `ref` aleatório**, guardado em hash
+  (`reunioes_intencoes`) — nunca o id da oportunidade no URL, nunca PII.
+- **Verificação pendente:** a documentação do Cal mostra `metadata[...]` a
+  chegar ao webhook a partir do embed; a primeira marcação de teste confirma
+  que o link directo também o passa (ver `docs/AGENDAMENTO.md`, passo 7).
+- **Eventos do News** vão para `analytics_events` (`origin 'servidor'`) sem o
+  URL nem o texto — o painel conta análises e prioridade, não guarda o que se lê.
+**Consequência:** com `SCHEDULING=off` nada muda para quem visita o site;
+ligar é aplicar a 0012, pôr três variáveis e criar o webhook.

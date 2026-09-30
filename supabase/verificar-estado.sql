@@ -94,4 +94,15 @@ select 21, 'restrição', 'organisations — aceita os 13 mercados (0011)',
          where conname = 'organisations_country_code_check'
            and pg_get_constraintdef(oid) like '%''ca''%'
        ) then 'ok' else 'EM FALTA - correr aplicar-0011.sql' end
+-- 0012: reuniões do Cal.com. As duas tabelas e a função, só executável pela
+-- chave de serviço.
+union all
+select 22, 'função', 'registar_reuniao e tabelas de reuniões (0012)',
+       case when to_regclass('public.reunioes') is not null
+             and to_regclass('public.reunioes_intencoes') is not null
+             and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                         where n.nspname = 'public' and p.proname = 'registar_reuniao')
+             and not has_function_privilege('anon',
+                   'public.registar_reuniao(text, text, text, timestamptz, timestamptz, text, text)', 'execute')
+            then 'ok' else 'EM FALTA - correr aplicar-0012.sql' end
 order by ordem;

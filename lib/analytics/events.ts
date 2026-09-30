@@ -45,16 +45,10 @@ export type AnalyticsEvent =
    */
   | { name: 'diagnostic_submitted' }
   /**
-   * NÃO é disparado, e é deliberado.
-   *
-   * Este site não tem superfície de marcação de reunião: o caminho para falar
-   * connosco é o diagnóstico, e `diagnostic_submitted` já o mede. Disparar
-   * isto no clique de WhatsApp produziria um número com aparência de procura
-   * que na verdade duplicava `whatsapp_clicked`.
-   *
-   * Fica no vocabulário porque o dia em que existir uma marcação real — uma
-   * agenda, um formulário de reunião — o nome já está definido e o schema já
-   * o aceita. Registado em docs/GAPS.md.
+   * Clique em «Marcar a conversa agora», no fim do diagnóstico (Cal.com).
+   * É a intenção, medida no browser; a marcação feita é `meeting_booked`, que
+   * nasce no servidor a partir do webhook assinado do Cal (migração 0012).
+   * Nunca no clique de WhatsApp — isso é `whatsapp_clicked`.
    */
   | { name: 'meeting_requested'; surface: string }
   /** `country` é nulo fora das páginas de país — inventá-lo falsearia o relatório. */

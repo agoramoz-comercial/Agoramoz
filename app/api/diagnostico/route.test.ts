@@ -732,3 +732,79 @@ describe('atribuição', () => {
     expect(JSON.stringify(a)).not.toContain('8f14e45');
   });
 });
+
+// ===========================================================================
+// Agendamento (Cal.com)
+// ===========================================================================
+
+const criarIntencao = vi.fn<(c: unknown, dealId: string) => Promise<string>>();
+vi.mock('@/lib/agendamento/servidor', () => ({
+  criarIntencao: (c: unknown, dealId: string) => criarIntencao(c, dealId),
+}));
+
+function comAgendamento(extra: Record<string, string> = {}) {
+  return carregarRota({
+    DIAGNOSTIC_PERSISTENCE: 'required',
+    SUPABASE_URL: 'https://projecto.supabase.co',
+    SUPABASE_SERVICE_ROLE_KEY: 'chave-de-teste-suficientemente-longa',
+    SCHEDULING: 'cal',
+    CAL_LINK: 'agoramoz/conversa-30',
+    CAL_WEBHOOK_SECRET: 'segredo-de-teste-com-mais-de-trinta-e-dois-caracteres',
+    ...extra,
+  });
+}
+
+describe('agendamento no fim do diagnóstico', () => {
+  beforeEach(() => {
+    criarIntencao.mockReset();
+    criarIntencao.mockResolvedValue('R'.repeat(32));
+  });
+
+  it('ligado: a resposta leva o link com o ref e nada mais', async () => {
+    const POST = await comAgendamento();
+    const corpo = await (await POST(pedido(VALIDO))).json();
+    expect(criarIntencao).toHaveBeenCalledWith({ marca: 'cliente-falso' }, resultado().deal_id);
+    const url = new URL(corpo.agendamento.url);
+    expect(url.origin + url.pathname).toBe('https://cal.com/agoramoz/conversa-30');
+    expect([...url.searchParams.entries()]).toEqual([['metadata[ref]', 'R'.repeat(32)]]);
+    // Nada do lead viaja no link.
+    for (const campo of ['Nome Exemplo', 'nome@exemplo.co.mz', '+258840000000', 'Empresa Exemplo']) {
+      expect(corpo.agendamento.url).not.toContain(encodeURIComponent(campo));
+      expect(corpo.agendamento.url).not.toContain(campo);
+    }
+  });
+
+  it('uma submissão repetida recebe a mesma forma, mas o ref não liga a oportunidade nenhuma', async () => {
+    ingest.mockResolvedValue(resultado({ duplicate: true }));
+    const POST = await comAgendamento();
+    const corpo = await (await POST(pedido(VALIDO))).json();
+    expect(Object.keys(corpo).sort()).toEqual(['agendamento', 'correlationId', 'ok']);
+    expect(new URL(corpo.agendamento.url).searchParams.get('metadata[ref]')).toMatch(/^[A-Za-z0-9_-]{32}$/);
+    // Quem reproduz a submissão de outra pessoa não escreve no CRM dela.
+    expect(criarIntencao).not.toHaveBeenCalled();
+  });
+
+  it('se a intenção falhar, o diagnóstico continua aceite — sem link, com aviso', async () => {
+    criarIntencao.mockRejectedValueOnce(Object.assign(new Error('x'), { code: '42P01' }));
+    const POST = await comAgendamento();
+    const linhas = capturarLogs();
+    const res = await POST(pedido(VALIDO));
+    expect(res.status).toBe(200);
+    expect((await res.json()).agendamento).toBeUndefined();
+    expect(linhas.find((l) => l.event === 'agendamento.intencao_falhou')).toMatchObject({ errorCode: '42P01' });
+  });
+
+  it('desligado: nem intenção nem link', async () => {
+    const POST = await comBase();
+    const corpo = await (await POST(pedido(VALIDO))).json();
+    expect(criarIntencao).not.toHaveBeenCalled();
+    expect(corpo.agendamento).toBeUndefined();
+  });
+
+  it('sem oportunidade (política do questionário), sem intenção', async () => {
+    ingest.mockResolvedValue(resultado({ deal_id: null }));
+    const POST = await comAgendamento();
+    await POST(pedido(VALIDO));
+    expect(criarIntencao).not.toHaveBeenCalled();
+  });
+});

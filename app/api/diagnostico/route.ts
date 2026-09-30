@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { gerarRef, urlDeMarcacao } from '@/lib/agendamento/cal';
+import { criarIntencao } from '@/lib/agendamento/servidor';
 import { derivarCanal } from '@/lib/attribution/channel';
 import { sanitizarAtribuicao } from '@/lib/attribution/sanitize';
 import { serverEnv } from '@/lib/config/env';
@@ -342,9 +344,45 @@ export async function POST(request: Request) {
   });
 
   /**
+   * 10. A marcação da conversa (Cal.com), DEPOIS do lead estar gravado — e
+   * nunca à custa dele. Uma intenção que falhe perde o link, não o
+   * diagnóstico: a pessoa recebe o mesmo «recebido» e a equipa contacta-a
+   * como sempre. O `ref` só existe no link; a base fica com o hash.
+   *
+   * Novo ou repetido, recebe um link: a forma da resposta não pode dizer se o
+   * e-mail já cá estava. (A criação da oportunidade é política do
+   * questionário, igual para todos, por isso `deal_id` nulo não distingue
+   * ninguém.)
+   */
+  let agendamento: { url: string } | undefined;
+  if (env.SCHEDULING === 'cal' && !resultado.deal_id) {
+    log.info('agendamento.sem_oportunidade', { correlationId, outcome: 'skipped' });
+  }
+  if (env.SCHEDULING === 'cal' && env.CAL_LINK && resultado.deal_id) {
+    try {
+      /**
+       * Uma submissão REPETIDA recebe um link com a mesma forma, mas o `ref`
+       * não fica ligado a nada. Quem reproduzisse a submissão de outra pessoa
+       * não conseguia assim escrever reuniões no CRM dela; e a resposta
+       * continua indistinguível. Uma marcação feita com esse link fica
+       * gravada sem oportunidade (`ligada: false` no log).
+       */
+      const ref = resultado.duplicate ? gerarRef() : await criarIntencao(client, resultado.deal_id);
+      agendamento = { url: urlDeMarcacao(env.CAL_ORIGIN, env.CAL_LINK, ref) };
+    } catch (erro) {
+      // Erro e não aviso: uma 0012 por aplicar (42P01) tira o link a TODOS os leads.
+      log.error('agendamento.intencao_falhou', {
+        correlationId,
+        errorCode: (erro as { code?: string }).code ?? 'desconhecido',
+        outcome: 'failed',
+      });
+    }
+  }
+
+  /**
    * A resposta é a MESMA quer seja submissão nova quer seja repetição. Dizer
    * ao cliente «já tínhamos isto» não lhe serve para nada e serve para sondar:
    * permitiria descobrir, e-mail a e-mail, quem já pediu um diagnóstico.
    */
-  return NextResponse.json({ ok: true, correlationId }, { status: 200 });
+  return NextResponse.json({ ok: true, correlationId, ...(agendamento && { agendamento }) }, { status: 200 });
 }

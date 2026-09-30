@@ -245,3 +245,45 @@ describe('logs', () => {
     expect(ok).toMatchObject({ modo: 'url', idioma: 'pt', prioridade: 'high', outcome: 'ok' });
   });
 });
+
+describe('evento para o painel', () => {
+  async function comMedicao() {
+    const registar = vi.fn(async () => {});
+    vi.doMock('@/lib/analytics/servidor', () => ({ registarEventoServidor: registar }));
+    const POST = await carregarRota();
+    return { POST, registar };
+  }
+
+  afterEach(() => vi.doUnmock('@/lib/analytics/servidor'));
+
+  it('uma análise feita regista news_analisada com a prioridade, sem URL nem texto', async () => {
+    motorResponde(EXEMPLO_LOVABLE);
+    const { POST, registar } = await comMedicao();
+    await POST(pedido(POR_URL));
+    expect(registar).toHaveBeenCalledTimes(1);
+    const [nome, props, opcoes] = registar.mock.calls[0] as unknown as [string, Record<string, unknown>, unknown];
+    expect(nome).toBe('news_analisada');
+    expect(props).toMatchObject({ idioma: 'pt', modo: 'url', prioridade: 'high', faltas: 0, descartados: 0 });
+    expect(opcoes).toEqual({ path: '/news' });
+    expect(JSON.stringify(props)).not.toContain('exemplo.co.mz');
+  });
+
+  it('uma falha do motor regista news_falhou com o motivo', async () => {
+    motorResponde({ error: 'x' }, 429);
+    const { POST, registar } = await comMedicao();
+    await POST(pedido(POR_URL));
+    expect(registar).toHaveBeenCalledWith(
+      'news_falhou',
+      expect.objectContaining({ motivo: 'indisponivel', status: 429 }),
+      { path: '/news' },
+    );
+  });
+
+  it('um pedido inválido não conta como análise tentada', async () => {
+    motorResponde(EXEMPLO_LOVABLE);
+    const { POST, registar } = await comMedicao();
+    await POST(pedido('{isto não é json'));
+    await POST(pedido({ modo: 'url', url: 'https://127.0.0.1/x', idioma: 'pt' }));
+    expect(registar).not.toHaveBeenCalled();
+  });
+});

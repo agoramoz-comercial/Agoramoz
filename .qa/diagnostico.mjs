@@ -219,6 +219,63 @@ console.log('\nligação de país e setor');
   await ctx.close();
 }
 
+console.log('\nmarcação da conversa no ecrã final (Cal.com simulado)');
+{
+  const LINK = `https://cal.com/agoramoz/conversa-30?metadata%5Bref%5D=${'R'.repeat(32)}`;
+  for (const [rotulo, corpoResposta] of [
+    ['com link', { ok: true, correlationId: 'qa', agendamento: { url: LINK } }],
+    ['sem link', { ok: true, correlationId: 'qa' }],
+    ['link não-https recusado', { ok: true, correlationId: 'qa', agendamento: { url: 'javascript:alert(1)' } }],
+  ]) {
+    const { ctx, p, eventos } = await contexto(390);
+    await p.unroute('**/api/diagnostico');
+    await p.route('**/api/diagnostico', (r) =>
+      r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpoResposta) }),
+    );
+    await p.goto(`${BASE}/diagnostico?pais=mz&setor=energia-mineracao`, { waitUntil: 'networkidle' });
+    await esperarTitulo(p, 'O que pretende melhorar?');
+    await p.locator('input[type=checkbox]').first().check();
+    await p.getByRole('button', { name: 'Continuar' }).click();
+    for (const proximo of ['Quando quer decidir?', 'Qual é o seu papel', 'Que investimento', 'Quer contar-nos']) {
+      await p.getByRole('radio').first().click();
+      await esperarTitulo(p, proximo);
+    }
+    await p.getByRole('button', { name: 'Saltar' }).click();
+    await esperarTitulo(p, 'Como o contactamos?');
+    await p.locator('input[autocomplete=name]').fill('Pessoa QA');
+    await p.getByLabel('Email profissional').fill('qa@exemplo.test');
+    await p.getByLabel('Telefone ou WhatsApp').fill('+258840000000');
+    await p.getByLabel('Nome da empresa').fill('Empresa QA');
+    await p.locator('input[type=checkbox][name=consent]').check();
+    await p.getByRole('button', { name: 'Enviar pedido' }).click();
+    await p.getByText('Pedido recebido.').waitFor({ timeout: 5000 });
+
+    const botao = p.getByRole('link', { name: 'Marcar a conversa agora' });
+    const n = await botao.count();
+    if (rotulo === 'com link') {
+      if (n !== 1) falha('com link: botão de marcação em falta');
+      else {
+        const [href, alvo, rel] = await Promise.all([botao.getAttribute('href'), botao.getAttribute('target'), botao.getAttribute('rel')]);
+        href === LINK && alvo === '_blank' && rel?.includes('noreferrer')
+          ? ok('com link: botão abre o Cal noutro separador, sem Referer')
+          : falha(`com link: atributos ${href} ${alvo} ${rel}`);
+        await p.route('https://cal.com/**', (r) => r.fulfill({ status: 200, body: 'cal simulado' }));
+        const [popup] = await Promise.all([ctx.waitForEvent('page'), botao.click()]);
+        await popup.close();
+        await p.waitForTimeout(300);
+        eventos.includes('meeting_requested') ? ok('com link: clique regista meeting_requested') : falha('sem meeting_requested');
+        await p.screenshot({ path: `${SAIDA}/diag-marcacao.png` });
+        const r = await new AxeBuilder({ page: p }).include('[role=status]').analyze();
+        const graves = r.violations.filter((v) => ['serious', 'critical'].includes(v.impact));
+        graves.length ? falha(`ecrã final: axe ${graves.map((v) => v.id).join(', ')}`) : ok('ecrã final: axe sem violações graves');
+      }
+    } else {
+      n === 0 ? ok(`${rotulo}: sem botão de marcação`) : falha(`${rotulo}: botão apareceu`);
+    }
+    await ctx.close();
+  }
+}
+
 console.log('\n/en/diagnostico');
 {
   const { ctx, p, erros } = await contexto(1440);

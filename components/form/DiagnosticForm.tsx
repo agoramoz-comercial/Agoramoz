@@ -51,6 +51,22 @@ const DRAFT_FIELDS = [
 // campo comercialmente mais sensível do formulário e não vale o risco.
 
 const TOTAL = CARTOES.length;
+
+/**
+ * O link de marcação que o servidor devolve com o diagnóstico aceite. Vem da
+ * nossa rota, mas lê-se como qualquer resposta: só `https:`, e nada que não
+ * seja um URL. Sem link (agendamento desligado, ou a intenção falhou), o ecrã
+ * final é o de sempre.
+ */
+function linkDeMarcacao(corpo: unknown): string | null {
+  const url = (corpo as { agendamento?: { url?: unknown } } | null)?.agendamento?.url;
+  if (typeof url !== 'string') return null;
+  try {
+    return new URL(url).protocol === 'https:' ? url : null;
+  } catch {
+    return null;
+  }
+}
 const INDICE_SETOR = CARTOES.indexOf('setor');
 
 /**
@@ -97,6 +113,8 @@ export function DiagnosticForm({
   /** Cada incremento pede o foco na caixa de erros, depois do render que a mostra. */
   const [pedidoFocoErros, setPedidoFocoErros] = useState(0);
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+  /** O link de marcação (Cal.com), quando o servidor o oferece. */
+  const [marcacao, setMarcacao] = useState<string | null>(null);
 
   const indiceRef = useRef(indice);
   const started = useRef(false);
@@ -335,6 +353,7 @@ export function DiagnosticForm({
         body: JSON.stringify({ ...values, atribuicao: lerAtribuicao() }),
       });
       if (!res.ok) throw new Error('request failed');
+      setMarcacao(linkDeMarcacao(await res.json().catch(() => null)));
       /**
        * O servidor já não devolve a classificação do lead, e este evento já
        * não a leva. Era um valor interno de priorização comercial que chegava
@@ -411,6 +430,25 @@ export function DiagnosticForm({
             ))}
           </ol>
         </div>
+
+        {marcacao && (
+          <div className="rule mt-7 pt-6">
+            <Button asChild>
+              <a
+                href={marcacao}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track({ name: 'meeting_requested', surface: 'diagnostico' })}
+              >
+                {t(FORM.marcar, idioma)}
+                <ArrowRight aria-hidden className="size-4" />
+              </a>
+            </Button>
+            <p className="mt-3 max-w-md text-[length:var(--text-micro)] text-[color:var(--muted)]">
+              {t(FORM.marcarDica, idioma)}
+            </p>
+          </div>
+        )}
 
         <div className="rule mt-7 flex flex-col gap-3 pt-6 sm:flex-row sm:flex-wrap">
           <Button asChild variant="outline">

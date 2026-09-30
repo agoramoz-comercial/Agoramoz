@@ -151,6 +151,11 @@ export const FORM = {
     pt: 'Se fizer sentido avançar, marcamos uma conversa objetiva.',
     en: 'If it makes sense to go ahead, we schedule a focused conversation.',
   },
+  marcar: { pt: 'Marcar a conversa agora', en: 'Book the conversation now' },
+  marcarDica: {
+    pt: 'Escolha o dia e a hora na agenda da equipa. Abre num separador novo; a videochamada vem no convite.',
+    en: 'Pick a day and time in the team calendar. It opens in a new tab; the video call link comes with the invitation.',
+  },
   whatsapp: { pt: 'Acrescentar algo por WhatsApp', en: 'Add something on WhatsApp' },
   verSolucoes: { pt: 'Ver as soluções entretanto', en: 'See the solutions in the meantime' },
 } as const satisfies Record<string, Texto>;

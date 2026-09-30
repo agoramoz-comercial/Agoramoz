@@ -48,6 +48,10 @@ const SAFE_FIELDS = [
   // Contagens de secções em falta e de itens recusados numa análise. Números.
   'faltas',
   'descartados',
+  // Agendamento: o nome do evento do Cal (`BOOKING_CREATED`…) e se a reunião
+  // ficou ligada a uma oportunidade. Nunca participantes, nunca o ref.
+  'evento',
+  'ligada',
 ] as const;
 
 type SafeField = (typeof SAFE_FIELDS)[number];

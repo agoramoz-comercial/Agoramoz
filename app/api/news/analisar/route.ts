@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
+import { registarEventoServidor, type PropsEscalares } from '@/lib/analytics/servidor';
 import { serverEnv } from '@/lib/config/env';
 import { clientKey, createMemoryRateLimiter, type RateLimiter } from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
@@ -42,6 +43,20 @@ function fail(status: number, correlationId: string, headers?: Record<string, st
     { error: 'Não foi possível analisar esta notícia.', correlationId },
     { status, headers: { ...SEM_CACHE, ...headers } },
   );
+}
+
+/**
+ * O evento para o painel, depois de a resposta sair: a análise não espera
+ * pela escrita. Fora de um pedido (testes unitários) o `after` lança, e aí
+ * corre-se já — com a persistência desligada, não faz nada.
+ */
+function medir(nome: 'news_analisada' | 'news_falhou', props: PropsEscalares) {
+  const tarefa = () => registarEventoServidor(nome, props, { path: '/news' });
+  try {
+    after(tarefa);
+  } catch {
+    void tarefa();
+  }
 }
 
 /** Timeout é 504; credenciais ou quota do motor são nossas, 503; o resto, 502. */
@@ -142,6 +157,14 @@ export async function POST(request: Request) {
       durationMs: Date.now() - started,
       outcome: 'failed',
     });
+    // Só as falhas do motor: um pedido inválido não é uma análise tentada.
+    medir('news_falhou', {
+      idioma: pedido.idioma,
+      modo: pedido.modo,
+      motivo: resultado.motivo,
+      status: resultado.status ?? null,
+      durationMs: Date.now() - started,
+    });
     return fail(STATUS_DA_FALHA[resultado.motivo] ?? 502, correlationId);
   }
 
@@ -158,6 +181,14 @@ export async function POST(request: Request) {
     descartados,
     durationMs: Date.now() - started,
     outcome: parcial ? 'parcial' : 'ok',
+  });
+  medir('news_analisada', {
+    idioma: pedido.idioma,
+    modo: pedido.modo,
+    prioridade: resultado.analise.prioridade ?? 'desconhecida',
+    faltas: seccoesEmFalta.length,
+    descartados,
+    durationMs: Date.now() - started,
   });
 
   return NextResponse.json(
