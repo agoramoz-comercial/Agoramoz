@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EXEMPLO_LOVABLE } from './exemplo';
-import { normalizar } from './esquema';
+import { normalizar, validarAnalise } from './esquema';
 
 const base = () => structuredClone(EXEMPLO_LOVABLE.analysis) as unknown as Record<string, unknown>;
 
@@ -135,6 +135,72 @@ describe('normalizar — o payload do motor Lovable', () => {
     const a = normalizar(b)!;
     expect(a.resumo).toHaveLength(12);
     expect(a.matriz).toHaveLength(8);
+  });
+
+  describe('uma secção cujos itens caem todos conta como em falta — não como «nenhum»', () => {
+    it('riscos todos com severidade desconhecida: lista vazia, marcada, e contados os descartados', () => {
+      const b = base();
+      b.risks = [
+        { title: 'A', description: 'a', severity: 'low' },
+        { title: 'B', description: 'b', severity: 'extreme' },
+      ];
+      const a = normalizar(b)!;
+      expect(a.riscos).toEqual([]);
+      expect(a.seccoesEmFalta).toContain('riscos');
+      expect(a.descartados).toBe(2);
+    });
+
+    it('uma lista que o motor devolveu vazia é resposta, não falta', () => {
+      const b = base();
+      b.risks = [];
+      const a = normalizar(b)!;
+      expect(a.riscos).toEqual([]);
+      expect(a.seccoesEmFalta).not.toContain('riscos');
+    });
+
+    it('perdas parciais ficam contadas, sem marcar a secção', () => {
+      const b = base();
+      b.opportunities = [
+        { title: 'A', description: 'a' },
+        { title: '', description: 'sem título' },
+      ];
+      const a = normalizar(b)!;
+      expect(a.oportunidades).toHaveLength(1);
+      expect(a.seccoesEmFalta).not.toContain('oportunidades');
+      expect(a.descartados).toBe(1);
+    });
+
+    it('interpretação sem nenhum campo útil é nula e marcada; recomendações vazias também', () => {
+      const b = base();
+      b.core_interpretation = { what_is_happening: '   ', hidden_signals: [] };
+      b.recommendations = { immediate_actions: [], monitor_closely: 'x' };
+      const a = normalizar(b)!;
+      expect(a.interpretacao).toBeNull();
+      expect(a.seccoesEmFalta).toEqual(expect.arrayContaining(['interpretacao', 'recomendacoes']));
+    });
+
+    it('o payload completo não descarta nada', () => {
+      expect(normalizar(base())!.descartados).toBe(0);
+    });
+  });
+
+  describe('validarAnalise — o que volta do localStorage', () => {
+    it('aceita o que o normalizador produz', () => {
+      expect(validarAnalise(normalizar(base()))).toBe(true);
+      expect(validarAnalise(JSON.parse(JSON.stringify(normalizar(base()))))).toBe(true);
+    });
+
+    it('recusa uma análise adulterada ou de uma versão antiga', () => {
+      const a = JSON.parse(JSON.stringify(normalizar(base())));
+      expect(validarAnalise({ ...a, riscos: [{ titulo: 'x', descricao: 'y' }] })).toBe(false);
+      expect(validarAnalise({ ...a, titulo: { titulo: 'x', fonte: 42 } })).toBe(false);
+      expect(validarAnalise({ ...a, recomendacoes: { agir: 'x' } })).toBe(false);
+      expect(validarAnalise({ ...a, pontuacoes: [{ dimensao: 'A', score: 500 }] })).toBe(false);
+      const semCampo = { ...a };
+      delete semCampo.descartados;
+      expect(validarAnalise(semCampo)).toBe(false);
+      expect(validarAnalise(null)).toBe(false);
+    });
   });
 
   it('entradas da matriz que não são objecto, ou com direcção desconhecida, são ignoradas', () => {

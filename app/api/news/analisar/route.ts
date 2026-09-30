@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { serverEnv } from '@/lib/config/env';
 import { clientKey, createMemoryRateLimiter, type RateLimiter } from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
-import { analisarComLovable } from '@/lib/news/motor';
+import { analisarComLovable, type FalhaMotor } from '@/lib/news/motor';
 import { pedidoSchema } from '@/lib/news/pedido';
 
 /**
@@ -14,6 +14,10 @@ import { pedidoSchema } from '@/lib/news/pedido';
  * normalizada — o que sai daqui é o nosso modelo, não o JSON do motor.
  *
  * Nada é guardado. Publicar uma análise é outra decisão, humana (fase 2).
+ *
+ * Limite conhecido: o limitador é em memória, por instância. Trava repetição e
+ * abuso ingénuo; não é um tecto global de custo. O tecto real de gasto tem de
+ * estar também do lado do Lovable (ver `docs/NEWS.md`).
  */
 
 export const runtime = 'nodejs';
@@ -25,9 +29,8 @@ const TIMEOUT_MOTOR_MS = 60_000;
 export const maxDuration = 70;
 
 let limiter: RateLimiter | null = null;
-function getLimiter(): RateLimiter {
-  const env = serverEnv();
-  limiter ??= createMemoryRateLimiter({ max: env.NEWS_RATE_LIMIT_MAX, windowMs: env.NEWS_RATE_LIMIT_WINDOW_MS });
+function getLimiter(max: number, windowMs: number): RateLimiter {
+  limiter ??= createMemoryRateLimiter({ max, windowMs });
   return limiter;
 }
 
@@ -41,10 +44,25 @@ function fail(status: number, correlationId: string, headers?: Record<string, st
   );
 }
 
+/** Timeout é 504; credenciais ou quota do motor são nossas, 503; o resto, 502. */
+const STATUS_DA_FALHA: Partial<Record<FalhaMotor, number>> = { timeout: 504, indisponivel: 503 };
+
 export async function POST(request: Request) {
   const started = Date.now();
   const correlationId = crypto.randomUUID();
-  const env = serverEnv();
+
+  /**
+   * Uma variável mal posta (motor ligado sem URL, valor com maiúscula) faz o
+   * `serverEnv()` lançar. Sem isto o pedido morria num 500 mudo, sem
+   * correlationId e sem linha de log — e o cliente culpava o artigo.
+   */
+  let env: ReturnType<typeof serverEnv>;
+  try {
+    env = serverEnv();
+  } catch {
+    log.error('news.falhou', { correlationId, reason: 'config-invalida', outcome: 'failed' });
+    return fail(503, correlationId);
+  }
 
   if (env.NEWS_ENGINE === 'off' || !env.LOVABLE_NEWS_FUNCTION_URL || !env.LOVABLE_NEWS_API_KEY) {
     log.warn('news.falhou', { correlationId, reason: 'motor-desligado', outcome: 'rejected' });
@@ -63,7 +81,7 @@ export async function POST(request: Request) {
     return fail(413, correlationId);
   }
 
-  const veredicto = getLimiter().check(await clientKey(request));
+  const veredicto = getLimiter(env.NEWS_RATE_LIMIT_MAX, env.NEWS_RATE_LIMIT_WINDOW_MS).check(await clientKey(request));
   if (!veredicto.allowed) {
     const retryAfter = Math.max(1, Math.ceil((veredicto.resetAt - Date.now()) / 1000));
     log.warn('news.falhou', {
@@ -80,6 +98,7 @@ export async function POST(request: Request) {
   try {
     bruto = await request.text();
   } catch {
+    log.warn('news.falhou', { correlationId, reason: 'body-read', outcome: 'rejected' });
     return fail(400, correlationId);
   }
   const bytes = new TextEncoder().encode(bruto).length;
@@ -98,7 +117,9 @@ export async function POST(request: Request) {
 
   const parsed = pedidoSchema.safeParse(json);
   if (!parsed.success) {
-    log.warn('news.falhou', { correlationId, reason: 'schema', outcome: 'rejected' });
+    // Os NOMES dos campos que falharam (`url`, `texto`…), nunca os valores.
+    const campos = [...new Set(parsed.error.issues.map((i) => i.path.join('.') || 'raiz'))].join(',');
+    log.warn('news.falhou', { correlationId, reason: `schema:${campos}`.slice(0, 80), outcome: 'rejected' });
     return fail(400, correlationId);
   }
   const pedido = parsed.data;
@@ -117,17 +138,26 @@ export async function POST(request: Request) {
       ...baseLog,
       reason: resultado.motivo,
       status: resultado.status,
+      errorCode: resultado.codigo,
       durationMs: Date.now() - started,
       outcome: 'failed',
     });
-    return fail(resultado.motivo === 'timeout' ? 504 : 502, correlationId);
+    return fail(STATUS_DA_FALHA[resultado.motivo] ?? 502, correlationId);
   }
 
-  log.info('news.analisada', {
+  /**
+   * Uma análise parcial é entregue (o relatório marca o que falta), mas fica
+   * no log como aviso: se o motor mudar de formato, é aqui que se vê primeiro.
+   */
+  const { seccoesEmFalta, descartados } = resultado.analise;
+  const parcial = seccoesEmFalta.length > 0 || descartados > 0;
+  (parcial ? log.warn : log.info)('news.analisada', {
     ...baseLog,
     prioridade: resultado.analise.prioridade ?? 'desconhecida',
+    faltas: seccoesEmFalta.length,
+    descartados,
     durationMs: Date.now() - started,
-    outcome: 'ok',
+    outcome: parcial ? 'parcial' : 'ok',
   });
 
   return NextResponse.json(

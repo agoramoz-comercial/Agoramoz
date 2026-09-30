@@ -16,22 +16,32 @@ import { assinado } from './formato';
  * HTML e CSS, não SVG: a largura acompanha o contentor sem viewBox, e o texto
  * é texto seleccionável e legível por leitor de ecrã.
  */
-export function BarrasImpacto({ pontuacoes, idioma }: { pontuacoes: readonly Pontuacao[]; idioma: Idioma }) {
+export function BarrasImpacto({
+  pontuacoes,
+  idioma,
+  lang,
+}: {
+  pontuacoes: readonly Pontuacao[];
+  idioma: Idioma;
+  /** O idioma do texto do motor (os nomes das dimensões vêm dele). */
+  lang?: string;
+}) {
   if (pontuacoes.length === 0) return null;
 
   return (
     <figure className="m-0">
       <figcaption className="rule-label text-[color:var(--muted)]">{t(RELATORIO.graficoTitulo, idioma)}</figcaption>
       <ul className="mt-6 grid gap-3" role="list">
-        {pontuacoes.map((p) => {
+        {pontuacoes.map((p, i) => {
           const metade = `${Math.abs(p.score) / 2}%`;
           const negativo = p.score < 0;
           return (
             <li
-              key={p.dimensao}
+              // Índice: o motor pode repetir o nome de uma dimensão.
+              key={i}
               className="grid grid-cols-[minmax(0,7rem)_1fr_3.25rem] items-center gap-3 sm:grid-cols-[minmax(0,10rem)_1fr_3.5rem]"
             >
-              <span className="truncate text-sm" title={p.dimensao}>
+              <span className="truncate text-sm" title={p.dimensao} lang={lang}>
                 {p.dimensao}
               </span>
               <span className="relative h-3 bg-[color:var(--surface-raised)]" aria-hidden>

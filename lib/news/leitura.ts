@@ -14,10 +14,13 @@ export const PESO_SEVERIDADE: Record<Severidade, number> = { critical: 3, high: 
 export interface Leitura {
   /** Média das pontuações por dimensão, arredondada. `null` sem pontuações. */
   readonly impactoLiquido: number | null;
-  /** Soma dos pesos de severidade dos riscos (crítico 3, alto 2, médio 1). */
-  readonly cargaRisco: number;
-  /** Número de oportunidades menos número de riscos. */
-  readonly balanco: number;
+  /**
+   * Soma dos pesos de severidade dos riscos (crítico 3, alto 2, médio 1).
+   * `null` quando os riscos estão em falta: 0 afirmaria «sem risco».
+   */
+  readonly cargaRisco: number | null;
+  /** Número de oportunidades menos número de riscos. `null` se faltar um dos dois. */
+  readonly balanco: number | null;
   /** A dimensão com maior valor absoluto; a primeira em caso de empate. */
   readonly dimensaoCritica: Pontuacao | null;
   readonly riscosOrdenados: readonly Risco[];
@@ -25,6 +28,7 @@ export interface Leitura {
 
 export function ler(a: Analise): Leitura {
   const n = a.pontuacoes.length;
+  const semRiscos = a.seccoesEmFalta.includes('riscos');
   const soma = a.pontuacoes.reduce((s, p) => s + p.score, 0);
 
   let critica: Pontuacao | null = null;
@@ -35,8 +39,8 @@ export function ler(a: Analise): Leitura {
   return {
     // `+ 0` normaliza o `-0` que `Math.round(-0.4)` dá.
     impactoLiquido: n === 0 ? null : Math.round(soma / n) + 0,
-    cargaRisco: a.riscos.reduce((s, r) => s + PESO_SEVERIDADE[r.severidade], 0),
-    balanco: a.oportunidades.length - a.riscos.length,
+    cargaRisco: semRiscos ? null : a.riscos.reduce((s, r) => s + PESO_SEVERIDADE[r.severidade], 0),
+    balanco: semRiscos || a.seccoesEmFalta.includes('oportunidades') ? null : a.oportunidades.length - a.riscos.length,
     dimensaoCritica: critica,
     // `sort` é estável desde o ES2019: riscos da mesma severidade mantêm a ordem do motor.
     riscosOrdenados: [...a.riscos].sort((x, y) => PESO_SEVERIDADE[y.severidade] - PESO_SEVERIDADE[x.severidade]),

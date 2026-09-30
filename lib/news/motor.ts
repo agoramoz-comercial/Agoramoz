@@ -19,14 +19,32 @@ export interface ConfigMotor {
   readonly timeoutMs: number;
 }
 
-export type FalhaMotor = 'timeout' | 'rede' | 'http' | 'json' | 'motor' | 'vazio';
+/**
+ * - `indisponivel`: o motor recusou por credenciais ou quota (401/402/403/429).
+ *   É problema nosso, não do artigo — a rota responde 503.
+ * - `grande`: resposta acima do tecto.
+ * - `vazio`: JSON válido, mas sem nada que se possa chamar análise.
+ */
+export type FalhaMotor = 'timeout' | 'rede' | 'http' | 'indisponivel' | 'grande' | 'json' | 'motor' | 'vazio';
 
 export type ResultadoMotor =
   | { readonly ok: true; readonly analise: Analise }
-  | { readonly ok: false; readonly motivo: FalhaMotor; readonly status?: number };
+  | { readonly ok: false; readonly motivo: FalhaMotor; readonly status?: number; readonly codigo?: string };
 
 /** Uma análise completa tem dezenas de KB. Isto é folga, não alvo. */
 const MAX_RESPOSTA = 1_000_000;
+
+const eTimeout = (e: unknown) => {
+  const nome = (e as { name?: string }).name;
+  return nome === 'TimeoutError' || nome === 'AbortError';
+};
+
+/** Só o código da causa (`ECONNREFUSED`, `ENOTFOUND`…) — nunca a mensagem, que pode trazer o URL. */
+function codigoDe(e: unknown): string {
+  const causa = (e as { cause?: { code?: unknown } }).cause;
+  const codigo = typeof causa?.code === 'string' ? causa.code : (e as { name?: string }).name;
+  return /^[A-Za-z_]{1,40}$/.test(codigo ?? '') ? codigo! : 'desconhecido';
+}
 
 export async function analisarComLovable(
   pedido: Pedido,
@@ -49,21 +67,30 @@ export async function analisarComLovable(
       body: JSON.stringify(corpo),
       signal: AbortSignal.timeout(cfg.timeoutMs),
       cache: 'no-store',
+      // Num redireccionamento para outro domínio o `authorization` é retirado,
+      // mas o `apikey` seguiria. O motor não redirecciona; se o fizer, é erro.
+      redirect: 'error',
     });
   } catch (erro) {
-    const nome = (erro as { name?: string }).name;
-    return { ok: false, motivo: nome === 'TimeoutError' || nome === 'AbortError' ? 'timeout' : 'rede' };
+    return eTimeout(erro) ? { ok: false, motivo: 'timeout' } : { ok: false, motivo: 'rede', codigo: codigoDe(erro) };
   }
 
-  if (!res.ok) return { ok: false, motivo: 'http', status: res.status };
+  if (!res.ok) {
+    const indisponivel = [401, 402, 403, 429].includes(res.status);
+    return { ok: false, motivo: indisponivel ? 'indisponivel' : 'http', status: res.status };
+  }
+
+  const declarado = Number(res.headers?.get('content-length') ?? '0');
+  if (Number.isFinite(declarado) && declarado > MAX_RESPOSTA) return { ok: false, motivo: 'grande' };
 
   let texto: string;
   try {
     texto = await res.text();
-  } catch {
-    return { ok: false, motivo: 'rede' };
+  } catch (erro) {
+    // O `AbortSignal.timeout` também cobre a leitura do corpo.
+    return eTimeout(erro) ? { ok: false, motivo: 'timeout' } : { ok: false, motivo: 'rede', codigo: codigoDe(erro) };
   }
-  if (texto.length > MAX_RESPOSTA) return { ok: false, motivo: 'json' };
+  if (texto.length > MAX_RESPOSTA) return { ok: false, motivo: 'grande' };
 
   let json: unknown;
   try {
@@ -73,7 +100,8 @@ export async function analisarComLovable(
   }
 
   const envelope = (typeof json === 'object' && json !== null ? json : {}) as { analysis?: unknown; error?: unknown };
-  // A mensagem do motor não passa: pode trazer detalhe interno dele.
+  // A mensagem do motor não passa nem para o cliente nem para o log: pode
+  // trazer detalhe interno dele, ou o artigo.
   if (envelope.error) return { ok: false, motivo: 'motor' };
 
   const analise = normalizar(envelope.analysis);

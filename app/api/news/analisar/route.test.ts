@@ -71,6 +71,42 @@ describe('motor desligado', () => {
   });
 });
 
+describe('configuração inválida', () => {
+  it('motor ligado sem as variáveis: 503 com correlationId e log próprio — não um 500 mudo', async () => {
+    const f = motorResponde(EXEMPLO_LOVABLE);
+    const POST = await carregarRota({ NEWS_ENGINE: 'lovable' });
+    const res = await POST(pedido(POR_URL));
+    expect(res.status).toBe(503);
+    expect((await res.json()).correlationId).toBeTruthy();
+    expect(f).not.toHaveBeenCalled();
+    expect(linhas.join('\n')).toContain('config-invalida');
+  });
+});
+
+describe('motor recusa por credenciais ou quota', () => {
+  it.each([401, 402, 403, 429])('%i do motor → 503 (é nosso, não do artigo)', async (status) => {
+    motorResponde({ error: 'x' }, status);
+    const POST = await carregarRota();
+    const res = await POST(pedido(POR_URL));
+    expect(res.status).toBe(503);
+    expect(linhas.join('\n')).toContain('indisponivel');
+  });
+});
+
+describe('resposta parcial', () => {
+  it('fica registada como aviso, com o número de secções em falta e de itens descartados', async () => {
+    const parcial = structuredClone(EXEMPLO_LOVABLE) as unknown as { analysis: Record<string, unknown> };
+    parcial.analysis.risks = [{ title: 'x', description: 'y', severity: 'low' }];
+    delete parcial.analysis.macro_analysis;
+    motorResponde(parcial);
+    const POST = await carregarRota();
+    const res = await POST(pedido(POR_URL));
+    expect(res.status).toBe(200);
+    const linha = JSON.parse(linhas.find((l) => l.includes('news.analisada'))!);
+    expect(linha).toMatchObject({ level: 'warn', faltas: 2, descartados: 1, outcome: 'parcial' });
+  });
+});
+
 describe('sucesso', () => {
   it('chama o motor com o contrato do Lovable e devolve a análise normalizada', async () => {
     const f = motorResponde(EXEMPLO_LOVABLE);
@@ -93,6 +129,8 @@ describe('sucesso', () => {
     const h = init.headers as Record<string, string>;
     expect(h.authorization).toBe(`Bearer ${CHAVE}`);
     expect(h.apikey).toBe(CHAVE);
+    // Um redireccionamento levaria o cabeçalho `apikey` a outro domínio.
+    expect(init.redirect).toBe('error');
   });
 
   it('modo texto envia `content`', async () => {
@@ -110,6 +148,24 @@ describe('o que sai do motor é dado não confiável', () => {
     ['500 do motor', () => motorResponde({ error: 'x' }, 500), 502],
     ['{ error } com 200', () => motorResponde({ error: 'Falha interna com detalhe' }), 502],
     ['JSON inválido', () => motorResponde('<html>não é json'), 502],
+    ['resposta acima do tecto', () => motorResponde('x'.repeat(1_100_000)), 502],
+    [
+      'tempo esgotado a ler o corpo',
+      () => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn(async () => ({
+            ok: true,
+            status: 200,
+            headers: new Headers(),
+            text: async () => {
+              throw Object.assign(new Error('timeout'), { name: 'TimeoutError' });
+            },
+          })),
+        );
+      },
+      504,
+    ],
     ['análise vazia', () => motorResponde({ analysis: {} }), 502],
     [
       'rede em baixo',

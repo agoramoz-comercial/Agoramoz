@@ -13,6 +13,7 @@ import {
   nomeDaDimensao,
 } from '@/content/i18n/news';
 import type { Analise, Prioridade, Severidade } from '@/lib/news/esquema';
+import type { IdiomaMotor } from '@/lib/news/limites';
 import { ler } from '@/lib/news/leitura';
 import { ligacao } from '@/lib/i18n/rotas';
 import { t } from '@/lib/i18n/texto';
@@ -32,6 +33,11 @@ import { assinado } from './formato';
  *
  * Todo o texto do motor passa pelo React, que o escapa. Não há `innerHTML`, e
  * o PDF é a própria página impressa — não uma janela escrita à mão.
+ *
+ * Os rótulos estão no idioma da página; o texto do motor está no idioma que
+ * a pessoa escolheu para o relatório, e é marcado com `lang` para o leitor de
+ * ecrã o pronunciar certo. As chaves das listas são o índice: o motor pode
+ * repetir um texto, e a lista é imutável por análise.
  */
 
 const TOM_PRIORIDADE: Record<Prioridade, string> = {
@@ -49,6 +55,9 @@ const TOM_SEVERIDADE: Record<Severidade, string> = {
 
 const SETA = { up: '↑', down: '↓', neutral: '→' } as const;
 
+/** Código BCP 47 do texto do motor. Xichangana é `ts` (Xitsonga). */
+const LANG: Record<IdiomaMotor, string> = { pt: 'pt', en: 'en', fr: 'fr', de: 'de', xg: 'ts' };
+
 function Bloco({ id, titulo, children }: { id: string; titulo: string; children: React.ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="rule scroll-mt-28 pt-6">
@@ -60,13 +69,13 @@ function Bloco({ id, titulo, children }: { id: string; titulo: string; children:
   );
 }
 
-function Lista({ itens }: { itens: readonly string[] }) {
+function Lista({ itens, lang }: { itens: readonly string[]; lang: string }) {
   return (
-    <ul className="grid gap-2" role="list">
-      {itens.map((i) => (
+    <ul className="grid gap-2" role="list" lang={lang}>
+      {itens.map((texto, i) => (
         <li key={i} className="flex gap-3 text-[color:var(--muted)]">
           <span aria-hidden className="text-[color:var(--on-surface)]">—</span>
-          <span>{i}</span>
+          <span>{texto}</span>
         </li>
       ))}
     </ul>
@@ -80,20 +89,27 @@ function resumoParaPartilhar(a: Analise, idioma: Idioma): string {
   if (a.recomendacoes.agir.length) {
     partes.push('', t(RELATORIO.agir, idioma), ...a.recomendacoes.agir.map((r) => `• ${r}`));
   }
-  partes.push('', `${MARCA_NEWS} · agoramoz.com/news`);
+  // Partilhado sem o aviso, um texto gerado por IA passaria por verificado.
+  partes.push('', t(NEWS.aviso, idioma));
+  if (a.seccoesEmFalta.length) partes.push(t(RELATORIO.incompleto, idioma));
+  partes.push(`${MARCA_NEWS} · agoramoz.com${ligacao('/news', idioma).href}`);
   return partes.join('\n');
 }
 
 export function Relatorio({
   analise: a,
   idioma,
+  idiomaConteudo,
   tituloRef,
 }: {
   analise: Analise;
   idioma: Idioma;
+  /** O idioma que a pessoa escolheu para o relatório — o do texto do motor. */
+  idiomaConteudo: IdiomaMotor;
   tituloRef?: React.Ref<HTMLHeadingElement>;
 }) {
   const l = ler(a);
+  const lc = LANG[idiomaConteudo];
   const [copia, setCopia] = useState<'ok' | 'falhou' | null>(null);
 
   const copiar = async () => {
@@ -121,22 +137,35 @@ export function Relatorio({
   ].filter((s) => s.mostra);
   const titulo = (id: string) => seccoes.find((s) => s.id === id)!.titulo;
   const mostra = (id: string) => seccoes.some((s) => s.id === id);
+  const faltaRiscos = a.seccoesEmFalta.includes('riscos');
+  const faltaOportunidades = a.seccoesEmFalta.includes('oportunidades');
+  const semDados = t(RELATORIO.semDados, idioma);
 
   const metricas = [
     {
       rotulo: t(RELATORIO.impactoLiquido, idioma),
-      valor: l.impactoLiquido === null ? t(RELATORIO.semDados, idioma) : assinado(l.impactoLiquido),
+      valor: l.impactoLiquido === null ? semDados : assinado(l.impactoLiquido),
       negativo: (l.impactoLiquido ?? 0) < 0,
     },
-    { rotulo: t(RELATORIO.cargaRisco, idioma), valor: String(l.cargaRisco), negativo: false },
-    { rotulo: t(RELATORIO.balanco, idioma), valor: assinado(l.balanco), negativo: l.balanco < 0 },
+    {
+      rotulo: t(RELATORIO.cargaRisco, idioma),
+      valor: l.cargaRisco === null ? semDados : String(l.cargaRisco),
+      negativo: false,
+    },
+    {
+      rotulo: t(RELATORIO.balanco, idioma),
+      valor: l.balanco === null ? semDados : assinado(l.balanco),
+      negativo: (l.balanco ?? 0) < 0,
+    },
     {
       rotulo: t(RELATORIO.dimensaoCritica, idioma),
-      valor: l.dimensaoCritica ? assinado(l.dimensaoCritica.score) : t(RELATORIO.semDados, idioma),
+      valor: l.dimensaoCritica ? assinado(l.dimensaoCritica.score) : semDados,
       detalhe: l.dimensaoCritica?.dimensao,
       negativo: (l.dimensaoCritica?.score ?? 0) < 0,
     },
   ];
+
+  const incompleto = a.seccoesEmFalta.length > 0 || a.descartados > 0;
 
   return (
     <article data-news-imprimir aria-labelledby="news-titulo" className="grid gap-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
@@ -168,7 +197,11 @@ export function Relatorio({
                 {t(RELATORIO.prioridade, idioma)}: {t(ROTULO_PRIORIDADE[a.prioridade], idioma)}
               </span>
             )}
-            {a.titulo.regiao && <span className="rule-label text-[color:var(--muted)]">{a.titulo.regiao}</span>}
+            {a.titulo.regiao && (
+              <span lang={lc} className="rule-label text-[color:var(--muted)]">
+                {a.titulo.regiao}
+              </span>
+            )}
             {(a.titulo.fonte || a.titulo.data) && (
               <span className="text-sm text-[color:var(--muted)]">
                 {[a.titulo.fonte, a.titulo.data].filter(Boolean).join(' · ')}
@@ -179,18 +212,36 @@ export function Relatorio({
             id="news-titulo"
             ref={tituloRef}
             tabIndex={-1}
-            className="mt-5 max-w-[30ch] text-[length:var(--text-h2)] leading-[var(--leading-heading)] font-bold tracking-[var(--tracking-heading)] outline-none"
+            lang={a.titulo.titulo ? lc : undefined}
+            className="mt-5 max-w-[30ch] scroll-mt-40 text-[length:var(--text-h2)] leading-[var(--leading-heading)] font-bold tracking-[var(--tracking-heading)] outline-none"
           >
             {a.titulo.titulo || t(RELATORIO.semTitulo, idioma)}
           </h2>
           {a.sectores.length > 0 && (
-            <ul className="mt-5 flex flex-wrap gap-2" role="list">
-              {a.sectores.map((s) => (
-                <li key={s} className="border border-[color:var(--border)] px-2.5 py-1 text-sm">
+            <ul className="mt-5 flex flex-wrap gap-2" role="list" lang={lc}>
+              {a.sectores.map((s, i) => (
+                <li key={i} className="border border-[color:var(--border)] px-2.5 py-1 text-sm">
                   {s}
                 </li>
               ))}
             </ul>
+          )}
+
+          {incompleto && (
+            <div role="note" className="mt-8 border-l-2 border-[color:var(--signal)] pl-4 text-sm">
+              <p className="rule-label text-[color:var(--signal)]">{t(RELATORIO.incompleto, idioma)}</p>
+              {a.seccoesEmFalta.length > 0 && (
+                <p className="mt-2 text-[color:var(--muted)]">
+                  {t(RELATORIO.emFalta, idioma)}{' '}
+                  {a.seccoesEmFalta.map((s) => t(RELATORIO.nomesSeccao[s], idioma)).join(', ')}.
+                </p>
+              )}
+              {a.descartados > 0 && (
+                <p className="mt-1 text-[color:var(--muted)]">
+                  {t(RELATORIO.descartados, idioma).replace('{n}', String(a.descartados))}
+                </p>
+              )}
+            </div>
           )}
 
           <dl className="mt-10 grid grid-cols-2 border-t border-l border-[color:var(--border)] md:grid-cols-4">
@@ -205,7 +256,11 @@ export function Relatorio({
                 >
                   {m.valor}
                 </dd>
-                {m.detalhe && <dd className="mt-1 truncate text-sm text-[color:var(--muted)]">{m.detalhe}</dd>}
+                {m.detalhe && (
+                  <dd lang={lc} className="mt-1 truncate text-sm text-[color:var(--muted)]">
+                    {m.detalhe}
+                  </dd>
+                )}
               </div>
             ))}
           </dl>
@@ -233,7 +288,7 @@ export function Relatorio({
               {t(RELATORIO.imprimir, idioma)}
             </button>
           </div>
-          <p role="status" className="mt-2 min-h-5 text-sm text-[color:var(--muted)]">
+          <p role="status" className="mt-2 min-h-5 text-sm text-[color:var(--muted)] print:hidden">
             {copia === 'ok' ? t(RELATORIO.copiado, idioma) : copia === 'falhou' ? t(RELATORIO.copiarFalhou, idioma) : ''}
           </p>
         </header>
@@ -242,9 +297,9 @@ export function Relatorio({
         {mostra('news-resumo') && (
           <Bloco id="news-resumo" titulo={titulo('news-resumo')}>
             {a.resumo.length > 0 && (
-              <ol className="grid gap-4">
+              <ol className="grid gap-4" lang={lc}>
                 {a.resumo.map((r, i) => (
-                  <li key={r} className="flex gap-5">
+                  <li key={i} className="flex gap-5">
                     <span className="rule-label shrink-0 pt-1 tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                     <span className="text-[length:var(--text-lead)]">{r}</span>
                   </li>
@@ -256,20 +311,24 @@ export function Relatorio({
                 {a.interpretacao.oQue && (
                   <div>
                     <p className="rule-label text-[color:var(--muted)]">{t(RELATORIO.oQue, idioma)}</p>
-                    <p className="mt-3">{a.interpretacao.oQue}</p>
+                    <p lang={lc} className="mt-3">
+                      {a.interpretacao.oQue}
+                    </p>
                   </div>
                 )}
                 {a.interpretacao.porque && (
                   <div>
                     <p className="rule-label text-[color:var(--muted)]">{t(RELATORIO.porque, idioma)}</p>
-                    <p className="mt-3">{a.interpretacao.porque}</p>
+                    <p lang={lc} className="mt-3">
+                      {a.interpretacao.porque}
+                    </p>
                   </div>
                 )}
                 {a.interpretacao.sinais.length > 0 && (
                   <div className="md:col-span-2">
                     <p className="rule-label text-[color:var(--muted)]">{t(RELATORIO.sinais, idioma)}</p>
                     <div className="mt-3">
-                      <Lista itens={a.interpretacao.sinais} />
+                      <Lista itens={a.interpretacao.sinais} lang={lc} />
                     </div>
                   </div>
                 )}
@@ -281,14 +340,14 @@ export function Relatorio({
         {/* 3. Impacto */}
         {mostra('news-impacto') && (
           <Bloco id="news-impacto" titulo={titulo('news-impacto')}>
-            <BarrasImpacto pontuacoes={a.pontuacoes} idioma={idioma} />
+            <BarrasImpacto pontuacoes={a.pontuacoes} idioma={idioma} lang={lc} />
             {a.matriz.length > 0 && (
               <div className="mt-10">
                 <p className="rule-label text-[color:var(--muted)]">{t(RELATORIO.matrizTitulo, idioma)}</p>
                 {/* Um número ímpar de dimensões deixava uma célula vazia: a última ocupa as duas colunas. */}
                 <dl className="mt-4 grid gap-px bg-[color:var(--border)] sm:grid-cols-2 sm:[&>*:last-child:nth-child(odd)]:col-span-2">
-                  {a.matriz.map((m) => (
-                    <div key={m.dimensao} className="bg-[color:var(--surface)] p-4">
+                  {a.matriz.map((m, i) => (
+                    <div key={i} className="bg-[color:var(--surface)] p-4">
                       <dt className="flex items-baseline gap-2 font-semibold">
                         <span aria-hidden className={m.direcao === 'down' ? 'text-[color:var(--signal)]' : undefined}>
                           {SETA[m.direcao]}
@@ -296,7 +355,11 @@ export function Relatorio({
                         {nomeDaDimensao(m.dimensao, idioma)}
                         <span className="sr-only">({t(RELATORIO.direcao[m.direcao], idioma)})</span>
                       </dt>
-                      {m.explicacao && <dd className="mt-1.5 text-sm text-[color:var(--muted)]">{m.explicacao}</dd>}
+                      {m.explicacao && (
+                        <dd lang={lc} className="mt-1.5 text-sm text-[color:var(--muted)]">
+                          {m.explicacao}
+                        </dd>
+                      )}
                     </div>
                   ))}
                 </dl>
@@ -311,21 +374,27 @@ export function Relatorio({
             <div className="grid gap-10 md:grid-cols-2">
               <div>
                 <p className="rule-label text-[color:var(--signal)]">
-                  {t(RELATORIO.riscosTitulo, idioma)} · {a.riscos.length}
+                  {t(RELATORIO.riscosTitulo, idioma)} · {faltaRiscos ? semDados : a.riscos.length}
                 </p>
                 {l.riscosOrdenados.length === 0 ? (
-                  <p className="mt-4 text-sm text-[color:var(--muted)]">{t(RELATORIO.nenhum, idioma)}</p>
+                  <p className="mt-4 text-sm text-[color:var(--muted)]">
+                    {faltaRiscos ? semDados : t(RELATORIO.nenhum, idioma)}
+                  </p>
                 ) : (
                   <ul className="mt-4 grid gap-4" role="list">
-                    {l.riscosOrdenados.map((r) => (
-                      <li key={r.titulo} className="border-l-2 border-[color:var(--signal)] pl-4">
+                    {l.riscosOrdenados.map((r, i) => (
+                      <li key={i} className="border-l-2 border-[color:var(--signal)] pl-4">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={cn('rule-label px-2 py-0.5', TOM_SEVERIDADE[r.severidade])}>
                             {t(ROTULO_SEVERIDADE[r.severidade], idioma)}
                           </span>
-                          <span className="font-semibold">{r.titulo}</span>
+                          <span lang={lc} className="font-semibold">
+                            {r.titulo}
+                          </span>
                         </div>
-                        <p className="mt-2 text-sm text-[color:var(--muted)]">{r.descricao}</p>
+                        <p lang={lc} className="mt-2 text-sm text-[color:var(--muted)]">
+                          {r.descricao}
+                        </p>
                       </li>
                     ))}
                   </ul>
@@ -333,14 +402,16 @@ export function Relatorio({
               </div>
               <div>
                 <p className="rule-label">
-                  {t(RELATORIO.oportunidadesTitulo, idioma)} · {a.oportunidades.length}
+                  {t(RELATORIO.oportunidadesTitulo, idioma)} · {faltaOportunidades ? semDados : a.oportunidades.length}
                 </p>
                 {a.oportunidades.length === 0 ? (
-                  <p className="mt-4 text-sm text-[color:var(--muted)]">{t(RELATORIO.nenhum, idioma)}</p>
+                  <p className="mt-4 text-sm text-[color:var(--muted)]">
+                    {faltaOportunidades ? semDados : t(RELATORIO.nenhum, idioma)}
+                  </p>
                 ) : (
-                  <ul className="mt-4 grid gap-4" role="list">
-                    {a.oportunidades.map((o) => (
-                      <li key={o.titulo} className="border-l-2 border-[color:var(--on-surface)] pl-4">
+                  <ul className="mt-4 grid gap-4" role="list" lang={lc}>
+                    {a.oportunidades.map((o, i) => (
+                      <li key={i} className="border-l-2 border-[color:var(--on-surface)] pl-4">
                         <div className="flex flex-wrap items-center gap-2">
                           {o.accionabilidade && (
                             <span className="rule-label border border-[color:var(--border)] px-2 py-0.5">
@@ -376,7 +447,7 @@ export function Relatorio({
                   </p>
                   <div className="mt-4">
                     {itens.length ? (
-                      <Lista itens={itens} />
+                      <Lista itens={itens} lang={lc} />
                     ) : (
                       <p className="text-sm text-[color:var(--muted)]">{t(RELATORIO.nenhum, idioma)}</p>
                     )}
@@ -408,7 +479,9 @@ export function Relatorio({
                 .map(([rotulo, v]) => (
                   <div key={rotulo.pt} className="border-t border-[color:var(--border)] pt-4">
                     <dt className="rule-label text-[color:var(--muted)]">{t(rotulo, idioma)}</dt>
-                    <dd className="mt-3">{v}</dd>
+                    <dd lang={lc} className="mt-3">
+                      {v}
+                    </dd>
                   </div>
                 ))}
             </dl>
@@ -419,12 +492,14 @@ export function Relatorio({
         {mostra('news-cadeias') && (
           <Bloco id="news-cadeias" titulo={titulo('news-cadeias')}>
             <ul className="grid gap-3" role="list">
-              {a.cadeias.map((c) => (
+              {a.cadeias.map((c, i) => (
                 <li
-                  key={c.cadeia}
+                  key={i}
                   className="flex flex-col gap-2 border border-[color:var(--border)] p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <span className="font-[family-name:var(--font-techno)] text-sm">{c.cadeia}</span>
+                  <span lang={lc} className="font-[family-name:var(--font-techno)] text-sm">
+                    {c.cadeia}
+                  </span>
                   <span
                     className={cn(
                       'rule-label shrink-0',
@@ -454,7 +529,9 @@ export function Relatorio({
                 .map(([rotulo, v]) => (
                   <div key={rotulo.pt} className="border-t border-[color:var(--border)] pt-4">
                     <dt className="rule-label text-[color:var(--muted)]">{t(rotulo, idioma)}</dt>
-                    <dd className="mt-3 text-sm">{v}</dd>
+                    <dd lang={lc} className="mt-3 text-sm">
+                      {v}
+                    </dd>
                   </div>
                 ))}
             </dl>
@@ -476,7 +553,9 @@ export function Relatorio({
                 .map(([rotulo, v], i) => (
                   <div key={rotulo.pt} className={cn('border-t border-[color:var(--border)] pt-4', i === 2 && 'md:col-span-2')}>
                     <dt className="rule-label text-[color:var(--muted)]">{t(rotulo, idioma)}</dt>
-                    <dd className="mt-3 text-sm">{v}</dd>
+                    <dd lang={lc} className="mt-3 text-sm">
+                      {v}
+                    </dd>
                   </div>
                 ))}
             </dl>
@@ -486,9 +565,9 @@ export function Relatorio({
         {/* 10. Perguntas por indústria */}
         {mostra('news-perguntas') && (
           <Bloco id="news-perguntas" titulo={titulo('news-perguntas')}>
-            <ul className="grid gap-6" role="list">
-              {a.perguntas.map((p) => (
-                <li key={p.pergunta} className="grid gap-2 border-l-2 border-[color:var(--border)] pl-4">
+            <ul className="grid gap-6" role="list" lang={lc}>
+              {a.perguntas.map((p, i) => (
+                <li key={i} className="grid gap-2 border-l-2 border-[color:var(--border)] pl-4">
                   <span className="rule-label text-[color:var(--muted)]">{p.industria}</span>
                   <span className="font-semibold">{p.pergunta}</span>
                   <span className="text-sm text-[color:var(--muted)]">{p.insight}</span>
@@ -501,11 +580,6 @@ export function Relatorio({
         <footer className="rule grid gap-2 pt-5 text-sm text-[color:var(--muted)]">
           {/* Dentro do artigo de propósito: o aviso sai também na versão impressa. */}
           <p>{t(NEWS.aviso, idioma)}</p>
-          {a.seccoesEmFalta.length > 0 && (
-            <p className="text-[length:var(--text-micro)]">
-              {t(RELATORIO.emFalta, idioma)} {a.seccoesEmFalta.join(', ')}.
-            </p>
-          )}
           <p className="rule-label">{MARCA_NEWS}</p>
         </footer>
       </div>

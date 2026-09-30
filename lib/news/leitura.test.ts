@@ -48,6 +48,18 @@ describe('ler — indicadores derivados das pontuações do motor', () => {
     expect(l.impactoLiquido).toBe(0);
   });
 
+  it('com os riscos em falta, carga e balanço ficam sem dados — nunca 0 e +N', () => {
+    const l = ler({ ...exemplo(), riscos: [], seccoesEmFalta: ['riscos'] });
+    expect(l.cargaRisco).toBeNull();
+    expect(l.balanco).toBeNull();
+  });
+
+  it('com as oportunidades em falta, o balanço fica sem dados e a carga mantém-se', () => {
+    const l = ler({ ...exemplo(), oportunidades: [], seccoesEmFalta: ['oportunidades'] });
+    expect(l.balanco).toBeNull();
+    expect(l.cargaRisco).toBe(6);
+  });
+
   it('a média arredonda ao inteiro', () => {
     const l = ler({
       ...exemplo(),

@@ -4,9 +4,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field, inputClass } from '@/components/form/Field';
 import type { Idioma } from '@/content/types';
-import { IDIOMAS_DO_MOTOR, NEWS } from '@/content/i18n/news';
-import type { Analise } from '@/lib/news/esquema';
-import { IDIOMAS_MOTOR, TEXTO_MIN, urlPublica, type IdiomaMotor } from '@/lib/news/pedido';
+import { IDIOMAS_DO_MOTOR, NEWS, RELATORIO } from '@/content/i18n/news';
+import { validarAnalise, type Analise } from '@/lib/news/esquema';
+import { IDIOMAS_MOTOR, TEXTO_MAX, TEXTO_MIN, urlPublica, type IdiomaMotor } from '@/lib/news/limites';
 import { t } from '@/lib/i18n/texto';
 import { cn } from '@/lib/utils/cn';
 import { Relatorio } from './Relatorio';
@@ -20,7 +20,8 @@ import { Relatorio } from './Relatorio';
  * tem o diagnóstico, que tem consentimento a sério.
  */
 
-const CHAVE_HISTORICO = 'agoramoz:news:historico';
+/** Versionada: uma mudança no modelo muda a chave, e as entradas antigas ficam para trás. */
+const CHAVE_HISTORICO = 'agoramoz:news:historico:v1';
 const MAX_HISTORICO = 10;
 
 interface Entrada {
@@ -33,23 +34,18 @@ interface Entrada {
 
 /**
  * O que está no `localStorage` pode ter sido escrito por uma versão antiga da
- * página, ou por qualquer pessoa com acesso ao browser. Uma entrada que não
- * tem a forma do modelo actual sai, em vez de partir o relatório.
+ * página, ou por qualquer pessoa com acesso ao browser. A análise é validada
+ * contra o modelo inteiro; uma entrada que não passa sai, em vez de partir o
+ * relatório ao ser aberta.
  */
 function entradaValida(e: unknown): e is Entrada {
   const x = e as Partial<Entrada> | null;
-  const a = x?.analise as Partial<Analise> | undefined;
   return (
     typeof x?.id === 'string' &&
     typeof x.titulo === 'string' &&
     typeof x.quando === 'string' &&
     IDIOMAS_MOTOR.includes(x.idioma as IdiomaMotor) &&
-    typeof a?.titulo?.titulo === 'string' &&
-    ['sectores', 'resumo', 'matriz', 'riscos', 'oportunidades', 'cadeias', 'perguntas', 'pontuacoes', 'seccoesEmFalta'].every(
-      (k) => Array.isArray((a as Record<string, unknown>)[k]),
-    ) &&
-    typeof a.recomendacoes === 'object' &&
-    a.recomendacoes !== null
+    validarAnalise(x.analise)
   );
 }
 
@@ -63,12 +59,14 @@ function lerHistorico(): Entrada[] {
   }
 }
 
-function gravarHistorico(h: Entrada[]): void {
+/** `false` quando o browser recusa (modo privado, quota cheia). */
+function gravarHistorico(h: Entrada[]): boolean {
   try {
     if (h.length === 0) localStorage.removeItem(CHAVE_HISTORICO);
     else localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(h));
+    return true;
   } catch {
-    // Armazenamento recusado ou cheio: o histórico fica só em memória.
+    return false;
   }
 }
 
@@ -76,7 +74,7 @@ function gravarHistorico(h: Entrada[]): void {
  * O histórico como loja externa, para `useSyncExternalStore`: o servidor e o
  * primeiro render do cliente veem uma lista vazia (sem desencontro de
  * hidratação), e o browser lê o `localStorage` depois. Outro separador que
- * altere o histórico actualiza este.
+ * altere ou limpe o histórico actualiza este.
  */
 const VAZIO: Entrada[] = [];
 let cacheHistorico: Entrada[] | null = null;
@@ -90,7 +88,8 @@ function historicoAtual(): Entrada[] {
 function subscreverHistorico(avisar: () => void): () => void {
   ouvintes.add(avisar);
   const deOutroSeparador = (e: StorageEvent) => {
-    if (e.key !== CHAVE_HISTORICO) return;
+    // `key === null` é um `localStorage.clear()` noutro separador.
+    if (e.key !== null && e.key !== CHAVE_HISTORICO) return;
     cacheHistorico = null;
     avisar();
   };
@@ -101,19 +100,35 @@ function subscreverHistorico(avisar: () => void): () => void {
   };
 }
 
-function definirHistorico(h: Entrada[]): void {
+function definirHistorico(h: Entrada[]): boolean {
   cacheHistorico = h;
-  gravarHistorico(h);
+  const gravou = gravarHistorico(h);
   for (const avisar of ouvintes) avisar();
+  return gravou;
+}
+
+/** `crypto.randomUUID` não existe fora de contexto seguro (http numa rede local). */
+function novoId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
 }
 
 type Estado =
   | { tipo: 'inicial' }
   | { tipo: 'a-analisar' }
   | { tipo: 'erro'; mensagem: string }
-  | { tipo: 'pronto'; analise: Analise };
+  | { tipo: 'pronto'; id: string; analise: Analise; idioma: IdiomaMotor; aviso?: string };
 
-type ChaveErro = keyof typeof NEWS.erros;
+/** O status HTTP da nossa rota → a mensagem. 500 é serviço, não artigo. */
+function mensagemDoStatus(status: number, idioma: Idioma): string {
+  const E = NEWS.erros;
+  const chave = status === 500 ? 503 : status;
+  const texto = chave in E ? E[chave as keyof typeof E] : E[502];
+  return t(texto, idioma);
+}
 
 export function Analisador({ idioma }: { idioma: Idioma }) {
   const [modo, setModo] = useState<'url' | 'texto'>('url');
@@ -124,65 +139,100 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
   const [estado, setEstado] = useState<Estado>({ tipo: 'inicial' });
   const historico = useSyncExternalStore(subscreverHistorico, historicoAtual, () => VAZIO);
   const tituloRef = useRef<HTMLHeadingElement>(null);
+  const campoRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
   const abortar = useRef<AbortController | null>(null);
 
   useEffect(() => () => abortar.current?.abort(), []);
 
   // Um relatório novo leva o foco ao seu título: quem usa leitor de ecrã ouve
   // que chegou, e quem usa rato não fica a olhar para o formulário.
+  const idPronto = estado.tipo === 'pronto' ? estado.id : null;
   useEffect(() => {
-    if (estado.tipo !== 'pronto') return;
+    if (!idPronto) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     tituloRef.current?.focus({ preventScroll: true });
-    tituloRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [estado]);
+    tituloRef.current?.scrollIntoView({ behavior: reduzido ? 'auto' : 'smooth', block: 'start' });
+  }, [idPronto]);
+
+  const recusarCampo = (mensagem: string) => {
+    setErroCampo(mensagem);
+    // O erro do campo não é região viva: o foco no campo é que o anuncia.
+    requestAnimationFrame(() => campoRef.current?.focus());
+  };
 
   const submeter = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (estado.tipo === 'a-analisar') return;
     setErroCampo(null);
 
-    if (modo === 'url' && !urlPublica(url.trim())) return setErroCampo(t(NEWS.erroUrl, idioma));
-    if (modo === 'texto' && texto.trim().length < TEXTO_MIN) return setErroCampo(t(NEWS.erroTexto, idioma));
+    const textoLimpo = texto.trim();
+    if (modo === 'url' && !urlPublica(url.trim())) return recusarCampo(t(NEWS.erroUrl, idioma));
+    if (modo === 'texto' && (textoLimpo.length < TEXTO_MIN || textoLimpo.length > TEXTO_MAX)) {
+      return recusarCampo(t(NEWS.erroTexto, idioma));
+    }
 
     abortar.current?.abort();
     const controlador = new AbortController();
     abortar.current = controlador;
     setEstado({ tipo: 'a-analisar' });
 
+    let res: Response;
     try {
-      const res = await fetch('/api/news/analisar', {
+      res = await fetch('/api/news/analisar', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(
           modo === 'url'
             ? { modo, url: url.trim(), idioma: idiomaRelatorio }
-            : { modo, texto: texto.trim(), idioma: idiomaRelatorio },
+            : { modo, texto: textoLimpo, idioma: idiomaRelatorio },
         ),
         signal: controlador.signal,
       });
-
-      if (!res.ok) {
-        const chave = (String(res.status) in NEWS.erros ? String(res.status) : '502') as ChaveErro;
-        return setEstado({ tipo: 'erro', mensagem: t(NEWS.erros[chave], idioma) });
-      }
-
-      const corpo = (await res.json()) as { analise?: Analise };
-      if (!corpo.analise) return setEstado({ tipo: 'erro', mensagem: t(NEWS.erros[502], idioma) });
-
-      const analise = corpo.analise;
-      setEstado({ tipo: 'pronto', analise });
-
-      const entrada: Entrada = {
-        id: crypto.randomUUID(),
-        titulo: analise.titulo.titulo || url || texto.slice(0, 60),
-        idioma: idiomaRelatorio,
-        quando: new Date().toISOString(),
-        analise,
-      };
-      definirHistorico([entrada, ...historicoAtual()].slice(0, MAX_HISTORICO));
     } catch (erro) {
       if ((erro as { name?: string }).name === 'AbortError') return;
-      setEstado({ tipo: 'erro', mensagem: t(NEWS.erros.rede, idioma) });
+      return setEstado({ tipo: 'erro', mensagem: t(NEWS.erros.rede, idioma) });
     }
+
+    if (!res.ok) return setEstado({ tipo: 'erro', mensagem: mensagemDoStatus(res.status, idioma) });
+
+    // Um 200 que não é JSON (uma página de proxy) é falha do serviço, não da rede.
+    let analise: Analise | undefined;
+    try {
+      analise = ((await res.json()) as { analise?: Analise }).analise;
+    } catch (erro) {
+      if ((erro as { name?: string }).name === 'AbortError') return;
+    }
+    if (!analise || !validarAnalise(analise)) {
+      return setEstado({ tipo: 'erro', mensagem: t(NEWS.erros[502], idioma) });
+    }
+
+    // O relatório entregue nunca é substituído por um erro do histórico.
+    const id = novoId();
+    const gravou = definirHistorico(
+      [
+        {
+          id,
+          titulo: analise.titulo.titulo || url || textoLimpo.slice(0, 60),
+          idioma: idiomaRelatorio,
+          quando: new Date().toISOString(),
+          analise,
+        },
+        ...historicoAtual(),
+      ].slice(0, MAX_HISTORICO),
+    );
+    setEstado({
+      tipo: 'pronto',
+      id,
+      analise,
+      idioma: idiomaRelatorio,
+      aviso: gravou ? undefined : t(NEWS.historicoFalhou, idioma),
+    });
+  };
+
+  const abrirDoHistorico = (h: Entrada) => {
+    // Uma análise em curso, ao chegar, taparia a que a pessoa escolheu abrir.
+    abortar.current?.abort();
+    setEstado({ tipo: 'pronto', id: h.id, analise: h.analise, idioma: h.idioma });
   };
 
   const aAnalisar = estado.tipo === 'a-analisar';
@@ -238,6 +288,7 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
             >
               {({ id, describedBy, invalid }) => (
                 <input
+                  ref={campoRef}
                   id={id}
                   type="url"
                   inputMode="url"
@@ -247,6 +298,7 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
                   onChange={(e) => setUrl(e.target.value)}
                   aria-describedby={describedBy}
                   aria-invalid={invalid}
+                  aria-required
                   className={inputClass}
                 />
               )}
@@ -261,12 +313,14 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
             >
               {({ id, describedBy, invalid }) => (
                 <textarea
+                  ref={campoRef}
                   id={id}
                   rows={8}
                   value={texto}
                   onChange={(e) => setTexto(e.target.value)}
                   aria-describedby={describedBy}
                   aria-invalid={invalid}
+                  aria-required
                   className={inputClass}
                 />
               )}
@@ -280,6 +334,7 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
                   id={id}
                   value={idiomaRelatorio}
                   onChange={(e) => setIdiomaRelatorio(e.target.value as IdiomaMotor)}
+                  aria-required
                   className={inputClass}
                 >
                   {IDIOMAS_MOTOR.map((i) => (
@@ -298,7 +353,11 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
           <div role="status" aria-live="polite" className="min-h-6 text-sm">
             {aAnalisar && <p className="text-[color:var(--muted)]">{t(NEWS.aAnalisarDetalhe, idioma)}</p>}
             {estado.tipo === 'erro' && <p className="text-[color:var(--signal)]">{estado.mensagem}</p>}
-            {estado.tipo === 'pronto' && <p className="sr-only">{t(NEWS.pronto, idioma)}</p>}
+            {estado.tipo === 'pronto' && (
+              <p className={estado.aviso ? 'text-[color:var(--muted)]' : 'sr-only'}>
+                {t(NEWS.pronto, idioma)} {estado.aviso}
+              </p>
+            )}
           </div>
         </form>
 
@@ -311,6 +370,7 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
               <button
                 type="button"
                 onClick={() => definirHistorico([])}
+                aria-label={t(RELATORIO.limparHistoricoAria, idioma)}
                 className="text-sm underline-offset-4 hover:underline"
               >
                 {t(NEWS.limparHistorico, idioma)}
@@ -323,7 +383,7 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
                 <li key={h.id}>
                   <button
                     type="button"
-                    onClick={() => setEstado({ tipo: 'pronto', analise: h.analise })}
+                    onClick={() => abrirDoHistorico(h)}
                     className="grid w-full gap-0.5 border-t border-[color:var(--border)] py-3 text-left hover:text-[color:var(--muted)]"
                   >
                     <span className="line-clamp-2 text-sm font-medium">{h.titulo}</span>
@@ -341,7 +401,14 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
 
       {estado.tipo === 'pronto' && (
         <div id="news-resultado">
-          <Relatorio analise={estado.analise} idioma={idioma} tituloRef={tituloRef} />
+          {/* A chave por análise repõe o estado interno (cópia, «como calculamos») a cada relatório. */}
+          <Relatorio
+            key={estado.id}
+            analise={estado.analise}
+            idioma={idioma}
+            idiomaConteudo={estado.idioma}
+            tituloRef={tituloRef}
+          />
         </div>
       )}
     </div>

@@ -45,6 +45,9 @@ const SAFE_FIELDS = [
   // URL nem o texto analisado — dizem o que alguém anda a ler.
   'modo',
   'prioridade',
+  // Contagens de secções em falta e de itens recusados numa análise. Números.
+  'faltas',
+  'descartados',
 ] as const;
 
 type SafeField = (typeof SAFE_FIELDS)[number];

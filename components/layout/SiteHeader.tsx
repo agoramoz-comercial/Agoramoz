@@ -86,7 +86,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
               aria-haspopup="true"
               onClick={() => setMenu(menu === key ? null : key)}
               onMouseEnter={() => setMenu(key)}
-              className="rule-label inline-flex min-h-11 items-center gap-1.5 px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
+              className="rule-label inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)]"
             >
               {t(key === 'solucoes' ? CHROME.solucoes : CHROME.setores, idioma)}
               <ChevronDown aria-hidden className={cn('size-3.5 transition-transform duration-300', menu === key && 'rotate-180')} />
@@ -97,7 +97,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
               key={item.href}
               href={item.href}
               aria-current={pathname === item.href ? 'page' : undefined}
-              className="rule-label inline-flex min-h-11 items-center px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
+              className="rule-label inline-flex min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
             >
               {item.label}
             </Link>
@@ -105,7 +105,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
           <Link
             href={news.href}
             aria-current={pathname === news.href ? 'page' : undefined}
-            className="rule-label inline-flex min-h-11 items-center px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
+            className="rule-label inline-flex min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
           >
             {t(CHROME.news, idioma)}
           </Link>
@@ -113,7 +113,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
             <Link
               href={globalHref}
               aria-current={pathname === globalHref ? 'page' : undefined}
-              className="rule-label inline-flex min-h-11 items-center px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
+              className="rule-label inline-flex min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
             >
               {t(CHROME.mercadosGlobais, idioma)}
             </Link>
@@ -129,11 +129,16 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
           */}
           <Button asChild size="sm">
             <Link href={diagnostico.href} hrefLang={diagnostico.soPortugues ? 'pt' : undefined}>
-              <span className="sm:hidden" aria-hidden>
+              {/*
+                Também entre lg e xl (1024–1279px): com a ligação Moz News, a
+                barra desktop portuguesa transbordava 67px a 1024px. O rótulo
+                curto devolve o espaço sem tirar nenhuma ligação.
+              */}
+              <span className="sm:hidden lg:inline xl:hidden" aria-hidden>
                 {t(CHROME.diagnosticoCurto, idioma)}
               </span>
-              <span className="hidden sm:inline">{cta}</span>
-              <span className="sr-only sm:hidden">{cta}</span>
+              <span className="hidden sm:inline lg:hidden xl:inline">{cta}</span>
+              <span className="sr-only sm:hidden lg:inline xl:hidden">{cta}</span>
             </Link>
           </Button>
 

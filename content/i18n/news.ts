@@ -1,6 +1,6 @@
 import type { Texto } from '@/content/types';
-import type { IdiomaMotor } from '@/lib/news/pedido';
-import type { Prioridade, Severidade, TipoCadeia } from '@/lib/news/esquema';
+import type { IdiomaMotor } from '@/lib/news/limites';
+import type { Prioridade, Seccao, Severidade, TipoCadeia } from '@/lib/news/esquema';
 
 /**
  * AGORAMOZ Moz News, nos dois idiomas.
@@ -42,8 +42,8 @@ export const NEWS = {
   dicaUrl: { pt: 'Um endereço https de um site de notícias.', en: 'An https address from a news site.' },
   rotuloTexto: { pt: 'Texto da notícia', en: 'Article text' },
   dicaTexto: {
-    pt: 'Cole o artigo completo. Pelo menos 200 caracteres.',
-    en: 'Paste the full article. At least 200 characters.',
+    pt: 'Cole o artigo completo, entre 200 e 20 000 caracteres.',
+    en: 'Paste the full article, between 200 and 20,000 characters.',
   },
   rotuloIdioma: { pt: 'Idioma do relatório', en: 'Report language' },
   analisar: { pt: 'Analisar', en: 'Analyse' },
@@ -56,10 +56,18 @@ export const NEWS = {
 
   erroUrl: { pt: 'Indique um link https de um site público.', en: 'Enter an https link from a public site.' },
   erroTexto: {
-    pt: 'O texto precisa de pelo menos 200 caracteres.',
-    en: 'The text needs at least 200 characters.',
+    pt: 'O texto precisa de ter entre 200 e 20 000 caracteres.',
+    en: 'The text must be between 200 and 20,000 characters.',
+  },
+  historicoFalhou: {
+    pt: 'A análise está pronta, mas não foi possível guardá-la no histórico deste browser.',
+    en: 'The analysis is ready, but it could not be saved to this browser’s history.',
   },
   erros: {
+    413: {
+      pt: 'O texto é demasiado longo. Cole só o artigo, até 20 000 caracteres.',
+      en: 'The text is too long. Paste only the article, up to 20,000 characters.',
+    },
     400: {
       pt: 'Este pedido não pôde ser lido. Confirme o link ou o texto.',
       en: 'This request could not be read. Check the link or the text.',
@@ -282,9 +290,10 @@ export const RELATORIO = {
   copiar: { pt: 'Copiar resumo para o LinkedIn', en: 'Copy summary for LinkedIn' },
   copiado: { pt: 'Resumo copiado.', en: 'Summary copied.' },
   copiarFalhou: {
-    pt: 'Não foi possível copiar. Seleccione o texto do resumo e copie à mão.',
-    en: 'Could not copy. Select the summary text and copy it manually.',
+    pt: 'Não foi possível copiar: o browser não deu acesso à área de transferência.',
+    en: 'Could not copy: the browser did not allow access to the clipboard.',
   },
+  limparHistoricoAria: { pt: 'Limpar o histórico de análises', en: 'Clear analysis history' },
   imprimir: { pt: 'Imprimir ou guardar PDF', en: 'Print or save as PDF' },
   plano: { pt: 'Transformar num plano para a sua empresa', en: 'Turn this into a plan for your company' },
   planoNota: {
@@ -292,10 +301,32 @@ export const RELATORIO = {
     en: 'The AGORA diagnostic matches this reading against your actual process.',
   },
 
+  incompleto: { pt: 'Análise incompleta', en: 'Incomplete analysis' },
   emFalta: {
-    pt: 'O motor não devolveu estas secções:',
-    en: 'The engine did not return these sections:',
+    pt: 'O motor não devolveu, ou devolveu em formato inválido:',
+    en: 'The engine did not return, or returned in an invalid format:',
   },
+  descartados: {
+    pt: '{n} item(ns) recusado(s) por formato inválido.',
+    en: '{n} item(s) rejected for an invalid format.',
+  },
+  nomesSeccao: {
+    titulo: { pt: 'título', en: 'title' },
+    prioridade: { pt: 'prioridade', en: 'priority' },
+    sectores: { pt: 'sectores', en: 'sectors' },
+    resumo: { pt: 'resumo executivo', en: 'executive summary' },
+    interpretacao: { pt: 'interpretação', en: 'interpretation' },
+    matriz: { pt: 'matriz de impacto', en: 'impact matrix' },
+    riscos: { pt: 'riscos', en: 'risks' },
+    oportunidades: { pt: 'oportunidades', en: 'opportunities' },
+    horizonte: { pt: 'horizonte', en: 'outlook' },
+    recomendacoes: { pt: 'recomendações', en: 'recommendations' },
+    cadeias: { pt: 'cadeias de sinal', en: 'signal chains' },
+    economia: { pt: 'leitura económica', en: 'economic reading' },
+    estrategias: { pt: 'estratégias', en: 'strategies' },
+    perguntas: { pt: 'perguntas por indústria', en: 'industry questions' },
+    pontuacoes: { pt: 'pontuações de impacto', en: 'impact scores' },
+  } satisfies Record<Seccao, Texto>,
 } as const;
 
 export const ROTULO_PRIORIDADE: Record<Prioridade, Texto> = {
