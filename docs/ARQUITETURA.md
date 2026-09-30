@@ -106,7 +106,8 @@ aprende que a área existe.
 
 ### Especiais
 
-`sitemap.xml` (17 URLs) · `robots.txt` · `icon.svg` · `opengraph-image` ·
+`sitemap.xml` (17 URLs) · `robots.txt` · `icon.png` 480 · `apple-icon.png` ·
+`favicon.ico` · `manifest.webmanifest` · `opengraph-image` ·
 `not-found` · `global-error` · `/nao-encontrado`
 
 ---
@@ -710,7 +711,8 @@ agoramoz/
 │   ├── layout.tsx              html, body, fontes, metadataBase
 │   ├── robots.ts  sitemap.ts   17 URLs, derivados do registry
 │   ├── opengraph-image.tsx     cartão de partilha da raiz
-│   ├── icon.svg
+│   ├── icon.png apple-icon.png favicon.ico   logo sobre preto (.qa/icones.mjs)
+│   ├── manifest.ts             ícones 192/512, tema #000
 │   ├── not-found.tsx  global-error.tsx  nao-encontrado/
 │   └── globals.css             98 variáveis de design
 │

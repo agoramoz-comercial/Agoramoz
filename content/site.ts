@@ -92,8 +92,12 @@ export const IDENTITY: Identity = {
   legalName: null,
   tradingName: BRAND_NAME,
   url: SITE.url,
-  /** 2000×2000, verificado com `file` — não estimado. */
-  logo: { url: `${SITE.url}/brand/logo-light-bg.png`, width: 2000, height: 2000 },
+  /**
+   * O logo oficial sobre preto, quadrado, 512×512 — gerado por
+   * `.qa/icones.mjs` a partir de `logo-dark-bg.png`, com margem para o
+   * recorte circular do Google. O teste confirma o ficheiro e as medidas.
+   */
+  logo: { url: `${SITE.url}/brand/logo-preto-512.png`, width: 512, height: 512 },
   /**
    * É a linha de WhatsApp, e é a única que existe. Não invento um fixo para
    * o `contactPoint` ficar mais completo.
