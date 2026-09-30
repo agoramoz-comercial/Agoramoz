@@ -101,9 +101,9 @@ export const infraestruturaDigital: SolutionPage = {
   ],
 
   seo: {
-    title: 'Infraestrutura digital: integração, segurança e monitorização',
+    title: 'Integração de sistemas e segurança em Moçambique',
     description:
-      'Arquitetura, integrações, gestão de acessos, monitorização, recuperação e documentação para que os seus sistemas continuem a funcionar e a ser manteníveis.',
+      'Integração de sistemas, gestão de acessos, monitorização e recuperação, documentadas para que os sistemas da sua empresa continuem a funcionar.',
   },
 
   updatedAt: '2026-09-22',

@@ -104,9 +104,9 @@ export const agentesIa: SolutionPage = {
   ],
 
   seo: {
-    title: 'Agentes de IA com fontes, permissões e supervisão humana',
+    title: 'Agentes de IA para empresas em Moçambique',
     description:
-      'Assistentes com âmbito declarado, ancorados nas fontes da sua empresa, que citam a origem e escalam quando não sabem. Decisões críticas mantêm aprovação humana.',
+      'Agentes de IA para empresas, ancorados nas fontes da sua organização: citam a origem, escalam quando não sabem e mantêm aprovação humana nas decisões críticas.',
   },
 
   updatedAt: '2026-09-22',

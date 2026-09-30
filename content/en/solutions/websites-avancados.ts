@@ -96,9 +96,9 @@ export const websitesAvancadosEn: SolutionPage = {
   ],
 
   seo: {
-    title: 'Advanced websites built for conversion',
+    title: 'Website development for businesses in Mozambique',
     description:
-      'Websites that capture, qualify and route opportunities: strategy, copy, conditional forms, CRM connection, technical SEO and measurement. A diagnostic comes before the proposal.',
+      'Websites that capture and qualify opportunities: strategy, copy, conditional forms, CRM connection, technical SEO and measurement. Diagnostic first.',
   },
 
   updatedAt: '2026-09-29',

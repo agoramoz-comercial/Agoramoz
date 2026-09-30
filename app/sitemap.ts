@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, SECTOR_PAGES, SOLUTIONS } from '@/content/registry';
 import { PERFIL } from '@/content/landing/perfil';
 import { SOLUTIONS_EN } from '@/content/en/solutions';
-import { absolute } from '@/lib/seo/site';
+import { absolute, alternativasDeIdioma } from '@/lib/seo/site';
 import { caminhoNoIdioma } from '@/lib/i18n/texto';
 import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
 
@@ -93,5 +93,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
-  return [...portugues, ...ingles];
+  /**
+   * hreflang no sitemap: o MESMO conjunto que cada página declara no `<head>`
+   * (`buildMetadata`), para que as duas fontes nunca se contradigam — o par
+   * PT/EN com `x-default` em português, e os mercados na home e nos países.
+   */
+  const MERCADOS = { 'pt-MZ': '/mz', 'pt-PT': '/pt', 'pt-BR': '/br', 'x-default': '/' } as const;
+  const comMercados = new Set(['/', ...COUNTRY_CODES.map((c) => `/${c}`)]);
+  const absolutos = (l: Record<string, string>) =>
+    Object.fromEntries(Object.entries(l).map(([k, v]) => [k, absolute(v)]));
+  const bilingues = new Set(ROTAS_BILINGUES);
+
+  const hreflang = (rota: string, emIngles: boolean) => {
+    const l: Record<string, string> = {};
+    if (bilingues.has(rota)) Object.assign(l, alternativasDeIdioma(rota));
+    if (!emIngles && comMercados.has(rota)) Object.assign(l, MERCADOS);
+    return Object.keys(l).length ? { alternates: { languages: absolutos(l) } } : {};
+  };
+
+  const caminho = (url: string) => new URL(url).pathname;
+  return [
+    ...portugues.map((e) => ({ ...e, ...hreflang(caminho(e.url), false) })),
+    ...ingles.map((e, i) => ({ ...e, ...hreflang(ROTAS_BILINGUES[i]!, true) })),
+  ];
 }

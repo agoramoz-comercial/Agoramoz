@@ -101,9 +101,9 @@ export const infraestruturaDigitalEn: SolutionPage = {
   ],
 
   seo: {
-    title: 'Digital infrastructure: integration, security and monitoring',
+    title: 'Systems integration and security in Mozambique',
     description:
-      'Architecture, integrations, access management, monitoring, recovery and documentation so that your systems keep working and stay maintainable.',
+      'Systems integration, access management, monitoring and recovery, documented so that your company’s systems keep working and stay maintainable.',
   },
 
   updatedAt: '2026-09-29',

@@ -96,9 +96,9 @@ export const automacaoDeProcessosEn: SolutionPage = {
   ],
 
   seo: {
-    title: 'Business process automation',
+    title: 'Business process automation in Mozambique',
     description:
-      'We connect tasks, data and platforms to cut repetitive work, delays and manual data-entry errors. A diagnostic of the process comes before any automation.',
+      'Business process automation: we connect tasks, data and platforms to cut repetitive work, delays and manual errors. A diagnostic of the process comes first.',
   },
 
   updatedAt: '2026-09-29',

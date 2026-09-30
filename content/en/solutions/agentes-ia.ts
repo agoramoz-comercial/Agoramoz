@@ -101,9 +101,9 @@ export const agentesIaEn: SolutionPage = {
   ],
 
   seo: {
-    title: 'AI agents with sources, permissions and human supervision',
+    title: 'AI agents for businesses in Mozambique',
     description:
-      'Assistants with a declared scope, grounded in your company’s sources, that cite where answers come from and escalate when they do not know. Critical decisions keep human approval.',
+      'AI agents for businesses, grounded in your own sources: they cite where answers come from, escalate when unsure and keep human approval on critical decisions.',
   },
 
   updatedAt: '2026-09-29',

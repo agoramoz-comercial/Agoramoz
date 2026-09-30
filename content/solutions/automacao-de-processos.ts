@@ -96,9 +96,9 @@ export const automacaoDeProcessos: SolutionPage = {
   ],
 
   seo: {
-    title: 'Automação de processos empresariais',
+    title: 'Automação de processos empresariais em Moçambique',
     description:
-      'Ligamos tarefas, dados e plataformas para reduzir trabalho repetitivo, atrasos e erros de introdução manual. Diagnóstico do processo antes de qualquer automação.',
+      'Automação de processos para empresas: ligamos tarefas, dados e plataformas para reduzir trabalho repetitivo, atrasos e erros manuais. Diagnóstico primeiro.',
   },
 
   updatedAt: '2026-09-22',

@@ -101,9 +101,9 @@ export const softwareEmpresarialEn: SolutionPage = {
   ],
 
   seo: {
-    title: 'Custom business software: portals, operations and dashboards',
+    title: 'Custom software development in Mozambique',
     description:
-      'Systems designed around the process that sets your company apart: customer portals, operations management, documentation and decision dashboards. A diagnostic comes before the proposal.',
+      'Custom software development: customer portals, operations management and decision dashboards, designed around your process. A diagnostic comes first.',
   },
 
   updatedAt: '2026-09-29',

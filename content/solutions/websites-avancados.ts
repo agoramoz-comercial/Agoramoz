@@ -100,9 +100,9 @@ export const websitesAvancados: SolutionPage = {
   ],
 
   seo: {
-    title: 'Websites avançados orientados à conversão',
+    title: 'Criação de websites para empresas em Moçambique',
     description:
-      'Websites que captam, qualificam e encaminham oportunidades: estratégia, copy, formulários condicionais, ligação ao CRM, SEO técnico e medição. Diagnóstico antes da proposta.',
+      'Criação de websites que captam e qualificam oportunidades: estratégia, copy, formulários condicionais, ligação ao CRM, SEO técnico e medição.',
   },
 
   updatedAt: '2026-09-22',

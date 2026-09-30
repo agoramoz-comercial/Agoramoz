@@ -100,9 +100,9 @@ export const softwareEmpresarial: SolutionPage = {
   ],
 
   seo: {
-    title: 'Software empresarial à medida: portais, operações e painéis',
+    title: 'Software à medida para empresas em Moçambique',
     description:
-      'Sistemas desenhados à volta do processo que distingue a sua empresa: portais de cliente, gestão de operações, documentação e painéis de decisão. Diagnóstico antes da proposta.',
+      'Desenvolvimento de software à medida: portais de cliente, gestão de operações e painéis de decisão, desenhados à volta do seu processo. Diagnóstico primeiro.',
   },
 
   updatedAt: '2026-09-22',
