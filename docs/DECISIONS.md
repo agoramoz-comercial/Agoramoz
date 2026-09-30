@@ -215,3 +215,27 @@ noutro separador, em vez do script de embed do Cal.
   URL nem o texto — o painel conta análises e prioridade, não guarda o que se lê.
 **Consequência:** com `SCHEDULING=off` nada muda para quem visita o site;
 ligar é aplicar a 0012, pôr três variáveis e criar o webhook.
+
+## D-30 — Painel de comando: contagens exactas, dias de Maputo, nada inventado
+O `/admin` passou de cinco contagens a um painel com período (7/30/90 dias no
+URL), comparação com o período anterior, leads por dia, CRM por fase, funil do
+pixel, canais, desistência por cartão, Moz News, reuniões Cal.com e ERP.
+- **Contagens exactas, não linhas:** o PostgREST do Supabase corta leituras em
+  `max_rows` (1000) sem erro. Cada número é um `count: 'exact', head: true`;
+  só a série diária lê linhas, paginadas, com tecto de 20 000 — acima dele o
+  bloco diz «erro» em vez de mostrar um número incompleto.
+- **Dias de calendário de Maputo** (UTC+2, sem hora de verão), hoje incluído
+  até agora. O preço — hoje a meio compara com dias inteiros — está escrito no
+  cabeçalho do painel.
+- **Uma fonte por ligar diz «por activar» e o passo que falta**; uma leitura
+  que falha diz «erro». Nenhum dos dois mostra zero.
+- **Sessão do staff, sujeita à RLS.** Nunca a chave de serviço.
+- **Cor:** uma série em verde `#007a43`, o contexto em cinzento `#85858d`
+  (≥ 3:1, validado para daltonismo), negativo em `#b82200`; texto verde em
+  `#006b3a` (AA sobre giz e giz-2). Toda a figura tem tabela.
+- **ERP:** a porta existe (`lib/erp/porta.ts`, `docs/ERP.md`); o adaptador não,
+  porque o sistema não foi escolhido. O painel mostra «Por ligar».
+- **Pré-visualização de QA** em `/qa/painel`: só com `ADMIN_PREVIEW=on` fora de
+  produção; números de exemplo, assinalados no topo.
+**Consequência:** ~60 contagens em paralelo por visita ao painel. Se crescer,
+o passo seguinte é uma vista ou RPC agregada (migração própria).

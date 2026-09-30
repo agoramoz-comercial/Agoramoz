@@ -188,6 +188,17 @@ const serverSchema = z.object({
     .optional(),
   /** O segredo do webhook no Cal. Assina cada entrega (`X-Cal-Signature-256`). */
   CAL_WEBHOOK_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres').optional(),
+
+  // ── ERP (preparado, não ligado) ─────────────────────────────────────────
+  /**
+   * `off` — o CRM é o interno e o painel mostra «por ligar». `http` — um ERP
+   * com API HTTPS; só faz sentido quando existir o adaptador para ele (ver
+   * docs/ERP.md). Não há integração simulada: ligar sem adaptador mostra
+   * «configurado, adaptador por escrever», nunca dados de mentira.
+   */
+  ERP_PROVIDER: z.enum(['off', 'http']).default('off'),
+  ERP_URL: z.string().url('deve ser um URL').refine((v) => v.startsWith('https://'), 'deve usar https').optional(),
+  ERP_API_KEY: z.string().min(20, 'deve ter pelo menos 20 caracteres').optional(),
 })
   .superRefine((env, ctx) => {
     if (env.DIAGNOSTIC_PERSISTENCE !== 'required') return;
@@ -229,6 +240,12 @@ const serverSchema = z.object({
       if (!env[nome]) {
         ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando SCHEDULING=cal' });
       }
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.ERP_PROVIDER !== 'http') return;
+    for (const nome of ['ERP_URL', 'ERP_API_KEY'] as const) {
+      if (!env[nome]) ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando ERP_PROVIDER=http' });
     }
   })
   .superRefine((env, ctx) => {
@@ -307,6 +324,9 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       CAL_ORIGIN: process.env.CAL_ORIGIN,
       CAL_LINK: process.env.CAL_LINK,
       CAL_WEBHOOK_SECRET: process.env.CAL_WEBHOOK_SECRET,
+      ERP_PROVIDER: process.env.ERP_PROVIDER,
+      ERP_URL: process.env.ERP_URL,
+      ERP_API_KEY: process.env.ERP_API_KEY,
     },
     'servidor',
   );

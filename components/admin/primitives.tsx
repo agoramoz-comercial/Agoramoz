@@ -40,9 +40,13 @@ export function AdminHeading({
 const TOM_CLASSE: Record<Tom, string> = {
   neutro: 'border-[color:var(--border)] text-[color:var(--muted)]',
   espera: 'border-[color:var(--border)] text-[color:var(--on-surface)]',
-  bom: 'border-[color:var(--color-growth-500)] text-[color:var(--color-growth-500)]',
-  aviso: 'border-[color:var(--color-signal-600)] text-[color:var(--color-signal-600)]',
-  mau: 'border-[color:var(--color-signal-700)] text-[color:var(--color-signal-700)]',
+  // Texto pequeno: 4,5:1 no mínimo sobre giz e giz-2. O verde e o vermelho da
+  // marca (growth-500, signal-600) ficam para superfícies grandes, não aqui.
+  bom: 'border-[color:var(--color-dado-texto)] text-[color:var(--color-dado-texto)]',
+  aviso: 'border-[color:var(--color-signal-700)] text-[color:var(--color-signal-700)]',
+  // «mau» cheio, «aviso» só contorno: os dois vermelhos distinguem-se sem
+  // depender de um segundo tom. Giz sobre signal-700: 5,48:1.
+  mau: 'border-[color:var(--color-signal-700)] bg-[color:var(--color-signal-700)] text-[color:var(--color-chalk)]',
 };
 
 export function StateBadge({ rotulo }: { rotulo: Rotulo | undefined }) {

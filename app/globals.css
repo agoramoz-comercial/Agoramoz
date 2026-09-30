@@ -53,6 +53,16 @@
   --color-growth-500: #00b060;
   --color-energy-500: #ffd62e; /* 14,05:1 com tinta-950 no selo — AA */
 
+  /* Dados do painel (admin). Validados com o validador do skill dataviz sobre o
+     giz (#ededeb): a série em destaque passa 3:1, a separação CVD (ΔE 19) e a
+     de visão normal (ΔE 25) face ao contexto. O contexto (período anterior)
+     fica abaixo de 3:1 de propósito — recua — e por isso cada gráfico tem
+     legenda e vista em tabela. O negativo é o sinal da marca, com ícone. */
+  --color-dado: #007a43;
+  --color-dado-texto: #006b3a; /* verde em texto: 5,66:1 giz, 5,12:1 giz-2 — AA */
+  --color-dado-contexto: #85858d; /* 3,12:1 sobre giz; CVD ΔE 11,3 com o verde */
+  --color-dado-negativo: #b82200;
+
   /* ------------------------------------------------------------ tipografia */
   --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
