@@ -32,6 +32,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
   });
   const indiceSolucoes = ligacao('/solucoes', idioma);
   const diagnostico = ligacao('/diagnostico', idioma);
+  const news = ligacao('/news', idioma);
   const globalHref = caminhoNoIdioma('/global', idioma);
   const pt = idioma === 'en' ? ('pt' as const) : undefined;
   const pathname = usePathname();
@@ -178,6 +179,15 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                 nenhuma ligação interna é uma página que o rastreador alcança
                 só pelo sitemap, e isso enfraquece-a.
               */}
+              <li>
+                <Link
+                  href={news.href}
+                  aria-current={current(news.href)}
+                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                >
+                  {t(CHROME.news, idioma)}
+                </Link>
+              </li>
               {/* `/perfil` fica só em português, por decisão: é a página do Google Business Profile. */}
               {idioma === 'pt' && (
                 <li>

@@ -24,6 +24,7 @@ const REVISTO_EM = {
   '/contactos': '2026-09-29',
   '/privacidade': '2026-09-24',
   '/global': '2026-09-29',
+  '/news': '2026-09-30',
 } as const;
 
 const em = (rota: keyof typeof REVISTO_EM) => new Date(REVISTO_EM[rota]);
@@ -39,6 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absolute('/sobre'), lastModified: em('/sobre'), priority: 0.5 },
     { url: absolute('/contactos'), lastModified: em('/contactos'), priority: 0.5 },
     { url: absolute('/privacidade'), lastModified: em('/privacidade'), priority: 0.2 },
+    { url: absolute('/news'), lastModified: em('/news'), priority: 0.6 },
   ];
 
   /**

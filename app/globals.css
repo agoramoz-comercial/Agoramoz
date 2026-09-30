@@ -629,3 +629,43 @@
 [data-split] {
   text-wrap: initial;
 }
+
+/* ===========================================================================
+   Moz News — imprimir ou guardar em PDF.
+
+   O relatório é o PDF: `window.print()` sobre a própria página, sem janelas
+   escritas à mão. Só age quando há um relatório na página (`:has`), e aí
+   esconde tudo o que não é o relatório e força papel branco e tinta preta —
+   uma superfície escura impressa gasta tinteiro e lê-se mal.
+   =========================================================================== */
+@media print {
+  body:has([data-news-imprimir]) {
+    background: #fff !important;
+  }
+  body:has([data-news-imprimir]) * {
+    visibility: hidden;
+  }
+  [data-news-imprimir],
+  [data-news-imprimir] * {
+    visibility: visible;
+  }
+  [data-news-imprimir] {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: block !important;
+    --surface: #fff;
+    --surface-raised: #f1f1f1;
+    --on-surface: #000;
+    --muted: #333;
+    --border: #bbb;
+    --hairline: #ccc;
+    --accent: #000;
+    --signal: #b01e00;
+    color: #000;
+    background: #fff;
+  }
+  [data-news-imprimir] section,
+  [data-news-imprimir] li {
+    break-inside: avoid;
+  }
+}

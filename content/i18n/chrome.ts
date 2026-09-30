@@ -34,6 +34,7 @@ export const CHROME = {
   // os setores são páginas portuguesas.
   setores: { pt: 'Setores', en: 'Markets' },
   diagnosticoCurto: { pt: 'Diagnóstico', en: 'Diagnostic' },
+  news: { pt: 'Moz News', en: 'Moz News' },
   abrirMenu: { pt: 'Abrir menu', en: 'Open menu' },
   menuTitulo: { pt: 'Menu de navegação', en: 'Navigation menu' },
   fecharMenu: { pt: 'Fechar menu', en: 'Close menu' },

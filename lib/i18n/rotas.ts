@@ -23,6 +23,8 @@ export const ROTAS_BILINGUES: readonly string[] = [
   ...getAllSolutionParams().map((p) => `/solucoes/${p.solucao}`),
   '/global',
   ...GLOBAL_CODES.map((c) => `/global/${c}`),
+  // Lote N: AGORAMOZ Moz News.
+  '/news',
 ]
 
 /** A rota existe nos dois idiomas. Aceita o caminho de qualquer lado. */

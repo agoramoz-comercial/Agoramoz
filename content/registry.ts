@@ -86,6 +86,8 @@ export const RESERVED_TOP_LEVEL_SLUGS = [
   // segmentos de topo e, sem estarem aqui, um código de país futuro com o
   // mesmo nome ganharia em silêncio à rota estática.
   'en', 'global',
+  // AGORAMOZ Moz News (lote N).
+  'news',
 ] as const;
 
 /**

@@ -45,6 +45,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
   });
   const indiceSolucoes = ligacao('/solucoes', idioma);
   const diagnostico = ligacao('/diagnostico', idioma);
+  const news = ligacao('/news', idioma);
   const cta = t(CHROME.ctaPrimario, idioma);
   const globalHref = caminhoNoIdioma('/global', idioma);
   const globalRotulo = t(CHROME.globalN, idioma).replace('{n}', String(GLOBAL_CODES.length));
@@ -101,6 +102,13 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
               {item.label}
             </Link>
           ))}
+          <Link
+            href={news.href}
+            aria-current={pathname === news.href ? 'page' : undefined}
+            className="rule-label inline-flex min-h-11 items-center px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
+          >
+            {t(CHROME.news, idioma)}
+          </Link>
           {idioma === 'en' && (
             <Link
               href={globalHref}
@@ -203,6 +211,13 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
                   )}
 
                   <div className="mt-5 border-t border-[color:var(--border)] pt-3">
+                    <Link
+                      href={news.href}
+                      aria-current={pathname === news.href ? 'page' : undefined}
+                      className="flex min-h-11 items-center text-[0.9375rem] aria-[current=page]:text-[color:var(--accent)]"
+                    >
+                      {t(CHROME.news, idioma)}
+                    </Link>
                     {NAV.primary.map((item) => (
                       <Link
                         key={item.href}
