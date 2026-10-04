@@ -707,3 +707,7 @@ grant execute on function public.registar_exportacao_inquerito(uuid, boolean) to
 
 revoke all on function public.resultados_inquerito(uuid) from public, anon;
 grant execute on function public.resultados_inquerito(uuid) to authenticated;
+
+-- O PostgREST guarda as funções numa cache; sem isto, as RPC novas podem
+-- responder PGRST202 («função não encontrada») até à próxima recarga.
+notify pgrst, 'reload schema';

@@ -135,6 +135,29 @@ describe('0013 — inquéritos', () => {
     );
   });
 
+  it('termina a recarregar a cache do PostgREST (sem isso as RPC novas dão PGRST202)', () => {
+    expect(MIGRACAO.trimEnd().endsWith("notify pgrst, 'reload schema';")).toBe(true);
+  });
+
+  it('verificar-estado.sql conta as dez funções da 0013 (linha 24)', () => {
+    expect(VERIFICAR).toMatch(/select 24, [^\n]*\(0013\)/);
+    for (const nome of [
+      'obter_inquerito_publico',
+      'ingest_survey_response',
+      'criar_inquerito',
+      'guardar_rascunho',
+      'publicar_versao',
+      'definir_inquerito_activo',
+      'criar_link',
+      'revogar_link',
+      'resultados_inquerito',
+      'registar_exportacao_inquerito',
+    ]) {
+      expect(VERIFICAR, nome).toContain(`'${nome}'`);
+      expect(MIGRACAO, nome).toContain(`create or replace function public.${nome}(`);
+    }
+  });
+
   it('verificar-estado.sql tem a linha 23 da 0013', () => {
     expect(VERIFICAR).toMatch(/select 23, [^\n]*\(0013\)/);
     expect(VERIFICAR).toContain("'EM FALTA - correr aplicar-0013.sql'");

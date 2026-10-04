@@ -1,5 +1,5 @@
 -- ============================================================================
--- Verificação de estado — 0009 e 0010
+-- Verificação de estado — 0009 a 0013
 -- ============================================================================
 -- SÓ LEITURA. Não cria, não altera e não apaga nada. Pode correr as vezes que
 -- quiser, com o site a funcionar.
@@ -9,7 +9,7 @@
 -- que decidem o deploy ficavam escondidas atrás de uma contagem de colunas.
 --
 -- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
--- para 0009/0010; a linha 21 para 0011.
+-- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013.
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -116,4 +116,22 @@ select 23, 'função', 'inquéritos: survey_links, ingest_survey_response e regr
              and not has_function_privilege('anon',
                    'public.ingest_survey_response(text, jsonb, text, text, jsonb, text, text, text)', 'execute')
             then 'ok' else 'EM FALTA - correr aplicar-0013.sql' end
+-- 0013: as dez funções que a aplicação chama. Conta-as (uma em falta é a
+-- causa de um PGRST202) e confirma que a leitura pública continua fechada a
+-- `anon`. Se aqui der 10/10 e o site ainda responder PGRST202, falta só
+-- recarregar a cache do PostgREST: notify pgrst, 'reload schema';
+union all
+select 24, 'função', 'inquéritos: as 10 funções chamadas pela aplicação (0013)',
+       (select count(distinct p.proname)::text
+        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'public'
+          and p.proname in ('obter_inquerito_publico', 'ingest_survey_response',
+                            'criar_inquerito', 'guardar_rascunho', 'publicar_versao',
+                            'definir_inquerito_activo', 'criar_link', 'revogar_link',
+                            'resultados_inquerito', 'registar_exportacao_inquerito'))
+       || ' de 10'
+       || case when exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                            where n.nspname = 'public' and p.proname = 'obter_inquerito_publico')
+                    and has_function_privilege('anon', 'public.obter_inquerito_publico(text)', 'execute')
+               then ' - ATENCAO: anon executa a leitura publica' else '' end
 order by ordem;
