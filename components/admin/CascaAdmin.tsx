@@ -18,6 +18,7 @@ const ENTRADAS: readonly Entrada[] = [
   { href: '/admin/oportunidades', texto: 'Oportunidades', icone: 'oportunidades' },
   { href: '/admin/contactos', texto: 'Contactos', icone: 'contactos' },
   { href: '/admin/organizacoes', texto: 'Organizações', icone: 'organizacoes' },
+  { href: '/admin/inqueritos', texto: 'Inquéritos', icone: 'inqueritos' },
   { href: '/admin/aquisicao', texto: 'Aquisição', icone: 'aquisicao' },
   { href: '/admin/fila', texto: 'Fila', icone: 'fila' },
   { href: '/admin/equipa', texto: 'Equipa', icone: 'equipa' },
@@ -31,11 +32,15 @@ export interface SessaoVisivel {
 
 export function CascaAdmin({
   sessao,
+  inqueritos = false,
   children,
 }: {
   sessao: SessaoVisivel;
+  /** `SURVEYS=on`. Desligado, a entrada não aparece — as páginas dariam 404. */
+  inqueritos?: boolean;
   children: React.ReactNode;
 }) {
+  const entradas = inqueritos ? ENTRADAS : ENTRADAS.filter((e) => e.icone !== 'inqueritos');
   return (
     <div className="flex w-full flex-col lg:flex-row">
       <aside className="border-b border-[color:var(--border)] lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
@@ -47,7 +52,7 @@ export function CascaAdmin({
           </Link>
 
           <div className="mt-5 lg:mt-8">
-            <AdminNav entradas={ENTRADAS} />
+            <AdminNav entradas={entradas} />
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[color:var(--border)] pt-4 lg:mt-auto lg:block lg:pt-5">

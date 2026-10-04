@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { DIAGNOSTIC_STATES } from '@/lib/diagnostic/types';
-import { ESTADO_DIAGNOSTICO, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE , CANAL, __canais } from './labels';
+import {
+  ESTADO_DIAGNOSTICO,
+  FASES_OPORTUNIDADE,
+  FASE_OPORTUNIDADE,
+  CANAL,
+  __canais,
+  estadoDoInquerito,
+} from './labels';
 
 describe('rótulos de estado', () => {
   it('todos os estados de diagnóstico têm rótulo', () => {
@@ -37,5 +44,21 @@ describe('canais de aquisição', () => {
 
   it('não há rótulos para canais que não existem', () => {
     expect(Object.keys(CANAL).sort()).toEqual([...__canais].sort());
+  });
+});
+
+describe('estado de um inquérito', () => {
+  const pub = { published_at: '2026-10-01T00:00:00Z', retired_at: null };
+  const rasc = { published_at: null, retired_at: null };
+  const antiga = { published_at: '2026-09-01T00:00:00Z', retired_at: '2026-10-01T00:00:00Z' };
+
+  it('nunca publicado é rascunho, mesmo inactivo', () => {
+    expect(estadoDoInquerito(false, [rasc])).toBe('rascunho');
+    expect(estadoDoInquerito(true, [antiga, rasc])).toBe('rascunho');
+  });
+
+  it('com versão em vigor: aberto ou fechado conforme `active`', () => {
+    expect(estadoDoInquerito(true, [pub, rasc])).toBe('aberto');
+    expect(estadoDoInquerito(false, [antiga, pub])).toBe('fechado');
   });
 });

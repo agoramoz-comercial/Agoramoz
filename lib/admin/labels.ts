@@ -148,3 +148,27 @@ export const CANAL: Record<Canal, Rotulo> = {
 
 /** Para o teste que exige rótulo para todo o canal. */
 export const __canais = CANAIS;
+
+// ── Inquéritos ───────────────────────────────────────────────────────────────
+
+export type EstadoInquerito = 'rascunho' | 'aberto' | 'fechado';
+
+export const ESTADO_INQUERITO: Record<EstadoInquerito, Rotulo> = {
+  rascunho: { texto: 'Rascunho', tom: 'neutro', nota: 'Nunca publicado: os links não abrem.' },
+  aberto: { texto: 'Aberto', tom: 'bom', nota: 'Os links activos aceitam respostas.' },
+  fechado: { texto: 'Fechado', tom: 'aviso', nota: 'Nenhum link aceita respostas.' },
+};
+
+/**
+ * O estado que a equipa vê, derivado do que a base guarda: `active` sozinho
+ * não chega, porque um inquérito novo nasce inactivo e não está «fechado» —
+ * nunca abriu. Publicar é que o abre (0013, `publicar_versao`).
+ */
+export function estadoDoInquerito(
+  activo: boolean,
+  versoes: readonly { published_at: string | null; retired_at: string | null }[],
+): EstadoInquerito {
+  const publicada = versoes.some((v) => v.published_at !== null && v.retired_at === null);
+  if (!publicada) return 'rascunho';
+  return activo ? 'aberto' : 'fechado';
+}

@@ -1,5 +1,6 @@
 import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { requireStaff } from '@/lib/auth/session';
+import { serverEnv } from '@/lib/config/env';
 
 /**
  * Casca dos ecrãs autenticados.
@@ -18,7 +19,10 @@ import { requireStaff } from '@/lib/auth/session';
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
   const sessao = await requireStaff();
   return (
-    <CascaAdmin sessao={{ nome: sessao.nome, email: sessao.email, papel: sessao.papel }}>
+    <CascaAdmin
+      sessao={{ nome: sessao.nome, email: sessao.email, papel: sessao.papel }}
+      inqueritos={serverEnv().SURVEYS === 'on'}
+    >
       {children}
     </CascaAdmin>
   );

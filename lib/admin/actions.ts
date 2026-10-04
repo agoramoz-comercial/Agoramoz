@@ -1,8 +1,13 @@
 'use server';
 
+import { randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { z } from 'zod';
 import { createSessionClient } from '@/lib/auth/client';
+import { serverEnv } from '@/lib/config/env';
+import { slugDe } from '@/lib/inqueritos/construtor';
+import { specInicial, specInquerito } from '@/lib/inqueritos/spec';
 import { log } from '@/lib/log/logger';
 import { RPC, type NomeRpc } from './rpc';
 
@@ -33,6 +38,9 @@ function mensagemDe(codigo: string | undefined, mensagem: string | undefined): s
       return 'O registo mudou entretanto. Recarregue a página e reveja antes de decidir.';
     case 'P0002':
       return 'Registo não encontrado.';
+    case '23505':
+      // Nunca a mensagem do Postgres: traz o valor que colidiu.
+      return 'Já existe um registo com este identificador.';
     case '23514':
     case '23503':
     case '22023':
@@ -43,11 +51,16 @@ function mensagemDe(codigo: string | undefined, mensagem: string | undefined): s
   }
 }
 
-async function chamar(
+/**
+ * Chama a função e devolve o que ela devolve; num erro, volta a `destino`
+ * com a mensagem traduzida. Separada de `chamar` para as acções que precisam
+ * do resultado (o id de um inquérito acabado de criar).
+ */
+async function executar(
   funcao: NomeRpc,
   argumentos: Record<string, unknown>,
   destino: string,
-): Promise<never> {
+): Promise<unknown> {
   // Falha cedo e em desenvolvimento se alguém passar um argumento que a função
   // não declara: o PostgREST responderia «função não encontrada», que manda
   // procurar no sítio errado.
@@ -58,7 +71,7 @@ async function chamar(
   }
 
   const supabase = await createSessionClient();
-  const { error } = await supabase.rpc(funcao, argumentos);
+  const { data, error } = await supabase.rpc(funcao, argumentos);
 
   if (error) {
     log.warn('admin.accao_recusada', {
@@ -70,6 +83,15 @@ async function chamar(
   }
 
   log.info('admin.accao', { outcome: 'accepted', reason: funcao });
+  return data;
+}
+
+async function chamar(
+  funcao: NomeRpc,
+  argumentos: Record<string, unknown>,
+  destino: string,
+): Promise<never> {
+  await executar(funcao, argumentos, destino);
   revalidatePath(destino);
   revalidatePath('/admin');
   redirect(`${destino}?ok=1`);
@@ -169,5 +191,88 @@ export async function definirActivo(formData: FormData): Promise<void> {
     'definir_perfil_activo',
     { p_user: idDe(formData, 'id'), p_activo: formData.get('activo') === 'sim' },
     '/admin/equipa',
+  );
+}
+
+// ── Inquéritos (0013) ─────────────────────────────────────────────────────
+
+/** Com `SURVEYS=off` as funções da 0013 podem nem existir na base. */
+function exigirInqueritos(): void {
+  if (serverEnv().SURVEYS !== 'on') redirect('/admin');
+}
+
+const nomeDeInquerito = z.string().trim().min(1).max(160);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** O spec tem tecto de 64 KB; o texto do formulário, com folga para o JSON. */
+const MAX_SPEC_TEXTO = 200_000;
+
+function voltarCom(destino: string, erro: string): never {
+  redirect(`${destino}?erro=${encodeURIComponent(erro)}`);
+}
+
+export async function criarInquerito(formData: FormData): Promise<void> {
+  exigirInqueritos();
+  const destino = '/admin/inqueritos/novo';
+  const nome = nomeDeInquerito.safeParse(formData.get('nome'));
+  if (!nome.success) voltarCom(destino, 'Dê um nome ao inquérito (até 160 caracteres).');
+  const idioma = formData.get('idioma') === 'en' ? 'en' : 'pt';
+
+  // O sufixo aleatório evita colisões entre inquéritos com o mesmo nome; o
+  // slug é interno e nunca aparece no link partilhado.
+  const id = await executar(
+    'criar_inquerito',
+    {
+      p_slug: slugDe(nome.data, randomBytes(3).toString('hex')),
+      p_nome: nome.data,
+      p_spec: specInicial(idioma),
+    },
+    destino,
+  );
+  if (typeof id !== 'string' || !UUID.test(id)) voltarCom(destino, 'Não foi possível concluir a acção.');
+  revalidatePath('/admin/inqueritos');
+  redirect(`/admin/inqueritos/${id}?ok=criado`);
+}
+
+/**
+ * Guarda o rascunho e, com `intencao=publicar`, publica-o a seguir. O spec
+ * vem do construtor como JSON e é validado aqui pelo mesmo esquema que a
+ * página pública usa — o browser já o validou, mas o que chega a uma Server
+ * Action é tão pouco confiável como o que chega a uma rota.
+ */
+export async function guardarInquerito(formData: FormData): Promise<void> {
+  exigirInqueritos();
+  const id = idDe(formData, 'id');
+  const destino = `/admin/inqueritos/${id}`;
+
+  const nome = nomeDeInquerito.safeParse(formData.get('nome'));
+  if (!nome.success) voltarCom(destino, 'Dê um nome ao inquérito (até 160 caracteres).');
+
+  const texto = String(formData.get('spec') ?? '');
+  if (texto.length === 0 || texto.length > MAX_SPEC_TEXTO) voltarCom(destino, 'Pedido inválido.');
+  let bruto: unknown;
+  try {
+    bruto = JSON.parse(texto);
+  } catch {
+    voltarCom(destino, 'Pedido inválido.');
+  }
+  const spec = specInquerito.safeParse(bruto);
+  if (!spec.success) voltarCom(destino, 'O inquérito tem problemas por corrigir. Nada foi guardado.');
+
+  await executar('guardar_rascunho', { p_id: id, p_nome: nome.data, p_spec: spec.data }, destino);
+  const publicar = formData.get('intencao') === 'publicar';
+  if (publicar) await executar('publicar_versao', { p_id: id }, destino);
+
+  revalidatePath(destino);
+  revalidatePath('/admin/inqueritos');
+  redirect(`${destino}?ok=${publicar ? 'publicado' : 'guardado'}`);
+}
+
+export async function definirInqueritoActivo(formData: FormData): Promise<void> {
+  exigirInqueritos();
+  const id = idDe(formData, 'id');
+  await chamar(
+    'definir_inquerito_activo',
+    { p_id: id, p_activo: formData.get('activo') === 'sim' },
+    `/admin/inqueritos/${id}`,
   );
 }
