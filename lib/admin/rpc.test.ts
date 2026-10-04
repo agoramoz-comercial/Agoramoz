@@ -3,14 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { RPC } from './rpc';
 
 const SQL = readFileSync('supabase/migrations/0006_admin_actions.sql', 'utf-8');
+const SQL13 = readFileSync('supabase/migrations/0013_inqueritos.sql', 'utf-8');
+/** Onde as funções do mapa `RPC` podem estar declaradas. */
+const ACCOES = `${SQL}\n${SQL13}`;
 
-/** Lê os parâmetros declarados na migração para cada função. */
+/** Lê os parâmetros declarados na migração para cada função (numa ou em várias linhas). */
 function parametrosDe(nome: string): string[] {
-  const inicio = SQL.indexOf(`create or replace function public.${nome}(`);
+  const inicio = ACCOES.indexOf(`create or replace function public.${nome}(`);
   if (inicio === -1) return [];
-  const abre = SQL.indexOf('(', inicio);
-  const fecha = SQL.indexOf('\n)', abre);
-  return [...SQL.slice(abre + 1, fecha).matchAll(/^\s*(p_[a-z_]+)\s/gm)].map((m) => m[1]!);
+  const abre = ACCOES.indexOf('(', inicio);
+  const fecha = ACCOES.lastIndexOf(')', ACCOES.indexOf('returns', abre));
+  return [...ACCOES.slice(abre, fecha).matchAll(/[(,]\s*(p_[a-z_]+)\s/g)].map((m) => m[1]!);
 }
 
 describe('contrato das funções do admin', () => {
@@ -24,10 +27,27 @@ describe('contrato das funções do admin', () => {
     // A guarda não pode faltar em nenhuma: sem ela, qualquer pessoa
     // autenticada executaria a função, porque o `grant` é a `authenticated`.
     for (const nome of Object.keys(RPC)) {
-      const inicio = SQL.indexOf(`create or replace function public.${nome}(`);
-      const fim = SQL.indexOf('$$;', inicio);
-      const corpo = SQL.slice(inicio, fim);
+      const inicio = ACCOES.indexOf(`create or replace function public.${nome}(`);
+      const fim = ACCOES.indexOf('$$;', inicio);
+      const corpo = ACCOES.slice(inicio, fim);
       expect(corpo, `sem verificação de papel: ${nome}`).toContain('exigir_papel');
+    }
+  });
+
+  it('toda a função de escrita corre com search_path fixo e é só para autenticados', () => {
+    for (const nome of Object.keys(RPC)) {
+      const inicio = ACCOES.indexOf(`create or replace function public.${nome}(`);
+      const cabecalho = ACCOES.slice(inicio, ACCOES.indexOf('as $$', inicio));
+      expect(cabecalho, nome).toContain('security definer');
+      expect(cabecalho, nome).toContain('set search_path = public, pg_catalog');
+    }
+    for (const nome of Object.keys(RPC).filter((n) => SQL13.includes(`function public.${n}(`))) {
+      expect(SQL13, nome).toMatch(
+        new RegExp(`revoke all on function public\\.${nome}\\([^)]*\\) from public, anon;`),
+      );
+      expect(SQL13, nome).toMatch(
+        new RegExp(`grant execute on function public\\.${nome}\\([^)]*\\) to authenticated;`),
+      );
     }
   });
 

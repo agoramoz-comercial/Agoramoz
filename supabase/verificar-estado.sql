@@ -105,4 +105,15 @@ select 22, 'função', 'registar_reuniao e tabelas de reuniões (0012)',
              and not has_function_privilege('anon',
                    'public.registar_reuniao(text, text, text, timestamptz, timestamptz, text, text)', 'execute')
             then 'ok' else 'EM FALTA - correr aplicar-0012.sql' end
+-- 0013: inquéritos. A tabela de links, a função de ingestão (só executável
+-- pela chave de serviço) e a regra nova das respostas (contacto OU link).
+union all
+select 23, 'função', 'inquéritos: survey_links, ingest_survey_response e regra das respostas (0013)',
+       case when to_regclass('public.survey_links') is not null
+             and exists (select 1 from pg_constraint where conname = 'responses_contacto_ou_link')
+             and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                         where n.nspname = 'public' and p.proname = 'ingest_survey_response')
+             and not has_function_privilege('anon',
+                   'public.ingest_survey_response(text, jsonb, text, text, jsonb, text, text, text)', 'execute')
+            then 'ok' else 'EM FALTA - correr aplicar-0013.sql' end
 order by ordem;
