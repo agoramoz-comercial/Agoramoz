@@ -239,3 +239,28 @@ pixel, canais, desistência por cartão, Moz News, reuniões Cal.com e ERP.
   produção; números de exemplo, assinalados no topo.
 **Consequência:** ~60 contagens em paralelo por visita ao painel. Se crescer,
 o passo seguinte é uma vista ou RPC agregada (migração própria).
+
+## D-31 — Inquéritos: anónimos por omissão, link por HMAC, construtor com estado
+A equipa cria inquéritos no `/admin` e partilha-os por link e QR
+(`docs/INQUERITOS.md`). Decisões do fundador: uso interno, anónimo por
+omissão, contacto só com consentimento, sem IA na v1, link recuperável.
+- **Link recuperável sem guardar o token:** `token = HMAC(SURVEY_LINK_SECRET,
+  link_id)`; a base guarda o SHA-256. Mostra-se de novo derivando-o.
+  **Consequência:** trocar o segredo invalida todos os links distribuídos.
+- **Respostas sem contacto:** `responses.contact_id` passou a aceitar nulo,
+  com a regra «contacto OU link»; `activities` ganhou `contact_id` e
+  `deal_id` passou a aceitar nulo, com a regra «oportunidade OU contacto».
+  O diagnóstico continua a gravar sempre contacto e oportunidade.
+- **CRM sem atropelos:** um contacto de inquérito é só inserido, nunca
+  sobrescreve o que existe, e nunca cria oportunidade.
+- **Idempotência por submissão, não por conteúdo:** a chave junta o link e um
+  `submissionId` gerado no browser. Duas pessoas anónimas com respostas
+  iguais são duas respostas; a mesma submissão repetida é uma.
+- **Fora dos leads:** com `SURVEYS=on`, o painel tira as respostas de
+  inquérito das contagens de submissões e mostra-as num bloco próprio.
+- **O construtor guarda estado no browser** — a excepção deliberada a D-26.
+  O servidor revalida tudo pelo mesmo esquema; só as RPC da 0013 escrevem.
+- **Chaves estáveis:** pergunta e opção têm chaves geradas que nunca mudam;
+  os resultados agregam por chave através das versões publicadas.
+**Consequência:** com `SURVEYS=off` nada muda no site nem no painel; ligar é
+aplicar a 0013, pôr `SURVEY_LINK_SECRET` e `SURVEYS=on`.
