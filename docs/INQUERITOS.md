@@ -76,10 +76,20 @@ sequenceDiagram
 - **Contacto só com email e consentimento.** O texto do consentimento é
   escrito no construtor e é **exactamente** o que fica em `consent_records`,
   com uma versão derivada do texto. Rever o texto antes de publicar.
+- **O email não é verificado.** Qualquer pessoa com o link pode escrever o
+  email de outra. Por isso o consentimento é **auto-declarado** e só se regista
+  para o contacto que a resposta cria; a um contacto que já existia no CRM
+  nunca se junta consentimento, e a actividade fica marcada
+  `contacto_existente`. Não usar estes consentimentos como prova para
+  campanhas sem confirmação por email (dupla confirmação — fora da v1).
 - **Entra no CRM como contacto e actividade, nunca como oportunidade.** Um
   contacto que já existe **não é reescrito** — mantém-se o que o CRM tinha.
 - **Exportação:** o CSV sem contactos está disponível a toda a equipa; com
-  contactos (`?contacto=1`) só para admin e comercial.
+  contactos (`?contacto=1`) só para admin e comercial. Cada exportação fica
+  na auditoria (`inquerito.exportar`, com ou sem contactos); sem esse registo,
+  não há ficheiro.
+- **Endereços e QR** só aparecem a admin e comercial: um link é a capacidade
+  de responder.
 - Registar o consentimento não é declarar conformidade legal. O texto e o uso
   dos dados precisam de revisão qualificada antes de recolher contactos fora
   da equipa.
@@ -90,14 +100,20 @@ sequenceDiagram
 |---|---|
 | Adivinhar links | Token de 32 bytes HMAC; 404 igual para «não existe» e «desligado» |
 | Token em logs ou analítica | Vai no corpo do POST; `/i` é caminho privado na atribuição; `no-referrer`, `noindex`, `no-store` em `/i` |
-| Spam de respostas | Limite por IP (20/10 min) e por link (600/10 min) em memória; tecto por link na base; armadilha `fax`; revogar |
+| Spam de respostas | Na base, durável: 50 respostas por link e IP em 10 min, e o tecto por link. Na aplicação, em memória: 20 pedidos por IP e 600 por link em 10 min (o de link só conta links que existem). Armadilha `fax`; revogar |
 | Respostas forjadas | Validadas pelo spec guardado na base, nunca pelo que o browser diz; a ingestão recusa chaves desconhecidas |
 | Injecção de fórmulas no CSV | Células que começam por `= + - @`, tabulação ou retorno ficam texto |
 | Texto do inquérito com HTML | Mostrado sempre como texto (React escapa; sem `innerHTML`) |
 | Edição do diagnóstico por aqui | Todas as RPC recusam `kind <> 'survey'` |
 
-O limite em memória vale por instância da Vercel. Os limites duráveis são o
-tecto de respostas e a revogação.
+O limite em memória vale por instância da Vercel; o da base vale para todas.
+Uma sala com mais de 50 pessoas atrás do mesmo router chega ao limite por IP
+em 10 minutos — para eventos grandes, criar um link por grupo.
+
+**Desligar depois de usar:** para parar de receber respostas, **feche os
+inquéritos** ou revogue os links. Pôr `SURVEYS=off` esconde o ecrã; enquanto
+`SURVEY_LINK_SECRET` existir, o painel continua a tirar as respostas de
+inquérito das contagens de leads.
 
 ## Decisão registada: o construtor é a excepção ao «admin sem estado de cliente»
 

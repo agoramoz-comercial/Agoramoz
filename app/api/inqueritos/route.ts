@@ -163,19 +163,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, correlationId }, { status: 202 });
   }
 
-  // 8. Limite por link. Só o hash serve de chave — o token nunca fica em memória longa.
   const tokenHash = hashToken(token);
-  const porEsteLink = link.check(tokenHash);
-  if (!porEsteLink.allowed) {
-    log.warn('inquerito.limitado', {
-      correlationId,
-      reason: 'link',
-      limit: MAX_POR_LINK,
-      windowMs: JANELA_MS,
-      outcome: 'rejected',
-    });
-    return fail(429, correlationId, { 'Retry-After': esperar(porEsteLink.resetAt) });
-  }
 
   const cliente = dbAdmin();
   if (!cliente) {
@@ -196,6 +184,21 @@ export async function POST(request: Request) {
       return fechado(inquerito.estado, correlationId);
     }
     const baseLog = { correlationId, entityType: 'inquerito', entityId: inquerito.inquerito };
+
+    // 9-bis. Limite por link — DEPOIS de o link existir. Contado antes, um
+    // atacante enchia o limitador com tokens inventados e, cheio, ele recusa
+    // chaves novas: os links verdadeiros ficavam a dar 429 (revisão ECC, M1).
+    const porEsteLink = link.check(tokenHash);
+    if (!porEsteLink.allowed) {
+      log.warn('inquerito.limitado', {
+        ...baseLog,
+        reason: 'link',
+        limit: MAX_POR_LINK,
+        windowMs: JANELA_MS,
+        outcome: 'rejected',
+      });
+      return fail(429, correlationId, { 'Retry-After': esperar(porEsteLink.resetAt) });
+    }
 
     // 10. Validação pelo spec guardado.
     const validacao = validarResposta(inquerito.spec, { respostas, contacto });
@@ -228,6 +231,10 @@ export async function POST(request: Request) {
     });
 
     if (!resultado.ok) {
+      if (resultado.estado === 'limitado') {
+        log.warn('inquerito.limitado', { ...baseLog, reason: 'origem-base', outcome: 'rejected' });
+        return fail(429, correlationId, { 'Retry-After': '600' });
+      }
       // Fechou entre a leitura e a gravação (revogado, tecto atingido).
       log.info('inquerito.fechado', { ...baseLog, reason: resultado.estado, outcome: 'rejected' });
       return fechado(resultado.estado, correlationId);

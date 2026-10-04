@@ -279,6 +279,15 @@ describe('inquéritos no painel', () => {
     });
   });
 
+  it('SURVEYS desligado depois de usado: o filtro dos leads mantém-se (filtrarInqueritos)', async () => {
+    const d = await carregarPainel(clienteFalso(comRespostasDeInquerito()), J, {
+      ...TUDO_LIGADO,
+      filtrarInqueritos: true,
+    });
+    expect(d.leads).toMatchObject({ estado: 'ok', dados: { actual: 1 } });
+    expect(d.inqueritos.estado).toBe('por-activar');
+  });
+
   it('desligado: inquéritos «por activar» e nenhuma consulta filtra survey_link_id', async () => {
     const pedidos: Chamada[][] = [];
     const d = await carregarPainel(clienteFalso(dados(), { pedidos }), J, TUDO_LIGADO);

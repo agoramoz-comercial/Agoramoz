@@ -26,7 +26,12 @@ export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PAGINA = 1000;
-const TECTO = 50_000;
+const TECTO = 20_000;
+/**
+ * Tecto também em bytes: uma resposta pode ter até 64 KB, e o ficheiro é
+ * montado em memória. 40 MB de respostas chegam para qualquer uso real da v1.
+ */
+const TECTO_BYTES = 40 * 1024 * 1024;
 
 const texto = (status: number, corpo: string) =>
   new Response(corpo, {
@@ -83,6 +88,7 @@ export async function GET(pedido: Request, { params }: { params: Promise<{ id: s
   ].join(', ');
 
   const todas: Linha[] = [];
+  let bytes = 0;
   for (let de = 0; ; de += PAGINA) {
     const { data, error } = await supabase
       .from('responses')
@@ -103,10 +109,34 @@ export async function GET(pedido: Request, { params }: { params: Promise<{ id: s
     }
     const pagina = (data ?? []) as unknown as Linha[];
     todas.push(...pagina);
-    if (pagina.length < PAGINA) break;
+    bytes += pagina.reduce((n, l) => n + JSON.stringify(l.response_answers).length, 0);
+    if (bytes > TECTO_BYTES) {
+      return texto(413, 'Respostas demasiado volumosas para exportar de uma só vez.');
+    }
+    // Pára na página vazia, não na curta: se o projecto tiver `max_rows`
+    // abaixo de PAGINA, uma página curta não quer dizer que acabou.
+    if (pagina.length === 0) break;
     if (todas.length >= TECTO) {
       return texto(413, `Mais de ${TECTO} respostas: a exportação de uma só vez está limitada.`);
     }
+  }
+
+  // Sem registo na auditoria, não há ficheiro: quem exporta (e se levou
+  // contactos) fica na base, como as outras acções do admin.
+  const auditoria = await supabase.rpc('registar_exportacao_inquerito', {
+    p_id: id,
+    p_com_contacto: comContacto,
+  });
+  if (auditoria.error) {
+    log.error('inquerito.exportacao_falhou', {
+      entityType: 'inquerito',
+      entityId: id,
+      errorCode: auditoria.error.code ?? 'auditoria',
+      outcome: 'failed',
+    });
+    return auditoria.error.code === '42501'
+      ? texto(403, 'Sem permissão para esta exportação.')
+      : texto(503, 'Não foi possível registar a exportação. Tente de novo.');
   }
 
   const respostas: RespostaExportada[] = todas.map((l) => ({

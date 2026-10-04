@@ -1,5 +1,5 @@
 import { createSessionClient } from '@/lib/auth/client';
-import { currentSession } from '@/lib/auth/session';
+import { currentSession, podeEscrever } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/config/env';
 import { qrDe, svgDe } from '@/lib/inqueritos/qr';
 import { tokenDoLink, urlDoInquerito } from '@/lib/inqueritos/token';
@@ -7,8 +7,9 @@ import { SITE_URL } from '@/lib/seo/site';
 
 /**
  * O código QR de um link, em SVG, para imprimir. Só para a equipa: o
- * middleware exige sessão em /admin, e aqui volta a verificar-se o perfil e
- * a ler-se o link pela sessão (RLS). Um link revogado não tem QR.
+ * middleware exige sessão em /admin, e aqui volta a verificar-se o perfil (só
+ * quem pode escrever) e a ler-se o link pela sessão (RLS). Um link revogado
+ * não tem QR.
  */
 
 export const runtime = 'nodejs';
@@ -26,7 +27,10 @@ export async function GET(
   if (env.SURVEYS !== 'on') return nada(404);
   const { id, linkId } = await params;
   if (!UUID.test(id) || !UUID.test(linkId)) return nada(404);
-  if (!(await currentSession())) return nada(404);
+  const sessao = await currentSession();
+  if (!sessao) return nada(404);
+  // O QR é uma capacidade de responder: só para admin e comercial.
+  if (!podeEscrever(sessao.papel)) return nada(403);
   if (!env.SURVEY_LINK_SECRET) return nada(503);
 
   const supabase = await createSessionClient();

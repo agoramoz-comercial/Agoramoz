@@ -253,6 +253,13 @@ omissão, contacto só com consentimento, sem IA na v1, link recuperável.
   O diagnóstico continua a gravar sempre contacto e oportunidade.
 - **CRM sem atropelos:** um contacto de inquérito é só inserido, nunca
   sobrescreve o que existe, e nunca cria oportunidade.
+- **Consentimento auto-declarado** (revisão ECC): o email não é verificado,
+  por isso o consentimento só se regista para o contacto que a resposta cria
+  — nunca se junta «prova» a um contacto que já existia.
+- **Revisões ECC aplicadas:** idempotência repetida depois do bloqueio do link;
+  limite durável por link e IP na base; spec medido em bytes de texto e com
+  chaves únicas; exportação auditada; chaves já publicadas nunca reutilizadas
+  pelo construtor.
 - **Idempotência por submissão, não por conteúdo:** a chave junta o link e um
   `submissionId` gerado no browser. Duas pessoas anónimas com respostas
   iguais são duas respostas; a mesma submissão repetida é uma.

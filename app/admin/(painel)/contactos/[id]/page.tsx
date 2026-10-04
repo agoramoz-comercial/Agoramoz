@@ -9,6 +9,7 @@ import {
 } from '@/components/admin/primitives';
 import { ESTADO_DIAGNOSTICO, FASE_OPORTUNIDADE } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
+import { serverEnv } from '@/lib/config/env';
 
 export const metadata = { title: 'Contacto' };
 
@@ -27,11 +28,18 @@ export default async function ContactoPage({ params }: { params: Promise<{ id: s
       .select('id, purpose, granted, consent_text, consent_version, captured_at')
       .eq('contact_id', id)
       .order('captured_at', { ascending: false }),
-    supabase
-      .from('responses')
-      .select('id, submitted_at, diagnostics(id, state, tier, score)')
-      .eq('contact_id', id)
-      .order('submitted_at', { ascending: false }),
+    (() => {
+      // Com a 0013 aplicada, as respostas a inquéritos (que têm link) não são
+      // diagnósticos e não entram nesta lista.
+      const env = serverEnv();
+      const q = supabase
+        .from('responses')
+        .select('id, submitted_at, diagnostics(id, state, tier, score)')
+        .eq('contact_id', id);
+      const filtrada =
+        env.SURVEYS === 'on' || env.SURVEY_LINK_SECRET ? q.is('survey_link_id', null) : q;
+      return filtrada.order('submitted_at', { ascending: false });
+    })(),
     supabase
       .from('deals')
       .select('id, stage, tier, score, created_at')

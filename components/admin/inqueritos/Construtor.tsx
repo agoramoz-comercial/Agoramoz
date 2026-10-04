@@ -14,8 +14,11 @@ import {
   errosLegiveis,
   mover,
   mudarTipo,
+  novaChave,
   novaOpcao,
   semCondicao,
+  SEM_RESERVADAS,
+  type Reservadas,
 } from '@/lib/inqueritos/construtor';
 import {
   CAMPOS_CONTACTO,
@@ -64,6 +67,8 @@ export interface PropsConstrutor {
   /** Há um rascunho guardado e ainda não publicado. */
   readonly temRascunho: boolean;
   readonly guardar: (formData: FormData) => Promise<void>;
+  /** Chaves já gravadas em alguma versão: nunca são dadas a perguntas novas. */
+  readonly reservadas?: Reservadas;
 }
 
 export function Construtor({
@@ -72,13 +77,15 @@ export function Construtor({
   specInicial,
   temRascunho,
   guardar,
+  reservadas = SEM_RESERVADAS,
 }: PropsConstrutor) {
   const base = useId();
   const [nome, setNome] = useState(nomeInicial);
   const [spec, setSpec] = useState<SpecInquerito>(specInicial);
   const [aviso, setAviso] = useState<string | null>(null);
   const [tipoNovo, setTipoNovo] = useState<TipoPergunta>('escolha_unica');
-  const aSubmeter = useRef(false);
+  /** O id a focar depois da próxima mudança à lista de perguntas, e o recurso. */
+  const focoPendente = useRef<{ id: string; recurso: string } | null>(null);
 
   const validacao = useMemo(() => specInquerito.safeParse(spec), [spec]);
   const erros = useMemo(
@@ -93,20 +100,35 @@ export function Construtor({
   const [previa, setPrevia] = useState<SpecInquerito>(specInicial);
   if (validacao.success && validacao.data !== previa) setPrevia(validacao.data);
 
+  // Comparação na forma canónica (a que o esquema devolve: aparada, pela
+  // ordem do esquema) — a mesma em que o servidor guarda e devolve o spec.
+  // Comparar o estado cru deixava «alterações por guardar» depois de guardar.
   const inicial = useMemo(() => JSON.stringify(specInicial), [specInicial]);
-  const sujo = nome !== nomeInicial || JSON.stringify(spec) !== inicial;
+  const canonico = validacao.success ? JSON.stringify(validacao.data) : null;
+  const sujo = nome !== nomeInicial || canonico !== inicial;
   const valido = validacao.success && nome.trim().length > 0;
 
   // Sair com alterações por guardar pede confirmação ao browser.
   useEffect(() => {
     if (!sujo) return;
-    const antes = (e: BeforeUnloadEvent) => {
-      if (aSubmeter.current) return;
-      e.preventDefault();
-    };
+    // Guardar é uma navegação do React (redirect da Server Action), que não
+    // dispara `beforeunload`: não é preciso desligar o aviso ao submeter.
+    const antes = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener('beforeunload', antes);
     return () => window.removeEventListener('beforeunload', antes);
   }, [sujo]);
+
+  // Mover, duplicar, acrescentar e apagar tiram o foco do sítio (o botão
+  // mudou de lugar, ficou desligado ou desapareceu): devolve-se a um sítio
+  // que faça sentido, para quem usa teclado ou leitor de ecrã.
+  useEffect(() => {
+    const pedido = focoPendente.current;
+    if (!pedido) return;
+    focoPendente.current = null;
+    const alvo = document.getElementById(pedido.id) as HTMLButtonElement | null;
+    if (alvo && !alvo.disabled) alvo.focus();
+    else document.getElementById(pedido.recurso)?.focus();
+  }, [spec.perguntas, aviso]);
 
   function alterar(patch: Partial<SpecInquerito>) {
     setSpec((s) => ({ ...s, ...patch }));
@@ -125,15 +147,15 @@ export function Construtor({
       <div className="min-w-0 space-y-8">
         <form
           action={guardar}
-          onSubmit={() => {
-            aSubmeter.current = true;
-          }}
           className="sticky top-0 z-10 -mx-1 flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--border)] bg-[color:var(--surface)] px-1 py-3"
         >
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="nome" value={nome} />
-          <input type="hidden" name="spec" value={JSON.stringify(spec)} />
-          <p className="text-sm text-[color:var(--muted)]" aria-live="polite">
+          {/* O que vai é a forma validada; com problemas, os botões estão desligados. */}
+          <input type="hidden" name="spec" value={canonico ?? ''} />
+          {/* Sem aria-live: a contagem muda a cada tecla e seria ruído. A lista
+              de problemas está logo abaixo, à vista. */}
+          <p className="text-sm text-[color:var(--muted)]">
             {erros.length > 0
               ? `${erros.length} ${erros.length === 1 ? 'problema' : 'problemas'} por corrigir`
               : sujo
@@ -147,6 +169,8 @@ export function Construtor({
 
         {aviso && (
           <p
+            id={`${base}-aviso`}
+            tabIndex={-1}
             role="status"
             className="flex items-start justify-between gap-3 border border-[color:var(--border)] px-4 py-3 text-sm"
           >
@@ -228,9 +252,39 @@ export function Construtor({
                   idioma={spec.idioma}
                   erros={erros.filter((e) => e.pergunta === i).map((e) => e.texto)}
                   onAlterar={(f) => alterarPergunta(i, f)}
-                  onMover={(delta) => definirPerguntas(mover(spec.perguntas, i, delta))}
-                  onDuplicar={() => definirPerguntas(duplicar(spec.perguntas, i))}
+                  opcoesReservadas={reservadas.opcoes[p.chave] ?? []}
+                  onMudarTipo={(tipo) =>
+                    alterarPergunta(i, (q) =>
+                      mudarTipo(
+                        q,
+                        tipo,
+                        spec.idioma,
+                        // Uma pergunta já gravada que muda de tipo é outra pergunta.
+                        reservadas.perguntas.includes(q.chave)
+                          ? novaChave(
+                              [...spec.perguntas.map((x) => x.chave), ...reservadas.perguntas],
+                              'p',
+                            )
+                          : undefined,
+                      ),
+                    )
+                  }
+                  onMover={(delta) => {
+                    const id = `${base}-${p.chave}-${delta < 0 ? 'subir' : 'descer'}`;
+                    focoPendente.current = { id, recurso: `${base}-${p.chave}-cab` };
+                    definirPerguntas(mover(spec.perguntas, i, delta));
+                  }}
+                  onDuplicar={() => {
+                    const lista = duplicar(spec.perguntas, i, reservadas.perguntas);
+                    const copia = lista[i + 1]!.chave;
+                    focoPendente.current = {
+                      id: `${base}-${copia}-titulo`,
+                      recurso: `${base}-${copia}-cab`,
+                    };
+                    definirPerguntas(lista);
+                  }}
                   onApagar={() => {
+                    focoPendente.current = { id: `${base}-aviso`, recurso: `${base}-aviso` };
                     const r = apagar(spec.perguntas, i);
                     definirPerguntas(r.perguntas);
                     setAviso(
@@ -272,7 +326,20 @@ export function Construtor({
               size="sm"
               className="gap-1.5"
               disabled={spec.perguntas.length >= LIMITES.perguntas}
-              onClick={() => definirPerguntas(acrescentar(spec.perguntas, tipoNovo, spec.idioma))}
+              onClick={() => {
+                const lista = acrescentar(
+                  spec.perguntas,
+                  tipoNovo,
+                  spec.idioma,
+                  reservadas.perguntas,
+                );
+                const nova = lista.at(-1)!.chave;
+                focoPendente.current = {
+                  id: `${base}-${nova}-titulo`,
+                  recurso: `${base}-${nova}-cab`,
+                };
+                definirPerguntas(lista);
+              }}
             >
               <Plus aria-hidden className="size-4" />
               Acrescentar pergunta
@@ -490,6 +557,8 @@ function EditorPergunta({
   idioma,
   erros,
   onAlterar,
+  onMudarTipo,
+  opcoesReservadas,
   onMover,
   onDuplicar,
   onApagar,
@@ -502,6 +571,8 @@ function EditorPergunta({
   idioma: SpecInquerito['idioma'];
   erros: readonly string[];
   onAlterar: (f: (p: Pergunta) => Pergunta) => void;
+  onMudarTipo: (tipo: TipoPergunta) => void;
+  opcoesReservadas: readonly string[];
   onMover: (delta: -1 | 1) => void;
   onDuplicar: () => void;
   onApagar: () => void;
@@ -527,7 +598,7 @@ function EditorPergunta({
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 id={`${base}-cab`} className="text-sm font-medium">
+        <h3 id={`${base}-cab`} tabIndex={-1} className="text-sm font-medium outline-none">
           {p.tipo === 'seccao' ? `Secção · posição ${n}` : `Pergunta ${n}`}
           <span className="sr-only"> — {p.titulo || 'sem título'}</span>
         </h3>
@@ -535,6 +606,7 @@ function EditorPergunta({
           <button
             type="button"
             className={iconeBotao}
+            id={`${base}-subir`}
             aria-label={`Subir a pergunta ${n}`}
             title="Subir"
             disabled={indice === 0}
@@ -545,6 +617,7 @@ function EditorPergunta({
           <button
             type="button"
             className={iconeBotao}
+            id={`${base}-descer`}
             aria-label={`Descer a pergunta ${n}`}
             title="Descer"
             disabled={indice === total - 1}
@@ -555,6 +628,7 @@ function EditorPergunta({
           <button
             type="button"
             className={iconeBotao}
+            id={`${base}-duplicar`}
             aria-label={`Duplicar a pergunta ${n}`}
             title="Duplicar"
             disabled={total >= LIMITES.perguntas}
@@ -565,6 +639,7 @@ function EditorPergunta({
           <button
             type="button"
             className={iconeBotao}
+            id={`${base}-apagar`}
             aria-label={`Apagar a pergunta ${n}`}
             title="Apagar"
             disabled={total <= 1}
@@ -596,7 +671,7 @@ function EditorPergunta({
             id={`${base}-tipo`}
             className={cn(campo, 'mt-1.5')}
             value={p.tipo}
-            onChange={(e) => onAlterar((q) => mudarTipo(q, e.target.value as TipoPergunta, idioma))}
+            onChange={(e) => onMudarTipo(e.target.value as TipoPergunta)}
           >
             {TIPOS.map((t) => (
               <option key={t} value={t}>
@@ -645,11 +720,12 @@ function EditorPergunta({
             min={1}
             max={p.tipo === 'texto_curto' ? LIMITES.textoCurto : LIMITES.textoLongo}
             className={cn(campo, 'mt-1.5')}
-            value={p.max}
+            value={p.max ?? ''}
             onChange={(e) =>
               onAlterar((q) =>
                 q.tipo === 'texto_curto' || q.tipo === 'texto_longo'
-                  ? ({ ...q, max: numeroOuNada(e.target.value) ?? 1 } as Pergunta)
+                  ? // Vazio fica vazio enquanto se escreve; o esquema repõe o tecto por omissão.
+                    ({ ...q, max: numeroOuNada(e.target.value) } as unknown as Pergunta)
                   : q,
               )
             }
@@ -714,7 +790,9 @@ function EditorPergunta({
             disabled={p.opcoes.length >= LIMITES.opcoes}
             onClick={() =>
               onAlterar((q) =>
-                'opcoes' in q ? ({ ...q, opcoes: novaOpcao(q.opcoes, idioma) } as Pergunta) : q,
+                'opcoes' in q
+                  ? ({ ...q, opcoes: novaOpcao(q.opcoes, idioma, opcoesReservadas) } as Pergunta)
+                  : q,
               )
             }
           >

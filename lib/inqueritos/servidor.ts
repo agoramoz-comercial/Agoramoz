@@ -67,7 +67,11 @@ export interface GravarResposta {
 
 const respostaGravar = z.union([
   z.object({ ok: z.literal(true), duplicado: z.boolean() }),
-  z.object({ ok: z.literal(false), estado: z.enum(['fechado', 'expirado', 'inexistente']) }),
+  // `limitado`: o limite durável por origem da base (50 por link e IP em 10 min).
+  z.object({
+    ok: z.literal(false),
+    estado: z.enum(['fechado', 'expirado', 'inexistente', 'limitado']),
+  }),
 ]);
 
 export type ResultadoGravar = z.infer<typeof respostaGravar>;

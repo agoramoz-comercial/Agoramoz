@@ -86,6 +86,15 @@ alter table public.responses
   add constraint responses_contacto_ou_link check (contact_id is not null or survey_link_id is not null);
 create index if not exists responses_link_idx
   on public.responses (survey_link_id, submitted_at desc) where survey_link_id is not null;
+-- O limite durável por origem (ingest_survey_response) conta por link e ip_hash.
+create index if not exists responses_link_ip_idx
+  on public.responses (survey_link_id, ip_hash, submitted_at desc) where survey_link_id is not null;
+
+-- Os resultados contam eventos por inquérito (e por passo) sem varrer todos os
+-- eventos com esse nome.
+create index if not exists analytics_events_inquerito_idx
+  on public.analytics_events ((props->>'surveyId'), name, (props->>'step'))
+  where props ? 'surveyId';
 
 
 -- ---------------------------------------------------------------------------
@@ -154,11 +163,17 @@ as $$
      and p_spec->>'schemaVersion' = 'survey.v1'
      and jsonb_typeof(p_spec->'perguntas') = 'array'
      and jsonb_array_length(p_spec->'perguntas') between 1 and 50
-     and pg_column_size(p_spec) <= 131072
+     -- Bytes do texto, não `pg_column_size`: esse mede o valor comprimido.
+     and octet_length(p_spec::text) <= 131072
      and not exists (
        select 1 from jsonb_array_elements(p_spec->'perguntas') p
        where jsonb_typeof(p) <> 'object' or coalesce(p->>'chave', '') !~ '^[a-z0-9_]{1,40}$'
-     );
+     )
+     -- Chaves repetidas partiriam a gravação (unique response_id, question_key).
+     and (select count(distinct p->>'chave') = count(*)
+            from jsonb_array_elements(p_spec->'perguntas') p)
+     -- O mesmo tecto do CHECK de consent_records.consent_text.
+     and coalesce(length(p_spec->'contacto'->>'textoConsentimento'), 0) <= 4000;
 $$;
 
 revoke all on function public.spec_de_inquerito_valido(jsonb) from public, anon, authenticated;
@@ -469,6 +484,7 @@ declare
   v_texto text;
   v_response uuid;
   v_desconhecidas int;
+  v_novo boolean := false;
 begin
   if p_idempotency_key !~ '^[0-9a-f]{64}$' or p_fingerprint !~ '^[0-9a-f]{64}$' then
     raise exception 'Chaves inválidas.' using errcode = '22023';
@@ -487,6 +503,12 @@ begin
   if not found then
     return jsonb_build_object('ok', false, 'estado', 'inexistente');
   end if;
+  -- Outra vez, já com o link bloqueado: duas entregas da mesma submissão ao
+  -- mesmo tempo passam ambas a verificação de cima; a segunda só pode ser
+  -- reconhecida aqui, antes de gravar consentimento ou contacto.
+  if exists (select 1 from public.responses where idempotency_key = p_idempotency_key) then
+    return jsonb_build_object('ok', true, 'duplicado', true);
+  end if;
   select * into q from public.questionnaires where id = l.questionnaire_id;
   if q.kind <> 'survey' then
     return jsonb_build_object('ok', false, 'estado', 'inexistente');
@@ -494,6 +516,16 @@ begin
   v_estado := public.estado_do_link(l, q);
   if v_estado <> 'aberto' then
     return jsonb_build_object('ok', false, 'estado', v_estado);
+  end if;
+
+  -- Limite durável por origem: o da aplicação vive em memória e vale por
+  -- instância. 50 em 10 minutos por link e IP deixa responder uma sala
+  -- inteira atrás do mesmo router e trava um script.
+  if p_ip_hash is not null and (
+       select count(*) from public.responses
+        where survey_link_id = l.id and ip_hash = p_ip_hash
+          and submitted_at > now() - interval '10 minutes') >= 50 then
+    return jsonb_build_object('ok', false, 'estado', 'limitado');
   end if;
 
   select * into v from public.questionnaire_versions
@@ -522,13 +554,19 @@ begin
             nullif(trim(coalesce(p_contacto->>'telefone', '')), ''), 'inquerito')
     on conflict (normalized_email) do nothing
     returning id into v_contact;
-    if v_contact is null then
+    v_novo := v_contact is not null;
+    if v_novo then
+      -- O email não é verificado: este consentimento é auto-declarado por
+      -- quem tinha o link. Só se regista para o contacto que esta resposta
+      -- criou — nunca se junta «prova» de consentimento a alguém que já
+      -- existia no CRM, porque qualquer pessoa pode escrever o email de outra.
+      insert into public.consent_records
+        (contact_id, purpose, granted, consent_text, consent_version, source, ip_hash, user_agent_hash)
+      values (v_contact, 'inquerito', true, v_texto, left(p_consentimento_versao, 40), 'inquerito',
+              p_ip_hash, p_ua_hash);
+    else
       select id into v_contact from public.contacts where normalized_email = v_email;
     end if;
-
-    insert into public.consent_records
-      (contact_id, purpose, granted, consent_text, consent_version, source, ip_hash, user_agent_hash)
-    values (v_contact, 'inquerito', true, v_texto, left(p_consentimento_versao, 40), 'inquerito', p_ip_hash, p_ua_hash);
   end if;
 
   begin
@@ -553,6 +591,9 @@ begin
     values (v_contact, 'inquerito_respondido', 'system',
             jsonb_strip_nulls(jsonb_build_object(
               'inquerito', q.id, 'resposta', v_response,
+              -- Email não verificado: num contacto que já existia, esta
+              -- actividade pode ter sido escrita por outra pessoa.
+              'contacto_existente', not v_novo,
               'organizacao', left(nullif(trim(coalesce(p_contacto->>'organizacao', '')), ''), 160))));
   end if;
 
@@ -629,18 +670,29 @@ begin
      where t.tipo = 'escolha_multipla' and jsonb_typeof(r.value) = 'array'
      group by 1, 2
   ),
+  respondidas as (
+    select question_key, count(*)::int as n from respostas group by 1
+  ),
+  medias as (
+    select question_key, round(avg((value #>> '{}')::numeric), 2) as media
+      from respostas where jsonb_typeof(value) = 'number' group by 1
+  ),
+  valores as (
+    -- `valor` nulo (um JSON null) não pode ser chave de objecto.
+    select question_key, jsonb_object_agg(valor, n) as valores
+      from contagens where valor is not null group by 1
+  ),
   por_pergunta as (
     select t.chave,
            jsonb_build_object(
-             'respondidas', (select count(*) from respostas r where r.question_key = t.chave),
-             'valores', coalesce((select jsonb_object_agg(c.valor, c.n) from contagens c where c.question_key = t.chave),
-                                 '{}'::jsonb),
-             'media', case when t.tipo in ('numero', 'avaliacao', 'nps')
-                           then (select round(avg((r.value #>> '{}')::numeric), 2) from respostas r
-                                  where r.question_key = t.chave and jsonb_typeof(r.value) = 'number')
-                      end
+             'respondidas', coalesce(r.n, 0),
+             'valores', coalesce(v.valores, '{}'::jsonb),
+             'media', case when t.tipo in ('numero', 'avaliacao', 'nps') then m.media end
            ) as dados
       from tipos t
+      left join respondidas r on r.question_key = t.chave
+      left join valores v on v.question_key = t.chave
+      left join medias m on m.question_key = t.chave
      where t.tipo <> 'seccao'
   )
   select coalesce(jsonb_object_agg(chave, dados), '{}'::jsonb) into v_por_pergunta from por_pergunta;
@@ -648,6 +700,32 @@ begin
   return jsonb_build_object('total', v_total, 'porPergunta', v_por_pergunta);
 end;
 $$;
+
+-- A exportação sai pela aplicação (CSV), mas fica registada aqui, pela
+-- sessão de quem exporta: com contactos, só admin e comercial.
+create or replace function public.registar_exportacao_inquerito(p_id uuid, p_com_contacto boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+begin
+  if p_com_contacto then
+    perform public.exigir_papel(array['admin', 'comercial']::public.user_role[]);
+  else
+    perform public.exigir_papel(array['admin', 'comercial', 'leitura']::public.user_role[]);
+  end if;
+  if not exists (select 1 from public.questionnaires where id = p_id and kind = 'survey') then
+    raise exception 'Inquérito inexistente.' using errcode = 'P0002';
+  end if;
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id, after)
+  values (auth.uid(), 'user', 'inquerito.exportar', 'questionnaire', p_id::text,
+          jsonb_build_object('com_contacto', p_com_contacto));
+end;
+$$;
+
+revoke all on function public.registar_exportacao_inquerito(uuid, boolean) from public, anon;
+grant execute on function public.registar_exportacao_inquerito(uuid, boolean) to authenticated;
 
 revoke all on function public.resultados_inquerito(uuid) from public, anon;
 grant execute on function public.resultados_inquerito(uuid) to authenticated;

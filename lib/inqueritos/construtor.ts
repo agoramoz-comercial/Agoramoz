@@ -80,9 +80,20 @@ export function novaPergunta(tipo: TipoPergunta, chave: string, idioma: Idioma):
   }
 }
 
-/** Muda o tipo mantendo o que faz sentido manter: texto, condição e, entre escolhas, as opções. */
-export function mudarTipo(p: Pergunta, tipo: TipoPergunta, idioma: Idioma): Pergunta {
+/**
+ * Muda o tipo mantendo o que faz sentido manter: texto, condição e, entre
+ * escolhas, as opções. Se a chave já foi gravada (`chaveNova` dada), a
+ * pergunta passa a ser outra: leva chave nova, para respostas do tipo antigo
+ * não serem lidas como do tipo novo.
+ */
+export function mudarTipo(
+  p: Pergunta,
+  tipo: TipoPergunta,
+  idioma: Idioma,
+  chaveNova?: string,
+): Pergunta {
   if (p.tipo === tipo) return p;
+  if (chaveNova) return mudarTipo({ ...p, chave: chaveNova } as Pergunta, tipo, idioma);
   const nova = novaPergunta(tipo, p.chave, idioma);
   const comum = {
     titulo: p.titulo,
@@ -97,25 +108,62 @@ export function mudarTipo(p: Pergunta, tipo: TipoPergunta, idioma: Idioma): Perg
   return { ...nova, ...comum, ...obrigatoria } as Pergunta;
 }
 
+/**
+ * As chaves já gravadas em alguma versão do inquérito. Uma chave que já teve
+ * respostas nunca volta a ser dada a outra pergunta (nem a outra opção da
+ * mesma pergunta): os resultados agregam por chave através das versões, e as
+ * respostas antigas apareceriam debaixo da pergunta nova (revisão ECC).
+ */
+export interface Reservadas {
+  readonly perguntas: readonly string[];
+  readonly opcoes: Readonly<Record<string, readonly string[]>>;
+}
+
+export const SEM_RESERVADAS: Reservadas = { perguntas: [], opcoes: {} };
+
+/** Lê as chaves de specs guardados, tolerante: um spec antigo não pode partir o editor. */
+export function chavesReservadas(specs: readonly unknown[]): Reservadas {
+  const perguntas = new Set<string>();
+  const opcoes: Record<string, Set<string>> = {};
+  for (const spec of specs) {
+    const lista = (spec as { perguntas?: unknown } | null)?.perguntas;
+    if (!Array.isArray(lista)) continue;
+    for (const p of lista) {
+      const chave = (p as { chave?: unknown } | null)?.chave;
+      if (typeof chave !== 'string') continue;
+      perguntas.add(chave);
+      const ops = (p as { opcoes?: unknown }).opcoes;
+      if (!Array.isArray(ops)) continue;
+      for (const o of ops) {
+        const k = (o as { chave?: unknown } | null)?.chave;
+        if (typeof k === 'string') (opcoes[chave] ??= new Set()).add(k);
+      }
+    }
+  }
+  return {
+    perguntas: [...perguntas],
+    opcoes: Object.fromEntries(Object.entries(opcoes).map(([k, v]) => [k, [...v]])),
+  };
+}
+
 export function acrescentar(
   perguntas: readonly Pergunta[],
   tipo: TipoPergunta,
   idioma: Idioma,
+  reservadas: readonly string[] = [],
 ): Pergunta[] {
-  const chave = novaChave(
-    perguntas.map((p) => p.chave),
-    'p',
-  );
+  const chave = novaChave([...perguntas.map((p) => p.chave), ...reservadas], 'p');
   return [...perguntas, novaPergunta(tipo, chave, idioma)];
 }
 
-export function duplicar(perguntas: readonly Pergunta[], i: number): Pergunta[] {
+export function duplicar(
+  perguntas: readonly Pergunta[],
+  i: number,
+  reservadas: readonly string[] = [],
+): Pergunta[] {
   const original = perguntas[i];
   if (!original) return [...perguntas];
-  const chave = novaChave(
-    perguntas.map((p) => p.chave),
-    'p',
-  );
+  const chave = novaChave([...perguntas.map((p) => p.chave), ...reservadas], 'p');
   const copia = structuredClone(original) as Pergunta;
   return [...perguntas.slice(0, i + 1), { ...copia, chave }, ...perguntas.slice(i + 1)];
 }
@@ -160,11 +208,9 @@ export function mover(perguntas: readonly Pergunta[], i: number, delta: -1 | 1):
 export function novaOpcao(
   opcoes: readonly { chave: string; rotulo: string }[],
   idioma: Idioma,
+  reservadas: readonly string[] = [],
 ): { chave: string; rotulo: string }[] {
-  const chave = novaChave(
-    opcoes.map((o) => o.chave),
-    'o',
-  );
+  const chave = novaChave([...opcoes.map((o) => o.chave), ...reservadas], 'o');
   const n = opcoes.length + 1;
   return [...opcoes, { chave, rotulo: `${idioma === 'pt' ? 'Opção' : 'Option'} ${n}` }];
 }

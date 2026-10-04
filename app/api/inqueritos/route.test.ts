@@ -168,6 +168,25 @@ describe('estado do link', () => {
     }
   });
 
+  it('tokens inventados não gastam o limite por link (só links que existem contam)', async () => {
+    const POST = await carregarRota();
+    base({ estado: 'inexistente' });
+    const estados = new Set<number>();
+    for (let i = 0; i < 610; i += 1) {
+      const res = await POST(pedido(VALIDO, { 'x-forwarded-for': `10.${i >> 8}.${i & 255}.9` }));
+      estados.add(res.status);
+    }
+    expect([...estados]).toEqual([404]);
+  });
+
+  it('o limite durável da base (por link e IP) dá 429 com Retry-After', async () => {
+    const POST = await carregarRota();
+    base(aberto(), { ok: false, estado: 'limitado' });
+    const res = await POST(pedido(VALIDO));
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Retry-After')).toBe('600');
+  });
+
   it('fechado entre a leitura e a gravação também é 410', async () => {
     const POST = await carregarRota();
     base(aberto(), { ok: false, estado: 'fechado' });

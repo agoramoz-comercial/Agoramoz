@@ -107,6 +107,34 @@ describe('0013 — inquéritos', () => {
     expect(corpo).not.toContain('response_attribution');
   });
 
+  it('revisão ECC: idempotência depois do bloqueio, consentimento só em contacto novo, limite por IP', () => {
+    const corpo = corpoDe('ingest_survey_response');
+    const bloqueio = corpo.indexOf('for update');
+    expect(corpo.indexOf('idempotency_key = p_idempotency_key', bloqueio)).toBeGreaterThan(
+      bloqueio,
+    );
+    const consentimento = corpo.indexOf('insert into public.consent_records');
+    expect(corpo.lastIndexOf('if v_novo then', consentimento)).toBeGreaterThan(-1);
+    expect(corpo).toContain("'estado', 'limitado'");
+    expect(MIGRACAO).toContain('responses_link_ip_idx');
+  });
+
+  it('o spec é medido em bytes de texto, com chaves únicas', () => {
+    const f = corpoDe('spec_de_inquerito_valido');
+    expect(f).toContain('octet_length(p_spec::text)');
+    expect(f).not.toContain('pg_column_size(p_spec)');
+    expect(f).toContain("count(distinct p->>'chave') = count(*)");
+  });
+
+  it('a exportação é auditada e com contactos exige admin ou comercial', () => {
+    const f = corpoDe('registar_exportacao_inquerito');
+    expect(f).toContain("array['admin', 'comercial']::public.user_role[]");
+    expect(f).toContain("'inquerito.exportar'");
+    expect(MIGRACAO).toMatch(
+      /grant execute on function public\.registar_exportacao_inquerito\(uuid, boolean\) to authenticated;/,
+    );
+  });
+
   it('verificar-estado.sql tem a linha 23 da 0013', () => {
     expect(VERIFICAR).toMatch(/select 23, [^\n]*\(0013\)/);
     expect(VERIFICAR).toContain("'EM FALTA - correr aplicar-0013.sql'");

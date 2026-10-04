@@ -2,6 +2,7 @@ import { AdminHeading, DataHora, StateBadge } from '@/components/admin/primitive
 import { SurveyRenderer } from '@/components/inqueritos/SurveyRenderer';
 import { Button } from '@/components/ui/Button';
 import { ESTADO_INQUERITO, type EstadoInquerito } from '@/lib/admin/labels';
+import type { Reservadas } from '@/lib/inqueritos/construtor';
 import type { SpecInquerito } from '@/lib/inqueritos/spec';
 import { Construtor } from './Construtor';
 
@@ -31,6 +32,8 @@ export interface DadosEditor {
   readonly temRascunho: boolean;
   /** O rascunho, se houver; senão a versão em vigor. */
   readonly spec: SpecInquerito;
+  /** Chaves de versões publicadas: nunca reutilizadas pelo construtor. */
+  readonly reservadas?: Reservadas;
 }
 
 export function EditorInquerito({
@@ -107,6 +110,7 @@ export function EditorInquerito({
           specInicial={spec}
           temRascunho={temRascunho}
           guardar={guardar}
+          reservadas={dados.reservadas}
         />
       ) : (
         <section aria-labelledby="previa-leitura" className="max-w-2xl">

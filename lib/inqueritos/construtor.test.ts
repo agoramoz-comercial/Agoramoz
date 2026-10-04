@@ -3,6 +3,7 @@ import {
   TIPOS,
   acrescentar,
   apagar,
+  chavesReservadas,
   duplicar,
   errosLegiveis,
   mover,
@@ -145,5 +146,43 @@ describe('slug', () => {
     expect(s).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
     expect(slugDe('***', 'ff00aa')).toBe('inquerito-ff00aa');
     expect(slugDe('x'.repeat(80), 'ab12cd').length).toBeLessThanOrEqual(57);
+  });
+});
+
+describe('chaves já gravadas nunca voltam (revisão ECC)', () => {
+  const gravadas = chavesReservadas([
+    {
+      perguntas: [
+        { chave: 'p1', opcoes: [{ chave: 'o1' }, { chave: 'o2' }, { chave: 'o3' }] },
+        { chave: 'p2' },
+      ],
+    },
+    { perguntas: 'corrompido' },
+    null,
+  ]);
+
+  it('lê as chaves de perguntas e opções de todas as versões, tolerante a lixo', () => {
+    expect([...gravadas.perguntas].sort()).toEqual(['p1', 'p2']);
+    expect([...(gravadas.opcoes.p1 ?? [])].sort()).toEqual(['o1', 'o2', 'o3']);
+  });
+
+  it('apagar p2 e acrescentar não devolve p2', () => {
+    const so1 = [novaPergunta('escolha_unica', 'p1', 'pt')];
+    expect(acrescentar(so1, 'nps', 'pt', gravadas.perguntas).at(-1)?.chave).toBe('p3');
+    expect(duplicar(so1, 0, gravadas.perguntas)[1]?.chave).toBe('p3');
+  });
+
+  it('opção nova não reutiliza uma opção retirada da mesma pergunta', () => {
+    const opcoes = [
+      { chave: 'o1', rotulo: 'A' },
+      { chave: 'o2', rotulo: 'B' },
+    ];
+    expect(novaOpcao(opcoes, 'pt', gravadas.opcoes.p1)?.at(-1)?.chave).toBe('o4');
+  });
+
+  it('mudar o tipo de uma pergunta gravada dá-lhe chave nova', () => {
+    const p = novaPergunta('nps', 'p2', 'pt');
+    expect(mudarTipo(p, 'escolha_unica', 'pt', 'p5').chave).toBe('p5');
+    expect(mudarTipo(p, 'escolha_unica', 'pt').chave).toBe('p2');
   });
 });

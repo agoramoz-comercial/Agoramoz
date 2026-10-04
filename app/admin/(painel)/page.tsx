@@ -35,6 +35,7 @@ export default async function PainelPage({
     agendamento: env.SCHEDULING === 'cal',
     news: env.NEWS_ENGINE !== 'off',
     inqueritos: env.SURVEYS === 'on',
+    filtrarInqueritos: env.SURVEYS === 'on' || Boolean(env.SURVEY_LINK_SECRET),
     erp: estadoErp(env),
   };
 

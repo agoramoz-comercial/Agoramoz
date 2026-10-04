@@ -91,6 +91,19 @@ function dicaDe(p: Pergunta, idioma: Idioma): string | null {
   }
 }
 
+/**
+ * O id da submissão (UUID v4). `crypto.randomUUID` falta em origens não
+ * seguras e em Safari anterior a 15.4; `getRandomValues` existe em todos.
+ */
+function novoIdDeSubmissao(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6]! & 0x0f) | 0x40;
+  b[8] = (b[8]! & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
 function mensagemDeErro(p: Pergunta, erro: ErroCartao, idioma: Idioma): string {
   if (erro === 'obrigatoria') return t(INQ.obrigatoria, idioma);
   if (p.tipo === 'texto_curto' || p.tipo === 'texto_longo')
@@ -117,6 +130,8 @@ export function SurveyRenderer(props: Props) {
   const [consentimento, setConsentimento] = useState(false);
   const [errosContacto, setErrosContacto] = useState<ReadonlySet<string>>(new Set());
   const [envio, setEnvio] = useState<Envio>('idle');
+  /** Guarda síncrona: dois cliques antes do novo render não fazem dois pedidos. */
+  const aEnviar = useRef(false);
   const [fax, setFax] = useState('');
 
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -161,6 +176,31 @@ export function SurveyRenderer(props: Props) {
     [],
   );
 
+  // Na pré-visualização do construtor o inquérito muda por baixo: se o cartão
+  // actual deixou de existir, volta-se ao último que existe.
+  useEffect(() => {
+    if (total > 0 && indiceRef.current > total - 1) {
+      indiceRef.current = total - 1;
+      setIndice(total - 1);
+    }
+  }, [total]);
+
+  // E uma pergunta que mudou de tipo perde a resposta de rascunho: um texto
+  // antigo não serve de NPS, e um número fora da escala deixava-a sem foco.
+  const tipos = useRef<Map<string, Pergunta['tipo']>>(new Map());
+  useEffect(() => {
+    const agora = new Map(spec.perguntas.map((p) => [p.chave, p.tipo] as const));
+    const mudadas = [...agora].filter(
+      ([k, t]) => tipos.current.has(k) && tipos.current.get(k) !== t,
+    );
+    tipos.current = agora;
+    if (mudadas.length === 0) return;
+    const limpo = { ...rascunhoRef.current };
+    for (const [k] of mudadas) delete limpo[k];
+    rascunhoRef.current = limpo;
+    setRascunho(limpo);
+  }, [spec.perguntas]);
+
   function definir(chave: string, valor: ValorRascunho) {
     rascunhoRef.current = { ...rascunhoRef.current, [chave]: valor };
     setRascunho(rascunhoRef.current);
@@ -181,6 +221,8 @@ export function SurveyRenderer(props: Props) {
     indiceRef.current = destino;
     setIndice(destino);
     setErro(null);
+    // Um erro de envio é do envio, não do cartão para onde se foi.
+    setEnvio((e) => (e === 'enviando' ? e : 'idle'));
   }
 
   function voltar() {
@@ -220,7 +262,7 @@ export function SurveyRenderer(props: Props) {
   }
 
   async function enviar() {
-    if (envio === 'enviando') return;
+    if (aEnviar.current) return;
     const r = rascunhoRef.current;
     const atuais = cartoesDe(spec, r);
     const comErro = primeiroComErro(atuais, r);
@@ -252,9 +294,10 @@ export function SurveyRenderer(props: Props) {
       return;
     }
 
-    submissionId.current ??= crypto.randomUUID();
+    aEnviar.current = true;
     setEnvio('enviando');
     try {
+      submissionId.current ??= novoIdDeSubmissao();
       const res = await fetch('/api/inqueritos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -280,6 +323,8 @@ export function SurveyRenderer(props: Props) {
       setEnvio(res.status === 429 ? 'limite' : 'erro');
     } catch {
       setEnvio('erro');
+    } finally {
+      aEnviar.current = false;
     }
   }
 
@@ -299,7 +344,9 @@ export function SurveyRenderer(props: Props) {
   function onKeyDownTitulo(e: React.KeyboardEvent) {
     if (e.key === 'ArrowRight') {
       e.preventDefault();
-      avancar();
+      // Como avanço automático: no último cartão valida mas nunca envia —
+      // enviar é sempre um gesto explícito no botão.
+      avancar(indiceRef.current, true);
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       voltar();
@@ -703,6 +750,8 @@ function Entrada({
       const nps = p.tipo === 'nps';
       return (
         <Escala
+          obrigatoria={p.obrigatoria}
+          invalida={invalida}
           de={nps ? 0 : 1}
           ate={nps ? 10 : 5}
           valor={typeof valor === 'number' ? valor : null}
@@ -728,6 +777,8 @@ function Entrada({
  * linha, para os onze valores do NPS caberem num telemóvel sem 11 linhas.
  */
 function Escala({
+  obrigatoria,
+  invalida,
   de,
   ate,
   valor,
@@ -738,6 +789,8 @@ function Escala({
   onMudar,
   onEscolher,
 }: {
+  obrigatoria: boolean;
+  invalida: boolean;
   de: number;
   ate: number;
   valor: number | null;
@@ -750,7 +803,7 @@ function Escala({
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const valores = Array.from({ length: ate - de + 1 }, (_, i) => de + i);
-  const ativo = valor === null ? 0 : valores.indexOf(valor);
+  const ativo = Math.max(0, valor === null ? 0 : valores.indexOf(valor));
   const extremosId = useId();
 
   function onKeyDown(e: React.KeyboardEvent, i: number) {
@@ -770,6 +823,8 @@ function Escala({
     <div>
       <div
         role="radiogroup"
+        aria-required={obrigatoria || undefined}
+        aria-invalid={invalida || undefined}
         aria-labelledby={tituloId}
         aria-describedby={[extremosId, descritores].filter(Boolean).join(' ')}
         className="flex flex-wrap gap-1.5"

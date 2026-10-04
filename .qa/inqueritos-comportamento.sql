@@ -352,5 +352,99 @@ do $$ begin
   raise exception '25: resposta órfã';
 exception when check_violation then null; end $$;
 
+-- 26. Contacto existente: a resposta liga-se, mas nenhum consentimento é
+--     juntado (o email não é verificado) e a actividade diz que já existia.
+do $$ begin
+  if exists (select 1 from public.consent_records
+             where contact_id = '00000000-0000-0000-0000-0000000000c9') then
+    raise exception '26: consentimento juntado a um contacto que já existia';
+  end if;
+  if not exists (select 1 from public.activities
+                 where contact_id = '00000000-0000-0000-0000-0000000000c9'
+                   and (metadata->>'contacto_existente')::boolean) then
+    raise exception '26: actividade sem a marca de contacto existente';
+  end if;
+  if exists (select 1 from public.activities a join public.contacts c on c.id = a.contact_id
+             where c.normalized_email = 'nova@exemplo.test'
+               and (a.metadata->>'contacto_existente')::boolean) then
+    raise exception '26: contacto novo marcado como existente';
+  end if;
+end $$;
+
+-- 27. Limite durável por origem: 50 em 10 minutos por link e IP. Link novo
+--     (o «a» foi revogado no 20).
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000aa01', true);
+do $$ begin
+  perform public.criar_link((select valor::uuid from qa where chave = 'inquerito'),
+                            '00000000-0000-0000-0000-0000000001a4', repeat('8', 64), 'Limite', null, null);
+end $$;
+reset role;
+set local role service_role;
+do $$ declare r jsonb; i int; begin
+  for i in 1..50 loop
+    r := public.ingest_survey_response(repeat('8', 64), '{"p1":"sim"}',
+           encode(sha256(('ip-' || i)::bytea), 'hex'), repeat('2', 64), null, null, repeat('d', 64), null);
+    if not (r->>'ok')::boolean then raise exception '27: recusada a % (%)', i, r; end if;
+  end loop;
+  r := public.ingest_survey_response(repeat('8', 64), '{"p1":"sim"}',
+         encode(sha256('ip-51'::bytea), 'hex'), repeat('2', 64), null, null, repeat('d', 64), null);
+  if (r->>'ok')::boolean or r->>'estado' <> 'limitado' then raise exception '27: passou do limite %', r; end if;
+  -- Outro IP no mesmo link continua a responder.
+  r := public.ingest_survey_response(repeat('8', 64), '{"p1":"sim"}',
+         encode(sha256('ip-outro'::bytea), 'hex'), repeat('2', 64), null, null, repeat('e', 64), null);
+  if not (r->>'ok')::boolean then raise exception '27: outro IP recusado %', r; end if;
+end $$;
+reset role;
+
+-- 28. A base recusa chaves repetidas e consentimento acima do tecto.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000aa01', true);
+do $$ begin
+  perform public.criar_inquerito('qa-repetida', 'x', jsonb_set(pg_temp.qa_spec('x'), '{perguntas,1,chave}', '"p1"'));
+  raise exception '28: aceitou chaves repetidas';
+exception when invalid_parameter_value then null; end $$;
+do $$ begin
+  perform public.criar_inquerito('qa-consent', 'x',
+    jsonb_set(pg_temp.qa_spec('x'), '{contacto,textoConsentimento}', to_jsonb(repeat('x', 4001))));
+  raise exception '28: aceitou consentimento com 4001 caracteres';
+exception when invalid_parameter_value then null; end $$;
+
+-- 29. Exportar fica na auditoria; com contactos, só admin e comercial.
+do $$ declare v uuid; begin
+  select valor::uuid into v from qa where chave = 'inquerito';
+  perform public.registar_exportacao_inquerito(v, true);
+  if not exists (select 1 from public.audit_log where action = 'inquerito.exportar'
+                 and (after->>'com_contacto')::boolean) then
+    raise exception '29: exportação não auditada';
+  end if;
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000aa02', true);
+do $$ declare v uuid; begin
+  select valor::uuid into v from qa where chave = 'inquerito';
+  perform public.registar_exportacao_inquerito(v, false);
+  begin
+    perform public.registar_exportacao_inquerito(v, true);
+    raise exception '29: leitura exportou contactos';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- 30. Resultados (reescritos numa só agregação) continuam a contar certo.
+do $$ declare v uuid; r jsonb; begin
+  select valor::uuid into v from qa where chave = 'inquerito';
+  r := public.resultados_inquerito(v);
+  if (r->>'total')::int <> (select count(*) from public.responses rr
+                              join public.questionnaire_versions qv on qv.id = rr.questionnaire_version_id
+                             where qv.questionnaire_id = v) then
+    raise exception '30: total %', r->>'total';
+  end if;
+  if (r->'porPergunta'->'p3'->'valores'->>'rh')::int < 1
+     or (r->'porPergunta'->'p2'->>'media')::numeric <> 9 then
+    raise exception '30: agregação %', r->'porPergunta';
+  end if;
+  if r->'porPergunta' ? 's1' then raise exception '30: secção nos resultados'; end if;
+end $$;
+reset role;
+
 select 'inqueritos-comportamento: tudo verde' as resultado;
 rollback;

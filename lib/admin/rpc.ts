@@ -24,6 +24,7 @@ export const RPC = {
   definir_inquerito_activo: ['p_id', 'p_activo'],
   criar_link: ['p_id', 'p_link_id', 'p_token_hash', 'p_rotulo', 'p_expira', 'p_max'],
   revogar_link: ['p_link_id'],
+  registar_exportacao_inquerito: ['p_id', 'p_com_contacto'],
 } as const satisfies Record<string, readonly string[]>;
 
 export type NomeRpc = keyof typeof RPC;

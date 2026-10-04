@@ -102,6 +102,13 @@ export interface Ligacoes {
    * eram — a coluna pode ainda nem existir.
    */
   readonly inqueritos?: boolean;
+  /**
+   * Tirar as respostas de inquérito das contagens de leads. Por omissão segue
+   * `inqueritos`; a página liga-o também quando há `SURVEY_LINK_SECRET` (só se
+   * cria depois de aplicar a 0013), para que desligar `SURVEYS` mais tarde não
+   * devolva as respostas já recolhidas às contagens de leads.
+   */
+  readonly filtrarInqueritos?: boolean;
   readonly erp: EstadoErp;
 }
 
@@ -188,7 +195,8 @@ export async function carregarPainel(
   }
 
   /** Com inquéritos ligados, as submissões que contam como leads são as sem link. */
-  const soLeads: readonly [string, null][] = ligacoes.inqueritos ? [['survey_link_id', null]] : [];
+  const filtrar = ligacoes.filtrarInqueritos ?? ligacoes.inqueritos ?? false;
+  const soLeads: readonly [string, null][] = filtrar ? [['survey_link_id', null]] : [];
 
   /** Eventos do pixel com `nome` no período actual (ou em [de, ate)). */
   const evento = (
@@ -218,7 +226,7 @@ export async function carregarPainel(
       const datas: string[] = [];
       for (let de = 0; ; de += PAGINA) {
         let consulta = sb.from('responses').select('submitted_at').gte('submitted_at', desde);
-        if (ligacoes.inqueritos) consulta = consulta.is('survey_link_id', null);
+        if (filtrar) consulta = consulta.is('survey_link_id', null);
         const pagina = await linhas<{ submitted_at: string }>(
           consulta
             .order('submitted_at', { ascending: true })
@@ -376,7 +384,7 @@ export async function carregarPainel(
       let consulta = sb
         .from('responses')
         .select('id, submitted_at, contacts(name, email), diagnostics(id, state, score, tier)');
-      if (ligacoes.inqueritos) consulta = consulta.is('survey_link_id', null);
+      if (filtrar) consulta = consulta.is('survey_link_id', null);
       return linhas<LinhaRecente>(consulta.order('submitted_at', { ascending: false }).limit(8));
     }),
 

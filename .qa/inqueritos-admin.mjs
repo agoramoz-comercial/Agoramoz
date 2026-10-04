@@ -86,6 +86,8 @@ for (const largura of [390, 768, 1440]) {
 
   // Subir a condicional acima da pergunta-alvo → erro; descer de volta.
   await p.getByRole('button', { name: 'Subir a pergunta 2' }).click();
+  const focoMover = await p.evaluate(() => document.activeElement?.id ?? '');
+  confere(/-p2-(subir|cab)$/.test(focoMover), 'mover mantém o foco na mesma pergunta', focoMover);
   confere(
     (await p.getByText('a condição tem de apontar para uma pergunta anterior').count()) >= 1,
     'condição invertida é apanhada',
@@ -97,6 +99,8 @@ for (const largura of [390, 768, 1440]) {
   await p.getByLabel('Tipo da pergunta nova').selectOption('avaliacao');
   await p.getByRole('button', { name: 'Acrescentar pergunta' }).click();
   confere((await p.locator('article').count()) === 4, 'pergunta nova acrescentada');
+  const focoNova = await p.evaluate(() => document.activeElement?.id ?? '');
+  confere(/-p4-titulo$/.test(focoNova), 'acrescentar põe o foco no título da pergunta nova', focoNova);
   confere((await p.getByRole('heading', { name: /^Perguntas \(4 de 50\)/ }).count()) === 1, 'contagem actualizada');
 
   // Apagar a pergunta 1 retira a condição da 2 e avisa.
@@ -104,6 +108,10 @@ for (const largura of [390, 768, 1440]) {
   confere(
     (await p.getByText('1 condição que dependia dela foi retirada').count()) === 1,
     'apagar avisa da condição retirada',
+  );
+  confere(
+    await p.evaluate(() => document.activeElement?.getAttribute('role') === 'status'),
+    'apagar põe o foco no aviso',
   );
   confere(
     !(await p.locator('article').nth(0).getByLabel('Mostrar só consoante uma resposta anterior').isChecked()),

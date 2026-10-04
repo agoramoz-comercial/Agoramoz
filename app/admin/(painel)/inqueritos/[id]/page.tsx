@@ -11,6 +11,7 @@ import { estadoDoInquerito } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/config/env';
+import { chavesReservadas } from '@/lib/inqueritos/construtor';
 import { montarLinks, type LinhaLink } from '@/lib/inqueritos/partilha';
 import { specInquerito } from '@/lib/inqueritos/spec';
 import { SITE_URL } from '@/lib/seo/site';
@@ -50,7 +51,7 @@ export default async function InqueritoPage({
   const supabase = await createSessionClient();
 
   const env = serverEnv();
-  const [inquerito, versoes, links] = await Promise.all([
+  const [inquerito, versoes, links, total] = await Promise.all([
     supabase
       .from('questionnaires')
       .select('id, name, kind, active')
@@ -67,7 +68,14 @@ export default async function InqueritoPage({
       .select('id, rotulo, created_at, expires_at, revoked_at, max_responses')
       .eq('questionnaire_id', id)
       .order('created_at', { ascending: false })
-      .limit(50),
+      .limit(200),
+    // O total vem de uma contagem própria: a soma dos links listados ficava
+    // curta com mais links do que a lista mostra.
+    supabase
+      .from('responses')
+      .select('id, questionnaire_versions!inner(questionnaire_id)', { count: 'exact', head: true })
+      .eq('questionnaire_versions.questionnaire_id', id)
+      .not('survey_link_id', 'is', null),
   ]);
 
   const q = inquerito.data as { id: string; name: string; active: boolean } | null;
@@ -114,6 +122,8 @@ export default async function InqueritoPage({
         emVigor: emVigor ? { versao: emVigor.version, publicadaEm: emVigor.published_at! } : null,
         temRascunho: Boolean(rascunho),
         spec: spec.data,
+        // Só as versões publicadas tiveram respostas; as chaves delas ficam.
+        reservadas: chavesReservadas(lista.filter((v) => v.published_at).map((v) => v.spec)),
       }}
       escreve={podeEscrever(sessao.papel)}
       erro={erro}
@@ -124,8 +134,16 @@ export default async function InqueritoPage({
       <Partilha
         inqueritoId={q.id}
         estadoInquerito={estado}
-        totalRespostas={leituraFalhou ? null : [...porLink.values()].reduce((a, n) => a + n, 0)}
-        links={montarLinks(linhasLinks, porLink, env.SURVEY_LINK_SECRET, SITE_URL, await agora())}
+        totalRespostas={leituraFalhou || total.error ? null : (total.count ?? 0)}
+        links={montarLinks(
+          linhasLinks,
+          porLink,
+          // O endereço é uma capacidade de responder: só para quem pode
+          // escrever (revisão ECC, L3). Sem segredo, montarLinks não o deriva.
+          podeEscrever(sessao.papel) ? env.SURVEY_LINK_SECRET : undefined,
+          SITE_URL,
+          await agora(),
+        )}
         escreve={podeEscrever(sessao.papel)}
         semSegredo={!env.SURVEY_LINK_SECRET}
         criarLink={criarLink}
