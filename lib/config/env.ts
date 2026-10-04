@@ -199,6 +199,20 @@ const serverSchema = z.object({
   ERP_PROVIDER: z.enum(['off', 'http']).default('off'),
   ERP_URL: z.string().url('deve ser um URL').refine((v) => v.startsWith('https://'), 'deve usar https').optional(),
   ERP_API_KEY: z.string().min(20, 'deve ter pelo menos 20 caracteres').optional(),
+
+  // ── Inquéritos ──────────────────────────────────────────────────────────
+  /**
+   * `off` — `/i/…` e `/api/inqueritos` respondem 404; o admin mostra os
+   * inquéritos «por activar». `on` — só depois de aplicar
+   * supabase/aplicar-0013.sql (ver docs/INQUERITOS.md).
+   */
+  SURVEYS: z.enum(['off', 'on']).default('off'),
+  /**
+   * Deriva o token de cada link (HMAC do id do link). A base guarda só o
+   * SHA-256 do token; é este segredo que permite voltar a mostrar o link à
+   * equipa. Trocá-lo invalida TODOS os links já partilhados.
+   */
+  SURVEY_LINK_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres').optional(),
 })
   .superRefine((env, ctx) => {
     if (env.DIAGNOSTIC_PERSISTENCE !== 'required') return;
@@ -246,6 +260,12 @@ const serverSchema = z.object({
     if (env.ERP_PROVIDER !== 'http') return;
     for (const nome of ['ERP_URL', 'ERP_API_KEY'] as const) {
       if (!env[nome]) ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando ERP_PROVIDER=http' });
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.SURVEYS !== 'on') return;
+    for (const nome of ['SURVEY_LINK_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const) {
+      if (!env[nome]) ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando SURVEYS=on' });
     }
   })
   .superRefine((env, ctx) => {
@@ -327,6 +347,8 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       ERP_PROVIDER: process.env.ERP_PROVIDER,
       ERP_URL: process.env.ERP_URL,
       ERP_API_KEY: process.env.ERP_API_KEY,
+      SURVEYS: process.env.SURVEYS,
+      SURVEY_LINK_SECRET: process.env.SURVEY_LINK_SECRET,
     },
     'servidor',
   );

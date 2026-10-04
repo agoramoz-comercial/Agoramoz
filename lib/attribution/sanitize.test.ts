@@ -112,6 +112,14 @@ describe('sanitizarCaminho', () => {
     expect(sanitizarCaminho('/diagnostico#seccao')).toBe('/diagnostico');
   });
 
+  it('um token de inquérito nunca chega à base, mas /insights continua público', () => {
+    const token = 'AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-abcde';
+    expect(sanitizarCaminho(`/i/${token}`)).toBe(CAMINHO_PRIVADO);
+    expect(sanitizarCaminho('/i')).toBe(CAMINHO_PRIVADO);
+    // O prefixo é um segmento, não um começo de palavra.
+    expect(sanitizarCaminho('/insights')).toBe('/insights');
+  });
+
   it.each(['/admin', '/admin/oportunidades', '/api/diagnostico', '/documento/abc123'])(
     'marca %j como privado em vez de o gravar',
     (entrada) => {

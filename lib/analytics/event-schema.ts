@@ -55,6 +55,12 @@ const corpo = z.discriminatedUnion('name', [
   z.strictObject({ name: z.literal('diagnostic_submitted') }),
   z.strictObject({ name: z.literal('meeting_requested'), surface: superficie }),
   z.strictObject({ name: z.literal('whatsapp_clicked'), country: pais.nullable(), surface: superficie }),
+  z.strictObject({ name: z.literal('survey_started'), surveyId: z.uuid() }),
+  z.strictObject({
+    name: z.literal('survey_step_viewed'),
+    surveyId: z.uuid(),
+    step: z.number().int().min(1).max(60),
+  }),
 ]);
 
 export const eventoRecebido = z.strictObject({

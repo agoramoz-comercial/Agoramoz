@@ -39,7 +39,7 @@ export const CAMINHO_PRIVADO = '(privado)';
  * token, e o token viaja no caminho. Gravá-lo em `landing_page` poria um
  * segredo numa tabela lida por toda a equipa e exportável para um relatório.
  */
-const PREFIXOS_PRIVADOS = ['/admin', '/api', '/documento'] as const;
+const PREFIXOS_PRIVADOS = ['/admin', '/api', '/documento', '/i'] as const;
 
 /**
  * Valores que passam no conjunto de caracteres e mesmo assim não significam

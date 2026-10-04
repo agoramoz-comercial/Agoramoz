@@ -54,6 +54,13 @@ export type AnalyticsEvent =
   /** `country` é nulo fora das páginas de país — inventá-lo falsearia o relatório. */
   | { name: 'whatsapp_clicked'; country: DiagnosticCode | null; surface: string }
   /**
+   * Inquéritos (`/i/<token>`). Só o id do inquérito e o número do cartão:
+   * nunca o token, nunca uma resposta. O caminho `/i` é privado na atribuição,
+   * e por isso chega à base como `/privado`.
+   */
+  | { name: 'survey_started'; surveyId: string }
+  | { name: 'survey_step_viewed'; surveyId: string; step: number }
+  /**
    * Do SERVIDOR, não do browser.
    *
    * Ficam no tipo para o vocabulário ser um só de ponta a ponta, mas nascem na
@@ -64,7 +71,9 @@ export type AnalyticsEvent =
    */
   | { name: 'deal_created'; dealId: string; channel: Canal }
   | { name: 'deal_won'; dealId: string; channel: Canal }
-  | { name: 'document_confirmed_view'; documentId: string };
+  | { name: 'document_confirmed_view'; documentId: string }
+  /** Nasce em `ingest_survey_response` (0013), na mesma transacção da resposta. */
+  | { name: 'survey_submitted'; surveyId: string };
 
 export type AnalyticsEventName = AnalyticsEvent['name'];
 
@@ -80,10 +89,13 @@ export const EVENTOS_DE_BROWSER = [
   'diagnostic_submitted',
   'meeting_requested',
   'whatsapp_clicked',
+  'survey_started',
+  'survey_step_viewed',
 ] as const satisfies readonly AnalyticsEventName[];
 
 export const EVENTOS_DE_SERVIDOR = [
   'deal_created',
   'deal_won',
   'document_confirmed_view',
+  'survey_submitted',
 ] as const satisfies readonly AnalyticsEventName[];

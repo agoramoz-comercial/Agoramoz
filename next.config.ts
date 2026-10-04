@@ -98,6 +98,15 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'no-referrer' },
         ],
       },
+      {
+        // Inquéritos: o mesmo caso dos documentos — o token vai no caminho.
+        source: '/i/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nosnippet' },
+          { key: 'Cache-Control', value: 'no-store, max-age=0, must-revalidate' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+        ],
+      },
     ];
   },
 };
