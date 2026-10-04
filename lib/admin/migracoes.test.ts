@@ -61,7 +61,9 @@ describe('ordem das migrações', () => {
     const problemas: string[] = [];
 
     for (const f of funcoesSql(sql)) {
-      for (const ref of new Set([...f.corpo.matchAll(/\bpublic\.([a-z_]+)\b/g)].map((m) => m[1]!))) {
+      for (const ref of new Set(
+        [...f.corpo.matchAll(/\bpublic\.([a-z_]+)\b/g)].map((m) => m[1]!),
+      )) {
         const criacao = sql.indexOf(`create table public.${ref} (`);
         if (criacao === -1) continue; // não é tabela nossa
         if (criacao > f.posicao) {

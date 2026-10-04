@@ -1,16 +1,32 @@
 import { notFound } from 'next/navigation';
 import { EditorInquerito } from '@/components/admin/inqueritos/EditorInquerito';
-import { definirInqueritoActivo, guardarInquerito } from '@/lib/admin/actions';
+import { Partilha } from '@/components/admin/inqueritos/Partilha';
+import {
+  criarLink,
+  definirInqueritoActivo,
+  guardarInquerito,
+  revogarLink,
+} from '@/lib/admin/actions';
 import { estadoDoInquerito } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/config/env';
+import { montarLinks, type LinhaLink } from '@/lib/inqueritos/partilha';
 import { specInquerito } from '@/lib/inqueritos/spec';
+import { SITE_URL } from '@/lib/seo/site';
 import { log } from '@/lib/log/logger';
 
 export const metadata = { title: 'Inquérito' };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Assíncrona de propósito: ler o relógio no corpo de um componente é o que a
+ * regra de pureza do React recusa (o mesmo recurso do painel).
+ */
+async function agora(): Promise<Date> {
+  return new Date(Date.now());
+}
 
 interface Versao {
   version: number;
@@ -33,7 +49,8 @@ export default async function InqueritoPage({
   const sessao = await requireStaff();
   const supabase = await createSessionClient();
 
-  const [inquerito, versoes] = await Promise.all([
+  const env = serverEnv();
+  const [inquerito, versoes, links] = await Promise.all([
     supabase
       .from('questionnaires')
       .select('id, name, kind, active')
@@ -45,6 +62,12 @@ export default async function InqueritoPage({
       .select('version, spec, published_at, retired_at')
       .eq('questionnaire_id', id)
       .order('version', { ascending: false }),
+    supabase
+      .from('survey_links')
+      .select('id, rotulo, created_at, expires_at, revoked_at, max_responses')
+      .eq('questionnaire_id', id)
+      .order('created_at', { ascending: false })
+      .limit(50),
   ]);
 
   const q = inquerito.data as { id: string; name: string; active: boolean } | null;
@@ -65,12 +88,29 @@ export default async function InqueritoPage({
     throw new Error('Inquérito com formato ilegível.');
   }
 
+  // Uma contagem por link (cabeça, sem linhas): exacta mesmo além das mil
+  // linhas que o PostgREST devolve por pedido. Toda a resposta de inquérito
+  // vem por um link, por isso o total é a soma.
+  const linhasLinks = (links.data ?? []) as LinhaLink[];
+  const contagens = await Promise.all(
+    linhasLinks.map(async (l) => {
+      const { count, error } = await supabase
+        .from('responses')
+        .select('*', { count: 'exact', head: true })
+        .eq('survey_link_id', l.id);
+      return [l.id, error ? null : (count ?? 0)] as const;
+    }),
+  );
+  const leituraFalhou = Boolean(links.error) || contagens.some(([, n]) => n === null);
+  const porLink = new Map(contagens.map(([k, n]) => [k, n ?? 0]));
+  const estado = estadoDoInquerito(q.active, lista);
+
   return (
     <EditorInquerito
       dados={{
         id: q.id,
         nome: q.name,
-        estado: estadoDoInquerito(q.active, lista),
+        estado,
         emVigor: emVigor ? { versao: emVigor.version, publicadaEm: emVigor.published_at! } : null,
         temRascunho: Boolean(rascunho),
         spec: spec.data,
@@ -80,6 +120,17 @@ export default async function InqueritoPage({
       ok={ok}
       guardar={guardarInquerito}
       definirActivo={definirInqueritoActivo}
-    />
+    >
+      <Partilha
+        inqueritoId={q.id}
+        estadoInquerito={estado}
+        totalRespostas={leituraFalhou ? null : [...porLink.values()].reduce((a, n) => a + n, 0)}
+        links={montarLinks(linhasLinks, porLink, env.SURVEY_LINK_SECRET, SITE_URL, await agora())}
+        escreve={podeEscrever(sessao.papel)}
+        semSegredo={!env.SURVEY_LINK_SECRET}
+        criarLink={criarLink}
+        revogarLink={revogarLink}
+      />
+    </EditorInquerito>
   );
 }

@@ -133,7 +133,11 @@ export const ORIGEM_EVIDENCIA: Record<string, string> = {
  * para trás.
  */
 export const CANAL: Record<Canal, Rotulo> = {
-  gbp: { texto: 'Perfil de empresa', tom: 'bom', nota: 'Chegou pelo perfil da AGORAMOZ no Google.' },
+  gbp: {
+    texto: 'Perfil de empresa',
+    tom: 'bom',
+    nota: 'Chegou pelo perfil da AGORAMOZ no Google.',
+  },
   organico: { texto: 'Pesquisa orgânica', tom: 'bom' },
   social: { texto: 'Redes sociais', tom: 'neutro' },
   referencia: { texto: 'Referência', tom: 'neutro', nota: 'Veio de outro site.' },

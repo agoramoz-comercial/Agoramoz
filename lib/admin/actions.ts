@@ -1,12 +1,14 @@
 'use server';
 
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createSessionClient } from '@/lib/auth/client';
 import { serverEnv } from '@/lib/config/env';
 import { slugDe } from '@/lib/inqueritos/construtor';
+import { fimDoDia } from '@/lib/inqueritos/links';
+import { hashToken, tokenDoLink } from '@/lib/inqueritos/token';
 import { specInicial, specInquerito } from '@/lib/inqueritos/spec';
 import { log } from '@/lib/log/logger';
 import { RPC, type NomeRpc } from './rpc';
@@ -228,7 +230,8 @@ export async function criarInquerito(formData: FormData): Promise<void> {
     },
     destino,
   );
-  if (typeof id !== 'string' || !UUID.test(id)) voltarCom(destino, 'Não foi possível concluir a acção.');
+  if (typeof id !== 'string' || !UUID.test(id))
+    voltarCom(destino, 'Não foi possível concluir a acção.');
   revalidatePath('/admin/inqueritos');
   redirect(`/admin/inqueritos/${id}?ok=criado`);
 }
@@ -256,7 +259,8 @@ export async function guardarInquerito(formData: FormData): Promise<void> {
     voltarCom(destino, 'Pedido inválido.');
   }
   const spec = specInquerito.safeParse(bruto);
-  if (!spec.success) voltarCom(destino, 'O inquérito tem problemas por corrigir. Nada foi guardado.');
+  if (!spec.success)
+    voltarCom(destino, 'O inquérito tem problemas por corrigir. Nada foi guardado.');
 
   await executar('guardar_rascunho', { p_id: id, p_nome: nome.data, p_spec: spec.data }, destino);
   const publicar = formData.get('intencao') === 'publicar';
@@ -275,4 +279,55 @@ export async function definirInqueritoActivo(formData: FormData): Promise<void> 
     { p_id: id, p_activo: formData.get('activo') === 'sim' },
     `/admin/inqueritos/${id}`,
   );
+}
+
+/**
+ * Um link novo. O id nasce aqui, o token deriva dele com o segredo
+ * (`tokenDoLink`) e à base só chega o hash — o token nunca é guardado, e
+ * volta a derivar-se quando a equipa abre o inquérito.
+ */
+export async function criarLink(formData: FormData): Promise<void> {
+  exigirInqueritos();
+  const id = idDe(formData, 'id');
+  const destino = `/admin/inqueritos/${id}`;
+  const segredo = serverEnv().SURVEY_LINK_SECRET;
+  if (!segredo) voltarCom(destino, 'Falta configurar SURVEY_LINK_SECRET.');
+
+  const rotulo = String(formData.get('rotulo') ?? '').trim();
+  if (rotulo.length > 80) voltarCom(destino, 'O nome do link tem no máximo 80 caracteres.');
+
+  const expiraTexto = String(formData.get('expira') ?? '').trim();
+  const expira = expiraTexto ? fimDoDia(expiraTexto) : null;
+  if (expiraTexto && !expira) voltarCom(destino, 'Data de expiração inválida.');
+
+  const maxTexto = String(formData.get('max') ?? '').trim();
+  const max = maxTexto ? Number(maxTexto) : null;
+  if (max !== null && (!Number.isInteger(max) || max < 1 || max > 1_000_000)) {
+    voltarCom(destino, 'O tecto de respostas é um número inteiro entre 1 e 1 000 000.');
+  }
+
+  const linkId = randomUUID();
+  await executar(
+    'criar_link',
+    {
+      p_id: id,
+      p_link_id: linkId,
+      p_token_hash: hashToken(tokenDoLink(segredo, linkId)),
+      p_rotulo: rotulo || null,
+      p_expira: expira,
+      p_max: max,
+    },
+    destino,
+  );
+  revalidatePath(destino);
+  redirect(`${destino}?ok=link#partilha`);
+}
+
+export async function revogarLink(formData: FormData): Promise<void> {
+  exigirInqueritos();
+  const id = idDe(formData, 'id');
+  const destino = `/admin/inqueritos/${id}`;
+  await executar('revogar_link', { p_link_id: idDe(formData, 'link') }, destino);
+  revalidatePath(destino);
+  redirect(`${destino}?ok=revogado#partilha`);
 }

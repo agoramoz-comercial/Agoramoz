@@ -194,6 +194,41 @@ function Indicadores({ dados }: { dados: DadosPainel }) {
   );
 }
 
+/**
+ * Respostas a inquéritos, à parte dos leads (com SURVEYS ligado, o painel
+ * filtra-as de todas as contagens de submissões). Desligado, nem aparece.
+ */
+function Inqueritos({ dados }: { dados: DadosPainel }) {
+  if (dados.inqueritos.estado === 'por-activar') return null;
+  return (
+    <Bloco
+      id="painel-inqueritos"
+      titulo="Inquéritos"
+      subtitulo="Respostas no período, fora da contagem de leads."
+      accao={
+        <Link href="/admin/inqueritos" className="text-sm underline underline-offset-4">
+          Abrir
+        </Link>
+      }
+    >
+      <ComFonte fonte={dados.inqueritos}>
+        {(d) => (
+          <p className="text-sm">
+            <span className="font-techno text-[length:var(--text-h3)] font-semibold tabular-nums">
+              {numero(d.respostas)}
+            </span>{' '}
+            {d.respostas === 1 ? 'resposta' : 'respostas'}
+            <span className="text-[color:var(--muted)]">
+              {' '}
+              · antes: {numero(d.anterior)} · {numero(d.comContacto)} com contacto
+            </span>
+          </p>
+        )}
+      </ComFonte>
+    </Bloco>
+  );
+}
+
 function Funil({ dados }: { dados: DadosPainel }) {
   return (
     <Bloco
@@ -480,6 +515,7 @@ export function PainelComando({ dados }: { dados: DadosPainel }) {
 
       <Operacao dados={dados} />
       <Indicadores dados={dados} />
+      <Inqueritos dados={dados} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Bloco

@@ -30,6 +30,9 @@ function aplicar(linhas: Linha[], chamadas: Chamada[]): Linha[] {
       if (m === 'in') return (arg as unknown[]).includes(v);
       if (m === 'gte') return String(v) >= String(arg);
       if (m === 'lt') return String(v) < String(arg);
+      // Só as duas formas que o painel usa: `.is(col, null)` e `.not(col, 'is', null)`.
+      if (m === 'is') return v === null || v === undefined;
+      if (m === 'not') return v !== null && v !== undefined;
       return true;
     }),
   );
@@ -247,5 +250,42 @@ describe('carregarPainel', () => {
     expect(d.reunioes.estado).toBe('por-activar');
     expect(d.news.estado).toBe('por-activar');
     expect(consultadas.has('reunioes')).toBe(false);
+  });
+});
+
+describe('inquéritos no painel', () => {
+  const COM_INQUERITOS: Ligacoes = { ...TUDO_LIGADO, inqueritos: true };
+  function comRespostasDeInquerito(): Tabelas {
+    const t = dados();
+    t.responses = [
+      { id: 'l1', submitted_at: dia(1), survey_link_id: null, contact_id: 'c1' },
+      { id: 'i1', submitted_at: dia(1), survey_link_id: 'k1', contact_id: null },
+      { id: 'i2', submitted_at: dia(2), survey_link_id: 'k1', contact_id: 'c2' },
+      { id: 'i3', submitted_at: dia(9), survey_link_id: 'k1', contact_id: null },
+    ];
+    return t;
+  }
+
+  it('com SURVEYS ligado, as respostas de inquérito ficam fora dos leads, do funil e das recentes', async () => {
+    const d = await carregarPainel(clienteFalso(comRespostasDeInquerito()), J, COM_INQUERITOS);
+    expect(d.leads).toMatchObject({ estado: 'ok', dados: { actual: 1, anterior: 0 } });
+    const funil = d.funil.estado === 'ok' ? d.funil.dados.etapas : [];
+    expect(funil.find((e) => e.chave === 'submetidos')?.valor).toBe(1);
+    const recentes = d.recentes.estado === 'ok' ? d.recentes.dados : [];
+    expect(recentes.map((r) => r.id)).toEqual(['l1']);
+    expect(d.inqueritos).toEqual({
+      estado: 'ok',
+      dados: { respostas: 2, anterior: 1, comContacto: 1 },
+    });
+  });
+
+  it('desligado: inquéritos «por activar» e nenhuma consulta filtra survey_link_id', async () => {
+    const pedidos: Chamada[][] = [];
+    const d = await carregarPainel(clienteFalso(dados(), { pedidos }), J, TUDO_LIGADO);
+    expect(d.inqueritos).toEqual({
+      estado: 'por-activar',
+      passo: expect.stringContaining('INQUERITOS.md'),
+    });
+    expect(pedidos.flat().some(([, col]) => col === 'survey_link_id')).toBe(false);
   });
 });

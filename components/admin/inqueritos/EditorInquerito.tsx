@@ -18,6 +18,8 @@ const OK: Record<string, string> = {
   criado: 'Inquérito criado. Escreva as perguntas e publique quando estiver pronto.',
   guardado: 'Rascunho guardado. Quem responde só vê as alterações depois de publicar.',
   publicado: 'Publicado. Os links activos passam a mostrar esta versão.',
+  link: 'Link criado. Copie-o ou descarregue o código QR na secção «Partilhar».',
+  revogado: 'Link revogado: deixa de aceitar respostas.',
   '1': 'Registado.',
 };
 
@@ -46,7 +48,7 @@ export function EditorInquerito({
   ok?: string;
   guardar: (formData: FormData) => Promise<void>;
   definirActivo: (formData: FormData) => Promise<void>;
-  /** Secções a seguir ao construtor (partilha e resultados). */
+  /** Secções antes do construtor (partilha e resultados). */
   children?: React.ReactNode;
 }) {
   const { id, nome, estado, emVigor, temRascunho, spec } = dados;
@@ -96,6 +98,8 @@ export function EditorInquerito({
         {temRascunho ? ' Há alterações guardadas por publicar.' : ''}
       </p>
 
+      {children}
+
       {escreve ? (
         <Construtor
           id={id}
@@ -123,8 +127,6 @@ export function EditorInquerito({
           </div>
         </section>
       )}
-
-      {children}
     </>
   );
 }

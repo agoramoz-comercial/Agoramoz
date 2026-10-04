@@ -83,6 +83,8 @@ export interface DadosPainel {
   }>;
   readonly operacao: Fonte<{ porRever: number; fila: number; semSaida: number }>;
   readonly recentes: Fonte<LinhaRecente[]>;
+  /** Respostas a inquéritos (0013): à parte, nunca somadas aos leads. */
+  readonly inqueritos: Fonte<{ respostas: number; anterior: number; comContacto: number }>;
   readonly erp: EstadoErp;
 }
 
@@ -93,6 +95,13 @@ export interface Ligacoes {
   readonly agendamento: boolean;
   /** `NEWS_ENGINE !== 'off'`. */
   readonly news: boolean;
+  /**
+   * `SURVEYS === 'on'`. Só com a 0013 aplicada existe `responses.survey_link_id`;
+   * então os três sítios que contam submissões filtram-na, para uma resposta a
+   * um inquérito nunca contar como lead. Desligado, as consultas ficam como
+   * eram — a coluna pode ainda nem existir.
+   */
+  readonly inqueritos?: boolean;
   readonly erp: EstadoErp;
 }
 
@@ -168,13 +177,18 @@ export async function carregarPainel(
     coluna: string,
     de: string,
     ate: string | null,
-    filtros: readonly [coluna: string, valor: string | readonly string[]][] = [],
+    filtros: readonly [coluna: string, valor: string | readonly string[] | null][] = [],
   ): Promise<number> {
     let q = sb.from(tabela).select('*', cabeca).gte(coluna, de);
     if (ate) q = q.lt(coluna, ate);
-    for (const [c, v] of filtros) q = typeof v === 'string' ? q.eq(c, v) : q.in(c, [...v]);
+    for (const [c, v] of filtros) {
+      q = v === null ? q.is(c, null) : typeof v === 'string' ? q.eq(c, v) : q.in(c, [...v]);
+    }
     return contagem(q);
   }
+
+  /** Com inquéritos ligados, as submissões que contam como leads são as sem link. */
+  const soLeads: readonly [string, null][] = ligacoes.inqueritos ? [['survey_link_id', null]] : [];
 
   /** Eventos do pixel com `nome` no período actual (ou em [de, ate)). */
   const evento = (
@@ -187,181 +201,202 @@ export async function carregarPainel(
   const actualEAnteriorDe = (fazer: (de: string, ate: string | null) => Promise<number>) =>
     Promise.all([fazer(inicio, null), fazer(desde, inicio)]);
 
-  const [leads, qualidade, crm, funil, cartoes, canais, reunioes, news, operacao, recentes] =
-    await Promise.all([
-      bloco(async () => {
-        const datas: string[] = [];
-        for (let de = 0; ; de += PAGINA) {
-          const pagina = await linhas<{ submitted_at: string }>(
-            sb
-              .from('responses')
-              .select('submitted_at')
-              .gte('submitted_at', desde)
-              .order('submitted_at', { ascending: true })
-              .order('id', { ascending: true })
-              .range(de, de + PAGINA - 1),
-          );
-          datas.push(...pagina.map((x) => x.submitted_at));
-          if (pagina.length < PAGINA) break;
-          if (datas.length >= TECTO_DE_LINHAS) throw new ErroDeLeitura('tecto-do-painel');
-        }
-        return {
-          ...actualEAnterior(datas, j),
-          serie: porDia(datas, j.inicio, j.dias),
-          serieAnterior: porDia(datas, j.inicioAnterior, j.dias),
-        };
-      }),
+  const [
+    leads,
+    qualidade,
+    crm,
+    funil,
+    cartoes,
+    canais,
+    reunioes,
+    news,
+    operacao,
+    recentes,
+    inqueritos,
+  ] = await Promise.all([
+    bloco(async () => {
+      const datas: string[] = [];
+      for (let de = 0; ; de += PAGINA) {
+        let consulta = sb.from('responses').select('submitted_at').gte('submitted_at', desde);
+        if (ligacoes.inqueritos) consulta = consulta.is('survey_link_id', null);
+        const pagina = await linhas<{ submitted_at: string }>(
+          consulta
+            .order('submitted_at', { ascending: true })
+            .order('id', { ascending: true })
+            .range(de, de + PAGINA - 1),
+        );
+        datas.push(...pagina.map((x) => x.submitted_at));
+        if (pagina.length < PAGINA) break;
+        if (datas.length >= TECTO_DE_LINHAS) throw new ErroDeLeitura('tecto-do-painel');
+      }
+      return {
+        ...actualEAnterior(datas, j),
+        serie: porDia(datas, j.inicio, j.dias),
+        serieAnterior: porDia(datas, j.inicioAnterior, j.dias),
+      };
+    }),
 
-      bloco(async () => {
-        const AB = ['A', 'B'] as const;
-        const [[total, totalAnterior], [ab, abAnterior]] = await Promise.all([
-          actualEAnteriorDe((de, ate) => conta('diagnostics', 'created_at', de, ate)),
-          actualEAnteriorDe((de, ate) =>
-            conta('diagnostics', 'created_at', de, ate, [['tier', AB]]),
-          ),
-        ]);
-        return { ab, total, abAnterior, totalAnterior };
-      }),
+    bloco(async () => {
+      const AB = ['A', 'B'] as const;
+      const [[total, totalAnterior], [ab, abAnterior]] = await Promise.all([
+        actualEAnteriorDe((de, ate) => conta('diagnostics', 'created_at', de, ate)),
+        actualEAnteriorDe((de, ate) => conta('diagnostics', 'created_at', de, ate, [['tier', AB]])),
+      ]);
+      return { ab, total, abAnterior, totalAnterior };
+    }),
 
-      bloco(async () => {
-        // O pipeline agora (todas as oportunidades) e os ganhos do período pelo
-        // evento de servidor `deal_won` — `updated_at` muda com qualquer nota e
-        // não diz quando se ganhou.
-        const [porFase, [ganhos, ganhosAnterior]] = await Promise.all([
-          Promise.all(
-            FASES_OPORTUNIDADE.map(async (fase) => ({
-              chave: fase,
-              valor: await contagem(sb.from('deals').select('*', cabeca).eq('stage', fase)),
-            })),
-          ),
-          actualEAnteriorDe((de, ate) => evento('deal_won', de, ate)),
-        ]);
-        return { porFase, ganhos, ganhosAnterior };
-      }),
-
-      ligacoes.pixel
-        ? bloco(async () => {
-            const [iniciados, submetidos, oportunidades, reunioesMarcadas, ganhos] =
-              await Promise.all([
-                evento('diagnostic_started'),
-                // Submissões pela tabela, não pelo evento do browser: é o número exacto.
-                conta('responses', 'submitted_at', inicio, null),
-                evento('deal_created'),
-                evento('meeting_booked'),
-                evento('deal_won'),
-              ]);
-            const etapas: Contagem<EtapaFunil>[] = [
-              { chave: 'iniciados', valor: iniciados },
-              { chave: 'submetidos', valor: submetidos },
-              { chave: 'oportunidades', valor: oportunidades },
-              { chave: 'reunioes', valor: reunioesMarcadas },
-              { chave: 'ganhos', valor: ganhos },
-            ];
-            return { etapas };
-          })
-        : porActivar(SEM_PIXEL),
-
-      ligacoes.pixel
-        ? bloco(async () => {
-            const porCartao = (nome: string) =>
-              Promise.all(
-                CARTOES.map(async (chave) => ({
-                  chave,
-                  valor: await evento(nome, inicio, null, [['props->>stepId', chave]]),
-                })),
-              );
-            const [vistos, concluidos] = await Promise.all([
-              porCartao('step_viewed'),
-              porCartao('form_step_completed'),
-            ]);
-            return { vistos, concluidos };
-          })
-        : porActivar(SEM_PIXEL),
-
-      bloco(() =>
+    bloco(async () => {
+      // O pipeline agora (todas as oportunidades) e os ganhos do período pelo
+      // evento de servidor `deal_won` — `updated_at` muda com qualquer nota e
+      // não diz quando se ganhou.
+      const [porFase, [ganhos, ganhosAnterior]] = await Promise.all([
         Promise.all(
-          CANAIS.map(async (chave) => ({
-            chave,
-            valor: await conta('response_attribution', 'created_at', inicio, null, [
-              ['channel', chave],
-            ]),
+          FASES_OPORTUNIDADE.map(async (fase) => ({
+            chave: fase,
+            valor: await contagem(sb.from('deals').select('*', cabeca).eq('stage', fase)),
           })),
         ),
+        actualEAnteriorDe((de, ate) => evento('deal_won', de, ate)),
+      ]);
+      return { porFase, ganhos, ganhosAnterior };
+    }),
+
+    ligacoes.pixel
+      ? bloco(async () => {
+          const [iniciados, submetidos, oportunidades, reunioesMarcadas, ganhos] =
+            await Promise.all([
+              evento('diagnostic_started'),
+              // Submissões pela tabela, não pelo evento do browser: é o número exacto.
+              conta('responses', 'submitted_at', inicio, null, soLeads),
+              evento('deal_created'),
+              evento('meeting_booked'),
+              evento('deal_won'),
+            ]);
+          const etapas: Contagem<EtapaFunil>[] = [
+            { chave: 'iniciados', valor: iniciados },
+            { chave: 'submetidos', valor: submetidos },
+            { chave: 'oportunidades', valor: oportunidades },
+            { chave: 'reunioes', valor: reunioesMarcadas },
+            { chave: 'ganhos', valor: ganhos },
+          ];
+          return { etapas };
+        })
+      : porActivar(SEM_PIXEL),
+
+    ligacoes.pixel
+      ? bloco(async () => {
+          const porCartao = (nome: string) =>
+            Promise.all(
+              CARTOES.map(async (chave) => ({
+                chave,
+                valor: await evento(nome, inicio, null, [['props->>stepId', chave]]),
+              })),
+            );
+          const [vistos, concluidos] = await Promise.all([
+            porCartao('step_viewed'),
+            porCartao('form_step_completed'),
+          ]);
+          return { vistos, concluidos };
+        })
+      : porActivar(SEM_PIXEL),
+
+    bloco(() =>
+      Promise.all(
+        CANAIS.map(async (chave) => ({
+          chave,
+          valor: await conta('response_attribution', 'created_at', inicio, null, [
+            ['channel', chave],
+          ]),
+        })),
       ),
+    ),
 
-      ligacoes.agendamento
-        ? bloco(
-            async () => {
-              const [[marcadas, marcadasAnterior], realizadas, proximas] = await Promise.all([
-                actualEAnteriorDe((de, ate) => conta('reunioes', 'created_at', de, ate)),
-                conta('reunioes', 'created_at', inicio, null, [['estado', 'realizada']]),
-                linhas<{ inicio: string; tipo: string | null; deal_id: string | null }>(
-                  sb
-                    .from('reunioes')
-                    .select('inicio, tipo, deal_id')
-                    .eq('estado', 'marcada')
-                    .gte('inicio', agora)
-                    .order('inicio', { ascending: true })
-                    .limit(6),
-                ),
-              ]);
-              return {
-                marcadas,
-                marcadasAnterior,
-                realizadas,
-                proximas: proximas.map((x) => ({
-                  inicio: x.inicio,
-                  tipo: x.tipo,
-                  dealId: x.deal_id,
-                })),
-              };
-            },
-            (codigo) =>
-              tabelaEmFalta(codigo) ? 'Aplicar supabase/aplicar-0012.sql no Supabase.' : null,
-          )
-        : porActivar('Ligar o Cal.com: docs/AGENDAMENTO.md (0012, webhook, SCHEDULING=cal).'),
-
-      ligacoes.news && ligacoes.pixel
-        ? bloco(async () => {
-            const [[analisadas, anterior], falhadas, porPrioridade] = await Promise.all([
-              actualEAnteriorDe((de, ate) => evento('news_analisada', de, ate)),
-              evento('news_falhou'),
-              Promise.all(
-                PRIORIDADES.map(async (chave) => ({
-                  chave,
-                  valor: await evento('news_analisada', inicio, null, [
-                    ['props->>prioridade', chave],
-                  ]),
-                })),
+    ligacoes.agendamento
+      ? bloco(
+          async () => {
+            const [[marcadas, marcadasAnterior], realizadas, proximas] = await Promise.all([
+              actualEAnteriorDe((de, ate) => conta('reunioes', 'created_at', de, ate)),
+              conta('reunioes', 'created_at', inicio, null, [['estado', 'realizada']]),
+              linhas<{ inicio: string; tipo: string | null; deal_id: string | null }>(
+                sb
+                  .from('reunioes')
+                  .select('inicio, tipo, deal_id')
+                  .eq('estado', 'marcada')
+                  .gte('inicio', agora)
+                  .order('inicio', { ascending: true })
+                  .limit(6),
               ),
             ]);
-            return { analisadas, anterior, falhadas, porPrioridade };
-          })
-        : porActivar(ligacoes.news ? SEM_PIXEL : 'Ligar NEWS_ENGINE na Vercel (docs/NEWS.md).'),
+            return {
+              marcadas,
+              marcadasAnterior,
+              realizadas,
+              proximas: proximas.map((x) => ({
+                inicio: x.inicio,
+                tipo: x.tipo,
+                dealId: x.deal_id,
+              })),
+            };
+          },
+          (codigo) =>
+            tabelaEmFalta(codigo) ? 'Aplicar supabase/aplicar-0012.sql no Supabase.' : null,
+        )
+      : porActivar('Ligar o Cal.com: docs/AGENDAMENTO.md (0012, webhook, SCHEDULING=cal).'),
 
-      bloco(async () => {
-        const [porRever, fila, semSaida] = await Promise.all([
-          contagem(
-            sb.from('diagnostics').select('*', cabeca).in('state', ['computed', 'pending_review']),
-          ),
-          contagem(
-            sb.from('outbox_events').select('*', cabeca).in('status', ['pending', 'failed']),
-          ),
-          contagem(sb.from('outbox_events').select('*', cabeca).eq('status', 'dead')),
-        ]);
-        return { porRever, fila, semSaida };
-      }),
+    ligacoes.news && ligacoes.pixel
+      ? bloco(async () => {
+          const [[analisadas, anterior], falhadas, porPrioridade] = await Promise.all([
+            actualEAnteriorDe((de, ate) => evento('news_analisada', de, ate)),
+            evento('news_falhou'),
+            Promise.all(
+              PRIORIDADES.map(async (chave) => ({
+                chave,
+                valor: await evento('news_analisada', inicio, null, [
+                  ['props->>prioridade', chave],
+                ]),
+              })),
+            ),
+          ]);
+          return { analisadas, anterior, falhadas, porPrioridade };
+        })
+      : porActivar(ligacoes.news ? SEM_PIXEL : 'Ligar NEWS_ENGINE na Vercel (docs/NEWS.md).'),
 
-      bloco(() =>
-        linhas<LinhaRecente>(
-          sb
-            .from('responses')
-            .select('id, submitted_at, contacts(name, email), diagnostics(id, state, score, tier)')
-            .order('submitted_at', { ascending: false })
-            .limit(8),
+    bloco(async () => {
+      const [porRever, fila, semSaida] = await Promise.all([
+        contagem(
+          sb.from('diagnostics').select('*', cabeca).in('state', ['computed', 'pending_review']),
         ),
-      ),
-    ]);
+        contagem(sb.from('outbox_events').select('*', cabeca).in('status', ['pending', 'failed'])),
+        contagem(sb.from('outbox_events').select('*', cabeca).eq('status', 'dead')),
+      ]);
+      return { porRever, fila, semSaida };
+    }),
+
+    bloco(() => {
+      let consulta = sb
+        .from('responses')
+        .select('id, submitted_at, contacts(name, email), diagnostics(id, state, score, tier)');
+      if (ligacoes.inqueritos) consulta = consulta.is('survey_link_id', null);
+      return linhas<LinhaRecente>(consulta.order('submitted_at', { ascending: false }).limit(8));
+    }),
+
+    ligacoes.inqueritos
+      ? bloco(async () => {
+          const comLink = () =>
+            sb.from('responses').select('*', cabeca).not('survey_link_id', 'is', null);
+          const [[respostas, anterior], comContacto] = await Promise.all([
+            actualEAnteriorDe((de, ate) => {
+              const q = comLink().gte('submitted_at', de);
+              return contagem(ate ? q.lt('submitted_at', ate) : q);
+            }),
+            contagem(comLink().not('contact_id', 'is', null).gte('submitted_at', inicio)),
+          ]);
+          return { respostas, anterior, comContacto };
+        })
+      : porActivar(
+          'Ligar os inquéritos: docs/INQUERITOS.md (0013, SURVEY_LINK_SECRET, SURVEYS=on).',
+        ),
+  ]);
 
   return {
     periodo: j.dias,
@@ -376,6 +411,7 @@ export async function carregarPainel(
     news,
     operacao,
     recentes,
+    inqueritos,
     erp: ligacoes.erp,
   };
 }

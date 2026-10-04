@@ -34,6 +34,7 @@ export default async function PainelPage({
     pixel: env.ANALYTICS_PERSISTENCE === 'on',
     agendamento: env.SCHEDULING === 'cal',
     news: env.NEWS_ENGINE !== 'off',
+    inqueritos: env.SURVEYS === 'on',
     erp: estadoErp(env),
   };
 

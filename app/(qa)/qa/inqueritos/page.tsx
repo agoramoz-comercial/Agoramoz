@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { EditorInquerito } from '@/components/admin/inqueritos/EditorInquerito';
+import { Partilha } from '@/components/admin/inqueritos/Partilha';
+import { Resultados } from '@/components/admin/inqueritos/Resultados';
+import { qrDe } from '@/lib/inqueritos/qr';
 import { specInquerito } from '@/lib/inqueritos/spec';
 
 /**
@@ -9,7 +12,9 @@ import { specInquerito } from '@/lib/inqueritos/spec';
  * nem base. Só com `ADMIN_PREVIEW=on` e nunca na produção da Vercel.
  *
  * O inquérito é UM EXEMPLO. As acções não escrevem nada: voltam a esta
- * página. `?papel=leitura` mostra a vista sem edição.
+ * página. `?papel=leitura` mostra a vista sem edição; `?vista=resultados`, os
+ * resultados com números de exemplo. Os links e o QR são de exemplo: o
+ * token não foi derivado de segredo nenhum e não abre nada.
  */
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +28,8 @@ async function semEfeito(): Promise<void> {
   'use server';
   redirect('/qa/inqueritos?ok=guardado');
 }
+
+const ID = '00000000-0000-4000-8000-000000000001';
 
 const EXEMPLO = specInquerito.parse({
   schemaVersion: 'survey.v1',
@@ -57,11 +64,12 @@ const EXEMPLO = specInquerito.parse({
 export default async function PreviaConstrutorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ papel?: string; ok?: string }>;
+  searchParams: Promise<{ papel?: string; ok?: string; vista?: string }>;
 }) {
   if (process.env.ADMIN_PREVIEW !== 'on' || process.env.VERCEL_ENV === 'production') notFound();
-  const { papel, ok } = await searchParams;
+  const { papel, ok, vista } = await searchParams;
   const leitura = papel === 'leitura';
+  const urlExemplo = 'https://agoramoz.com/i/EXEMPLOexemploEXEMPLOexemploEXEMPLOexempl_-';
 
   return (
     <div
@@ -82,20 +90,88 @@ export default async function PreviaConstrutorPage({
         }}
         inqueritos
       >
-        <EditorInquerito
-          dados={{
-            id: '00000000-0000-4000-8000-000000000001',
-            nome: 'Levantamento de processos (exemplo)',
-            estado: 'aberto',
-            emVigor: { versao: 2, publicadaEm: '2026-10-01T09:00:00.000Z' },
-            temRascunho: false,
-            spec: EXEMPLO,
-          }}
-          escreve={!leitura}
-          ok={ok}
-          guardar={semEfeito}
-          definirActivo={semEfeito}
-        />
+        {vista === 'resultados' ? (
+          <Resultados
+            id={ID}
+            nome="Levantamento de processos (exemplo)"
+            versao={2}
+            spec={EXEMPLO}
+            resultados={{
+              total: 42,
+              porPergunta: {
+                p1: { respondidas: 42, valores: { o1: 25, o2: 17 }, media: null },
+                p2: { respondidas: 25, valores: {}, media: null },
+                p3: {
+                  respondidas: 38,
+                  valores: { '10': 12, '9': 9, '8': 7, '7': 4, '6': 3, '3': 2, '0': 1 },
+                  media: 8.05,
+                },
+              },
+            }}
+            desistencia={{ estado: 'ok', iniciados: 61, porPasso: [58, 33, 47] }}
+            escreve={!leitura}
+          />
+        ) : (
+          <EditorInquerito
+            dados={{
+              id: ID,
+              nome: 'Levantamento de processos (exemplo)',
+              estado: 'aberto',
+              emVigor: { versao: 2, publicadaEm: '2026-10-01T09:00:00.000Z' },
+              temRascunho: false,
+              spec: EXEMPLO,
+            }}
+            escreve={!leitura}
+            ok={ok}
+            guardar={semEfeito}
+            definirActivo={semEfeito}
+          >
+            <Partilha
+              inqueritoId={ID}
+              estadoInquerito="aberto"
+              totalRespostas={42}
+              escreve={!leitura}
+              semSegredo={false}
+              criarLink={semEfeito}
+              revogarLink={semEfeito}
+              links={[
+                {
+                  id: '00000000-0000-4000-8000-0000000000a1',
+                  rotulo: 'Clientes · Outubro (exemplo)',
+                  criadoEm: '2026-10-01T09:30:00.000Z',
+                  expiraEm: '2026-10-31T21:59:59.000Z',
+                  max: 200,
+                  respostas: 37,
+                  estado: 'activo',
+                  url: urlExemplo,
+                  qr: qrDe(urlExemplo),
+                },
+                {
+                  id: '00000000-0000-4000-8000-0000000000a2',
+                  rotulo: 'Evento de Setembro (exemplo)',
+                  criadoEm: '2026-09-10T09:30:00.000Z',
+                  expiraEm: null,
+                  max: 5,
+                  respostas: 5,
+                  estado: 'esgotado',
+                  url: null,
+                  qr: null,
+                },
+                {
+                  id: '00000000-0000-4000-8000-0000000000a3',
+                  rotulo: null,
+                  criadoEm: '2026-09-01T09:30:00.000Z',
+                  expiraEm: null,
+                  max: null,
+                  respostas: 0,
+                  estado: 'revogado',
+                  url: null,
+                  qr: null,
+                },
+              ]}
+            />
+          </EditorInquerito>
+        )}
       </CascaAdmin>
     </div>
   );

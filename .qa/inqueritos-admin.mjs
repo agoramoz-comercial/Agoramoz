@@ -124,6 +124,54 @@ for (const largura of [390, 768, 1440]) {
   await ctx.close();
 }
 
+console.log('\npartilha');
+{
+  const ctx = await b.newContext({
+    viewport: { width: 1440, height: 900 },
+    permissions: ['clipboard-read', 'clipboard-write'],
+  });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/qa/inqueritos`, { waitUntil: 'load' });
+  const partilha = p.locator('#partilha');
+  confere((await partilha.getByRole('img', { name: /Código QR/ }).count()) === 1, 'QR só no link activo');
+  confere((await partilha.getByRole('button', { name: 'Copiar' }).count()) === 1, 'copiar só no link activo');
+  await partilha.getByRole('button', { name: 'Copiar' }).click();
+  await partilha.getByText('Copiado.').waitFor();
+  const copiado = await p.evaluate(() => navigator.clipboard.readText());
+  confere(copiado.startsWith('https://agoramoz.com/i/'), 'copiar põe o endereço na área de transferência');
+  confere((await partilha.getByRole('button', { name: /^Revogar/ }).count()) === 2, 'revogar nos não revogados');
+  const qrHref = await partilha.getByRole('link', { name: 'Descarregar QR (SVG)' }).getAttribute('href');
+  confere(/\/admin\/inqueritos\/[0-9a-f-]+\/links\/[0-9a-f-]+\/qr$/.test(qrHref ?? ''), 'QR para descarregar no /admin');
+  confere((await partilha.getByText('Tecto atingido').count()) === 1, 'estado «tecto atingido» visível');
+  await axe(p, 'partilha');
+  await partilha.screenshot({ path: `${SAIDA}/inqueritos-partilha-1440.png` });
+  await ctx.close();
+}
+
+console.log('\nresultados');
+for (const largura of [390, 1440]) {
+  const ctx = await b.newContext({ viewport: { width: largura, height: 900 } });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/qa/inqueritos?vista=resultados`, { waitUntil: 'load' });
+  const larguraDoc = await p.evaluate(() => document.documentElement.scrollWidth);
+  confere(larguraDoc <= largura, `${largura}: sem scroll horizontal`, `${larguraDoc}`);
+  confere((await p.getByText('Estimativa:', { exact: false }).count()) >= 1, `${largura}: desistência diz que é estimativa`);
+  const nps = await p.locator('section[aria-labelledby="res-p3"]').textContent();
+  confere(/NPS\s*39/.test(nps ?? ''), `${largura}: NPS calculado das respostas (39)`, nps?.slice(0, 80));
+  confere((await p.getByText('Respostas em texto ou data: veja-as na exportação CSV.').count()) === 1, `${largura}: texto remete para o CSV`);
+  confere((await p.getByRole('link', { name: 'Exportar com contactos' }).count()) === 1, `${largura}: exportar com contactos para comercial`);
+  await axe(p, `resultados ${largura}`);
+  await p.screenshot({ path: `${SAIDA}/inqueritos-resultados-${largura}.png`, fullPage: true });
+  await ctx.close();
+}
+{
+  const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/qa/inqueritos?vista=resultados&papel=leitura`, { waitUntil: 'load' });
+  confere((await p.getByRole('link', { name: 'Exportar com contactos' }).count()) === 0, 'leitura: sem exportar contactos');
+  await ctx.close();
+}
+
 console.log('\nleitura');
 {
   const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });

@@ -120,6 +120,7 @@ function exemplo(periodo: Periodo): DadosPainel {
         },
       ],
     },
+    inqueritos: { estado: 'ok', dados: { respostas: 18, anterior: 11, comContacto: 5 } },
     erp: { estado: 'por-ligar' },
   };
 }
