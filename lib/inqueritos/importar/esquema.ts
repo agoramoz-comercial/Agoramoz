@@ -11,6 +11,9 @@ import { z } from 'zod';
  * que só deixa sair um `SpecInquerito` que passa a validação completa.
  */
 
+/** O máximo de texto colado: um inquérito de 50 perguntas cabe com folga. */
+export const MAX_TEXTO = 20_000;
+
 export const TIPOS_IMPORTAVEIS = [
   'texto_curto',
   'texto_longo',

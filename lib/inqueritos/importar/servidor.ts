@@ -13,8 +13,7 @@ import { normalizar, type ModoImportacao, type ResultadoImportacao } from './nor
 
 export type Motor = 'kimi' | 'local';
 
-/** O máximo de texto colado: um inquérito de 50 perguntas cabe com folga. */
-export const MAX_TEXTO = 20_000;
+export { MAX_TEXTO } from './esquema';
 
 export interface PedidoImportacao {
   readonly texto: string;

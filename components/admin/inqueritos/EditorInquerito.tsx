@@ -1,10 +1,12 @@
 import { AdminHeading, DataHora, StateBadge } from '@/components/admin/primitives';
 import { SurveyRenderer } from '@/components/inqueritos/SurveyRenderer';
 import { Button } from '@/components/ui/Button';
+import type { ResultadoAccaoImportar } from '@/lib/admin/importar-inquerito';
 import { ESTADO_INQUERITO, type EstadoInquerito } from '@/lib/admin/labels';
 import type { Reservadas } from '@/lib/inqueritos/construtor';
 import type { SpecInquerito } from '@/lib/inqueritos/spec';
 import { Construtor } from './Construtor';
+import type { EntradaImportar } from './ImportarTexto';
 
 /**
  * O ecrã de um inquérito: cabeçalho, estado, abrir/fechar e o construtor.
@@ -43,6 +45,9 @@ export function EditorInquerito({
   ok,
   guardar,
   definirActivo,
+  importar,
+  iaDisponivel,
+  modeloIA,
   children,
 }: {
   dados: DadosEditor;
@@ -51,6 +56,10 @@ export function EditorInquerito({
   ok?: string;
   guardar: (formData: FormData) => Promise<void>;
   definirActivo: (formData: FormData) => Promise<void>;
+  /** «Colar e transformar»: a Server Action real, ou a de QA (só analisador local). */
+  importar?: (entrada: EntradaImportar) => Promise<ResultadoAccaoImportar>;
+  iaDisponivel?: boolean;
+  modeloIA?: string;
   /** Secções antes do construtor (partilha e resultados). */
   children?: React.ReactNode;
 }) {
@@ -111,6 +120,9 @@ export function EditorInquerito({
           temRascunho={temRascunho}
           guardar={guardar}
           reservadas={dados.reservadas}
+          importar={importar}
+          iaDisponivel={iaDisponivel}
+          modeloIA={modeloIA}
         />
       ) : (
         <section aria-labelledby="previa-leitura" className="max-w-2xl">
@@ -124,9 +136,6 @@ export function EditorInquerito({
             data-surface="deep"
             className="bg-[color:var(--surface)] p-4 text-[color:var(--on-surface)]"
           >
-            <p className="mb-4 text-[length:var(--text-lead)] font-bold text-balance">
-              {spec.boasVindas.titulo}
-            </p>
             <SurveyRenderer modo="previa" spec={spec} />
           </div>
         </section>

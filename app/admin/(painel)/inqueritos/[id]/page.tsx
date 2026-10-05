@@ -11,7 +11,9 @@ import { estadoDoInquerito } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/config/env';
+import { importarTextoInquerito } from '@/lib/admin/importar-inquerito';
 import { chavesReservadas } from '@/lib/inqueritos/construtor';
+import { iaDisponivel } from '@/lib/inqueritos/importar/servidor';
 import { montarLinks, type LinhaLink } from '@/lib/inqueritos/partilha';
 import { specInquerito } from '@/lib/inqueritos/spec';
 import { SITE_URL } from '@/lib/seo/site';
@@ -130,6 +132,9 @@ export default async function InqueritoPage({
       ok={ok}
       guardar={guardarInquerito}
       definirActivo={definirInqueritoActivo}
+      importar={importarTextoInquerito}
+      iaDisponivel={iaDisponivel(env)}
+      modeloIA={iaDisponivel(env) ? env.KIMI_MODEL : undefined}
     >
       <Partilha
         inqueritoId={q.id}

@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { ArrowDown, ArrowUp, Copy, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Plus, Trash2, Undo2, X } from 'lucide-react';
 import { SurveyRenderer } from '@/components/inqueritos/SurveyRenderer';
+import type { ResultadoAccaoImportar } from '@/lib/admin/importar-inquerito';
 import { Button } from '@/components/ui/Button';
 import {
   NOME_DO_TIPO,
@@ -31,6 +32,7 @@ import {
   type TipoPergunta,
 } from '@/lib/inqueritos/spec';
 import { cn } from '@/lib/utils/cn';
+import { ImportarTexto, type EntradaImportar } from './ImportarTexto';
 
 /**
  * O construtor de inquéritos — a excepção deliberada ao «admin sem estado de
@@ -69,6 +71,10 @@ export interface PropsConstrutor {
   readonly guardar: (formData: FormData) => Promise<void>;
   /** Chaves já gravadas em alguma versão: nunca são dadas a perguntas novas. */
   readonly reservadas?: Reservadas;
+  /** «Colar e transformar» (D-33). Sem isto, o painel não aparece. */
+  readonly importar?: (entrada: EntradaImportar) => Promise<ResultadoAccaoImportar>;
+  readonly iaDisponivel?: boolean;
+  readonly modeloIA?: string;
 }
 
 export function Construtor({
@@ -78,12 +84,18 @@ export function Construtor({
   temRascunho,
   guardar,
   reservadas = SEM_RESERVADAS,
+  importar,
+  iaDisponivel = false,
+  modeloIA,
 }: PropsConstrutor) {
   const base = useId();
   const [nome, setNome] = useState(nomeInicial);
   const [spec, setSpec] = useState<SpecInquerito>(specInicial);
   const [aviso, setAviso] = useState<string | null>(null);
   const [tipoNovo, setTipoNovo] = useState<TipoPergunta>('escolha_unica');
+  /** O inquérito antes da última importação, para «Desfazer» (uma vez). */
+  const [antesDaImportacao, setAntesDaImportacao] = useState<SpecInquerito | null>(null);
+  const [importado, setImportado] = useState<string | null>(null);
   /** O id a focar depois da próxima mudança à lista de perguntas, e o recurso. */
   const focoPendente = useRef<{ id: string; recurso: string } | null>(null);
 
@@ -142,6 +154,21 @@ export function Construtor({
     setSpec((s) => ({ ...s, perguntas }));
   }
 
+  function aplicarImportacao(novo: SpecInquerito, resumo: string) {
+    setAntesDaImportacao(spec);
+    setSpec(novo);
+    setImportado(resumo);
+    focoPendente.current = { id: `${base}-importado`, recurso: `${base}-importado` };
+  }
+
+  function desfazerImportacao() {
+    if (!antesDaImportacao) return;
+    setSpec(antesDaImportacao);
+    setAntesDaImportacao(null);
+    setImportado('Importação desfeita: o inquérito voltou ao que era.');
+    focoPendente.current = { id: `${base}-importado`, recurso: `${base}-importado` };
+  }
+
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="min-w-0 space-y-8">
@@ -185,6 +212,41 @@ export function Construtor({
           </p>
         )}
 
+        {importado && (
+          <div
+            id={`${base}-importado`}
+            tabIndex={-1}
+            role="status"
+            className="flex flex-wrap items-center justify-between gap-3 border border-[color:var(--on-surface)] px-4 py-3 text-sm outline-none"
+          >
+            <span>{importado}</span>
+            <span className="flex gap-2">
+              {antesDaImportacao && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={desfazerImportacao}
+                >
+                  <Undo2 aria-hidden className="size-4" />
+                  Desfazer importação
+                </Button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setImportado(null);
+                  setAntesDaImportacao(null);
+                }}
+                className="min-h-11 text-[color:var(--muted)] underline"
+              >
+                Fechar
+              </button>
+            </span>
+          </div>
+        )}
+
         {erros.length > 0 && (
           <div className="border border-[color:var(--color-signal-700)] px-4 py-3">
             <p className="text-sm font-medium">Por corrigir antes de guardar</p>
@@ -226,6 +288,19 @@ export function Construtor({
             </div>
           </div>
         </Seccao>
+
+        {importar && (
+          <Seccao titulo="Colar e transformar">
+            <ImportarTexto
+              id={id}
+              base={previa}
+              iaDisponivel={iaDisponivel}
+              modeloIA={modeloIA}
+              importar={importar}
+              onAplicar={aplicarImportacao}
+            />
+          </Seccao>
+        )}
 
         <Seccao titulo="Boas-vindas">
           <Ecra
@@ -446,9 +521,6 @@ export function Construtor({
             data-surface="deep"
             className="bg-[color:var(--surface)] p-4 text-[color:var(--on-surface)]"
           >
-            <p className="mb-4 text-[length:var(--text-lead)] font-bold text-balance">
-              {previa.boasVindas.titulo}
-            </p>
             <SurveyRenderer modo="previa" spec={previa} />
           </div>
         </div>
@@ -684,15 +756,26 @@ function EditorPergunta({
 
       <div className="mt-3">
         <label htmlFor={`${base}-ajuda`} className={rotulo}>
-          Ajuda (opcional)
+          {p.tipo === 'seccao' ? 'Texto da secção (opcional)' : 'Subtítulo / ajuda (opcional)'}
         </label>
-        <input
-          id={`${base}-ajuda`}
-          className={cn(campo, 'mt-1.5')}
-          maxLength={LIMITES.ajuda}
-          value={p.ajuda ?? ''}
-          onChange={(e) => onAlterar((q) => ({ ...q, ajuda: e.target.value || undefined }))}
-        />
+        {p.tipo === 'seccao' ? (
+          <textarea
+            id={`${base}-ajuda`}
+            rows={3}
+            className={cn(campo, 'mt-1.5 resize-y')}
+            maxLength={LIMITES.ajuda}
+            value={p.ajuda ?? ''}
+            onChange={(e) => onAlterar((q) => ({ ...q, ajuda: e.target.value || undefined }))}
+          />
+        ) : (
+          <input
+            id={`${base}-ajuda`}
+            className={cn(campo, 'mt-1.5')}
+            maxLength={LIMITES.ajuda}
+            value={p.ajuda ?? ''}
+            onChange={(e) => onAlterar((q) => ({ ...q, ajuda: e.target.value || undefined }))}
+          />
+        )}
       </div>
 
       {p.tipo !== 'seccao' && (

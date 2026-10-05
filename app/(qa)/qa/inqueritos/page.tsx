@@ -4,6 +4,10 @@ import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { EditorInquerito } from '@/components/admin/inqueritos/EditorInquerito';
 import { Partilha } from '@/components/admin/inqueritos/Partilha';
 import { Resultados } from '@/components/admin/inqueritos/Resultados';
+import type { EntradaImportar } from '@/components/admin/inqueritos/ImportarTexto';
+import type { ResultadoAccaoImportar } from '@/lib/admin/importar-inquerito';
+import { SEM_RESERVADAS } from '@/lib/inqueritos/construtor';
+import { importarTexto } from '@/lib/inqueritos/importar/servidor';
 import { qrDe } from '@/lib/inqueritos/qr';
 import { specInquerito } from '@/lib/inqueritos/spec';
 
@@ -27,6 +31,32 @@ export const metadata: Metadata = {
 async function semEfeito(): Promise<void> {
   'use server';
   redirect('/qa/inqueritos?ok=guardado');
+}
+
+/**
+ * «Colar e transformar» de QA: SÓ o analisador local (`kimi: null` — sem
+ * chave, sem rede, sem base). Pedir o Kimi aqui cai para o local e mostra o
+ * aviso, que é o comportamento real sem chave configurada. A guarda repete-se
+ * dentro da acção: o id de uma Server Action existe no bundle mesmo quando a
+ * página responde 404.
+ */
+async function importarQa(entrada: EntradaImportar): Promise<ResultadoAccaoImportar> {
+  'use server';
+  if (process.env.ADMIN_PREVIEW !== 'on' || process.env.VERCEL_ENV === 'production')
+    return { ok: false, motivo: 'Indisponível.' };
+  const base = specInquerito.safeParse(entrada?.base);
+  const texto = typeof entrada?.texto === 'string' ? entrada.texto.slice(0, 20_000) : '';
+  if (!base.success || !texto.trim()) return { ok: false, motivo: 'Pedido inválido.' };
+  return importarTexto(
+    {
+      texto,
+      motor: entrada.motor === 'kimi' ? 'kimi' : 'local',
+      modo: entrada.modo === 'acrescentar' ? 'acrescentar' : 'substituir',
+      base: base.data,
+      reservadas: SEM_RESERVADAS,
+    },
+    { kimi: null },
+  );
 }
 
 const ID = '00000000-0000-4000-8000-000000000001';
@@ -64,10 +94,10 @@ const EXEMPLO = specInquerito.parse({
 export default async function PreviaConstrutorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ papel?: string; ok?: string; vista?: string }>;
+  searchParams: Promise<{ papel?: string; ok?: string; vista?: string; ia?: string }>;
 }) {
   if (process.env.ADMIN_PREVIEW !== 'on' || process.env.VERCEL_ENV === 'production') notFound();
-  const { papel, ok, vista } = await searchParams;
+  const { papel, ok, vista, ia } = await searchParams;
   const leitura = papel === 'leitura';
   const urlExemplo = 'https://agoramoz.com/i/EXEMPLOexemploEXEMPLOexemploEXEMPLOexempl_-';
 
@@ -125,6 +155,9 @@ export default async function PreviaConstrutorPage({
             ok={ok}
             guardar={semEfeito}
             definirActivo={semEfeito}
+            importar={importarQa}
+            iaDisponivel={ia === '1'}
+            modeloIA={ia === '1' ? 'kimi-k2.6' : undefined}
           >
             <Partilha
               inqueritoId={ID}
