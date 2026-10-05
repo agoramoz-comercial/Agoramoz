@@ -299,6 +299,11 @@ enquanto o volume couber no Postgres.
   inquéritos de teste antes de cada mudança de modelo.
 - **Fora da v1** por decisão do fundador (D-31). O «fluxo adaptativo por IA»
   fica para depois de haver respostas reais com que o avaliar.
+- **Antecipado (D-33):** a IA entra primeiro do lado do **autor**, não das
+  respostas — «Colar e transformar» estrutura um inquérito a partir de texto
+  com o Kimi (`lib/inqueritos/importar/`), com analisador local como recurso,
+  saída validada e revisão humana antes de aplicar. Nenhuma resposta de
+  respondente vai ao fornecedor.
 
 ## 10. Roadmap de 12 meses
 
@@ -307,7 +312,7 @@ enquanto o volume couber no Postgres.
 | **Q1** | Experiência de resposta v2 (Lote R); tipos lista, email e telefone validados; templates internos | 3 inquéritos reais respondidos; zero erros de runtime | taxa de conclusão; tempo mediano |
 | **Q2** | Outbox na ingestão; workers E1; webhooks assinados; email para a equipa; temas (`survey.v2`) | entrega de webhooks ≥ 99 % em 30 dias | eventos entregues / emitidos |
 | **Q3** | Multi-tenant (`workspaces`), RBAC por workspace, `/api/v1` com chaves; upload de ficheiros | 1 cliente piloto externo | inquéritos activos por workspace |
-| **Q4** | IA: resumo e classificação (`ai_jobs`); templates por sector (RH, ESG, energia); relatórios | qualidade da IA aprovada por humano | % de resumos aceites sem edição |
+| **Q4** | IA: resumo e classificação (`ai_jobs`); templates por sector (RH, ESG, energia); relatórios. **Iniciado:** importação de texto com IA (D-33) | qualidade da IA aprovada por humano | % de resumos aceites sem edição; % de propostas aplicadas sem edição |
 
 Dependências críticas: multi-tenant (Q3) antes de qualquer venda externa;
 outbox (Q2) antes de qualquer integração; IA só com respostas reais.

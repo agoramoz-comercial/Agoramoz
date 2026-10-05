@@ -44,6 +44,52 @@ marca (grão, malha de contorno parada, título em crómio nas boas-vindas).
 - Código: `components/inqueritos/SurveyRenderer.tsx` e `partes/`; lógica pura
   em `lib/inqueritos/teclas.ts`, `ritmo.ts`, `rascunho.ts` (com testes).
 
+## Colar e transformar (texto → inquérito)
+
+No construtor, antes de «Boas-vindas». Cola-se o inquérito inteiro em texto
+(do Word, do Google Docs ou escrito numa mensagem) e recebe-se uma
+**proposta** com secções e o seu texto, perguntas com tipo, obrigatoriedade,
+subtítulo, opções e condições. Nada é gravado: aplicar muda o construtor e só
+«Guardar rascunho» escreve na base.
+
+- **Dois motores, um contrato.** O *analisador local* (determinístico,
+  instantâneo, o texto não sai do servidor) e o **Kimi** (Moonshot AI, para
+  texto desorganizado). Os dois produzem o mesmo rascunho
+  (`lib/inqueritos/importar/esquema.ts`), que passa pela mesma normalização
+  (`normalizar.ts`) até um `SpecInquerito` válido.
+- **Se o Kimi falhar** (timeout de 45 s, 4xx/5xx, JSON inválido, sem
+  perguntas), cai sozinho para o analisador local e diz porquê no ecrã.
+- **Revisão antes de aplicar:** resumo (perguntas, secções, obrigatórias,
+  condições), a lista numerada com o tipo, **o porquê de cada tipo**, a
+  condição em linguagem simples e os avisos. «Aplicar: substituir o
+  inquérito» ou «Aplicar: juntar ao fim»; depois de aplicar, «Desfazer
+  importação» enquanto não se mexer no resultado. Uma proposta feita antes de
+  outras alterações no construtor não se aplica (apagaria essas alterações).
+- **Correcções automáticas, sempre avisadas:** limites (50 perguntas, 20
+  opções, títulos 300, ajuda 500), escolha com menos de 2 opções passa a
+  texto, opções repetidas saem, condições impossíveis saem, e **pedidos de
+  dados pessoais** («Qual o seu email?», «Número de telemóvel», NUIT, morada…)
+  são retirados — esses dados pedem-se no bloco «Contacto no fim», com
+  consentimento.
+- **Segurança:** a chave só existe no servidor (`KIMI_API_KEY`); o host é uma
+  lista fechada (`api.moonshot.ai` / `api.moonshot.cn`); o texto vai
+  delimitado como dado e o que vier do modelo é validado por esquema e nunca
+  executado; os logs levam só métricas (motor, caracteres, perguntas, tempo);
+  limite de 10 pedidos ao Kimi por utilizador em 10 min (por instância).
+  Só papéis com escrita (admin, comercial) usam o painel.
+
+**Ligar o Kimi (do lado do fundador):**
+1. Na consola da Moonshot (platform.kimi.ai), gerar uma chave nova e definir
+   um **limite de gasto** — é o controlo de custo real.
+2. Na Vercel, `KIMI_API_KEY` (Sensitive, Production), sem espaços nem linha
+   no fim; depois `SURVEY_AI=kimi`. Conta da plataforma chinesa:
+   `KIMI_BASE_URL=https://api.moonshot.cn/v1`. Opcional: `KIMI_MODEL`
+   (por omissão `kimi-k2.6`).
+3. Redeploy. Sem estas variáveis o painel funciona só com o analisador local.
+
+O texto enviado ao Kimi sai para a Moonshot AI: não colar dados pessoais de
+respondentes. A conformidade da transferência requer validação jurídica.
+
 ## Ligar (do lado do fundador)
 
 1. **Aplicar a 0013.** No SQL Editor do Supabase, correr
@@ -167,6 +213,8 @@ as funções da 0013 escrevem. Ver D-31.
 | `lib/inqueritos/respostas.ts`, `logica.ts`, `cartoes.ts` | Validação e visibilidade, iguais no browser e no servidor |
 | `lib/inqueritos/token.ts`, `partilha.ts`, `qr.ts`, `links.ts` | Token, endereços, QR, estado dos links |
 | `lib/inqueritos/csv.ts`, `resultados.ts` | Exportação e leitura dos resultados |
+| `lib/inqueritos/importar/` (`esquema`, `local`, `normalizar`, `kimi`, `servidor`) | «Colar e transformar»: contrato, analisador local, normalização, cliente Kimi, escolha do motor (D-33) |
+| `lib/admin/importar-inquerito.ts`, `components/admin/inqueritos/ImportarTexto.tsx` | Server Action (sem escrita) e painel de revisão |
 | `supabase/migrations/0013_inqueritos.sql` | Tabela, regras, RPC (= `supabase/aplicar-0013.sql`) |
 | `.qa/inqueritos-comportamento.sql` | 25 cenários SQL num Postgres real |
 | `.qa/inqueritos-publico.mjs`, `.qa/inqueritos-admin.mjs` | Playwright + axe a 390/768/1440 |

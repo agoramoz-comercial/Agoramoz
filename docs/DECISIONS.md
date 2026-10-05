@@ -289,3 +289,24 @@ módulo explícitas, eventos pela outbox da 0004 e API versionada.
   infraestrutura.
 **Consequência:** cada módulo escreve só nas suas tabelas, por RPC com
 `exigir_papel` + `audit_log`; extrair um serviço passa a ser mover um módulo.
+
+## D-33 — «Colar e transformar» com o Kimi, analisador local como recurso
+
+Revê D-31 («sem IA na v1») por decisão do fundador: o construtor ganha um
+painel que transforma texto colado num inquérito, com o **Kimi** (Moonshot AI)
+como motor e um **analisador local determinístico** sempre disponível.
+- **Um contrato, uma normalização:** os dois motores produzem o mesmo
+  rascunho tolerante; só `normalizar` decide o spec final, que passa a
+  validação completa. O modelo nunca escolhe chaves nem escreve na base.
+- **Proposta, não escrita:** a Server Action devolve uma proposta; o admin
+  revê (com o porquê de cada tipo) e o «Guardar» existente continua a ser o
+  único caminho de escrita.
+- **Falha sem bloquear:** qualquer falha do Kimi cai para o local e é dita no
+  ecrã.
+- **Segredo só na Vercel:** `KIMI_API_KEY` sensível; host numa lista fechada;
+  erros e logs só com códigos e métricas. A chave colada no chat durante o
+  pedido foi tratada como comprometida e não usada.
+- **Dados pessoais:** perguntas que pedem contacto são retiradas da proposta;
+  o texto enviado ao fornecedor é do admin, não de respondentes.
+**Consequência:** com `SURVEY_AI=off` (omissão) o painel funciona só com o
+analisador local; ligar o Kimi é criar a chave e `SURVEY_AI=kimi`.
