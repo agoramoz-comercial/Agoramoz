@@ -40,10 +40,27 @@ const textoOpcional = z
   .catch(undefined);
 const inteiro = z.number().int().optional().catch(undefined);
 
+/**
+ * «Mostrar só se…»: `pergunta` é o número de ordem (1, 2, 3…) de uma pergunta
+ * ANTERIOR entre as perguntas do rascunho (as secções não contam); `valor` é
+ * o rótulo da opção (ou o número da escala); `op` «diferente» é o «saltar»:
+ * mostra quando a resposta NÃO é aquela.
+ */
+const condicaoImportada = z
+  .object({
+    pergunta: z.number().int().positive(),
+    valor: z.string().min(1).max(200),
+    op: z.enum(['igual', 'diferente']).optional().catch(undefined),
+  })
+  .optional()
+  .catch(undefined);
+
 const blocoSeccao = z.object({
   bloco: z.literal('seccao'),
   titulo: texto,
   texto: textoOpcional,
+  /** Numa secção, a condição esconde-a com as suas perguntas (ramificação). */
+  condicao: condicaoImportada,
 });
 
 const blocoPergunta = z.object({
@@ -62,13 +79,22 @@ const blocoPergunta = z.object({
   min: inteiro,
   max: inteiro,
   inteiro: z.boolean().optional().catch(undefined),
+  condicao: condicaoImportada,
   /**
-   * «Mostrar só se…»: `pergunta` é o número de ordem (1, 2, 3…) de uma
-   * pergunta ANTERIOR entre as perguntas do rascunho (as secções não contam);
-   * `valor` é o rótulo da opção (ou o número da escala).
+   * Saltos («Se Não, passe para a Secção 3»): `seccao`/`pergunta` são a ordem
+   * do destino no rascunho (a 3.ª secção, a 10.ª pergunta); `fim` salta o
+   * resto. `normalizar` transforma-os em condições nos blocos saltados.
    */
-  condicao: z
-    .object({ pergunta: z.number().int().positive(), valor: z.string().min(1).max(200) })
+  saltos: z
+    .array(
+      z.object({
+        valor: z.string().min(1).max(200),
+        seccao: z.number().int().positive().optional(),
+        pergunta: z.number().int().positive().optional(),
+        fim: z.literal(true).optional(),
+      }),
+    )
+    .max(20)
     .optional()
     .catch(undefined),
   /** Porque é que este tipo foi escolhido — mostrado ao admin na revisão. */

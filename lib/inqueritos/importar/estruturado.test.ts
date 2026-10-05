@@ -255,3 +255,77 @@ describe('marcas de lista do Word', () => {
     expect(p.tipo).toBe('escolha_unica');
   });
 });
+
+describe('Microsoft Forms e Typeform — vocabulário', () => {
+  it('Likert com afirmações em lista: uma pergunta por afirmação, com a escala', () => {
+    const lida = analisarEstruturado(`Pergunta 1: Como avalia a nossa equipa?
+Tipo: Likert
+Obrigatória: Sim
+Afirmações:
+- Responde a tempo
+- Explica com clareza
+- Cumpre prazos
+Pergunta 2: Recomendaria?
+Tipo: NPS
+Condição: P1 = Concordo`)!;
+    const ps = perguntasDe(lida.rascunho);
+    expect(ps.map((p) => p.titulo)).toEqual([
+      'Responde a tempo',
+      'Explica com clareza',
+      'Cumpre prazos',
+      'Recomendaria?',
+    ]);
+    expect(ps[0]).toMatchObject({
+      tipo: 'escolha_unica',
+      obrigatoria: true,
+      ajuda: 'Como avalia a nossa equipa?',
+      opcoes: ['Discordo totalmente', 'Discordo', 'Neutro', 'Concordo', 'Concordo totalmente'],
+    });
+    expect(ps[0]!.razao).toMatch(/uma pergunta por afirmação/);
+    // A condição «P1» aponta para a primeira afirmação, e a NPS continua a ser a 4.ª pergunta.
+    expect(ps[3]!.condicao).toEqual({ pergunta: 1, valor: 'Concordo' });
+  });
+
+  it('grelha numa tabela, com as colunas como opções', () => {
+    const lida = analisarEstruturado(
+      [
+        '| Pergunta | Tipo | Afirmações | Opções |',
+        '|---|---|---|---|',
+        '| Satisfação com | Grelha | Preço; Prazo | Má; Boa; Óptima |',
+      ].join('\n'),
+    )!;
+    const ps = perguntasDe(lida.rascunho);
+    expect(ps.map((p) => [p.titulo, p.opcoes])).toEqual([
+      ['Preço', ['Má', 'Boa', 'Óptima']],
+      ['Prazo', ['Má', 'Boa', 'Óptima']],
+    ]);
+  });
+
+  it.each([
+    ['Declaração', 'seccao', undefined],
+    ['Statement', 'seccao', undefined],
+    ['Ranking', 'escolha_multipla', /ordenação ainda não existe/],
+    ['Carregar ficheiro', 'texto_curto', /ficheiros ainda não existe/],
+    ['Hora', 'texto_curto', /hora/],
+    ['Escala de opinião 1-7', 'numero', undefined],
+    ['Opinion scale 0-10', 'nps', undefined],
+  ])('«%s» → %s', (dito, tipo, nota) => {
+    const t = lerTipo(dito)!;
+    expect(t.tipo).toBe(tipo);
+    if (nota) expect(t.nota).toMatch(nota);
+  });
+
+  it('Legal fica Aceito / Não aceito, e a nota explica o tipo que não existe', () => {
+    const lida = analisarEstruturado(`Pergunta 1: Aceita os termos?
+Tipo: Legal
+Obrigatória: Sim
+Pergunta 2: Ordene as prioridades
+Tipo: Ranking
+Opções: Preço; Prazo; Qualidade`)!;
+    const ps = perguntasDe(lida.rascunho);
+    expect(ps[0]).toMatchObject({ tipo: 'escolha_unica', opcoes: ['Aceito', 'Não aceito'] });
+    expect(ps[1]!.razao).toBe(
+      'Tipo indicado no texto: «Ranking». A ordenação ainda não existe: ficou escolha múltipla (as mais importantes).',
+    );
+  });
+});

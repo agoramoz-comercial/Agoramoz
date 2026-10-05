@@ -86,6 +86,21 @@ subtítulo, opções e condições. Nada é gravado: aplicar muda o construtor e
   botão «Inserir modelo com campos» mostra o formato.
 - **Listas do Word coladas sem marcas** (opções em linhas soltas, ou com os
   caracteres privados de marca do Word) são lidas como opções.
+- **Lógica do Microsoft Forms e do Typeform (D-34):**
+  - até **200 perguntas + 50 secções** (as secções não contam para as
+    perguntas) — exige a 0014 aplicada (`supabase/aplicar-0014.sql`, linha 25
+    de `verificar-estado.sql`);
+  - **ramificação:** uma secção com condição esconde-se com as suas
+    perguntas; condições «for» e «não for»;
+  - **saltos no texto:** «Se Não, passe para a Secção 3», «(Se respondeu Não,
+    avance para a pergunta 10)», «Não → Secção 3», «Sim – ir para o fim»,
+    «Lógica: Se Não, ir para a Secção 3» — viram «mostrar só se a resposta
+    não for…» nos blocos saltados;
+  - **Likert/grelha:** «Tipo: Likert» + «Afirmações: a; b; c» (+ «Colunas:»
+    ou a escala de 5 pontos por omissão) → uma pergunta por afirmação;
+  - **equivalentes:** Declaração → secção; Ranking → escolha múltipla;
+    Upload e Hora → texto curto; Legal → Aceito/Não aceito; Escala de
+    opinião → avaliação, NPS ou número conforme o intervalo.
 - **Revisão antes de aplicar:** resumo (perguntas, secções, obrigatórias,
   condições), a lista numerada com o tipo, **o porquê de cada tipo**, a
   condição em linguagem simples e os avisos. «Aplicar: substituir o

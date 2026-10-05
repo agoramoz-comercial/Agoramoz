@@ -1,5 +1,5 @@
 -- ============================================================================
--- Verificação de estado — 0009 a 0013
+-- Verificação de estado — 0009 a 0014
 -- ============================================================================
 -- SÓ LEITURA. Não cria, não altera e não apaga nada. Pode correr as vezes que
 -- quiser, com o site a funcionar.
@@ -9,7 +9,7 @@
 -- que decidem o deploy ficavam escondidas atrás de uma contagem de colunas.
 --
 -- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
--- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013.
+-- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014.
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -134,4 +134,12 @@ select 24, 'função', 'inquéritos: as 10 funções chamadas pela aplicação (
                             where n.nspname = 'public' and p.proname = 'obter_inquerito_publico')
                     and has_function_privilege('anon', 'public.obter_inquerito_publico(text)', 'execute')
                then ' - ATENCAO: anon executa a leitura publica' else '' end
+-- 0014: limites do Microsoft Forms — a verificação do inquérito aceita 250
+-- blocos (200 perguntas + 50 secções).
+union all
+select 25, 'função', 'inquéritos: 200 perguntas + 50 secções (0014)',
+       case when exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                         where n.nspname = 'public' and p.proname = 'spec_de_inquerito_valido'
+                           and pg_get_functiondef(p.oid) like '%between 1 and 250%')
+            then 'ok' else 'EM FALTA - correr aplicar-0014.sql' end
 order by ordem;

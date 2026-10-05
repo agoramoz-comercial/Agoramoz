@@ -10,6 +10,7 @@ import {
   seccaoPorPalavra,
   simplificar,
 } from './local';
+import { lerSalto, resolverSalto, separarSaltoDeOpcao, type SaltoLido } from './saltos';
 
 /**
  * O leitor ESTRUTURADO do «Colar e transformar».
@@ -42,11 +43,13 @@ type Campo =
   | 'tipo'
   | 'obrigatoria'
   | 'opcoes'
+  | 'afirmacoes'
   | 'ajuda'
   | 'escala'
   | 'min'
   | 'max'
   | 'condicao'
+  | 'salto'
   | 'titulo'
   | 'introducao'
   | 'agradecimento';
@@ -67,7 +70,11 @@ const ROTULOS: readonly (readonly [Campo, RegExp])[] = [
   ['obrigatoria', /^(?:obrigatori[ao]|resposta obrigatoria|required|mandatory|obrig)$/],
   [
     'opcoes',
-    /^(?:opcoes|opcoes de resposta|alternativas|respostas possiveis|respostas|escolhas|options|choices|answers)$/,
+    /^(?:opcoes|opcoes de resposta|alternativas|respostas possiveis|respostas|escolhas|colunas|escala de resposta|options|choices|answers|columns)$/,
+  ],
+  [
+    'afirmacoes',
+    /^(?:afirmacoes|afirmacao|linhas|itens|items|statements|rows|enunciados|subperguntas|aspectos)$/,
   ],
   [
     'ajuda',
@@ -79,6 +86,10 @@ const ROTULOS: readonly (readonly [Campo, RegExp])[] = [
   [
     'condicao',
     /^(?:condicao|logica|mostrar se|so se|exibir se|mostrar apenas se|show if|condition|depende de)$/,
+  ],
+  [
+    'salto',
+    /^(?:salto|saltos|saltar|logica de salto|regra de salto|ramificacao|branching|ir para|navegacao|logic jump|jump)$/,
   ],
   [
     'titulo',
@@ -123,7 +134,10 @@ function linhaDeCampo(l: string): { campo: Campo; valor: string; numero?: string
 // ── Os valores ──────────────────────────────────────────────────────────────
 
 interface TipoLido {
-  tipo: TipoImportavel | 'seccao';
+  /** `grelha`: Likert/matriz do Microsoft Forms e do Google Forms — expande-se. */
+  tipo: TipoImportavel | 'seccao' | 'grelha';
+  /** Quando o tipo do Forms/Typeform não existe aqui: o que se fez, dito ao admin. */
+  nota?: string;
   min?: number;
   max?: number;
   inteiro?: boolean;
@@ -149,8 +163,26 @@ function porIntervalo(s: string): TipoLido | null {
 export function lerTipo(valor: string): TipoLido | null {
   const s = simplificar(valor).trim();
   if (!s) return null;
-  if (/seccao|secao|so texto|texto informativo|cabecalho|\bsection\b/.test(s))
+  if (/seccao|secao|so texto|texto informativo|cabecalho|declaracao|statement|\bsection\b/.test(s))
     return { tipo: 'seccao' };
+  // Likert e grelhas (Microsoft Forms, Google Forms): uma pergunta por linha.
+  if (/likert|grelha|grade|matriz|matrix|\bgrid\b/.test(s)) return { tipo: 'grelha' };
+  // Tipos do Forms/Typeform que ainda não existem aqui: o equivalente mais próximo, dito.
+  if (/ordenacao|ordenar|ranking|classificacao por ordem|prioriz/.test(s))
+    return {
+      tipo: 'escolha_multipla',
+      nota: 'A ordenação ainda não existe: ficou escolha múltipla (as mais importantes).',
+    };
+  if (/upload|carregar|ficheiro|arquivo|anexo|\bfile\b/.test(s))
+    return {
+      tipo: 'texto_curto',
+      nota: 'Carregar ficheiros ainda não existe: ficou texto curto (peça um link).',
+    };
+  if (/^hora$|\btime\b|horario/.test(s))
+    return { tipo: 'texto_curto', nota: 'A hora fica como texto curto (ex.: 14:30).' };
+  if (/\blegal\b|aceito|termos|consentimento/.test(s))
+    return { tipo: 'escolha_unica', opcoes: ['Aceito', 'Não aceito'] };
+  if (/website|\burl\b|link|endereco web/.test(s)) return { tipo: 'texto_curto' };
   if (/\bnps\b|net promoter|recomendacao/.test(s)) return { tipo: 'nps' };
   if (/escala|linear|scale/.test(s)) return porIntervalo(s) ?? { tipo: 'avaliacao' };
   if (/avaliacao|estrelas|rating|stars|classificacao|satisfacao/.test(s))
@@ -241,13 +273,30 @@ interface PerguntaLida {
   min?: number;
   max?: number;
   condicao?: { numero: string; valor: string };
+  saltos: SaltoLido[];
+  /** Linhas de uma grelha/Likert («Afirmações:»). */
+  afirmacoes: string[];
 }
 interface SeccaoLida {
   k: 's';
   titulo: string;
   texto: string[];
+  /** O número escrito («Secção 3»), para os saltos «ir para a Secção 3». */
+  numero?: string;
+  /** «Condição:» dentro de uma secção: esconde-a com as suas perguntas. */
+  condicao?: { numero: string; valor: string };
 }
-type BlocoLido = PerguntaLida | SeccaoLida;
+type BlocoLidoBase = PerguntaLida | SeccaoLida;
+
+/** As opções, com os saltos colados («Não → Secção 3») passados para a pergunta. */
+function juntarOpcoes(p: PerguntaLida, lista: readonly string[]): void {
+  for (const o of lista) {
+    const { rotulo, salto } = separarSaltoDeOpcao(o);
+    p.opcoes.push(rotulo);
+    if (salto) p.saltos.push(salto);
+  }
+}
+type BlocoLido = BlocoLidoBase;
 
 /** Os campos que só aparecem quando alguém declara a estrutura de propósito. */
 const CAMPOS_DE_ESTRUTURA: ReadonlySet<Campo> = new Set(['tipo', 'obrigatoria', 'opcoes', 'escala']);
@@ -266,15 +315,24 @@ function lerFicha(linhas: readonly string[]): RascunhoImportado | null {
   const introducao: string[] = [];
   let agradecimento: string | undefined;
   let atual: BlocoLido | null = null;
-  /** Depois de «Opções:» sem nada à frente, as linhas seguintes são as opções. */
+  /** Depois de «Opções:» (ou «Afirmações:») sem nada à frente, as linhas seguintes são a lista. */
   let listaAberta = false;
+  let listaPara: 'opcoes' | 'afirmacoes' = 'opcoes';
   /** O último campo de texto aberto, para continuar em várias linhas. */
   let continuar: 'ajuda' | 'textoSeccao' | 'introducao' | 'agradecimento' | null = null;
 
   const pergunta = (): PerguntaLida | null => (atual?.k === 'p' ? atual : null);
   const seccao = (): SeccaoLida | null => (atual?.k === 's' ? atual : null);
   const novaPergunta = (t: string, numero?: string) => {
-    const p: PerguntaLida = { k: 'p', titulo: t, opcoes: [], ajuda: [], ...(numero ? { numero } : {}) };
+    const p: PerguntaLida = {
+      k: 'p',
+      titulo: t,
+      opcoes: [],
+      ajuda: [],
+      saltos: [],
+      afirmacoes: [],
+      ...(numero ? { numero } : {}),
+    };
     if (/\*+\s*$/.test(p.titulo)) {
       p.obrigatoria = true;
       p.titulo = p.titulo.replace(/\s*\*+\s*$/, '');
@@ -284,8 +342,13 @@ function lerFicha(linhas: readonly string[]): RascunhoImportado | null {
     listaAberta = false;
     continuar = null;
   };
-  const novaSeccao = (t: string): SeccaoLida => {
-    const s: SeccaoLida = { k: 's', titulo: t.replace(/[:.]\s*$/, '').trim() || '—', texto: [] };
+  const novaSeccao = (t: string, numero?: string): SeccaoLida => {
+    const s: SeccaoLida = {
+      k: 's',
+      titulo: t.replace(/[:.]\s*$/, '').trim() || '—',
+      texto: [],
+      ...(numero ? { numero } : {}),
+    };
     blocos.push(s);
     atual = s;
     listaAberta = false;
@@ -314,7 +377,7 @@ function lerFicha(linhas: readonly string[]): RascunhoImportado | null {
           continuar = 'agradecimento';
           break;
         case 'seccao':
-          novaSeccao(c.valor);
+          novaSeccao(c.valor, c.numero);
           break;
         case 'textoSeccao':
           if (s) {
@@ -346,8 +409,17 @@ function lerFicha(linhas: readonly string[]): RascunhoImportado | null {
         case 'opcoes':
           if (p) {
             const lista = lerOpcoes(c.valor);
-            p.opcoes.push(...lista);
+            juntarOpcoes(p, lista);
             listaAberta = lista.length === 0;
+            listaPara = 'opcoes';
+          }
+          break;
+        case 'afirmacoes':
+          if (p) {
+            const lista = lerOpcoes(c.valor);
+            p.afirmacoes.push(...lista);
+            listaAberta = lista.length === 0;
+            listaPara = 'afirmacoes';
           }
           break;
         case 'ajuda':
@@ -363,6 +435,11 @@ function lerFicha(linhas: readonly string[]): RascunhoImportado | null {
           }
           break;
         case 'escala':
+          // Numa grelha, «Escala: Discordo; …; Concordo» são as colunas.
+          if (p && /[;|]/.test(c.valor)) {
+            juntarOpcoes(p, lerOpcoes(c.valor));
+            break;
+          }
           if (p) {
             const t = porIntervalo(simplificar(c.valor));
             if (t && !p.tipo) {
@@ -381,8 +458,17 @@ function lerFicha(linhas: readonly string[]): RascunhoImportado | null {
           }
           break;
         case 'condicao':
-          if (p) p.condicao = lerCondicao(c.valor) ?? p.condicao;
+        case 'salto': {
+          // «Lógica: Se Não, ir para a Secção 3» é um salto; «Condição: P4 = Sim» é uma condição.
+          const salto = lerSalto(c.valor) ?? separarSaltoDeOpcao(c.valor.replace(/^se\s+/i, '')).salto;
+          if (salto && p) p.saltos.push(salto);
+          else if (c.campo === 'condicao') {
+            const cond = lerCondicao(c.valor);
+            if (p && cond) p.condicao = cond;
+            else if (s && cond) s.condicao = cond;
+          }
           break;
+        }
       }
       continue;
     }
@@ -390,15 +476,25 @@ function lerFicha(linhas: readonly string[]): RascunhoImportado | null {
     // Linhas sem campo.
     const p = pergunta();
     const opcao = RE_OPCAO.exec(l);
+    const saltoSolto = lerSalto(l);
+    if (saltoSolto && p) {
+      p.saltos.push(saltoSolto);
+      continue;
+    }
+    if (p && listaAberta && listaPara === 'afirmacoes') {
+      p.afirmacoes.push(limparOpcao(l));
+      continue;
+    }
     if (p && (listaAberta || (opcao && (p.opcoes.length > 0 || continuar === null)))) {
-      p.opcoes.push(limparOpcao(l));
+      juntarOpcoes(p, [limparOpcao(l)]);
       listaAberta = true;
+      listaPara = 'opcoes';
       continue;
     }
     const md = RE_MD.exec(l);
     const porPalavra = seccaoPorPalavra(l);
     if (md || porPalavra !== null) {
-      novaSeccao(md ? md[1]! : porPalavra!);
+      novaSeccao(md ? md[1]! : porPalavra!, /(\d{1,3})/.exec(l)?.[1]);
       continue;
     }
     const num = numerada(l);
@@ -491,7 +587,9 @@ function lerTabela(linhas: readonly string[]): RascunhoImportado | null {
     const p: PerguntaLida = {
       k: 'p',
       titulo: tituloP.replace(/\s*\*+\s*$/, ''),
-      opcoes: lerOpcoes(valor('opcoes')),
+      opcoes: [],
+      saltos: [],
+      afirmacoes: lerOpcoes(valor('afirmacoes')),
       ajuda: ajuda ? [ajuda] : [],
       ...(numero ? { numero } : {}),
       ...(t ? { tipo: t, tipoDito } : {}),
@@ -507,8 +605,12 @@ function lerTabela(linhas: readonly string[]): RascunhoImportado | null {
         p.tipoDito = `escala ${escala}`;
       }
     }
-    const cond = lerCondicao(valor('condicao'));
-    if (cond) p.condicao = cond;
+    juntarOpcoes(p, lerOpcoes(valor('opcoes')));
+    for (const regra of [valor('condicao'), valor('salto')].filter(Boolean)) {
+      const salto = lerSalto(regra) ?? separarSaltoDeOpcao(regra.replace(/^se\s+/i, '')).salto;
+      if (salto) p.saltos.push(salto);
+      else p.condicao = lerCondicao(regra) ?? p.condicao;
+    }
     blocos.push(p);
   }
   return montar(blocos, antes[0], antes.slice(1), agradecimento);
@@ -516,26 +618,87 @@ function lerTabela(linhas: readonly string[]): RascunhoImportado | null {
 
 // ── Montar o rascunho ───────────────────────────────────────────────────────
 
+/** A escala Likert de 5 pontos, quando a grelha não diz as colunas. */
+const LIKERT_PT = ['Discordo totalmente', 'Discordo', 'Neutro', 'Concordo', 'Concordo totalmente'];
+
+/**
+ * Likert e grelhas (Microsoft Forms, Google Forms): uma pergunta de escolha
+ * única por afirmação, todas com a mesma escala. Feito ANTES de numerar, para
+ * as condições e os saltos que apontam para perguntas seguintes continuarem
+ * certos; o número escrito da grelha passa a ser o da primeira afirmação.
+ */
+function expandirGrelhas(blocos: readonly BlocoLido[]): BlocoLido[] {
+  return blocos.flatMap((b): BlocoLido[] => {
+    if (b.k !== 'p' || b.tipo?.tipo !== 'grelha') return [b];
+    const colunas = b.opcoes.length >= 2 ? b.opcoes : LIKERT_PT;
+    const tipoUnica: TipoLido = {
+      tipo: 'escolha_unica',
+      nota: 'Likert/grelha do Microsoft Forms: uma pergunta por afirmação, com a mesma escala.',
+    };
+    if (b.afirmacoes.length === 0)
+      return [{ ...b, opcoes: [...colunas], tipo: tipoUnica }];
+    const enunciado = [b.titulo, ...b.ajuda].filter(Boolean);
+    return b.afirmacoes.map(
+      (afirmacao, i): PerguntaLida => ({
+        k: 'p',
+        titulo: afirmacao,
+        ajuda: enunciado,
+        opcoes: [...colunas],
+        afirmacoes: [],
+        saltos: [],
+        tipo: tipoUnica,
+        tipoDito: b.tipoDito,
+        ...(i === 0 && b.numero ? { numero: b.numero } : {}),
+        ...(b.obrigatoria !== undefined ? { obrigatoria: b.obrigatoria } : {}),
+        ...(b.condicao ? { condicao: b.condicao } : {}),
+      }),
+    );
+  });
+}
+
 function montar(
-  blocos: readonly BlocoLido[],
+  blocosLidos: readonly BlocoLido[],
   titulo: string | undefined,
   introducao: readonly string[],
   agradecimento: string | undefined,
 ): RascunhoImportado | null {
+  const blocos = expandirGrelhas(blocosLidos);
   const numeroParaOrdem = new Map<string, number>();
+  const seccaoParaOrdem = new Map<string, number>();
   let ordem = 0;
+  let ordemSeccao = 0;
   for (const b of blocos) {
-    if (b.k !== 'p') continue;
+    if (b.k === 's') {
+      ordemSeccao += 1;
+      if (b.numero) seccaoParaOrdem.set(b.numero, ordemSeccao);
+      continue;
+    }
     ordem += 1;
     if (b.numero) numeroParaOrdem.set(b.numero, ordem);
   }
   if (ordem === 0) return null;
 
+  const resolverCondicao = (
+    c: { numero: string; valor: string } | undefined,
+    antesDe: number,
+  ): PerguntaImportada['condicao'] => {
+    if (!c) return undefined;
+    const alvo = numeroParaOrdem.get(c.numero) ?? (/^\d+$/.test(c.numero) ? Number(c.numero) : undefined);
+    return alvo && alvo < antesDe ? { pergunta: alvo, valor: c.valor } : undefined;
+  };
+
   ordem = 0;
   const saida = blocos.map((b): BlocoImportado => {
     if (b.k === 's') {
       const texto = b.texto.join('\n');
-      return { bloco: 'seccao', titulo: b.titulo || '—', ...(texto ? { texto } : {}) };
+      // Uma secção vem depois das perguntas já contadas: a condição aponta para uma delas.
+      const condicao = resolverCondicao(b.condicao, ordem + 1);
+      return {
+        bloco: 'seccao',
+        titulo: b.titulo || '—',
+        ...(texto ? { texto } : {}),
+        ...(condicao ? { condicao } : {}),
+      };
     }
     ordem += 1;
     const ajuda = b.ajuda.join('\n');
@@ -545,9 +708,10 @@ function montar(
     let min: number | undefined;
     let max: number | undefined;
     let inteiro: boolean | undefined;
-    if (b.tipo && b.tipo.tipo !== 'seccao') {
+    if (b.tipo && b.tipo.tipo !== 'seccao' && b.tipo.tipo !== 'grelha') {
       tipo = b.tipo.tipo;
-      razao = `Tipo indicado no texto: «${b.tipoDito}».`;
+      // De onde veio o tipo — e, se o Forms/Typeform tinha um que aqui não existe, o que se fez.
+      razao = [`Tipo indicado no texto: «${b.tipoDito}».`, b.tipo.nota].filter(Boolean).join(' ');
       ({ min, max, inteiro } = b.tipo);
     } else {
       const d = deduzir(b.titulo, ajuda, [], opcoes);
@@ -557,13 +721,11 @@ function montar(
     }
     if (b.min !== undefined) min = b.min;
     if (b.max !== undefined) max = b.max;
-    let condicao: PerguntaImportada['condicao'];
-    if (b.condicao) {
-      const alvo =
-        numeroParaOrdem.get(b.condicao.numero) ??
-        (/^\d+$/.test(b.condicao.numero) ? Number(b.condicao.numero) : undefined);
-      if (alvo && alvo < ordem) condicao = { pergunta: alvo, valor: b.condicao.valor };
-    }
+    const condicao = resolverCondicao(b.condicao, ordem);
+    const saltos = b.saltos.flatMap((sl) => {
+      const r = resolverSalto(sl, { seccoes: seccaoParaOrdem, perguntas: numeroParaOrdem });
+      return r ? [r] : [];
+    });
     return {
       bloco: 'pergunta',
       titulo: b.titulo || '—',
@@ -575,6 +737,7 @@ function montar(
       ...(max !== undefined ? { max } : {}),
       ...(inteiro !== undefined ? { inteiro } : {}),
       ...(condicao ? { condicao } : {}),
+      ...(saltos.length > 0 ? { saltos } : {}),
       razao,
     };
   });

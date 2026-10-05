@@ -1,5 +1,5 @@
 import { CAMPOS_CONTACTO, type CampoContacto, type Pergunta, type SpecInquerito } from './spec';
-import { condicaoCumprida, type ValorResposta } from './logica';
+import { percursoDeVisibilidade, type ValorResposta } from './logica';
 
 /**
  * Validação de uma resposta contra o inquérito publicado — no servidor, sempre.
@@ -189,17 +189,15 @@ export function validarResposta(spec: SpecInquerito, entrada: unknown): Resultad
   // Pela ordem do inquérito, com a visibilidade calculada sobre os valores JÁ
   // VALIDADOS — um valor inválido nunca abre uma pergunta condicional.
   const validas: Record<string, ValorResposta> = {};
-  const vistas = new Set<string>();
+  const percurso = percursoDeVisibilidade();
   for (const p of spec.perguntas) {
-    const visivel =
-      !p.mostrarSe || (vistas.has(p.mostrarSe.pergunta) && condicaoCumprida(p.mostrarSe, validas));
+    const visivel = percurso(p, validas);
     const bruto = recebidas[p.chave];
 
     if (!visivel) {
       if (!vazio(bruto) && p.tipo !== 'seccao') erros.push({ chave: p.chave, codigo: 'oculta' });
       continue;
     }
-    vistas.add(p.chave);
     if (p.tipo === 'seccao') continue;
 
     if (vazio(bruto)) {

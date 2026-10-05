@@ -130,8 +130,8 @@ describe('specInquerito', () => {
     ).toContain('o inquérito precisa de pelo menos uma pergunta');
   });
 
-  it('um inquérito acima de 64 KB é recusado', () => {
-    const grande = Array.from({ length: 40 }, (_, i) =>
+  it('um inquérito acima de 256 KB é recusado', () => {
+    const grande = Array.from({ length: 160 }, (_, i) =>
       escolha(`p${i}`, {
         titulo: 'x'.repeat(290),
         ajuda: 'y'.repeat(490),

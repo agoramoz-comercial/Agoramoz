@@ -88,11 +88,21 @@ describe('normalizar — chaves e modos', () => {
     expect(r.spec.boasVindas).toEqual(BASE.boasVindas);
   });
 
-  it('acima de 50 perguntas fica o que cabe, com aviso', () => {
-    const blocos = Array.from({ length: 60 }, (_, i) => p(`Pergunta ${i + 1}?`));
+  it('acima de 200 perguntas fica o que cabe, com aviso', () => {
+    const blocos = Array.from({ length: 210 }, (_, i) => p(`Pergunta ${i + 1}?`));
     const r = ok(subst({ blocos }));
-    expect(r.spec.perguntas).toHaveLength(50);
+    expect(r.spec.perguntas).toHaveLength(200);
     expect(r.avisos.some((a) => /10 bloco/.test(a.texto))).toBe(true);
+  });
+
+  it('como no Microsoft Forms, as secções não contam para as 200 perguntas', () => {
+    const blocos = Array.from({ length: 30 }, (_, s) => [
+      { bloco: 'seccao' as const, titulo: `Secção ${s + 1}` },
+      ...Array.from({ length: 6 }, (_, i) => p(`S${s + 1} pergunta ${i + 1}?`)),
+    ]).flat();
+    const r = ok(subst({ blocos }));
+    expect(r.resumo).toMatchObject({ perguntas: 180, seccoes: 30 });
+    expect(r.avisos.some((a) => /não couberam/.test(a.texto))).toBe(false);
   });
 });
 

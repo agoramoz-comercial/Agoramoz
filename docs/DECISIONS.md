@@ -310,3 +310,25 @@ como motor e um **analisador local determinístico** sempre disponível.
   o texto enviado ao fornecedor é do admin, não de respondentes.
 **Consequência:** com `SURVEY_AI=off` (omissão) o painel funciona só com o
 analisador local; ligar o Kimi é criar a chave e `SURVEY_AI=kimi`.
+
+## D-34 — Inquéritos com a lógica do Microsoft Forms e do Typeform
+
+O fundador colou um inquérito com mais de 50 blocos e pediu «a lógica do
+Microsoft Forms e do Typeform».
+- **Limites do Forms:** as secções deixam de contar para as perguntas —
+  200 perguntas + 50 secções (250 blocos), spec até 256 KB. A base acompanha
+  pela 0014 (só `spec_de_inquerito_valido`), aplicada pelo fundador; até lá,
+  gravar mais de 50 blocos é recusado pela base.
+- **Uma só regra de visibilidade** (`percursoDeVisibilidade`, logica.ts),
+  usada pelo browser, pelo servidor e pela pré-visualização — antes estava
+  em três sítios.
+- **Ramificação por secção:** uma secção escondida esconde as suas perguntas
+  até à secção seguinte (o «ir para a secção» do Forms, o «logic jump» do
+  Typeform). Muda o significado de condições em secções já existentes — uso
+  interno, poucos inquéritos.
+- **Condição «não for»** (`diferente`): sem resposta conta como «não é».
+- **Saltos escritos em texto** («Se Não, passe para a Secção 3», «Não →
+  Secção 3», «ir para o fim») viram condições «não for» nos blocos saltados.
+- **Tipos que não existem aqui** (Likert/grelha, ranking, upload, hora,
+  legal) importam-se para o equivalente mais próximo, e a proposta diz o que
+  se fez. A Likert expande-se numa pergunta por afirmação, com a mesma escala.

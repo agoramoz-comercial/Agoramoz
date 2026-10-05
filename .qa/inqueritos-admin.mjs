@@ -101,7 +101,7 @@ for (const largura of [390, 768, 1440]) {
   confere((await p.locator('article').count()) === 4, 'pergunta nova acrescentada');
   const focoNova = await p.evaluate(() => document.activeElement?.id ?? '');
   confere(/-p4-titulo$/.test(focoNova), 'acrescentar põe o foco no título da pergunta nova', focoNova);
-  confere((await p.getByRole('heading', { name: /^Perguntas \(4 de 50\)/ }).count()) === 1, 'contagem actualizada');
+  confere((await p.getByRole('heading', { name: /^Perguntas \(4 de 200\)/ }).count()) === 1, 'contagem actualizada');
 
   // Apagar a pergunta 1 retira a condição da 2 e avisa.
   await p.getByRole('button', { name: 'Apagar a pergunta 1' }).click();
@@ -201,7 +201,7 @@ for (const largura of [390, 1440]) {
   const erros = [];
   p.on('pageerror', (e) => erros.push(e.message));
   await p.goto(`${BASE}/qa/inqueritos`, { waitUntil: 'load' });
-  const perguntas = (n) => p.getByRole('heading', { name: new RegExp(`^Perguntas \\(${n} de 50\\)`) });
+  const perguntas = (n) => p.getByRole('heading', { name: new RegExp(`^Perguntas \\(${n} de 200\\)`) });
 
   confere((await p.getByRole('heading', { name: 'Colar e transformar' }).count()) === 1, 'painel presente');
   const transformar = p.getByRole('button', { name: 'Transformar' });
@@ -234,7 +234,7 @@ for (const largura of [390, 1440]) {
   await p.screenshot({ path: `${SAIDA}/inqueritos-importar-${largura}.png`, fullPage: true });
 
   await p.getByRole('button', { name: 'Aplicar: substituir o inquérito' }).click();
-  await perguntas(10).waitFor();
+  await perguntas(8).waitFor();
   ok('substituir: 10 blocos (8 perguntas + 2 secções)');
   confere(
     await p.evaluate(() => document.activeElement?.textContent?.startsWith('Inquérito substituído: 8 perguntas, 2 secções')),
@@ -254,11 +254,11 @@ for (const largura of [390, 1440]) {
   await transformar.click();
   await proposta.waitFor();
   await p.getByRole('button', { name: 'Aplicar: juntar ao fim' }).click();
-  await perguntas(13).waitFor();
+  await perguntas(11).waitFor();
   ok('juntar ao fim: 3 + 10 blocos');
   await p.getByRole('button', { name: 'Fechar', exact: true }).click();
   confere(
-    await p.evaluate(() => document.activeElement?.textContent?.startsWith('Perguntas (13 de 50)')),
+    await p.evaluate(() => document.activeElement?.textContent?.startsWith('Perguntas (11 de 200) · 2 secções')),
     '«Fechar» leva o foco às perguntas',
   );
   confere(erros.length === 0, 'sem erros na página', erros.slice(0, 3).join(' | '));

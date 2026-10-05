@@ -48,7 +48,7 @@ Devolve APENAS um objecto JSON com esta forma:
   "introducao": "texto de apresentação antes da primeira pergunta (se existir)",
   "agradecimento": "mensagem final de agradecimento (se existir)",
   "blocos": [
-    { "bloco": "seccao", "titulo": "nome da secção", "texto": "texto introdutório da secção (se existir)" },
+    { "bloco": "seccao", "titulo": "nome da secção", "texto": "texto introdutório da secção (se existir)", "condicao": { "pergunta": N, "valor": "…", "op": "igual" | "diferente" } },
     {
       "bloco": "pergunta",
       "titulo": "a pergunta",
@@ -57,7 +57,8 @@ Devolve APENAS um objecto JSON com esta forma:
       "obrigatoria": true | false,
       "opcoes": ["opção 1", "opção 2"],
       "min": número, "max": número, "inteiro": true | false,
-      "condicao": { "pergunta": N, "valor": "rótulo da opção" },
+      "condicao": { "pergunta": N, "valor": "rótulo da opção", "op": "igual" | "diferente" },
+      "saltos": [{ "valor": "rótulo da opção", "seccao": S }, { "valor": "…", "pergunta": N }, { "valor": "…", "fim": true }],
       "razao": "uma frase curta: porque escolheste este tipo"
     }
   ]
@@ -72,6 +73,8 @@ Regras:
 - "ajuda": usa a instrução que o texto der. Só se não houver nenhuma e a pergunta ficar ambígua, podes acrescentar uma instrução curta de resposta (até 100 caracteres), como «Escolha todas as que se aplicam».
 - Secções: títulos de secção ou parte do inquérito. O parágrafo que as segue vai para "texto".
 - "condicao": quando o texto diz «se sim», «se respondeu X à pergunta N»… "pergunta" é o número de ordem (1, 2, 3…) de uma pergunta ANTERIOR contando só as perguntas (não as secções); "valor" é o rótulo exacto da opção.
+- "saltos": quando o texto manda saltar («Se Não, passe para a Secção 3», «Não → P10», «Sim: ir para o fim»), como no Microsoft Forms. "seccao" é a ordem da secção de destino (1.ª, 2.ª… contando só secções), "pergunta" a ordem da pergunta de destino; "fim" salta o resto.
+- Numa secção, "condicao" mostra a secção (e as suas perguntas) só se a condição se cumprir.
 - NUNCA incluas perguntas de nome, email, telefone ou outro contacto: esses dados pedem-se noutro sítio, com consentimento.
 - Limites: no máximo ${LIMITES.perguntas} blocos, ${LIMITES.opcoes} opções por pergunta, títulos até ${LIMITES.titulo} caracteres, ajuda até ${LIMITES.ajuda}.
 - Escreve "razao" em português. Mantém o resto na língua do texto${idioma === 'en' ? ' (inglês)' : ''}.`;

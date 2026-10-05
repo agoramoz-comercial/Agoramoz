@@ -181,19 +181,33 @@ export function normalizar(
   const razoes: Record<string, string> = {};
   const existentes = modo === 'acrescentar' ? base.perguntas : [];
   const usadas = new Set<string>([...reservadas.perguntas, ...existentes.map((p) => p.chave)]);
-  const espaco = LIMITES.perguntas - existentes.length;
+  // Como no Microsoft Forms: perguntas e secções têm limites separados.
+  const existentesComResposta = existentes.filter(temResposta).length;
+  let espacoPerguntas = LIMITES.perguntas - existentesComResposta;
+  let espacoSeccoes = LIMITES.seccoes - (existentes.length - existentesComResposta);
 
   const novas: Pergunta[] = [];
   /** Ordem da pergunta no rascunho (1, 2…, sem secções) → o seu índice em `novas`. */
   const porOrdem = new Map<number, number>();
-  const condicoes: { indice: number; alvo: number; valor: string }[] = [];
+  const condicoes: { indice: number; alvo: number; valor: string; op?: 'igual' | 'diferente' }[] =
+    [];
   let ordem = 0;
   let foraDoLimite = 0;
   let contactosRetirados = 0;
+  /** Ordem da secção no rascunho (1, 2…) → o seu índice em `novas`. */
+  const seccaoPorOrdem = new Map<number, number>();
+  let ordemSeccao = 0;
+  const saltosDeclarados: {
+    origem: number;
+    indice: number;
+    salto: NonNullable<PerguntaImportada['saltos']>[number];
+  }[] = [];
 
   for (const b of rascunho.blocos) {
     if (b.bloco === 'pergunta') ordem += 1;
-    if (novas.length >= espaco) {
+    else ordemSeccao += 1;
+    const semEspaco = b.bloco === 'seccao' ? espacoSeccoes <= 0 : espacoPerguntas <= 0;
+    if (semEspaco) {
       foraDoLimite += 1;
       continue;
     }
@@ -206,12 +220,21 @@ export function normalizar(
       const ajuda = cortar(b.texto, LIMITES.ajuda);
       if (b.texto && b.texto.length > LIMITES.ajuda)
         aviso(`Texto da secção cortado a ${LIMITES.ajuda} caracteres.`);
+      if (b.condicao)
+        condicoes.push({
+          indice: novas.length,
+          alvo: b.condicao.pergunta,
+          valor: b.condicao.valor,
+          op: b.condicao.op,
+        });
+      seccaoPorOrdem.set(ordemSeccao, novas.length);
       novas.push({
         tipo: 'seccao',
         chave,
         titulo: cortar(b.titulo, LIMITES.titulo)!,
         ...(ajuda ? { ajuda } : {}),
       });
+      espacoSeccoes -= 1;
       continue;
     }
     if (ehContacto(b.titulo)) {
@@ -221,9 +244,68 @@ export function normalizar(
     const chave = novaChave(usadas, 'p');
     usadas.add(chave);
     porOrdem.set(ordem, novas.length);
-    if (b.condicao) condicoes.push({ indice: novas.length, alvo: b.condicao.pergunta, valor: b.condicao.valor });
+    if (b.condicao)
+      condicoes.push({
+        indice: novas.length,
+        alvo: b.condicao.pergunta,
+        valor: b.condicao.valor,
+        op: b.condicao.op,
+      });
+    for (const salto of b.saltos ?? [])
+      saltosDeclarados.push({ origem: ordem, indice: novas.length, salto });
     novas.push(construirPergunta(b, chave, aviso));
+    espacoPerguntas -= 1;
     if (b.razao) razoes[chave] = b.razao;
+  }
+
+  // Saltos («Se Não, passe para a Secção 3»), como no Microsoft Forms e no
+  // Typeform: cada bloco saltado passa a «mostrar só se a resposta NÃO for…».
+  // Uma secção inteira dentro do salto leva a condição ela própria — e com
+  // ela as suas perguntas (logica.ts); uma secção cortada a meio leva-a
+  // pergunta a pergunta. Um bloco que já tem condição não leva outra.
+  const comCondicao = new Set(condicoes.map((c) => c.indice));
+  for (const { origem, indice, salto } of saltosDeclarados) {
+    const destino = salto.fim
+      ? novas.length
+      : salto.seccao !== undefined
+        ? seccaoPorOrdem.get(salto.seccao)
+        : porOrdem.get(salto.pergunta ?? 0);
+    const descricao = `«se ${salto.valor} → ${
+      salto.fim ? 'fim' : salto.seccao !== undefined ? `secção ${salto.seccao}` : `pergunta ${salto.pergunta}`
+    }»`;
+    if (destino === undefined || destino <= indice) {
+      avisos.push({
+        texto: `O salto ${descricao} não tem destino à frente da pergunta — retirado.`,
+        pergunta: existentes.length + indice + 1,
+      });
+      continue;
+    }
+    let ocupados = 0;
+    for (let j = indice + 1; j < destino; ) {
+      if (novas[j]!.tipo === 'seccao') {
+        let fimDaSeccao = j + 1;
+        while (fimDaSeccao < novas.length && novas[fimDaSeccao]!.tipo !== 'seccao') fimDaSeccao += 1;
+        if (fimDaSeccao <= destino && !comCondicao.has(j)) {
+          condicoes.push({ indice: j, alvo: origem, valor: salto.valor, op: 'diferente' });
+          comCondicao.add(j);
+          j = fimDaSeccao;
+          continue;
+        }
+        j += 1;
+        continue;
+      }
+      if (comCondicao.has(j)) ocupados += 1;
+      else {
+        condicoes.push({ indice: j, alvo: origem, valor: salto.valor, op: 'diferente' });
+        comCondicao.add(j);
+      }
+      j += 1;
+    }
+    if (ocupados > 0)
+      avisos.push({
+        texto: `O salto ${descricao} não chegou a ${ocupados} pergunta(s) que já tinham condição.`,
+        pergunta: existentes.length + indice + 1,
+      });
   }
 
   // Condições: só para perguntas ANTERIORES de um tipo que pode ser condição.
@@ -233,7 +315,9 @@ export function normalizar(
     const alvo = indiceAlvo !== undefined && indiceAlvo < c.indice ? novas[indiceAlvo] : undefined;
     const regras = alvo ? valoresDeCondicao(alvo) : null;
     const valor = alvo && regras ? valorDaCondicao(alvo, c.valor) : null;
-    if (!alvo || !regras || !valor) {
+    // «Diferente» (um salto) não pode cair para «inclui»: inverteria o sentido.
+    const opValida = !c.op || c.op !== 'diferente' || (regras?.ops.includes('diferente') ?? false);
+    if (!alvo || !regras || !valor || !opValida) {
       avisos.push({
         texto: `A condição «se ${c.valor}» não corresponde a uma opção de uma pergunta anterior — retirada.`,
         pergunta: existentes.length + c.indice + 1,
@@ -242,14 +326,18 @@ export function normalizar(
     }
     novas[c.indice] = {
       ...novas[c.indice]!,
-      mostrarSe: { pergunta: alvo.chave, op: regras.ops[0]!, valor },
+      mostrarSe: {
+        pergunta: alvo.chave,
+        op: c.op && regras.ops.includes(c.op) ? c.op : regras.ops[0]!,
+        valor,
+      },
     } as Pergunta;
     condicoesAplicadas += 1;
   }
 
   if (foraDoLimite > 0)
     avisos.push({
-      texto: `${foraDoLimite} bloco(s) não couberam: o máximo são ${LIMITES.perguntas} perguntas e secções.`,
+      texto: `${foraDoLimite} bloco(s) não couberam: o máximo são ${LIMITES.perguntas} perguntas e ${LIMITES.seccoes} secções.`,
     });
   if (contactosRetirados > 0)
     avisos.push({
@@ -279,7 +367,7 @@ export function normalizar(
     return {
       ok: false,
       motivo: tamanho
-        ? 'O inquérito resultante é grande demais (máximo 64 KB). Divida-o em dois.'
+        ? 'O inquérito resultante é grande demais (máximo 256 KB). Divida-o em dois.'
         : 'O texto não deu um inquérito válido. Reveja a estrutura e tente de novo.',
     };
   }

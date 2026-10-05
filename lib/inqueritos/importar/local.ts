@@ -1,4 +1,5 @@
 import type { BlocoImportado, RascunhoImportado, TipoImportavel } from './esquema';
+import { lerSalto, resolverSalto, separarSaltoDeOpcao, type SaltoLido } from './saltos';
 
 /**
  * O analisador local: lê um inquérito escrito em texto (colado do Word, do
@@ -146,6 +147,7 @@ interface Marcas {
   dicas: string[];
   opcoes?: string[];
   condicao?: { valor: string; numero?: string };
+  saltos: SaltoLido[];
 }
 
 function extrairMarcas(bruto: string): Marcas {
@@ -154,6 +156,7 @@ function extrairMarcas(bruto: string): Marcas {
   const dicas: string[] = [];
   let opcoes: string[] | undefined;
   let condicao: Marcas['condicao'];
+  const saltos: SaltoLido[] = [];
 
   const cond = RE_CONDICAO.exec(titulo);
   if (cond && cond[3]!.trim().length >= 3) {
@@ -173,6 +176,11 @@ function extrairMarcas(bruto: string): Marcas {
   }
   // Segmentos entre parênteses: opções («(Sim/Não)») ou indicação de tipo («[escala 1-5]»).
   titulo = titulo.replace(/\s*[([]([^()[\]]{1,80})[)\]]/g, (inteiro, dentro: string) => {
+    const salto = lerSalto(dentro);
+    if (salto) {
+      saltos.push(salto);
+      return '';
+    }
     const lista = dentro.includes('/') ? opcoesEmLinha(dentro) : null;
     if (lista && !opcoes) {
       opcoes = lista;
@@ -193,7 +201,7 @@ function extrairMarcas(bruto: string): Marcas {
       titulo = titulo.slice(0, q + 1);
     }
   }
-  return { titulo: titulo.trim(), obrigatoria, dicas, opcoes, condicao };
+  return { titulo: titulo.trim(), obrigatoria, dicas, opcoes, condicao, saltos };
 }
 
 // ── Dedução do tipo ─────────────────────────────────────────────────────────
@@ -273,6 +281,19 @@ interface PerguntaEmCurso {
   marcas: Marcas;
   ajuda: string[];
   opcoes: string[];
+  saltos: SaltoLido[];
+}
+
+/** «Não → Secção 3» numa opção: fica o rótulo, e o salto vai para a pergunta. */
+function juntarOpcao(p: PerguntaEmCurso, texto: string): void {
+  const { rotulo, salto } = separarSaltoDeOpcao(texto);
+  p.opcoes.push(rotulo);
+  if (salto) p.saltos.push(salto);
+}
+
+/** O número de uma secção escrita como «Secção 3: …», se o tiver. */
+function numeroDaSeccao(l: string): string | undefined {
+  return RE_SECCAO.exec(l)?.[1];
 }
 interface SeccaoEmCurso {
   k: 's';
@@ -334,18 +355,30 @@ export function analisarTexto(
   /** O número escrito no texto («3», «2.1») → a ordem da pergunta no rascunho. */
   const numeroParaOrdem = new Map<string, number>();
   const condicoesPorNumero = new Map<PerguntaEmCurso, string>();
+  /** O número escrito da secção («Secção 3») → a sua ordem entre as secções. */
+  const seccaoParaOrdem = new Map<string, number>();
   let perguntas = 0;
+  let seccoes = 0;
 
   const novaPergunta = (textoTitulo: string, numero?: string) => {
     const marcas = extrairMarcas(textoTitulo);
-    const p: PerguntaEmCurso = { k: 'p', marcas, ajuda: [], opcoes: marcas.opcoes ?? [] };
+    const p: PerguntaEmCurso = {
+      k: 'p',
+      marcas,
+      ajuda: [],
+      opcoes: [],
+      saltos: [...marcas.saltos],
+    };
+    for (const o of marcas.opcoes ?? []) juntarOpcao(p, o);
     perguntas += 1;
     if (numero) numeroParaOrdem.set(numero, perguntas);
     if (marcas.condicao?.numero) condicoesPorNumero.set(p, marcas.condicao.numero);
     blocos.push(p);
     atual = p;
   };
-  const novaSeccao = (t: string) => {
+  const novaSeccao = (t: string, numero?: string) => {
+    seccoes += 1;
+    if (numero) seccaoParaOrdem.set(numero, seccoes);
     const s: SeccaoEmCurso = { k: 's', titulo: t.replace(/[:.]\s*$/, '').trim(), texto: [] };
     blocos.push(s);
     atual = s;
@@ -365,7 +398,7 @@ export function analisarTexto(
     }
     const porPalavra = seccaoPorPalavra(l);
     if (porPalavra !== null) {
-      novaSeccao(porPalavra);
+      novaSeccao(porPalavra, numeroDaSeccao(l));
       continue;
     }
     const num = numerada(l);
@@ -376,6 +409,15 @@ export function analisarTexto(
     }
     const n = nota(l);
     const pAtual = atual as PerguntaEmCurso | SeccaoEmCurso | null;
+    // «Se Não, passe para a Secção 3»: um salto da pergunta corrente.
+    const salto = lerSalto(n ?? l);
+    if (salto) {
+      const ultima = [...blocos].reverse().find((b): b is PerguntaEmCurso => b.k === 'p');
+      if (ultima) {
+        ultima.saltos.push(salto);
+        continue;
+      }
+    }
     if (pAtual?.k === 'p') {
       // Escala do Google Forms colada: «1», «2»… numa linha cada, ou «1 2 3 4 5».
       if (/^\d{1,2}(?:\s+\d{1,2})*$/.test(l)) {
@@ -384,7 +426,7 @@ export function analisarTexto(
       }
       const opcao = RE_OPCAO.exec(l);
       if (opcao && !n) {
-        pAtual.opcoes.push(opcao[1]!.trim());
+        juntarOpcao(pAtual, opcao[1]!.trim());
         continue;
       }
     }
@@ -418,7 +460,7 @@ export function analisarTexto(
       if (pAtual.opcoes.length === 0) {
         const corrida = corridaSimples(linhas, i);
         if (corrida.n >= 2) {
-          for (let j = i; j <= corrida.fim; j += 1) if (linhas[j]) pAtual.opcoes.push(linhas[j]!);
+          for (let j = i; j <= corrida.fim; j += 1) if (linhas[j]) juntarOpcao(pAtual, linhas[j]!);
           i = corrida.fim;
           continue;
         }
@@ -426,7 +468,7 @@ export function analisarTexto(
       const emLinha = pAtual.opcoes.length === 0 ? opcoesEmLinha(l) : null;
       const jaTemCorpo = pAtual.opcoes.length > 0 || pAtual.ajuda.length > 0;
       if (emLinha) {
-        pAtual.opcoes.push(...emLinha);
+        for (const o of emLinha) juntarOpcao(pAtual, o);
       } else if (RE_COMO_RESPONDER.test(l) && !jaTemCorpo) {
         // «Escolha uma opção», «Selecione todas as que se aplicam»: instrução da pergunta.
         pAtual.ajuda.push(l);
@@ -473,6 +515,10 @@ export function analisarTexto(
       if (alvo && alvo < ordem) condicao = { pergunta: alvo, valor: b.marcas.condicao.valor };
     }
     if (b.opcoes.length >= 2 || d.tipo === 'avaliacao' || d.tipo === 'nps') ultimaComOpcoes = ordem;
+    const saltos = b.saltos.flatMap((sl) => {
+      const r = resolverSalto(sl, { seccoes: seccaoParaOrdem, perguntas: numeroParaOrdem });
+      return r ? [r] : [];
+    });
     return {
       bloco: 'pergunta',
       titulo: b.marcas.titulo || '—',
@@ -484,6 +530,7 @@ export function analisarTexto(
       ...(d.max !== undefined ? { max: d.max } : {}),
       ...(d.inteiro !== undefined ? { inteiro: d.inteiro } : {}),
       ...(condicao ? { condicao } : {}),
+      ...(saltos.length > 0 ? { saltos } : {}),
       razao: d.razao,
     };
   });

@@ -114,7 +114,7 @@ describe('flag e guardas de entrada', () => {
   it('recusa um corpo grande pelo tamanho declarado e pelo real', async () => {
     const POST = await carregarRota();
     expect((await POST(pedido(VALIDO, { 'content-length': '999999' }))).status).toBe(413);
-    const grande = { ...VALIDO, respostas: { p1: 'x'.repeat(70 * 1024) } };
+    const grande = { ...VALIDO, respostas: { p1: 'x'.repeat(300 * 1024) } };
     expect((await POST(pedido(grande))).status).toBe(413);
   });
 

@@ -1,4 +1,4 @@
-import { condicaoCumprida, visiveis, type ValorResposta } from './logica';
+import { percursoDeVisibilidade, visiveis, type ValorResposta } from './logica';
 import { validarValor } from './respostas';
 import type { CampoContacto, Pergunta, SpecInquerito } from './spec';
 
@@ -41,12 +41,9 @@ export function respostasValidas(
   rascunho: Rascunho,
 ): Record<string, ValorResposta> {
   const validas: Record<string, ValorResposta> = {};
-  const vistas = new Set<string>();
+  const visivel = percursoDeVisibilidade();
   for (const p of spec.perguntas) {
-    const visivel =
-      !p.mostrarSe || (vistas.has(p.mostrarSe.pergunta) && condicaoCumprida(p.mostrarSe, validas));
-    if (!visivel) continue;
-    vistas.add(p.chave);
+    if (!visivel(p, validas)) continue;
     if (p.tipo === 'seccao') continue;
     const v = normalizar(p, rascunho[p.chave]);
     if (vazio(v)) continue;

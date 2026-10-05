@@ -21,8 +21,15 @@ import { z } from 'zod';
 
 export const SCHEMA_VERSION = 'survey.v1' as const;
 
+/**
+ * Como no Microsoft Forms: as secções não contam para o limite de perguntas.
+ * `perguntas` conta só as que têm resposta; `seccoes` as secções; `blocos` é
+ * o total do array (o tecto que a base também verifica — 0014).
+ */
 export const LIMITES = {
-  perguntas: 50,
+  perguntas: 200,
+  seccoes: 50,
+  blocos: 250,
   opcoes: 20,
   titulo: 300,
   ajuda: 500,
@@ -32,7 +39,7 @@ export const LIMITES = {
   ecraTitulo: 160,
   ecraCorpo: 1000,
   consentimento: 4000,
-  specBytes: 65_536,
+  specBytes: 262_144,
 } as const;
 
 const chave = z.string().regex(/^[a-z0-9_]{1,40}$/, 'chave: minúsculas, números e _, até 40');
@@ -41,7 +48,8 @@ const textoOpcional = (max: number) => z.string().trim().max(max).optional();
 
 const condicao = z.strictObject({
   pergunta: chave,
-  op: z.enum(['igual', 'inclui']),
+  /** `diferente`: «mostrar se a resposta NÃO for…» — o «saltar para» do Forms/Typeform. */
+  op: z.enum(['igual', 'diferente', 'inclui']),
   valor: z.string().min(1).max(40),
 });
 export type Condicao = z.infer<typeof condicao>;
@@ -111,7 +119,7 @@ const specBase = z.strictObject({
   idioma: z.enum(['pt', 'en']),
   boasVindas: ecra,
   agradecimento: ecra,
-  perguntas: z.array(pergunta).min(1).max(LIMITES.perguntas),
+  perguntas: z.array(pergunta).min(1).max(LIMITES.blocos),
   /**
    * Bloco de contacto opcional. Sempre facultativo para quem responde: o
    * inquérito é anónimo por omissão. Se a pessoa deixar algum dado, tem de
@@ -136,13 +144,16 @@ export function valoresDeCondicao(
 ): { ops: readonly Condicao['op'][]; valores: readonly string[] } | null {
   switch (alvo.tipo) {
     case 'escolha_unica':
-      return { ops: ['igual'], valores: alvo.opcoes.map((o) => o.chave) };
+      return { ops: ['igual', 'diferente'], valores: alvo.opcoes.map((o) => o.chave) };
     case 'escolha_multipla':
       return { ops: ['inclui'], valores: alvo.opcoes.map((o) => o.chave) };
     case 'avaliacao':
-      return { ops: ['igual'], valores: ['1', '2', '3', '4', '5'] };
+      return { ops: ['igual', 'diferente'], valores: ['1', '2', '3', '4', '5'] };
     case 'nps':
-      return { ops: ['igual'], valores: Array.from({ length: 11 }, (_, i) => String(i)) };
+      return {
+        ops: ['igual', 'diferente'],
+        valores: Array.from({ length: 11 }, (_, i) => String(i)),
+      };
     default:
       // Texto, número e data não servem de condição na v1: comparar texto livre
       // por igualdade é frágil, e intervalos numéricos ficam para depois.
@@ -241,6 +252,23 @@ export const specInquerito = specBase.superRefine((spec, ctx) => {
 
     vistas.set(p.chave, p);
   });
+
+  const comResposta = spec.perguntas.filter(temResposta).length;
+  if (comResposta > LIMITES.perguntas) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['perguntas'],
+      message: `no máximo ${LIMITES.perguntas} perguntas (tem ${comResposta})`,
+    });
+  }
+  const seccoes = spec.perguntas.length - comResposta;
+  if (seccoes > LIMITES.seccoes) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['perguntas'],
+      message: `no máximo ${LIMITES.seccoes} secções (tem ${seccoes})`,
+    });
+  }
 
   if (!spec.perguntas.some(temResposta)) {
     ctx.addIssue({

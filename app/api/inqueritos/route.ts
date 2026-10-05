@@ -46,8 +46,11 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** O spec admite até 50 perguntas com textos longos; 64 KB chega com folga. */
-const MAX_BYTES = 64 * 1024;
+/**
+ * O spec admite até 200 perguntas (como o Microsoft Forms). Respostas reais
+ * são curtas; 256 KB cobre 200 respostas com folga e continua a cortar abusos.
+ */
+const MAX_BYTES = 256 * 1024;
 
 const JANELA_MS = 10 * 60 * 1000;
 const MAX_POR_ORIGEM = 20;

@@ -25,6 +25,7 @@ import {
   CAMPOS_CONTACTO,
   LIMITES,
   specInquerito,
+  temResposta,
   valoresDeCondicao,
   type CampoContacto,
   type Pergunta,
@@ -112,6 +113,11 @@ export function Construtor({
   const focoPendente = useRef<{ id: string; recurso: string } | null>(null);
 
   const validacao = useMemo(() => specInquerito.safeParse(spec), [spec]);
+  // Como no Microsoft Forms: perguntas e secções contam à parte (200 e 50).
+  const contagem = useMemo(() => {
+    const perguntas = spec.perguntas.filter(temResposta).length;
+    return { perguntas, seccoes: spec.perguntas.length - perguntas };
+  }, [spec.perguntas]);
   const erros = useMemo(
     () => (validacao.success ? [] : errosLegiveis(spec, validacao.error.issues)),
     [spec, validacao],
@@ -340,7 +346,11 @@ export function Construtor({
         </Seccao>
 
         <Seccao
-          titulo={`Perguntas (${spec.perguntas.length} de ${LIMITES.perguntas})`}
+          titulo={`Perguntas (${contagem.perguntas} de ${LIMITES.perguntas})${
+            contagem.seccoes > 0
+              ? ` · ${contagem.seccoes} ${contagem.seccoes === 1 ? 'secção' : 'secções'}`
+              : ''
+          }`}
           idTitulo={`${base}-perguntas`}
         >
           <ol className="space-y-4">
@@ -351,6 +361,11 @@ export function Construtor({
                   pergunta={p}
                   indice={i}
                   total={spec.perguntas.length}
+                  podeDuplicar={
+                    p.tipo === 'seccao'
+                      ? contagem.seccoes < LIMITES.seccoes
+                      : contagem.perguntas < LIMITES.perguntas
+                  }
                   anteriores={spec.perguntas.slice(0, i)}
                   idioma={spec.idioma}
                   erros={erros.filter((e) => e.pergunta === i).map((e) => e.texto)}
@@ -428,7 +443,11 @@ export function Construtor({
               variant="outline"
               size="sm"
               className="gap-1.5"
-              disabled={spec.perguntas.length >= LIMITES.perguntas}
+              disabled={
+                tipoNovo === 'seccao'
+                  ? contagem.seccoes >= LIMITES.seccoes
+                  : contagem.perguntas >= LIMITES.perguntas
+              }
               onClick={() => {
                 const lista = acrescentar(
                   spec.perguntas,
@@ -667,6 +686,7 @@ function EditorPergunta({
   pergunta: p,
   indice,
   total,
+  podeDuplicar,
   anteriores,
   idioma,
   erros,
@@ -681,6 +701,8 @@ function EditorPergunta({
   pergunta: Pergunta;
   indice: number;
   total: number;
+  /** Há espaço para mais uma pergunta (ou secção) deste tipo: 200 perguntas, 50 secções. */
+  podeDuplicar: boolean;
   anteriores: readonly Pergunta[];
   idioma: SpecInquerito['idioma'];
   erros: readonly string[];
@@ -745,7 +767,7 @@ function EditorPergunta({
             id={`${base}-duplicar`}
             aria-label={`Duplicar a pergunta ${n}`}
             title="Duplicar"
-            disabled={total >= LIMITES.perguntas}
+            disabled={!podeDuplicar}
             onClick={onDuplicar}
           >
             <Copy aria-hidden className="size-4" />
@@ -995,7 +1017,9 @@ function EditorPergunta({
               });
             }}
           />
-          Mostrar só consoante uma resposta anterior
+          {p.tipo === 'seccao'
+            ? 'Mostrar esta secção (e as suas perguntas) só consoante uma resposta anterior'
+            : 'Mostrar só consoante uma resposta anterior'}
         </label>
         {!p.mostrarSe && condicionaveis.length === 0 && (
           <p className="text-xs text-[color:var(--muted)]">
@@ -1033,9 +1057,32 @@ function EditorPergunta({
                 ))}
               </select>
             </div>
-            <p className="pb-3 text-sm text-[color:var(--muted)]">
-              {p.mostrarSe.op === 'inclui' ? 'incluir' : 'for'}
-            </p>
+            {possiveis && possiveis.ops.length > 1 ? (
+              <div>
+                <label htmlFor={`${base}-cond-op`} className={rotulo}>
+                  Regra
+                </label>
+                <select
+                  id={`${base}-cond-op`}
+                  className={cn(campo, 'mt-1.5')}
+                  value={p.mostrarSe.op}
+                  onChange={(e) => {
+                    const op = e.target.value as NonNullable<Pergunta['mostrarSe']>['op'];
+                    onAlterar((q) => (q.mostrarSe ? { ...q, mostrarSe: { ...q.mostrarSe, op } } : q));
+                  }}
+                >
+                  {possiveis.ops.map((op) => (
+                    <option key={op} value={op}>
+                      {op === 'diferente' ? 'não for' : op === 'inclui' ? 'incluir' : 'for'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <p className="pb-3 text-sm text-[color:var(--muted)]">
+                {p.mostrarSe.op === 'inclui' ? 'incluir' : p.mostrarSe.op === 'diferente' ? 'não for' : 'for'}
+              </p>
+            )}
             <div>
               <label htmlFor={`${base}-cond-v`} className={rotulo}>
                 Valor
