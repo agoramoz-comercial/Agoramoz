@@ -268,6 +268,44 @@ interface SeccaoEmCurso {
   texto: string[];
 }
 
+/**
+ * Uma linha «simples»: curta, sem número, sem «?», sem marcas de secção, nota
+ * ou instrução. Quando o Word perde as marcas da lista ao colar, as opções
+ * chegam assim — uma por linha, sem «a)» nem «•».
+ */
+function linhaSimples(l: string): boolean {
+  return (
+    l.length > 0 &&
+    l.length <= 80 &&
+    l.split(/\s+/).length <= 10 &&
+    !/[?:]$/.test(l) &&
+    !RE_LEGENDA.test(l) &&
+    !RE_MD.test(l) &&
+    seccaoPorPalavra(l) === null &&
+    numerada(l) === null &&
+    nota(l) === null &&
+    !ehMaiusculas(l) &&
+    !ehPergunta(l) &&
+    !RE_IMPERATIVO.test(l) &&
+    !RE_COMO_RESPONDER.test(l) &&
+    !(RE_AGRADECIMENTO.test(simplificar(l)) && l.split(/\s+/).length <= 5)
+  );
+}
+
+/** Quantas linhas simples seguidas começam em `i` (as linhas vazias entre elas não contam). */
+function corridaSimples(linhas: readonly string[], i: number): { n: number; fim: number } {
+  let n = 0;
+  let fim = i;
+  for (let j = i; j < linhas.length; j += 1) {
+    const l = linhas[j]!;
+    if (!l) continue;
+    if (!linhaSimples(l)) break;
+    n += 1;
+    fim = j;
+  }
+  return { n, fim };
+}
+
 export function analisarTexto(
   bruto: string,
   opcoes: { readonly cabecalho?: boolean } = {},
@@ -303,7 +341,8 @@ export function analisarTexto(
   const primeiraLinha = () =>
     comCabecalho && titulo === undefined && blocos.length === 0 && introducao.length === 0;
 
-  for (const l of linhas) {
+  for (let i = 0; i < linhas.length; i += 1) {
+    const l = linhas[i]!;
     if (!l || RE_LEGENDA.test(l)) continue;
 
     const md = RE_MD.exec(l);
@@ -362,6 +401,16 @@ export function analisarTexto(
       continue;
     }
     if (pAtual?.k === 'p') {
+      // Duas ou mais linhas simples seguidas depois da pergunta são as suas
+      // opções (lista do Word sem as marcas). Uma só continua a ser subtítulo.
+      if (pAtual.opcoes.length === 0) {
+        const corrida = corridaSimples(linhas, i);
+        if (corrida.n >= 2) {
+          for (let j = i; j <= corrida.fim; j += 1) if (linhas[j]) pAtual.opcoes.push(linhas[j]!);
+          i = corrida.fim;
+          continue;
+        }
+      }
       const emLinha = pAtual.opcoes.length === 0 ? opcoesEmLinha(l) : null;
       const jaTemCorpo = pAtual.opcoes.length > 0 || pAtual.ajuda.length > 0;
       if (emLinha) {

@@ -185,6 +185,49 @@ describe('importarTexto — partes em paralelo', () => {
     if (r.ok) expect(r.resumo.perguntas).toBe(44);
   });
 
+  it('conta Kimi de nível baixo (1 pedido de cada vez): as recusadas com 429 vão uma a uma', async () => {
+    let emVoo = 0;
+    const kimi: ImportadorIA = {
+      modelo: 'kimi-k2.6',
+      async estruturar(t, _idioma, excerto) {
+        if (emVoo > 0) throw new FalhaImportadorIA('http_429');
+        emVoo += 1;
+        await new Promise((r) => setTimeout(r, 5));
+        emVoo -= 1;
+        return analisarTexto(t, { cabecalho: (excerto?.parte ?? 1) === 1 });
+      },
+    };
+    const esperas: number[] = [];
+    const r = await importarTexto(pedido, {
+      kimi,
+      esperar: async (ms) => void esperas.push(ms),
+    });
+    expect(r).toMatchObject({ ok: true, motor: 'kimi', partes: { total, kimi: total, local: 0 } });
+    expect(esperas).toEqual([]);
+  });
+
+  it('um segundo 429 espera pela janela do minuto antes da parte seguinte', async () => {
+    const kimi: ImportadorIA = {
+      modelo: 'kimi-k2.6',
+      async estruturar(t, _idioma, excerto) {
+        if ((excerto?.parte ?? 1) > 1) throw new FalhaImportadorIA('http_429');
+        return analisarTexto(t);
+      },
+    };
+    const esperas: number[] = [];
+    const r = await importarTexto(pedido, {
+      kimi,
+      esperar: async (ms) => void esperas.push(ms),
+    });
+    expect(r).toMatchObject({
+      ok: true,
+      motor: 'kimi',
+      partes: { total, kimi: 1, local: total - 1, motivo: 'http_429' },
+    });
+    expect(esperas.length).toBe(total - 2);
+    expect(esperas.every((ms) => ms === 20_000)).toBe(true);
+  });
+
   it('um texto curto vai num só pedido, sem «excerto»', async () => {
     const vistos: unknown[] = [];
     const kimi: ImportadorIA = {

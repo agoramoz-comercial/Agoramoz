@@ -72,7 +72,7 @@ const MOTIVO_FALLBACK: Record<string, string> = {
   sem_perguntas: 'O Kimi não encontrou perguntas',
   http_401: 'O Kimi recusou a chave (verificar KIMI_API_KEY)',
   http_403: 'O Kimi recusou o acesso (verificar a conta)',
-  http_429: 'O Kimi está a limitar pedidos — tente daqui a pouco',
+  http_429: 'A conta Kimi está no limite de pedidos (o nível da conta sobe com o saldo carregado)',
 };
 
 function motivoDoFallback(codigo: string): string {

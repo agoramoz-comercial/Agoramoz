@@ -48,6 +48,21 @@ export const TAMANHO_PARTE = 3_000;
 const EM_PARALELO = 4;
 /** Prazo do conjunto: abaixo do `maxDuration` (120 s) da página do construtor. */
 const PRAZO_TOTAL_MS = 100_000;
+/**
+ * Contas Moonshot de nível baixo aceitam um pedido de cada vez e poucos por
+ * minuto (Tier0: concorrência 1, 3 RPM — «Recharge and Rate Limiting»). As
+ * partes recusadas com 429 tentam-se de novo uma a uma enquanto houver prazo;
+ * depois de um segundo 429 espera-se pela janela do minuto.
+ */
+const ESPERA_APOS_429_MS = 20_000;
+
+function dormir(ms: number, sinal: AbortSignal): Promise<void> {
+  return new Promise((resolver) => {
+    if (sinal.aborted) return resolver();
+    const t = setTimeout(resolver, ms);
+    sinal.addEventListener('abort', () => (clearTimeout(t), resolver()), { once: true });
+  });
+}
 
 interface AmbienteIA {
   readonly SURVEY_AI: 'off' | 'kimi';
@@ -134,7 +149,11 @@ export function juntarPartes(partes: readonly RascunhoImportado[]): RascunhoImpo
 
 export async function importarTexto(
   p: PedidoImportacao,
-  deps: { readonly kimi: ImportadorIA | null },
+  deps: {
+    readonly kimi: ImportadorIA | null;
+    /** Injetável nos testes, para não esperar a sério. */
+    readonly esperar?: (ms: number, sinal: AbortSignal) => Promise<void>;
+  },
 ): Promise<RespostaImportacao> {
   if (p.motor === 'local') return { ...local(p), motor: 'local' };
   if (!deps.kimi) return { ...local(p), motor: 'local', caiuParaLocal: 'indisponivel' };
@@ -144,24 +163,38 @@ export async function importarTexto(
   const total = textos.length;
   const prazo = AbortSignal.timeout(PRAZO_TOTAL_MS);
 
+  const pedirParte = async (i: number): Promise<ResultadoParte> => {
+    // O prazo do conjunto acabou antes de esta parte começar: nem se pede.
+    if (prazo.aborted) return { ok: false, codigo: 'timeout' };
+    try {
+      const rascunho = await kimi.estruturar(
+        textos[i]!,
+        p.base.idioma,
+        total > 1 ? { parte: i + 1, total, sinal: prazo } : undefined,
+      );
+      return { ok: true, rascunho };
+    } catch (e) {
+      if (!(e instanceof FalhaImportadorIA)) throw e;
+      return { ok: false, codigo: e.codigo };
+    }
+  };
+
   const resultados = await emLotes<ResultadoParte>(
-    textos.map((texto, i) => async () => {
-      // O prazo do conjunto acabou antes de esta parte começar: nem se pede.
-      if (prazo.aborted) return { ok: false, codigo: 'timeout' };
-      try {
-        const rascunho = await kimi.estruturar(
-          texto,
-          p.base.idioma,
-          total > 1 ? { parte: i + 1, total, sinal: prazo } : undefined,
-        );
-        return { ok: true, rascunho };
-      } catch (e) {
-        if (!(e instanceof FalhaImportadorIA)) throw e;
-        return { ok: false, codigo: e.codigo };
-      }
-    }),
+    textos.map((_, i) => () => pedirParte(i)),
     EM_PARALELO,
   );
+
+  // Recusadas por limite da conta: uma a uma, enquanto houver prazo.
+  const esperar = deps.esperar ?? dormir;
+  let espera = 0;
+  for (const [i, r] of resultados.entries()) {
+    if (r.ok || r.codigo !== 'http_429') continue;
+    if (espera > 0) await esperar(espera, prazo);
+    if (prazo.aborted) break;
+    const nova = await pedirParte(i);
+    resultados[i] = nova;
+    espera = !nova.ok && nova.codigo === 'http_429' ? ESPERA_APOS_429_MS : 0;
+  }
 
   const falhas = resultados.filter((r): r is Extract<ResultadoParte, { ok: false }> => !r.ok);
   if (falhas.length === total) {

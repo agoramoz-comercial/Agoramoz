@@ -196,3 +196,42 @@ describe('analisador local — robustez', () => {
     expect(analisarTexto('   \n\n  ').blocos).toEqual([]);
   });
 });
+
+describe('analisador local — lista do Word colada sem marcas', () => {
+  // Ao colar do Word, a lista automática perde «a)», «•»: cada opção vem numa linha.
+  const SEM_MARCAS = `Secção 1: Perfil
+1. Qual é o sector da sua organização?
+Energia
+Agricultura
+Banca e seguros
+Outro
+2. Qual a dimensão da equipa?
+Menos de 10
+
+10 a 49
+50 ou mais
+Com que frequência usa folhas de Excel?
+Diariamente
+Semanalmente
+Raramente
+3. Quantas pessoas usam o sistema?
+Inclua os colaboradores externos.`;
+  const ps = perguntas(SEM_MARCAS);
+
+  it('duas ou mais linhas simples depois da pergunta são as opções, não perguntas', () => {
+    expect(ps.map((p) => p.titulo)).toEqual([
+      'Qual é o sector da sua organização?',
+      'Qual a dimensão da equipa?',
+      'Com que frequência usa folhas de Excel?',
+      'Quantas pessoas usam o sistema?',
+    ]);
+    expect(ps[0]!.opcoes).toEqual(['Energia', 'Agricultura', 'Banca e seguros', 'Outro']);
+    expect(ps[1]!.opcoes).toEqual(['Menos de 10', '10 a 49', '50 ou mais']);
+    expect(ps[2]!.tipo).toBe('escolha_unica');
+  });
+
+  it('uma só linha depois da pergunta continua a ser o subtítulo', () => {
+    expect(ps[3]!.opcoes).toBeUndefined();
+    expect(ps[3]!.ajuda).toBe('Inclua os colaboradores externos.');
+  });
+});
