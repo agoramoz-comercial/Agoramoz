@@ -32,8 +32,14 @@ function destinoDaSeta(tecla: string, i: number, n: number, circular: boolean): 
 
 const MARCADA =
   'border-[color:var(--color-signal-600)] bg-[color:var(--color-signal-600)] text-white';
-const LIVRE =
-  'border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--on-surface)]';
+/**
+ * Borda de um controlo por escolher. `--border` é decorativa (~1,4:1 no
+ * `deep`); o limite de um controlo precisa de 3:1 (WCAG 1.4.11). 45 % da
+ * tinta dá ~4:1 em qualquer superfície, sem tocar no token do resto do site.
+ */
+export const BORDA_CONTROLO = 'border-[color:color-mix(in_oklab,var(--on-surface)_45%,transparent)]';
+
+const LIVRE = `${BORDA_CONTROLO} bg-[color:var(--surface)] hover:border-[color:var(--on-surface)]`;
 
 function Tecla({ letra, marcada }: { letra: string; marcada: boolean }) {
   return (
@@ -132,12 +138,17 @@ export function EscolhaUnica({
 
 export function EscolhaMultipla({
   titulo,
+  obrigatoria,
+  textoObrigatoria,
   opcoes,
   escolhidas,
   descritores,
   onMudar,
 }: {
   titulo: string;
+  obrigatoria: boolean;
+  /** «(obrigatória)» no idioma do inquérito — o asterisco visível é aria-hidden. */
+  textoObrigatoria: string;
   opcoes: readonly Opcao[];
   escolhidas: readonly string[];
   descritores: string | undefined;
@@ -145,7 +156,10 @@ export function EscolhaMultipla({
 }) {
   return (
     <fieldset className="min-w-0 border-0 p-0" aria-describedby={descritores}>
-      <legend className="sr-only">{titulo}</legend>
+      <legend className="sr-only">
+        {titulo}
+        {obrigatoria && ` ${textoObrigatoria}`}
+      </legend>
       <div className={colunas(opcoes.length)}>
         {opcoes.map((o, i) => {
           const marcada = escolhidas.includes(o.chave);

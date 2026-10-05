@@ -121,4 +121,15 @@ export const INQ = {
   respondeu: { pt: 'Respondeu a {n} perguntas.', en: 'You answered {n} questions.' },
   respondeuUma: { pt: 'Respondeu a 1 pergunta.', en: 'You answered 1 question.' },
   podeFechar: { pt: 'Pode fechar esta página.', en: 'You can close this page.' },
+  escolheu: { pt: 'Escolheu: {valor}', en: 'You chose: {valor}' },
+  descartado: { pt: 'Respostas descartadas.', en: 'Answers discarded.' },
+  obrigatoriaSr: { pt: '(obrigatória)', en: '(required)' },
+  contactoEmailInvalido: {
+    pt: 'Indique um email válido, por exemplo nome@empresa.co.mz.',
+    en: 'Enter a valid email, for example name@company.com.',
+  },
+  contactoTelefoneInvalido: {
+    pt: 'Indique um telefone válido, com o indicativo do país se não for de Moçambique.',
+    en: 'Enter a valid phone number, with the country code.',
+  },
 } as const satisfies Record<string, Texto>;

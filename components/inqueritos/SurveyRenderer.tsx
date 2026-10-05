@@ -34,7 +34,7 @@ import type { CampoContacto, Pergunta, SpecInquerito } from '@/lib/inqueritos/sp
 import { acaoDaTecla, letraDe } from '@/lib/inqueritos/teclas';
 import { cn } from '@/lib/utils/cn';
 import { EstadoInquerito } from './EstadoInquerito';
-import { Escala, EscolhaMultipla, EscolhaUnica } from './partes/Escolhas';
+import { BORDA_CONTROLO, Escala, EscolhaMultipla, EscolhaUnica } from './partes/Escolhas';
 import { Progresso } from './partes/Progresso';
 
 /**
@@ -224,7 +224,11 @@ export function SurveyRenderer(props: Props) {
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const fimRef = useRef<HTMLHeadingElement>(null);
-  const erroRef = useRef<HTMLDivElement>(null);
+  const fechadoRef = useRef<HTMLHeadingElement>(null);
+  const erroRef = useRef<HTMLElement>(null);
+  /** O que um leitor de ecrã ouve ao escolher ou descartar (role="status"). */
+  const [anuncio, setAnuncio] = useState('');
+  const focarComecar = useRef(false);
   const focarAoMudar = useRef(false);
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
   const vistos = useRef(new Set<number>());
@@ -276,7 +280,18 @@ export function SurveyRenderer(props: Props) {
 
   useEffect(() => {
     if (fase === 'fim') fimRef.current?.focus();
+    if (fase === 'fechado') fechadoRef.current?.focus();
   }, [fase]);
+
+  // Depois de descartar, os botões trocam: o foco vai para «Começar» em vez
+  // de cair no corpo da página.
+  useEffect(() => {
+    if (!retomavel && focarComecar.current) {
+      focarComecar.current = false;
+      // O `Button` do sistema não passa `ref`; o id é estável (useId).
+      document.getElementById(`${base}-comecar`)?.focus();
+    }
+  }, [retomavel, base]);
 
   useEffect(
     () => () => {
@@ -376,8 +391,10 @@ export function SurveyRenderer(props: Props) {
   }
 
   function descartar() {
+    focarComecar.current = true;
     apagarRascunho();
     window.dispatchEvent(new Event(EVENTO_RASCUNHO));
+    setAnuncio(t(INQ.descartado, idioma));
   }
 
   function irPara(destino: number) {
@@ -447,6 +464,12 @@ export function SurveyRenderer(props: Props) {
   function escolher(chave: string, valor: ValorRascunho, pausa = PAUSA_MS) {
     if (aEnviar.current) return;
     definir(chave, valor);
+    // O cartão muda daqui a nada e leva o foco: sem isto, quem usa leitor de
+    // ecrã nunca ouvia o que ficou escolhido.
+    const q = spec.perguntas.find((x) => x.chave === chave);
+    const rotulo =
+      q && 'opcoes' in q ? (q.opcoes.find((o) => o.chave === valor)?.rotulo ?? '') : String(valor);
+    setAnuncio(preencher(INQ.escolheu, idioma, { valor: rotulo }));
     if (temporizador.current) clearTimeout(temporizador.current);
     const de = indiceRef.current;
     temporizador.current = setTimeout(() => avancar(de, true), pausa);
@@ -536,8 +559,9 @@ export function SurveyRenderer(props: Props) {
   }
 
   function onKeyDownTitulo(e: React.KeyboardEvent) {
-    // Uma tecla mantida premida não pode saltar cartões em série.
-    if (e.repeat) return;
+    // Uma tecla mantida premida não pode saltar cartões em série; e Alt+← (o
+    // «voltar» do browser), Cmd+→ e afins pertencem ao browser.
+    if (e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     // Como avanço automático: no último cartão valida mas nunca envia —
     // enviar é sempre um gesto explícito no botão.
     if (e.key === 'ArrowRight' || e.key === 'Enter') {
@@ -611,7 +635,7 @@ export function SurveyRenderer(props: Props) {
 
   /** Fora das boas-vindas, o h1 da página fica, discreto, por cima. */
   const tituloCompacto = palco ? (
-    <TituloPagina className="rule-label min-w-0 truncate text-[color:var(--muted)]">
+    <TituloPagina className="rule-label min-w-0 break-words text-[color:var(--muted)]">
       {spec.boasVindas.titulo}
     </TituloPagina>
   ) : null;
@@ -621,7 +645,7 @@ export function SurveyRenderer(props: Props) {
     return (
       <div className={cn(palco && 'flex flex-1 flex-col')}>
         {tituloCompacto}
-        <EstadoInquerito estado={estadoFechado} idioma={idioma} nivel="h2" />
+        <EstadoInquerito estado={estadoFechado} idioma={idioma} nivel="h2" tituloRef={fechadoRef} />
       </div>
     );
   }
@@ -713,7 +737,13 @@ export function SurveyRenderer(props: Props) {
             </>
           ) : (
             <>
-              <Button type="button" size={palco ? 'lg' : 'md'} className="gap-2" onClick={comecar}>
+              <Button
+                id={`${base}-comecar`}
+                type="button"
+                size={palco ? 'lg' : 'md'}
+                className="gap-2"
+                onClick={comecar}
+              >
                 {t(INQ.comecar, idioma)}
                 <ArrowRight aria-hidden className="size-4" />
               </Button>
@@ -733,6 +763,9 @@ export function SurveyRenderer(props: Props) {
             {t(INQ.rascunhoGuardado, idioma)}
           </p>
         )}
+        <p role="status" className="sr-only">
+          {anuncio}
+        </p>
         <p className="rule mt-10 max-w-xl pt-4 text-sm text-[color:var(--muted)]">
           {t(spec.contacto ? INQ.contactoOpcional : INQ.semDados, idioma)}
         </p>
@@ -796,7 +829,8 @@ export function SurveyRenderer(props: Props) {
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerCancel={() => (toque.current = null)}
-          style={{ touchAction: 'pan-y' }}
+          // pinch-zoom: deslizar na horizontal é nosso, ampliar continua a ser de quem lê.
+          style={{ touchAction: 'pan-y pinch-zoom' }}
           className={cn(palco ? 'flex flex-1 flex-col justify-center py-8 sm:py-12' : 'pt-6')}
         >
           <p
@@ -847,7 +881,7 @@ export function SurveyRenderer(props: Props) {
           {automatico && (
             <p
               id={avisoId}
-              className="mt-2 text-[length:var(--text-micro)] text-[color:var(--muted)]"
+              className="mt-2 text-sm text-[color:var(--muted)]"
             >
               {t(INQ.avancaSozinho, idioma)}
             </p>
@@ -855,7 +889,7 @@ export function SurveyRenderer(props: Props) {
 
           {p && erro && (
             <div
-              ref={erroRef}
+              ref={erroRef as React.RefObject<HTMLDivElement | null>}
               tabIndex={-1}
               role="alert"
               id={erroId}
@@ -877,6 +911,7 @@ export function SurveyRenderer(props: Props) {
                 invalida={erro !== null}
                 onMudar={(v) => definir(p.chave, v)}
                 onEscolher={(v) => escolher(p.chave, v)}
+                textoObrigatoria={t(INQ.obrigatoriaSr, idioma)}
                 onSeguir={() => avancar(indiceRef.current, true)}
               />
             )}
@@ -924,6 +959,10 @@ export function SurveyRenderer(props: Props) {
           />
         </div>
 
+        <p role="status" className="sr-only">
+          {envio === 'enviando' ? t(INQ.aEnviar, idioma) : anuncio}
+        </p>
+
         {(envio === 'erro' || envio === 'limite') && (
           <p role="alert" className="mt-6 border border-[color:var(--color-signal-600)] p-4 text-sm">
             {t(envio === 'limite' ? INQ.limite : INQ.erroEnvio, idioma)}
@@ -966,7 +1005,7 @@ export function SurveyRenderer(props: Props) {
               // Chaves distintas: sem elas o React reaproveita o botão «Continuar»
               // (fundo claro) e a transição de cor mostra texto branco sobre claro.
               <Button key="enviar" type="submit" disabled={envio === 'enviando'} className="gap-1.5">
-                {envio === 'enviando' && <Loader2 aria-hidden className="size-4 animate-spin" />}
+                {envio === 'enviando' && <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />}
                 {t(envio === 'enviando' ? INQ.aEnviar : INQ.enviar, idioma)}
               </Button>
             ) : (
@@ -995,6 +1034,7 @@ function Entrada({
   onMudar,
   onEscolher,
   onSeguir,
+  textoObrigatoria,
 }: {
   pergunta: Pergunta;
   valor: ValorRascunho | undefined;
@@ -1006,6 +1046,7 @@ function Entrada({
   onMudar: (v: ValorRascunho) => void;
   onEscolher: (v: ValorRascunho) => void;
   onSeguir: () => void;
+  textoObrigatoria: string;
 }) {
   const texto = typeof valor === 'string' ? valor : '';
   const comum = {
@@ -1015,7 +1056,7 @@ function Entrada({
     'aria-required': p.tipo !== 'seccao' && p.obrigatoria ? true : undefined,
   } as const;
   /** No palco, os campos têm a escala da pergunta: lê-se o que se escreve. */
-  const campo = cn(inputClass, palco && 'min-h-13 text-lg');
+  const campo = cn(inputClass, BORDA_CONTROLO, palco && 'min-h-13 text-lg');
 
   switch (p.tipo) {
     case 'seccao':
@@ -1096,6 +1137,8 @@ function Entrada({
       return (
         <EscolhaMultipla
           titulo={p.titulo}
+          obrigatoria={p.obrigatoria}
+          textoObrigatoria={textoObrigatoria}
           opcoes={p.opcoes}
           escolhidas={Array.isArray(valor) ? (valor as readonly string[]) : []}
           descritores={descritores}
@@ -1147,7 +1190,7 @@ function BlocoContacto({
   valores: DadosContacto;
   consentimento: boolean;
   erros: ReadonlySet<string>;
-  erroRef: React.RefObject<HTMLDivElement | null>;
+  erroRef: React.RefObject<HTMLElement | null>;
   onCampo: (c: CampoContacto, v: string) => void;
   onConsentimento: (v: boolean) => void;
 }) {
@@ -1167,7 +1210,10 @@ function BlocoContacto({
               </label>
               <input
                 id={id}
-                className={cn(inputClass, 'mt-2')}
+                // O foco do erro vai para o próprio campo: o leitor de ecrã diz
+                // qual é e lê a mensagem (aria-describedby).
+                ref={c === primeiroErro ? (erroRef as React.RefObject<HTMLInputElement | null>) : undefined}
+                className={cn(inputClass, BORDA_CONTROLO, 'mt-2')}
                 {...TIPO_CAMPO[c]}
                 maxLength={c === 'email' ? 254 : 160}
                 value={valores[c] ?? ''}
@@ -1176,13 +1222,15 @@ function BlocoContacto({
                 onChange={(e) => onCampo(c, e.target.value)}
               />
               {comErro && (
-                <div
-                  ref={c === primeiroErro ? erroRef : undefined}
-                  tabIndex={-1}
-                  id={`${id}-erro`}
-                  className="mt-1.5 text-sm text-[color:var(--signal)] outline-none"
-                >
-                  {t(INQ.contactoInvalido, idioma)}
+                <div id={`${id}-erro`} className="mt-1.5 text-sm text-[color:var(--signal)]">
+                  {t(
+                    c === 'email'
+                      ? INQ.contactoEmailInvalido
+                      : c === 'telefone'
+                        ? INQ.contactoTelefoneInvalido
+                        : INQ.contactoInvalido,
+                    idioma,
+                  )}
                 </div>
               )}
             </div>
@@ -1203,7 +1251,7 @@ function BlocoContacto({
       </label>
       {faltaConsentimento && (
         <div
-          ref={primeiroErro ? undefined : erroRef}
+          ref={primeiroErro ? undefined : (erroRef as React.RefObject<HTMLDivElement | null>)}
           tabIndex={-1}
           role="alert"
           id={`${base}-consentimento`}
