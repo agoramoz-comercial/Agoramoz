@@ -60,6 +60,16 @@ const SAFE_FIELDS = [
   // Inquérito longo pedido em partes: quantas, e quantas caíram para o local.
   'partes',
   'partesLocal',
+  // Erro de servidor (instrumentation.ts): o digest que o ecrã mostra, a rota
+  // como padrão (`/admin/inqueritos/[id]`), o tipo, o método, o nome e a
+  // mensagem do erro (cortada) e o primeiro «ficheiro:linha» da stack.
+  'digest',
+  'rota',
+  'tipoRota',
+  'metodo',
+  'erro',
+  'mensagem',
+  'origem',
 ] as const;
 
 type SafeField = (typeof SAFE_FIELDS)[number];
