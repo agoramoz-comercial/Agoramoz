@@ -1,10 +1,17 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { inputClass } from '@/components/form/Field';
 import { Button } from '@/components/ui/Button';
-import { ChipGroup } from '@/components/ui/ChipGroup';
 import { INQ } from '@/content/i18n/inquerito';
 import type { Idioma, Texto } from '@/content/types';
 import { track } from '@/lib/analytics/track';
@@ -14,21 +21,34 @@ import {
   erroDoCartao,
   montarEnvio,
   primeiroComErro,
+  respostasValidas,
   type DadosContacto,
   type ErroCartao,
   type Rascunho,
   type ValorRascunho,
 } from '@/lib/inqueritos/cartoes';
+import { chaveDoRascunho, lerRascunho, serializarRascunho } from '@/lib/inqueritos/rascunho';
 import { validarResposta } from '@/lib/inqueritos/respostas';
+import { minutosRestantes } from '@/lib/inqueritos/ritmo';
 import type { CampoContacto, Pergunta, SpecInquerito } from '@/lib/inqueritos/spec';
+import { acaoDaTecla, letraDe } from '@/lib/inqueritos/teclas';
 import { cn } from '@/lib/utils/cn';
 import { EstadoInquerito } from './EstadoInquerito';
+import { Escala, EscolhaMultipla, EscolhaUnica } from './partes/Escolhas';
+import { Progresso } from './partes/Progresso';
 
 /**
- * Quem responde a um inquérito: boas-vindas → um cartão por pergunta →
+ * Quem responde a um inquérito: boas-vindas → uma pergunta de cada vez →
  * agradecimento. O mesmo componente serve a página pública (`modo
- * 'publico'`) e a pré-visualização do construtor no admin (`'previa'`, que
- * não envia nem mede nada).
+ * 'publico'`, em palco de ecrã inteiro) e a pré-visualização do construtor no
+ * admin (`'previa'`, compacta, que não envia, não mede e não guarda nada).
+ *
+ * O que o torna rápido de responder, sem custar acessibilidade:
+ * - letras (A, B, C…) e dígitos escolhem; Enter segue; setas no título
+ *   avançam e recuam; no telemóvel, deslizar faz o mesmo e as acções ficam
+ *   numa barra fixa ao alcance do polegar;
+ * - um rascunho em `sessionStorage` (sem contacto) sobrevive a um recarregar;
+ * - o foco segue sempre a pergunta nova, e o passo vai dentro do seu título.
  *
  * Todo o texto vem do spec e é mostrado como texto — o React escapa-o, e não
  * há `dangerouslySetInnerHTML` aqui. A validação de cada cartão é a mesma
@@ -46,6 +66,8 @@ type Envio = 'idle' | 'enviando' | 'erro' | 'limite';
 /** O suficiente para ver a escolha marcada antes de o cartão mudar. */
 const PAUSA_MS = 260;
 const AUTOMATICOS = new Set<Pergunta['tipo']>(['escolha_unica', 'avaliacao', 'nps']);
+/** Deslize mínimo, em px, para contar como gesto (o mesmo do diagnóstico). */
+const DESLIZE_PX = 60;
 
 const ROTULO_CAMPO: Record<CampoContacto, Texto> = {
   nome: INQ.campoNome,
@@ -59,6 +81,8 @@ const TIPO_CAMPO: Record<CampoContacto, { type: string; autoComplete: string }> 
   telefone: { type: 'tel', autoComplete: 'tel' },
   organizacao: { type: 'text', autoComplete: 'organization' },
 };
+
+const dois = (n: number) => String(n).padStart(2, '0');
 
 function preencher(texto: Texto, idioma: Idioma, valores: Record<string, string | number>) {
   return Object.entries(valores).reduce(
@@ -91,6 +115,26 @@ function dicaDe(p: Pergunta, idioma: Idioma): string | null {
   }
 }
 
+/** O atalho de teclado da pergunta, para quem tem teclado e rato — ou nada. */
+function atalhoDe(p: Pergunta, idioma: Idioma): string | null {
+  switch (p.tipo) {
+    case 'escolha_unica':
+    case 'escolha_multipla':
+      return preencher(INQ.teclasOpcoes, idioma, {
+        de: letraDe(0),
+        ate: letraDe(p.opcoes.length - 1),
+      });
+    case 'avaliacao':
+      return preencher(INQ.teclasOpcoes, idioma, { de: 1, ate: 5 });
+    case 'nps':
+      return preencher(INQ.teclasOpcoes, idioma, { de: 0, ate: 9 });
+    case 'texto_longo':
+      return t(INQ.teclaCtrlEnter, idioma);
+    default:
+      return null;
+  }
+}
+
 /**
  * O id da submissão (UUID v4). `crypto.randomUUID` falta em origens não
  * seguras e em Safari anterior a 15.4; `getRandomValues` existe em todos.
@@ -112,10 +156,47 @@ function mensagemDeErro(p: Pergunta, erro: ErroCartao, idioma: Idioma): string {
   return dicaDe(p, idioma) ?? t(INQ.invalida, idioma);
 }
 
+/**
+ * O rascunho guardado, lido como loja externa: no servidor não há
+ * `sessionStorage` (snapshot nulo), e no browser lê-se sem efeito nem
+ * segundo render. Outros separadores avisam por `storage`; este, ao
+ * descartar, pelo evento próprio.
+ */
+const EVENTO_RASCUNHO = 'agoraforms:rascunho';
+
+function subscreverRascunho(aviso: () => void) {
+  window.addEventListener('storage', aviso);
+  window.addEventListener(EVENTO_RASCUNHO, aviso);
+  return () => {
+    window.removeEventListener('storage', aviso);
+    window.removeEventListener(EVENTO_RASCUNHO, aviso);
+  };
+}
+
+function lerArmazenado(chave: string | null): string | null {
+  if (!chave) return null;
+  try {
+    return sessionStorage.getItem(chave);
+  } catch {
+    // Sem armazenamento (janela privada, cookies bloqueados): sem rascunho.
+    return null;
+  }
+}
+
+/** Campos onde uma letra é texto e não um atalho. */
+function escreveTexto(alvo: EventTarget): boolean {
+  if (!(alvo instanceof HTMLElement)) return false;
+  if (alvo.closest('textarea, select, [contenteditable="true"]')) return true;
+  return alvo instanceof HTMLInputElement && alvo.type !== 'checkbox' && alvo.type !== 'radio';
+}
+
 export function SurveyRenderer(props: Props) {
   const { spec, modo } = props;
   const idioma = spec.idioma;
   const base = useId();
+  /** Público: palco de ecrã inteiro, com o h1 da página. Prévia: compacta, sem títulos de página. */
+  const palco = modo === 'publico';
+  const TituloPagina = palco ? 'h1' : 'p';
 
   const [fase, setFase] = useState<Fase>('inicio');
   const [estadoFechado, setEstadoFechado] = useState<'fechado' | 'expirado'>('fechado');
@@ -123,6 +204,7 @@ export function SurveyRenderer(props: Props) {
   const rascunhoRef = useRef<Rascunho>({});
   const [indice, setIndice] = useState(0);
   const indiceRef = useRef(0);
+  const [maisAvancado, setMaisAvancado] = useState(0);
   const [direcao, setDirecao] = useState<'frente' | 'tras' | null>(null);
   const [erro, setErro] = useState<ErroCartao | null>(null);
   const [pedidoFocoErro, setPedidoFocoErro] = useState(0);
@@ -140,16 +222,34 @@ export function SurveyRenderer(props: Props) {
   const focarAoMudar = useRef(false);
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
   const vistos = useRef(new Set<number>());
+  const toque = useRef<{ x: number; y: number } | null>(null);
   /** Um por submissão, criado no primeiro envio: repetir o envio não duplica a resposta. */
   const submissionId = useRef<string | null>(null);
 
   const cartoes = useMemo(() => cartoesDe(spec, rascunho), [spec, rascunho]);
   const total = cartoes.length;
   const cartao = cartoes[Math.min(indice, total - 1)]!;
+  const p = cartao.tipo === 'pergunta' ? cartao.pergunta : null;
   const ultimo = indice >= total - 1;
 
   const medir = modo === 'publico';
   const surveyId = props.inqueritoId;
+  /** Só a página pública guarda rascunho; a prévia do construtor nunca. */
+  const chaveRascunho = useMemo(
+    () => (modo === 'publico' && surveyId ? chaveDoRascunho(surveyId, spec) : null),
+    [modo, surveyId, spec],
+  );
+
+  const textoGuardado = useSyncExternalStore(
+    subscreverRascunho,
+    () => lerArmazenado(chaveRascunho),
+    () => null,
+  );
+  /** Só nas boas-vindas se oferece retomar; depois, o rascunho é o que se está a responder. */
+  const retomavel = useMemo(
+    () => (fase === 'inicio' ? lerRascunho(textoGuardado, spec) : null),
+    [fase, textoGuardado, spec],
+  );
 
   useEffect(() => {
     if (fase !== 'cartoes' || !medir || !surveyId || vistos.current.has(indice)) return;
@@ -189,9 +289,9 @@ export function SurveyRenderer(props: Props) {
   // antigo não serve de NPS, e um número fora da escala deixava-a sem foco.
   const tipos = useRef<Map<string, Pergunta['tipo']>>(new Map());
   useEffect(() => {
-    const agora = new Map(spec.perguntas.map((p) => [p.chave, p.tipo] as const));
+    const agora = new Map(spec.perguntas.map((q) => [q.chave, q.tipo] as const));
     const mudadas = [...agora].filter(
-      ([k, t]) => tipos.current.has(k) && tipos.current.get(k) !== t,
+      ([k, tipo]) => tipos.current.has(k) && tipos.current.get(k) !== tipo,
     );
     tipos.current = agora;
     if (mudadas.length === 0) return;
@@ -201,16 +301,71 @@ export function SurveyRenderer(props: Props) {
     setRascunho(limpo);
   }, [spec.perguntas]);
 
+  function guardarRascunho(i: number) {
+    if (!chaveRascunho) return;
+    try {
+      sessionStorage.setItem(chaveRascunho, serializarRascunho(rascunhoRef.current, i));
+    } catch {
+      // Sem armazenamento, o inquérito funciona na mesma — só não retoma.
+    }
+  }
+
+  function apagarRascunho() {
+    if (!chaveRascunho) return;
+    try {
+      sessionStorage.removeItem(chaveRascunho);
+    } catch {
+      // Idem.
+    }
+  }
+
   function definir(chave: string, valor: ValorRascunho) {
     rascunhoRef.current = { ...rascunhoRef.current, [chave]: valor };
     setRascunho(rascunhoRef.current);
     setErro(null);
+    guardarRascunho(indiceRef.current);
   }
 
-  function comecar() {
+  const comecar = useCallback(() => {
     focarAoMudar.current = true;
     setFase('cartoes');
     if (medir && surveyId) track({ name: 'survey_started', surveyId });
+  }, [medir, surveyId]);
+
+  // «ou prima Enter»: nas boas-vindas, Enter começa — se o foco não estiver
+  // noutro controlo (aí, Enter é desse controlo).
+  useEffect(() => {
+    if (fase !== 'inicio' || !palco || retomavel) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Enter' || e.defaultPrevented || e.repeat) return;
+      const ativo = document.activeElement;
+      if (ativo && ativo !== document.body) return;
+      e.preventDefault();
+      comecar();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fase, palco, retomavel, comecar]);
+
+  /** Retoma o rascunho: no cartão onde ia, ou antes, no primeiro que ficou por responder. */
+  function retomar() {
+    if (!retomavel) return;
+    const r = retomavel.respostas;
+    rascunhoRef.current = r;
+    setRascunho(r);
+    const atuais = cartoesDe(spec, r);
+    let destino = Math.min(retomavel.indice, atuais.length - 1);
+    const comErro = primeiroComErro(atuais, r);
+    if (comErro >= 0 && comErro < destino) destino = comErro;
+    indiceRef.current = destino;
+    setIndice(destino);
+    setMaisAvancado(destino);
+    comecar();
+  }
+
+  function descartar() {
+    apagarRascunho();
+    window.dispatchEvent(new Event(EVENTO_RASCUNHO));
   }
 
   function irPara(destino: number) {
@@ -220,9 +375,11 @@ export function SurveyRenderer(props: Props) {
     setDirecao(destino > indiceRef.current ? 'frente' : 'tras');
     indiceRef.current = destino;
     setIndice(destino);
+    setMaisAvancado((m) => Math.max(m, destino));
     setErro(null);
     // Um erro de envio é do envio, não do cartão para onde se foi.
     setEnvio((e) => (e === 'enviando' ? e : 'idle'));
+    guardarRascunho(destino);
   }
 
   function voltar() {
@@ -252,6 +409,27 @@ export function SurveyRenderer(props: Props) {
       return;
     }
     irPara(de + 1);
+  }
+
+  /** Um segmento do progresso: para trás vai sempre; para a frente, só sem obrigatórias por responder pelo caminho. */
+  function irParaSegmento(destino: number) {
+    if (destino <= indiceRef.current) {
+      irPara(destino);
+      return;
+    }
+    const atuais = cartoesDe(spec, rascunhoRef.current);
+    for (let j = indiceRef.current; j < destino; j++) {
+      const c = atuais[j];
+      if (c?.tipo !== 'pergunta') continue;
+      const e = erroDoCartao(c.pergunta, rascunhoRef.current[c.pergunta.chave]);
+      if (e) {
+        irPara(j);
+        setErro(e);
+        setPedidoFocoErro((n) => n + 1);
+        return;
+      }
+    }
+    irPara(destino);
   }
 
   function escolher(chave: string, valor: ValorRascunho) {
@@ -309,12 +487,14 @@ export function SurveyRenderer(props: Props) {
         }),
       });
       if (res.status === 200 || res.status === 202) {
+        apagarRascunho();
         setEnvio('idle');
         setFase('fim');
         return;
       }
       if (res.status === 410 || res.status === 404) {
         const dados = (await res.json().catch(() => null)) as { estado?: string } | null;
+        apagarRascunho();
         setEstadoFechado(dados?.estado === 'expirado' ? 'expirado' : 'fechado');
         setEnvio('idle');
         setFase('fechado');
@@ -336,21 +516,60 @@ export function SurveyRenderer(props: Props) {
     setErrosContacto(new Set());
     indiceRef.current = 0;
     setIndice(0);
+    setMaisAvancado(0);
     setDirecao(null);
     focarAoMudar.current = false;
     setFase('inicio');
   }
 
   function onKeyDownTitulo(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowRight') {
+    // Como avanço automático: no último cartão valida mas nunca envia —
+    // enviar é sempre um gesto explícito no botão.
+    if (e.key === 'ArrowRight' || e.key === 'Enter') {
       e.preventDefault();
-      // Como avanço automático: no último cartão valida mas nunca envia —
-      // enviar é sempre um gesto explícito no botão.
       avancar(indiceRef.current, true);
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       voltar();
     }
+  }
+
+  /** Letras escolhem opções; dígitos, valores da escala. Nunca dentro de um campo de texto. */
+  function onKeyDownFormulario(e: React.KeyboardEvent) {
+    if (!p || e.defaultPrevented || escreveTexto(e.target)) return;
+    const acao = acaoDaTecla(p, e);
+    if (!acao) return;
+    e.preventDefault();
+    if (acao.tipo === 'valor') {
+      escolher(p.chave, acao.valor);
+      return;
+    }
+    if (p.tipo === 'escolha_unica') {
+      escolher(p.chave, p.opcoes[acao.indice]!.chave);
+    } else if (p.tipo === 'escolha_multipla') {
+      const atual = rascunhoRef.current[p.chave];
+      const lista: readonly string[] = Array.isArray(atual) ? atual : [];
+      const k = p.opcoes[acao.indice]!.chave;
+      definir(p.chave, lista.includes(k) ? lista.filter((x) => x !== k) : [...lista, k]);
+    }
+  }
+
+  /** Deslizar no telemóvel: para a esquerda avança (nunca envia), para a direita volta. */
+  function onPointerDown(e: React.PointerEvent) {
+    if (e.pointerType !== 'touch') return;
+    if ((e.target as HTMLElement).closest('input, textarea')) return;
+    toque.current = { x: e.clientX, y: e.clientY };
+  }
+
+  function onPointerUp(e: React.PointerEvent) {
+    const inicio = toque.current;
+    toque.current = null;
+    if (!inicio) return;
+    const dx = e.clientX - inicio.x;
+    const dy = e.clientY - inicio.y;
+    if (Math.abs(dx) < DESLIZE_PX || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    if (dx < 0) avancar(indiceRef.current, true);
+    else voltar();
   }
 
   const aviso =
@@ -360,37 +579,65 @@ export function SurveyRenderer(props: Props) {
       </p>
     ) : null;
 
+  /** Fora das boas-vindas, o h1 da página fica, discreto, por cima. */
+  const tituloCompacto = palco ? (
+    <TituloPagina className="rule-label min-w-0 truncate text-[color:var(--muted)]">
+      {spec.boasVindas.titulo}
+    </TituloPagina>
+  ) : null;
+
   // ── Fechado a meio (revogado ou tecto atingido entre abrir e enviar) ──────
   if (fase === 'fechado') {
-    return <EstadoInquerito estado={estadoFechado} idioma={idioma} nivel="h2" />;
+    return (
+      <div className={cn(palco && 'flex flex-1 flex-col')}>
+        {tituloCompacto}
+        <EstadoInquerito estado={estadoFechado} idioma={idioma} nivel="h2" />
+      </div>
+    );
   }
 
   // ── Agradecimento ──────────────────────────────────────────────────────────
   if (fase === 'fim') {
+    const n = Object.keys(respostasValidas(spec, rascunho)).length;
     return (
-      <div>
+      <div className={cn(palco && 'flex flex-1 flex-col')}>
         {aviso}
+        {tituloCompacto}
         <div
           role="status"
-          className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
+          className={cn(
+            palco
+              ? 'flex flex-1 flex-col justify-center py-10'
+              : 'border border-[color:var(--border)] p-5',
+          )}
         >
-          <span className="grid size-12 place-items-center rounded-full bg-[color:var(--ok)]">
-            <Check aria-hidden className="size-6 text-[color:var(--surface)]" />
+          <span
+            aria-hidden
+            className="grid size-14 place-items-center border border-[color:var(--on-surface)]"
+          >
+            <Check className="size-7" />
           </span>
           <h2
             ref={fimRef}
             tabIndex={-1}
-            className="mt-5 font-display text-[length:var(--text-h3)] text-balance outline-none"
+            className={cn(
+              'mt-6 max-w-[24ch] font-display font-bold text-balance outline-none',
+              palco ? 'pergunta-titulo' : 'pergunta-titulo-compacto',
+            )}
           >
             {spec.agradecimento.titulo}
           </h2>
           {spec.agradecimento.corpo && (
-            <p className="mt-3 max-w-[56ch] whitespace-pre-line text-[color:var(--muted)]">
+            <p className="mt-4 max-w-[56ch] whitespace-pre-line text-[length:var(--text-lead)] text-[color:var(--muted)]">
               {spec.agradecimento.corpo}
             </p>
           )}
+          <p className="rule rule-label mt-8 max-w-xl pt-4 text-[color:var(--muted)]">
+            {n === 1 ? t(INQ.respondeuUma, idioma) : preencher(INQ.respondeu, idioma, { n })}
+            {palco && <> · {t(INQ.podeFechar, idioma)}</>}
+          </p>
           {modo === 'previa' && (
-            <Button type="button" variant="outline" size="sm" className="mt-6" onClick={recomecar}>
+            <Button type="button" variant="outline" size="sm" className="mt-6 self-start" onClick={recomecar}>
               {t(INQ.recomecar, idioma)}
             </Button>
           )}
@@ -402,22 +649,63 @@ export function SurveyRenderer(props: Props) {
   // ── Boas-vindas ────────────────────────────────────────────────────────────
   if (fase === 'inicio') {
     return (
-      <div>
+      <div className={cn(palco && 'flex flex-1 flex-col justify-center py-6 sm:py-10')}>
         {aviso}
-        <div className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8">
-          {spec.boasVindas.corpo && (
-            <p className="max-w-[56ch] whitespace-pre-line text-[length:var(--text-lead)] text-[color:var(--muted)]">
-              {spec.boasVindas.corpo}
-            </p>
+        <p className="rule-label text-[color:var(--muted)]">
+          {t(INQ.metaTitulo, idioma)} ·{' '}
+          {preencher(INQ.minutos, idioma, { min: minutosRestantes(cartoes) })}
+        </p>
+        <TituloPagina
+          className={cn(
+            'chrome-text mt-4 max-w-[22ch] font-display font-bold text-balance',
+            palco
+              ? 'text-[length:var(--text-h2)] leading-[var(--leading-display)] tracking-[var(--tracking-display)]'
+              : 'pergunta-titulo-compacto',
           )}
-          <p className="rule mt-6 pt-5 text-sm text-[color:var(--muted)]">
-            {t(spec.contacto ? INQ.contactoOpcional : INQ.semDados, idioma)}
+        >
+          {spec.boasVindas.titulo}
+        </TituloPagina>
+        {spec.boasVindas.corpo && (
+          <p className="mt-6 max-w-[56ch] whitespace-pre-line text-[length:var(--text-lead)] text-[color:var(--muted)]">
+            {spec.boasVindas.corpo}
           </p>
-          <Button type="button" className="mt-6 gap-1.5" onClick={comecar}>
-            {t(INQ.comecar, idioma)}
-            <ArrowRight aria-hidden className="size-4" />
-          </Button>
+        )}
+        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+          {retomavel ? (
+            <>
+              <Button type="button" size={palco ? 'lg' : 'md'} className="gap-2" onClick={retomar}>
+                {t(INQ.retomar, idioma)}
+                <ArrowRight aria-hidden className="size-4" />
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={descartar}>
+                {t(INQ.descartar, idioma)}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button type="button" size={palco ? 'lg' : 'md'} className="gap-2" onClick={comecar}>
+                {t(INQ.comecar, idioma)}
+                <ArrowRight aria-hidden className="size-4" />
+              </Button>
+              {palco && (
+                <span
+                  aria-hidden
+                  className="hidden text-sm text-[color:var(--muted)] pointer-fine:inline"
+                >
+                  {t(INQ.teclaEnter, idioma)}
+                </span>
+              )}
+            </>
+          )}
         </div>
+        {retomavel && (
+          <p className="mt-3 max-w-[56ch] text-sm text-[color:var(--muted)]">
+            {t(INQ.rascunhoGuardado, idioma)}
+          </p>
+        )}
+        <p className="rule mt-10 max-w-xl pt-4 text-sm text-[color:var(--muted)]">
+          {t(spec.contacto ? INQ.contactoOpcional : INQ.semDados, idioma)}
+        </p>
       </div>
     );
   }
@@ -429,8 +717,8 @@ export function SurveyRenderer(props: Props) {
   const avisoId = `${base}-auto`;
   const erroId = `${base}-erro`;
   const passo = preencher(INQ.passo, idioma, { n: indice + 1, total });
-  const p = cartao.tipo === 'pergunta' ? cartao.pergunta : null;
   const dica = p ? dicaDe(p, idioma) : null;
+  const atalho = p ? atalhoDe(p, idioma) : null;
   const automatico = p !== null && AUTOMATICOS.has(p.tipo) && !ultimo;
   const descritores =
     [
@@ -442,37 +730,62 @@ export function SurveyRenderer(props: Props) {
       .filter(Boolean)
       .join(' ') || undefined;
   const bruto = p ? rascunho[p.chave] : undefined;
+  const titulos = cartoes.map((c) =>
+    c.tipo === 'pergunta' ? c.pergunta.titulo : t(INQ.contactoTitulo, idioma),
+  );
 
   return (
-    <div>
+    <div className={cn(palco && 'flex flex-1 flex-col')}>
       {aviso}
+      {tituloCompacto}
       <form
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
           avancar();
         }}
-        className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
+        onKeyDown={onKeyDownFormulario}
+        className={cn(
+          'flex flex-col',
+          palco ? 'mt-4 flex-1' : 'border border-[color:var(--border)] p-5',
+        )}
       >
-        {/* Visual. Para leitores de ecrã, o passo vai dentro do título do cartão. */}
-        <div aria-hidden>
-          <p className="font-techno text-[length:var(--text-micro)] font-medium tracking-[var(--tracking-techno)] text-[color:var(--accent)] uppercase">
-            {passo}
-          </p>
-          <div className="mt-3 h-1 w-full rounded-full bg-[color:var(--border)]">
-            <div
-              className="h-1 rounded-full bg-[color:var(--color-signal-600)] motion-safe:transition-[width] motion-safe:duration-300"
-              style={{ width: `${Math.round(((indice + 1) / total) * 100)}%` }}
-            />
-          </div>
-        </div>
+        <Progresso
+          total={total}
+          indice={indice}
+          maisAvancado={Math.min(maisAvancado, total - 1)}
+          titulos={titulos}
+          minutos={minutosRestantes(cartoes, indice)}
+          idioma={idioma}
+          onIr={irParaSegmento}
+        />
 
-        <div key={indice} data-cartao={direcao ?? undefined}>
+        <div
+          key={indice}
+          data-pergunta={direcao ?? undefined}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          onPointerCancel={() => (toque.current = null)}
+          style={{ touchAction: 'pan-y' }}
+          className={cn(palco ? 'flex flex-1 flex-col justify-center py-8 sm:py-12' : 'pt-6')}
+        >
+          <p
+            aria-hidden
+            className="flex items-center gap-2 text-[color:var(--accent)]"
+          >
+            <span className={cn('numeral', palco ? 'text-[1.75rem]' : 'text-xl')}>
+              {dois(indice + 1)}
+            </span>
+            <ArrowRight className="size-4" />
+          </p>
           <h2
             ref={headingRef}
             tabIndex={-1}
             onKeyDown={onKeyDownTitulo}
-            className="mt-6 font-display text-[length:var(--text-h3)] text-balance outline-none"
+            className={cn(
+              'mt-3 max-w-[32ch] font-display font-semibold text-balance outline-none',
+              palco ? 'pergunta-titulo' : 'pergunta-titulo-compacto',
+            )}
           >
             <span className="sr-only">{passo}. </span>
             {/* Só o título: é o nome acessível dos campos (aria-labelledby). */}
@@ -486,13 +799,13 @@ export function SurveyRenderer(props: Props) {
           {p?.ajuda && (
             <p
               id={ajudaId}
-              className="mt-2 max-w-[60ch] whitespace-pre-line text-[color:var(--muted)]"
+              className="mt-3 max-w-[60ch] whitespace-pre-line text-[length:var(--text-lead)] text-[color:var(--muted)]"
             >
               {p.ajuda}
             </p>
           )}
           {!p && (
-            <p className="mt-2 max-w-[60ch] text-[color:var(--muted)]">
+            <p className="mt-3 max-w-[60ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
               {t(INQ.contactoCorpo, idioma)}
             </p>
           )}
@@ -516,23 +829,25 @@ export function SurveyRenderer(props: Props) {
               tabIndex={-1}
               role="alert"
               id={erroId}
-              className="mt-5 rounded-[--radius-sm] border border-[color:var(--color-signal-600)] p-4 text-sm outline-none"
+              className="mt-5 max-w-xl border border-[color:var(--color-signal-600)] p-4 text-sm outline-none"
             >
               {mensagemDeErro(p, erro, idioma)}
             </div>
           )}
 
-          <div className="mt-6">
+          <div className="mt-8">
             {p && (
               <Entrada
                 pergunta={p}
                 valor={bruto}
                 idioma={idioma}
+                palco={palco}
                 tituloId={tituloId}
                 descritores={descritores}
                 invalida={erro !== null}
                 onMudar={(v) => definir(p.chave, v)}
                 onEscolher={(v) => escolher(p.chave, v)}
+                onSeguir={() => avancar(indiceRef.current, true)}
               />
             )}
             {!p && spec.contacto && (
@@ -556,6 +871,15 @@ export function SurveyRenderer(props: Props) {
               />
             )}
           </div>
+
+          {atalho && (
+            <p
+              aria-hidden
+              className="mt-4 hidden font-techno text-[length:var(--text-micro)] tracking-[var(--tracking-techno)] text-[color:var(--muted)] uppercase pointer-fine:block"
+            >
+              {atalho}
+            </p>
+          )}
         </div>
 
         {/* Armadilha — escondida de pessoas e de leitores de ecrã. */}
@@ -571,15 +895,22 @@ export function SurveyRenderer(props: Props) {
         </div>
 
         {(envio === 'erro' || envio === 'limite') && (
-          <p
-            role="alert"
-            className="mt-6 border border-[color:var(--color-signal-600)] p-4 text-sm"
-          >
+          <p role="alert" className="mt-6 border border-[color:var(--color-signal-600)] p-4 text-sm">
             {t(envio === 'limite' ? INQ.limite : INQ.erroEnvio, idioma)}
           </p>
         )}
 
-        <div className="mt-8 flex items-center justify-between gap-3">
+        {/* Acções. No telemóvel, uma barra fixa ao alcance do polegar, acima
+            da zona segura do iPhone; a partir de `sm`, em linha. Um só par de
+            botões — nunca dois «Continuar» na mesma página. */}
+        <div
+          className={cn(
+            'flex items-center justify-between gap-3',
+            palco
+              ? 'sticky bottom-0 z-10 -mx-4 mt-6 border-t border-[color:var(--hairline)] bg-[color:var(--surface)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:pb-0'
+              : 'mt-6',
+          )}
+        >
           <Button
             type="button"
             variant="ghost"
@@ -591,19 +922,29 @@ export function SurveyRenderer(props: Props) {
             <ArrowLeft aria-hidden className="size-4" />
             {t(INQ.voltar, idioma)}
           </Button>
-          {ultimo ? (
-            // Chaves distintas: sem elas o React reaproveita o botão «Continuar»
-            // (fundo claro) e a transição de cor mostra texto branco sobre claro.
-            <Button key="enviar" type="submit" disabled={envio === 'enviando'} className="gap-1.5">
-              {envio === 'enviando' && <Loader2 aria-hidden className="size-4 animate-spin" />}
-              {t(envio === 'enviando' ? INQ.aEnviar : INQ.enviar, idioma)}
-            </Button>
-          ) : (
-            <Button key="continuar" type="submit" variant="solid" className="gap-1.5">
-              {t(INQ.continuar, idioma)}
-              <ArrowRight aria-hidden className="size-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-4">
+            {palco && (
+              <span
+                aria-hidden
+                className="hidden font-techno text-[length:var(--text-micro)] tracking-[var(--tracking-techno)] text-[color:var(--muted)] uppercase pointer-fine:sm:inline"
+              >
+                Enter ↵
+              </span>
+            )}
+            {ultimo ? (
+              // Chaves distintas: sem elas o React reaproveita o botão «Continuar»
+              // (fundo claro) e a transição de cor mostra texto branco sobre claro.
+              <Button key="enviar" type="submit" disabled={envio === 'enviando'} className="gap-1.5">
+                {envio === 'enviando' && <Loader2 aria-hidden className="size-4 animate-spin" />}
+                {t(envio === 'enviando' ? INQ.aEnviar : INQ.enviar, idioma)}
+              </Button>
+            ) : (
+              <Button key="continuar" type="submit" variant="solid" className="gap-1.5">
+                {t(INQ.continuar, idioma)}
+                <ArrowRight aria-hidden className="size-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </form>
     </div>
@@ -616,20 +957,24 @@ function Entrada({
   pergunta: p,
   valor,
   idioma,
+  palco,
   tituloId,
   descritores,
   invalida,
   onMudar,
   onEscolher,
+  onSeguir,
 }: {
   pergunta: Pergunta;
   valor: ValorRascunho | undefined;
   idioma: Idioma;
+  palco: boolean;
   tituloId: string;
   descritores: string | undefined;
   invalida: boolean;
   onMudar: (v: ValorRascunho) => void;
   onEscolher: (v: ValorRascunho) => void;
+  onSeguir: () => void;
 }) {
   const texto = typeof valor === 'string' ? valor : '';
   const comum = {
@@ -638,6 +983,8 @@ function Entrada({
     'aria-invalid': invalida || undefined,
     'aria-required': p.tipo !== 'seccao' && p.obrigatoria ? true : undefined,
   } as const;
+  /** No palco, os campos têm a escala da pergunta: lê-se o que se escreve. */
+  const campo = cn(inputClass, palco && 'min-h-13 text-lg');
 
   switch (p.tipo) {
     case 'seccao':
@@ -646,7 +993,7 @@ function Entrada({
       return (
         <input
           type="text"
-          className={inputClass}
+          className={cn(campo, 'max-w-xl')}
           maxLength={p.max}
           value={texto}
           onChange={(e) => onMudar(e.target.value)}
@@ -655,13 +1002,19 @@ function Entrada({
       );
     case 'texto_longo':
       return (
-        <div>
+        <div className="max-w-2xl">
           <textarea
             rows={5}
-            className={cn(inputClass, 'min-h-32 resize-y')}
+            className={cn(campo, 'min-h-32 resize-y')}
             maxLength={p.max}
             value={texto}
             onChange={(e) => onMudar(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                onSeguir();
+              }
+            }}
             {...comum}
           />
           <p
@@ -677,7 +1030,7 @@ function Entrada({
         <input
           type="text"
           inputMode={p.inteiro ? 'numeric' : 'decimal'}
-          className={cn(inputClass, 'max-w-60 tabular-nums')}
+          className={cn(campo, 'max-w-60 tabular-nums')}
           value={texto}
           onChange={(e) => onMudar(e.target.value)}
           {...comum}
@@ -687,7 +1040,7 @@ function Entrada({
       return (
         <input
           type="date"
-          className={cn(inputClass, 'max-w-60')}
+          className={cn(campo, 'max-w-60')}
           min="1900-01-01"
           max="2100-12-31"
           value={texto}
@@ -697,54 +1050,27 @@ function Entrada({
       );
     case 'escolha_unica':
       return (
-        <ChipGroup
-          legend={p.titulo}
-          columns={p.opcoes.length <= 3 ? 1 : 2}
-          value={typeof valor === 'string' ? valor : null}
-          options={p.opcoes.map((o) => ({ value: o.chave, label: o.rotulo }))}
-          onChange={(v) => onMudar(v)}
-          onEscolha={(v) => onEscolher(v)}
-          describedBy={descritores}
+        <EscolhaUnica
+          opcoes={p.opcoes}
+          valor={typeof valor === 'string' ? valor : null}
+          tituloId={tituloId}
+          descritores={descritores}
+          obrigatoria={p.obrigatoria}
+          invalida={invalida}
+          onMudar={(v) => onMudar(v)}
+          onEscolher={(v) => onEscolher(v)}
         />
       );
-    case 'escolha_multipla': {
-      const escolhidas = Array.isArray(valor) ? (valor as readonly string[]) : [];
+    case 'escolha_multipla':
       return (
-        <fieldset className="min-w-0 border-0 p-0" aria-describedby={descritores}>
-          <legend className="sr-only">{p.titulo}</legend>
-          <div className="grid gap-2.5 sm:grid-cols-2">
-            {p.opcoes.map((o) => {
-              const marcada = escolhidas.includes(o.chave);
-              return (
-                <label
-                  key={o.chave}
-                  className={cn(
-                    'flex min-h-12 cursor-pointer items-center gap-3 border px-4 py-3 text-[0.9375rem] transition-colors duration-300',
-                    marcada
-                      ? 'border-[color:var(--color-signal-600)] bg-[color:var(--color-signal-600)] text-white'
-                      : 'border-[color:var(--border)] hover:border-[color:var(--on-surface)]',
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    checked={marcada}
-                    onChange={(e) =>
-                      onMudar(
-                        e.target.checked
-                          ? [...escolhidas, o.chave]
-                          : escolhidas.filter((k) => k !== o.chave),
-                      )
-                    }
-                    className="size-4 shrink-0 accent-[color:var(--color-ink-900)]"
-                  />
-                  {o.rotulo}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
+        <EscolhaMultipla
+          titulo={p.titulo}
+          opcoes={p.opcoes}
+          escolhidas={Array.isArray(valor) ? (valor as readonly string[]) : []}
+          descritores={descritores}
+          onMudar={(v) => onMudar(v)}
+        />
       );
-    }
     case 'avaliacao':
     case 'nps': {
       const nps = p.tipo === 'nps';
@@ -769,105 +1095,6 @@ function Entrada({
       );
     }
   }
-}
-
-/**
- * Escala numérica (avaliação 1–5, NPS 0–10) num radiogroup com roving
- * tabindex — as setas percorrem, o clique ou Enter escolhe e avança. Em
- * linha, para os onze valores do NPS caberem num telemóvel sem 11 linhas.
- */
-function Escala({
-  obrigatoria,
-  invalida,
-  de,
-  ate,
-  valor,
-  idioma,
-  tituloId,
-  descritores,
-  extremos,
-  onMudar,
-  onEscolher,
-}: {
-  obrigatoria: boolean;
-  invalida: boolean;
-  de: number;
-  ate: number;
-  valor: number | null;
-  idioma: Idioma;
-  tituloId: string;
-  descritores: string | undefined;
-  extremos: readonly [string, string];
-  onMudar: (v: number) => void;
-  onEscolher: (v: number) => void;
-}) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const valores = Array.from({ length: ate - de + 1 }, (_, i) => de + i);
-  const ativo = Math.max(0, valor === null ? 0 : valores.indexOf(valor));
-  const extremosId = useId();
-
-  function onKeyDown(e: React.KeyboardEvent, i: number) {
-    const teclas = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'];
-    if (!teclas.includes(e.key)) return;
-    e.preventDefault();
-    let j = i;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = Math.min(valores.length - 1, i + 1);
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = Math.max(0, i - 1);
-    if (e.key === 'Home') j = 0;
-    if (e.key === 'End') j = valores.length - 1;
-    refs.current[j]?.focus();
-    onMudar(valores[j]!);
-  }
-
-  return (
-    <div>
-      <div
-        role="radiogroup"
-        aria-required={obrigatoria || undefined}
-        aria-invalid={invalida || undefined}
-        aria-labelledby={tituloId}
-        aria-describedby={[extremosId, descritores].filter(Boolean).join(' ')}
-        className="flex flex-wrap gap-1.5"
-      >
-        {valores.map((v, i) => {
-          const marcado = v === valor;
-          return (
-            <button
-              key={v}
-              ref={(el) => {
-                refs.current[i] = el;
-              }}
-              type="button"
-              role="radio"
-              aria-checked={marcado}
-              aria-label={preencher(INQ.deEscala, idioma, { n: v, max: ate })}
-              tabIndex={i === ativo ? 0 : -1}
-              onClick={() => {
-                onMudar(v);
-                onEscolher(v);
-              }}
-              onKeyDown={(e) => onKeyDown(e, i)}
-              className={cn(
-                'grid min-h-11 min-w-11 flex-1 place-items-center border font-techno text-base tabular-nums transition-colors duration-300',
-                marcado
-                  ? 'border-[color:var(--color-signal-600)] bg-[color:var(--color-signal-600)] text-white'
-                  : 'border-[color:var(--border)] hover:border-[color:var(--on-surface)]',
-              )}
-            >
-              {v}
-            </button>
-          );
-        })}
-      </div>
-      <p
-        id={extremosId}
-        className="mt-2 flex justify-between gap-4 text-[length:var(--text-micro)] text-[color:var(--muted)]"
-      >
-        <span>{extremos[0]}</span>
-        <span className="text-right">{extremos[1]}</span>
-      </p>
-    </div>
-  );
 }
 
 function BlocoContacto({
@@ -897,7 +1124,7 @@ function BlocoContacto({
   const primeiroErro = campos.find((c) => erros.has(`contacto.${c}`));
 
   return (
-    <div className="space-y-5">
+    <div className="max-w-2xl space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
         {campos.map((c) => {
           const id = `${base}-c-${c}`;

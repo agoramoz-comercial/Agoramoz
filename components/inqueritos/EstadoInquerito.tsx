@@ -7,7 +7,8 @@ export type EstadoMostrado = 'fechado' | 'expirado' | 'indisponivel';
 /**
  * O ecrã de um link que não abre um formulário: fechado, expirado ou base em
  * baixo. Sem pormenores — quem tem o link não precisa de saber porquê, e quem
- * sonda não aprende nada.
+ * sonda não aprende nada. No mesmo palco do inquérito, sem caixa: a frase é o
+ * conteúdo todo.
  */
 export function EstadoInquerito({
   estado,
@@ -29,14 +30,14 @@ export function EstadoInquerito({
   const corpo = estado === 'indisponivel' ? INQ.indisponivelCorpo : INQ.fechadoCorpo;
 
   return (
-    <div
-      role="status"
-      className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
-    >
-      <Titulo className="font-display text-[length:var(--text-h3)] text-balance">
+    <div role="status" className="flex flex-1 flex-col justify-center py-10">
+      <span aria-hidden className="block h-1 w-12 bg-[color:var(--on-surface)]" />
+      <Titulo className="pergunta-titulo mt-6 max-w-[24ch] font-display font-bold text-balance">
         {t(titulo, idioma)}
       </Titulo>
-      <p className="mt-3 max-w-[48ch] text-[color:var(--muted)]">{t(corpo, idioma)}</p>
+      <p className="mt-4 max-w-[48ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
+        {t(corpo, idioma)}
+      </p>
     </div>
   );
 }

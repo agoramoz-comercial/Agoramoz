@@ -724,3 +724,48 @@
 :root[data-motion='reduced'] [data-cartao] {
   animation: none;
 }
+
+/* Inquérito (AGORAFORMS): a pergunta nova sobe de baixo ao avançar e desce de
+   cima ao recuar — o eixo de quem lê uma lista, não o de um carrossel. 240 ms
+   e só com movimento permitido. Atributo próprio: o do diagnóstico fica como
+   está. */
+@keyframes pergunta-de-baixo {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+}
+
+@keyframes pergunta-de-cima {
+  from {
+    opacity: 0;
+    transform: translateY(-1.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-pergunta='frente'] {
+    animation: pergunta-de-baixo 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  [data-pergunta='tras'] {
+    animation: pergunta-de-cima 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+}
+
+:root[data-motion='reduced'] [data-pergunta] {
+  animation: none;
+}
+
+/* O título da pergunta: maior do que um h3, menor do que o h2 de secção — uma
+   pergunta pode ter 300 caracteres e tem de caber num telemóvel. */
+.pergunta-titulo {
+  font-size: clamp(1.5rem, 1.15rem + 1.5vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.pergunta-titulo-compacto {
+  font-size: clamp(1.1875rem, 1.05rem + 0.7vw, 1.5rem);
+  line-height: 1.2;
+}

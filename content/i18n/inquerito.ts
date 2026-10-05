@@ -100,4 +100,25 @@ export const INQ = {
   },
   recomecar: { pt: 'Ver de novo', en: 'View again' },
   privacidade: { pt: 'Política de privacidade', en: 'Privacy policy (in Portuguese)' },
+
+  // ── Experiência v2 (Lote R) ────────────────────────────────────────────────
+  // Os nomes dos botões novos NÃO contêm «Começar», «Continuar», «Voltar» nem
+  // «Enviar»: os nomes acessíveis comparam-se por substring, e um «Começar de
+  // novo» seria confundido com «Começar».
+  minutos: { pt: '~{min} min', en: '~{min} min' },
+  perguntas: { pt: '{n} perguntas', en: '{n} questions' },
+  progresso: { pt: 'Progresso', en: 'Progress' },
+  irPara: { pt: 'Ir para o passo {n}: {titulo}', en: 'Go to step {n}: {titulo}' },
+  retomar: { pt: 'Retomar onde parou', en: 'Resume where you left off' },
+  descartar: { pt: 'Descartar respostas', en: 'Discard answers' },
+  rascunhoGuardado: {
+    pt: 'Guardámos as respostas que já deu, só neste separador do browser.',
+    en: 'We kept the answers you already gave, only in this browser tab.',
+  },
+  teclaEnter: { pt: 'ou prima Enter ↵', en: 'or press Enter ↵' },
+  teclaCtrlEnter: { pt: 'Ctrl + Enter para seguir', en: 'Ctrl + Enter to move on' },
+  teclasOpcoes: { pt: 'Teclas {de}–{ate} para escolher', en: 'Keys {de}–{ate} to choose' },
+  respondeu: { pt: 'Respondeu a {n} perguntas.', en: 'You answered {n} questions.' },
+  respondeuUma: { pt: 'Respondeu a 1 pergunta.', en: 'You answered 1 question.' },
+  podeFechar: { pt: 'Pode fechar esta página.', en: 'You can close this page.' },
 } as const satisfies Record<string, Texto>;
