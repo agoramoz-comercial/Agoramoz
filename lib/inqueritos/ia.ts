@@ -63,9 +63,23 @@ export class FalhaImportadorIA extends Error {
   }
 }
 
+export interface ExcertoIA {
+  readonly parte: number;
+  readonly total: number;
+  readonly sinal?: AbortSignal;
+}
+
 export interface ImportadorIA {
   /** O nome do modelo, para mostrar «gerado por IA (modelo)». */
   readonly modelo: string;
-  /** Lança `FalhaImportadorIA` em qualquer falha. */
-  estruturar(texto: string, idioma: 'pt' | 'en'): Promise<RascunhoImportado>;
+  /**
+   * Lança `FalhaImportadorIA` em qualquer falha. Com `excerto`, o texto é a
+   * parte `parte` de `total` de um inquérito longo; `sinal` corta o pedido
+   * quando o prazo do conjunto acaba.
+   */
+  estruturar(
+    texto: string,
+    idioma: 'pt' | 'en',
+    excerto?: ExcertoIA,
+  ): Promise<RascunhoImportado>;
 }

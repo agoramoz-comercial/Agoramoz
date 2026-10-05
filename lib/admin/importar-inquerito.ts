@@ -102,6 +102,13 @@ export async function importarTextoInquerito(bruto: unknown): Promise<ResultadoA
     perguntas: r.ok ? r.resumo.perguntas : 0,
     durationMs: Date.now() - inicio,
     ...(r.caiuParaLocal ? { reason: r.caiuParaLocal } : {}),
+    ...(r.ok && r.partes
+      ? {
+          partes: r.partes.total,
+          partesLocal: r.partes.local,
+          ...(r.partes.motivo ? { reason: r.partes.motivo } : {}),
+        }
+      : {}),
   });
   return r;
 }

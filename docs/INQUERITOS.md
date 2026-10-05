@@ -57,8 +57,18 @@ subtítulo, opções e condições. Nada é gravado: aplicar muda o construtor e
   texto desorganizado). Os dois produzem o mesmo rascunho
   (`lib/inqueritos/importar/esquema.ts`), que passa pela mesma normalização
   (`normalizar.ts`) até um `SpecInquerito` válido.
-- **Se o Kimi falhar** (timeout de 45 s, 4xx/5xx, JSON inválido, sem
-  perguntas), cai sozinho para o analisador local e diz porquê no ecrã.
+- **Rapidez:** o `kimi-k2.6` vai com o «thinking» desligado (por omissão vem
+  ligado e um inquérito de 48 perguntas passava dos 45 s). Um texto com mais
+  de 3000 caracteres é partido entre blocos (`partirTexto`) e as partes são
+  pedidas em paralelo (4 de cada vez, 50 s cada, 100 s no total; a página tem
+  `maxDuration = 120`).
+- **Se o Kimi falhar** (timeout, 4xx/5xx, JSON inválido, sem perguntas), a
+  parte que falhou é lida pelo analisador local e o ecrã diz quantas foram
+  («O Kimi estruturou 5 de 6 partes…»); se falharem todas, o inquérito inteiro
+  vem do analisador local, com o motivo.
+- **Limite de 50 blocos:** as secções contam para o limite de 50 (é o limite
+  do formato). O que passar é cortado com aviso; um inquérito maior divide-se
+  e junta-se com «Juntar ao fim».
 - **Revisão antes de aplicar:** resumo (perguntas, secções, obrigatórias,
   condições), a lista numerada com o tipo, **o porquê de cada tipo**, a
   condição em linguagem simples e os avisos. «Aplicar: substituir o

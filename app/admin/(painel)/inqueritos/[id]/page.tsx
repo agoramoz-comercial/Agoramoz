@@ -21,9 +21,12 @@ import { log } from '@/lib/log/logger';
 
 export const metadata = { title: 'Inquérito' };
 
-/** O «Colar e transformar» chama o Kimi por uma Server Action desta página, com 45 s de
- * limite: a função tem de durar mais do que isso para o recurso ao analisador local correr. */
-export const maxDuration = 60;
+/**
+ * O «Colar e transformar» chama o Kimi por uma Server Action desta página. Um
+ * inquérito longo vai em partes (4 em paralelo, até 50 s cada, 100 s no total):
+ * a função tem de durar mais do que isso para o recurso ao analisador local correr.
+ */
+export const maxDuration = 120;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

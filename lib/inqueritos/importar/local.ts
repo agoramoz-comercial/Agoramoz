@@ -268,7 +268,12 @@ interface SeccaoEmCurso {
   texto: string[];
 }
 
-export function analisarTexto(bruto: string): RascunhoImportado {
+export function analisarTexto(
+  bruto: string,
+  opcoes: { readonly cabecalho?: boolean } = {},
+): RascunhoImportado {
+  /** Numa parte do meio (`partirTexto`), a primeira linha não é o título. */
+  const comCabecalho = opcoes.cabecalho ?? true;
   const linhas = limparTexto(bruto)
     .split('\n')
     .map((l) => l.trim());
@@ -295,7 +300,8 @@ export function analisarTexto(bruto: string): RascunhoImportado {
     blocos.push(s);
     atual = s;
   };
-  const primeiraLinha = () => titulo === undefined && blocos.length === 0 && introducao.length === 0;
+  const primeiraLinha = () =>
+    comCabecalho && titulo === undefined && blocos.length === 0 && introducao.length === 0;
 
   for (const l of linhas) {
     if (!l || RE_LEGENDA.test(l)) continue;
@@ -428,4 +434,69 @@ export function analisarTexto(bruto: string): RascunhoImportado {
     ...(agradecimento ? { agradecimento } : {}),
     blocos: saida,
   };
+}
+
+// ── Partir um texto longo em partes ─────────────────────────────────────────
+
+/** «Se sim, …», «(Só se respondeu…)»: fica na mesma parte da pergunta anterior. */
+const RE_CONDICIONAL = /^\(?\s*(?:s[oó]\s+)?(?:se|caso|if)\b/iu;
+
+type InicioDeBloco = 'seccao' | 'pergunta' | null;
+
+function inicioDeBloco(l: string): InicioDeBloco {
+  if (!l || RE_LEGENDA.test(l)) return null;
+  if (RE_MD.test(l) || seccaoPorPalavra(l) !== null) return 'seccao';
+  const num = numerada(l);
+  if (num) return ehMaiusculas(num.resto) ? 'seccao' : 'pergunta';
+  if (ehMaiusculas(l)) return 'seccao';
+  if (RE_AGRADECIMENTO.test(simplificar(l)) && l.split(/\s+/).length <= 5) return 'seccao';
+  if (ehPergunta(l)) return 'pergunta';
+  return null;
+}
+
+/**
+ * Parte um inquérito longo em pedaços de até `max` caracteres, para o Kimi os
+ * estruturar em paralelo. Corta só no início de um bloco (secção ou pergunta),
+ * por isso uma pergunta nunca fica separada das suas opções e notas; prefere
+ * cortar numa secção; e uma pergunta condicional («Se sim, …») fica com a
+ * anterior. O cabeçalho fica na primeira parte e o «Obrigado» na última.
+ * Juntar as partes com «\n» devolve todas as linhas não vazias, pela ordem.
+ */
+export function partirTexto(bruto: string, opcoes: { readonly max?: number } = {}): string[] {
+  const max = opcoes.max ?? 3_000;
+  const linhas = limparTexto(bruto)
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  // Unidades: do início de um bloco até ao seguinte (o cabeçalho cola-se à primeira).
+  const unidades: { tipo: InicioDeBloco; linhas: string[]; tamanho: number }[] = [];
+  for (const l of linhas) {
+    const tipo = inicioDeBloco(l);
+    const ultima = unidades.at(-1);
+    if (tipo === null && ultima) {
+      ultima.linhas.push(l);
+      ultima.tamanho += l.length + 1;
+    } else {
+      unidades.push({ tipo, linhas: [l], tamanho: l.length + 1 });
+    }
+  }
+
+  const partes: string[][] = [];
+  let atual: string[] = [];
+  let tamanho = 0;
+  for (const u of unidades) {
+    const condicional = u.tipo === 'pergunta' && RE_CONDICIONAL.test(u.linhas[0]!);
+    const passa = tamanho + u.tamanho > max;
+    const cortarNaSeccao = u.tipo === 'seccao' && tamanho >= max / 2;
+    if (atual.length > 0 && u.tipo !== null && !condicional && (passa || cortarNaSeccao)) {
+      partes.push(atual);
+      atual = [];
+      tamanho = 0;
+    }
+    atual.push(...u.linhas);
+    tamanho += u.tamanho;
+  }
+  if (atual.length > 0) partes.push(atual);
+  return partes.map((p) => p.join('\n'));
 }

@@ -57,6 +57,9 @@ const SAFE_FIELDS = [
   'motor',
   'caracteres',
   'perguntas',
+  // Inquérito longo pedido em partes: quantas, e quantas caíram para o local.
+  'partes',
+  'partesLocal',
 ] as const;
 
 type SafeField = (typeof SAFE_FIELDS)[number];

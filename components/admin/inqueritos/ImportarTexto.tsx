@@ -322,7 +322,7 @@ export function ImportarTexto({
           <p role="status" className="text-xs text-[color:var(--muted)]">
             {aCorrer
               ? motor === 'kimi'
-                ? 'A transformar com o Kimi. Pode levar alguns segundos.'
+                ? 'A transformar com o Kimi. Inquéritos longos podem levar até um minuto e meio.'
                 : 'A transformar…'
               : baseInvalida
                 ? 'Corrija primeiro os problemas assinalados no inquérito.'
@@ -432,7 +432,7 @@ function RevisaoProposta({
   onAplicar: () => void;
   onDescartar: () => void;
 }) {
-  const { spec, resumo, avisos, razoes, motor, caiuParaLocal, modelo } = proposta;
+  const { spec, resumo, avisos, razoes, motor, caiuParaLocal, modelo, partes } = proposta;
   const inicio = modo === 'acrescentar' ? base.perguntas.length : 0;
   const novas = spec.perguntas.slice(inicio);
   const porChave = new Map(spec.perguntas.map((p) => [p.chave, p]));
@@ -473,6 +473,18 @@ function RevisaoProposta({
           <span>
             <span className="sr-only">Aviso: </span>
             {motivoDoFallback(caiuParaLocal)} — usei o analisador local. Reveja com atenção.
+          </span>
+        </p>
+      )}
+
+      {partes && partes.local > 0 && (
+        <p className="mt-2 flex items-start gap-2 border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-3 py-2 text-sm">
+          <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+          <span>
+            <span className="sr-only">Aviso: </span>
+            O Kimi estruturou {partes.kimi} de {partes.total} partes; {partes.local}{' '}
+            {partes.local === 1 ? 'ficou' : 'ficaram'} com o analisador local
+            {partes.motivo ? ` — ${motivoDoFallback(partes.motivo)}` : ''}. Reveja essas com atenção.
           </span>
         </p>
       )}

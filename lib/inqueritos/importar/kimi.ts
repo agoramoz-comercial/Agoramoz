@@ -1,4 +1,4 @@
-import { FalhaImportadorIA, type ImportadorIA } from '../ia';
+import { FalhaImportadorIA, type ExcertoIA, type ImportadorIA } from '../ia';
 import { LIMITES } from '../spec';
 import { rascunhoImportado, TIPOS_IMPORTAVEIS, type RascunhoImportado } from './esquema';
 
@@ -14,6 +14,11 @@ import { rascunhoImportado, TIPOS_IMPORTAVEIS, type RascunhoImportado } from './
  *     tente imitar são neutralizados antes de sair.
  *  2. Sem redireccionamentos (a chave nunca segue para outro host) e com
  *     tempo-limite; uma só tentativa.
+ *
+ * Rapidez: o `kimi-k2.6` raciocina antes de responder por omissão
+ * (`thinking: enabled`, documentação «Model Parameter Reference»). Estruturar
+ * texto não precisa disso e o raciocínio custava o tempo todo — vai desligado.
+ * Inquéritos longos chegam aqui em partes (`partirTexto`), pedidas em paralelo.
  *  3. A resposta é validada pelo contrato (`rascunhoImportado`) e depois
  *     normalizada — o que o modelo devolve é proposta, nunca acção.
  *  4. Os erros levam só um código (`http_401`, `timeout`…): nem a chave, nem
@@ -71,13 +76,30 @@ Regras:
 - Escreve "razao" em português. Mantém o resto na língua do texto${idioma === 'en' ? ' (inglês)' : ''}.`;
 }
 
+function notaDoExcerto(e: { parte: number; total: number }): string {
+  return `
+
+EXCERTO: este texto é a parte ${e.parte} de ${e.total} de um inquérito maior, partido entre blocos. Estrutura só o que está aqui.
+- ${e.parte === 1 ? '"titulo" e "introducao" vêm deste excerto, se existirem.' : 'Não devolvas "titulo" nem "introducao": a primeira linha é um bloco, não o título.'}
+- ${e.parte === e.total ? '"agradecimento" vem deste excerto, se existir.' : 'Não devolvas "agradecimento".'}
+- Em "condicao", "pergunta" conta só as perguntas DESTE excerto (1, 2, 3…). Se a condição se refere a uma pergunta fora do excerto, omite "condicao".`;
+}
+
 /** As mensagens do pedido — exportadas para os testes verem exactamente o que sai. */
-export function mensagensKimi(texto: string, idioma: 'pt' | 'en') {
+export function mensagensKimi(
+  texto: string,
+  idioma: 'pt' | 'en',
+  excerto?: { parte: number; total: number },
+) {
   // Neutraliza os caracteres e não só o marcador exacto: tirar «<<<FIM…>>>» de
   // «<<<FIM_<<<FIM_DO_INQUERITO>>>DO_INQUERITO>>>» voltaria a formá-lo.
   const limpo = texto.replace(/<<<|>>>/g, (m) => (m === '<<<' ? '‹‹‹' : '›››'));
   return [
-    { role: 'system' as const, content: promptDeSistema(idioma) },
+    {
+      role: 'system' as const,
+      content:
+        promptDeSistema(idioma) + (excerto && excerto.total > 1 ? notaDoExcerto(excerto) : ''),
+    },
     { role: 'user' as const, content: `${INICIO}\n${limpo}\n${FIM}` },
   ];
 }
@@ -95,7 +117,9 @@ export function criarImportadorKimi(config: ConfigKimi): ImportadorIA {
 
   return {
     modelo: config.modelo,
-    async estruturar(texto, idioma): Promise<RascunhoImportado> {
+    async estruturar(texto, idioma, excerto?: ExcertoIA): Promise<RascunhoImportado> {
+      const prazo = AbortSignal.timeout(timeoutMs);
+      const sinal = excerto?.sinal ? AbortSignal.any([prazo, excerto.sinal]) : prazo;
       let res: Response;
       try {
         res = await pedir(`${config.baseUrl}/chat/completions`, {
@@ -106,13 +130,15 @@ export function criarImportadorKimi(config: ConfigKimi): ImportadorIA {
           },
           body: JSON.stringify({
             model: config.modelo,
-            messages: mensagensKimi(texto, idioma),
+            messages: mensagensKimi(texto, idioma, excerto),
             response_format: { type: 'json_object' },
-            max_tokens: 12_000,
+            // Sem raciocínio prévio: é o que fazia o pedido passar dos 45 s.
+            thinking: { type: 'disabled' },
+            max_tokens: excerto && excerto.total > 1 ? 6_000 : 12_000,
           }),
           redirect: 'error',
           cache: 'no-store',
-          signal: AbortSignal.timeout(timeoutMs),
+          signal: sinal,
         });
       } catch (e) {
         const nome = (e as { name?: string } | null)?.name;
