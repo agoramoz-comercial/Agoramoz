@@ -27,11 +27,23 @@ export function simplificar(s: string): string {
   return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
 
-/** O que o Word e o Google Docs deixam no texto colado. */
-function limparTexto(t: string): string {
-  return t
+/**
+ * O que o Word e o Google Docs deixam no texto colado. As marcas de lista do
+ * Word chegam como caracteres privados da fonte Symbol/Wingdings (U+F0B7, U+F0A7…) ou
+ * como «o» seguido de tabulação: passam a «•». Com `tabs`, as tabulações
+ * ficam (são as colunas de uma tabela colada).
+ */
+export function limparTexto(t: string, opcoes: { readonly tabs?: boolean } = {}): string {
+  const semMarcas = t
     .replace(/^﻿/, '')
     .replace(/\r\n?/g, '\n')
+    .replace(/^[ \t]*(?:[\uF000-\uF0FF§Ø]|o(?=\t))[ \t]*/gmu, '• ');
+  if (opcoes.tabs)
+    return semMarcas
+      .replace(/[\u00A0\u2007\u202F]/g, ' ')
+      .replace(/[\u200B-\u200D\u2060]/g, '')
+      .replace(/[ ]{2,}/g, ' ');
+  return semMarcas
     .replace(/[   ]/g, ' ')
     .replace(/[​-‍⁠]/g, '')
     .replace(/\t/g, ' ')
@@ -42,14 +54,14 @@ const maiuscula = (s: string) => (s ? s[0]!.toUpperCase() + s.slice(1) : s);
 
 // ── Reconhecimento de linhas ────────────────────────────────────────────────
 
-const RE_MD = /^#{1,4}\s+(.+)$/;
+export const RE_MD = /^#{1,4}\s+(.+)$/;
 /** «Secção 2: Dados», «Parte B — Operações», «Section 1». Exige número/letra ou separador. */
 const RE_SECCAO =
   /^(?:sec[cç][aã]o|seccao|parte|bloco|m[oó]dulo|section|part)(?:\s+(\d{1,3}|[ivxlc]{1,6}|[a-z])(?![\p{L}]))?\s*([:.\-–—])?\s*(.*)$/iu;
 const RE_P_PREFIXO = /^(?:p|q|pergunta|quest[aã]o|question)\s*(\d{1,3})\s*[.)\-–:]?\s*(.+)$/iu;
 const RE_P_HIERARQUIA = /^(\d{1,3}(?:\.\d{1,3})+)\.?\s+(.+)$/;
 const RE_P_SIMPLES = /^(\d{1,3})\s*[.)\-–:]\s+(.+)$/;
-const RE_OPCAO =
+export const RE_OPCAO =
   /^(?:\(?[a-zA-Z]\)|[a-zA-Z][.)]|[-–•·▪◦●○◯☐☑□■➢➤✓]|\*(?=\s)|\[\s?[xX]?\s?\]|\(\s?\))\s*(.+)$/u;
 const RE_NOTA =
   /^(?:nota|obs\.?|observa[cç][aã]o|ajuda|dica|instru[cç][aã]o|subt[ií]tulo|descri[cç][aã]o|note|hint|help)\s*:\s*(.+)$/iu;
@@ -64,13 +76,13 @@ const RE_COMO_RESPONDER =
   /^(?:escolha|selecione|seleccione|marque|assinale|select|choose|check|tick)\s+(?:uma|um|todas|todos|as que|os que|at[eé]|no m[aá]ximo|apenas|s[oó]|one|all|up to|only)\b/iu;
 
 /** Uma linha que é pergunta sem número: acaba em «?», ou tem «?» seguido de opções. */
-function ehPergunta(l: string): boolean {
+export function ehPergunta(l: string): boolean {
   if (l.endsWith('?')) return true;
   const q = l.lastIndexOf('?');
   return q > 0 && opcoesEmLinha(l.slice(q + 1).trim()) !== null;
 }
 
-function ehMaiusculas(l: string): boolean {
+export function ehMaiusculas(l: string): boolean {
   const letras = l.match(/\p{L}/gu);
   return (
     !!letras &&
@@ -82,7 +94,7 @@ function ehMaiusculas(l: string): boolean {
   );
 }
 
-function nota(l: string): string | null {
+export function nota(l: string): string | null {
   const m = RE_NOTA.exec(l);
   if (m) return m[1]!.trim();
   if (/^\(.+\)$/.test(l)) return l.slice(1, -1).trim();
@@ -91,12 +103,12 @@ function nota(l: string): string | null {
   return null;
 }
 
-function numerada(l: string): { numero: string; resto: string } | null {
+export function numerada(l: string): { numero: string; resto: string } | null {
   const m = RE_P_PREFIXO.exec(l) ?? RE_P_HIERARQUIA.exec(l) ?? RE_P_SIMPLES.exec(l);
   return m ? { numero: m[1]!, resto: m[2]!.trim() } : null;
 }
 
-function seccaoPorPalavra(l: string): string | null {
+export function seccaoPorPalavra(l: string): string | null {
   if (l.endsWith('?')) return null;
   const m = RE_SECCAO.exec(l);
   if (!m) return null;
@@ -107,7 +119,7 @@ function seccaoPorPalavra(l: string): string | null {
 }
 
 /** Opções na mesma linha: «Sim / Não», «( ) Sim ( ) Não», «Sim | Não | Talvez». */
-function opcoesEmLinha(l: string): string[] | null {
+export function opcoesEmLinha(l: string): string[] | null {
   if (/[?.!]$/.test(l) || !/[/|;☐○]|\(\s?\)/.test(l)) return null;
   const partes = l
     .split(/\s*(?:\/|\||;|\(\s?\)|☐|○)\s*/u)
@@ -210,7 +222,7 @@ const RE = {
   maximo: /(?:ate|no maximo|maximo de|max\.?|up to|at most)\s*(\d{1,2})\b/,
 };
 
-function deduzir(titulo: string, ajuda: string, dicas: string[], opcoes: string[]): Deducao {
+export function deduzir(titulo: string, ajuda: string, dicas: string[], opcoes: string[]): Deducao {
   const dica = simplificar(dicas.join(' '));
   const tudo = simplificar([titulo, ajuda, ...dicas].join(' '));
   const maximo = RE.maximo.exec(tudo);

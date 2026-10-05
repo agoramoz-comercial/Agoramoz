@@ -64,6 +64,7 @@ Devolve APENAS um objecto JSON com esta forma:
 }
 
 Regras:
+- Se o texto DECLARAR a estrutura («Tipo:», «Obrigatória:», «Opções:», «Subtítulo:», «Texto da secção:», «Condição:» ou colunas de uma tabela), usa exactamente o que está declarado; deduz só o que faltar.
 - Mantém as palavras do autor nas perguntas, opções e secções. Corrige só maiúsculas, espaços e pontuação evidente. Não inventes perguntas nem opções.
 - Tipos: "escolha_unica" (lista, escolhe-se uma; Sim/Não incluído), "escolha_multipla" (pode escolher várias; "min"/"max" se o texto disser), "avaliacao" (escala de 1 a 5 ou estrelas), "nps" (0 a 10, ou «recomendaria»), "numero" (quantidades, idade, valores; "inteiro" true para contagens; "min"/"max" se indicados), "data", "texto_curto" (resposta curta), "texto_longo" (descreva, explique, comentários).
 - Uma escala de 1 a 10 que não seja de recomendação é "numero" com min 1 e max 10.

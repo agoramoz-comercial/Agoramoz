@@ -291,6 +291,30 @@ for (const largura of [390, 1440]) {
   );
   await axe(p, 'proposta com aviso de fallback');
   await p.getByRole('button', { name: 'Descartar proposta' }).click();
+  await campoTexto.fill('');
+  await p.getByRole('button', { name: 'Inserir modelo com campos' }).click();
+  await p.getByRole('button', { name: 'Transformar' }).click();
+  await p.getByRole('heading', { name: 'Proposta' }).waitFor();
+  confere(
+    (await p.getByText(/foi lida tal como está, sem IA/).count()) === 1,
+    'modelo com campos: estrutura lida directamente, sem IA (mesmo com o Kimi escolhido)',
+  );
+  const resumoFicha = (await p.getByRole('list', { name: 'Resumo' }).textContent()) ?? '';
+  confere(
+    ['5 perguntas', '2 secções', '3 obrigatórias', '1 condição'].every((t) => resumoFicha.includes(t)),
+    'modelo com campos: 5 perguntas, 2 secções, 3 obrigatórias, 1 condição',
+    resumoFicha,
+  );
+  confere(
+    (await p.getByText('Tipo indicado no texto: «Escolha múltipla».').count()) === 1,
+    'modelo com campos: cada tipo diz de onde veio',
+  );
+  confere(
+    (await p.getByText(/A IA não está configurada/).count()) === 0,
+    'modelo com campos: sem aviso de recurso ao analisador local',
+  );
+  await axe(p, 'proposta da ficha com campos');
+  await p.getByRole('button', { name: 'Descartar proposta' }).click();
   confere(
     await p.evaluate(() => document.activeElement?.tagName === 'TEXTAREA'),
     '«Descartar» devolve o foco ao texto',

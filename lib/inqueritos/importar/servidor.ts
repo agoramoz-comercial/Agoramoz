@@ -2,6 +2,7 @@ import type { Reservadas } from '../construtor';
 import { FalhaImportadorIA, type ErroImportadorIA, type ImportadorIA } from '../ia';
 import type { SpecInquerito } from '../spec';
 import type { BlocoImportado, RascunhoImportado } from './esquema';
+import { analisarEstruturado, type FormatoEstruturado } from './estruturado';
 import { criarImportadorKimi } from './kimi';
 import { analisarTexto, partirTexto } from './local';
 import { normalizar, type ModoImportacao, type ResultadoImportacao } from './normalizar';
@@ -30,6 +31,11 @@ export type RespostaImportacao = ResultadoImportacao & {
   /** Pediu-se o Kimi e caiu-se para o local: porquê (código, sem detalhe). */
   readonly caiuParaLocal?: ErroImportadorIA | 'indisponivel' | 'sem_perguntas';
   readonly modelo?: string;
+  /**
+   * O texto declarava a estrutura (ficha com campos ou tabela): foi lida
+   * directamente, sem IA — mesmo que se tenha pedido o Kimi.
+   */
+  readonly formato?: FormatoEstruturado;
   /**
    * Inquérito longo pedido ao Kimi em partes: quantas houve, quantas o Kimi
    * estruturou e quantas caíram para o analisador local (e porquê, a primeira).
@@ -86,7 +92,7 @@ export function importadorKimiDoAmbiente(env: AmbienteIA): ImportadorIA | null {
 }
 
 function local(p: PedidoImportacao): ResultadoImportacao {
-  return normalizar(analisarTexto(p.texto), {
+  return normalizar(analisarEstruturado(p.texto)?.rascunho ?? analisarTexto(p.texto), {
     base: p.base,
     reservadas: p.reservadas,
     modo: p.modo,
@@ -155,6 +161,18 @@ export async function importarTexto(
     readonly esperar?: (ms: number, sinal: AbortSignal) => Promise<void>;
   },
 ): Promise<RespostaImportacao> {
+  // Estrutura declarada (Tipo:, Obrigatória:, Opções:… ou tabela): não há nada a
+  // adivinhar — lê-se tal como está, instantâneo e exacto, sem gastar a conta Kimi.
+  const estruturado = analisarEstruturado(p.texto);
+  if (estruturado) {
+    const r = normalizar(estruturado.rascunho, {
+      base: p.base,
+      reservadas: p.reservadas,
+      modo: p.modo,
+    });
+    if (r.ok) return { ...r, motor: 'local', formato: estruturado.formato };
+  }
+
   if (p.motor === 'local') return { ...local(p), motor: 'local' };
   if (!deps.kimi) return { ...local(p), motor: 'local', caiuParaLocal: 'indisponivel' };
   const kimi = deps.kimi;

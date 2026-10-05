@@ -69,6 +69,23 @@ subtítulo, opções e condições. Nada é gravado: aplicar muda o construtor e
 - **Limite de 50 blocos:** as secções contam para o limite de 50 (é o limite
   do formato). O que passar é cortado com aviso; um inquérito maior divide-se
   e junta-se com «Juntar ao fim».
+- **Estrutura declarada = leitura exacta, sem IA** (`estruturado.ts`). Se o
+  texto disser a estrutura, é lida tal como está — instantâneo, sem custo, e
+  mesmo com o Kimi escolhido (nem é chamado):
+  - **ficha com campos** — «Título:», «Introdução:», «Secção 1:», «Texto da
+    secção:», «Pergunta 3:», «Tipo:», «Obrigatória:», «Opções:» (na linha,
+    separadas por «;», «|», «/» ou vírgulas, ou em lista nas linhas
+    seguintes), «Subtítulo:», «Escala:», «Mín:»/«Máx:», «Condição: P4 = Sim»,
+    «Agradecimento:»;
+  - **tabela** — colada do Word/Excel (tabulações) ou em Markdown («|»), com
+    cabeçalho «Nº | Secção | Pergunta | Tipo | Obrigatória | Opções |
+    Subtítulo | Condição».
+  O vocabulário de tipos aceita os nomes do construtor e os do Google Forms
+  («Resposta curta», «Parágrafo», «Caixas de verificação», «Lista pendente»,
+  «Escala linear»…). Cada pergunta mostra «Tipo indicado no texto: …». O
+  botão «Inserir modelo com campos» mostra o formato.
+- **Listas do Word coladas sem marcas** (opções em linhas soltas, ou com os
+  caracteres privados de marca do Word) são lidas como opções.
 - **Revisão antes de aplicar:** resumo (perguntas, secções, obrigatórias,
   condições), a lista numerada com o tipo, **o porquê de cada tipo**, a
   condição em linguagem simples e os avisos. «Aplicar: substituir o

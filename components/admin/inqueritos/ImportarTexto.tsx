@@ -27,6 +27,40 @@ export type EntradaImportar = {
 
 type Proposta = Extract<ResultadoAccaoImportar, { ok: true }>;
 
+/** O formato com campos: o mais exacto — cada campo é lido tal como está, sem IA. */
+const MODELO_FICHA = `Título: Avaliação de Satisfação do Cliente 2026
+Introdução: Obrigado por dedicar 3 minutos a ajudar-nos a melhorar.
+
+Secção 1: Perfil
+Texto da secção: Responda pensando na sua organização.
+
+Pergunta 1: Em que sector opera a sua organização?
+Tipo: Escolha única
+Obrigatória: Sim
+Opções: Energia; Agricultura; Banca e seguros; Outro
+
+Pergunta 2: Que serviços já utilizou?
+Tipo: Escolha múltipla
+Obrigatória: Não
+Subtítulo: Escolha todas as que se aplicam.
+Opções: Websites; Automação; Agentes de IA; Software à medida
+
+Secção 2: Experiência
+Pergunta 3: Como avalia o atendimento?
+Tipo: Avaliação (1 a 5)
+Obrigatória: Sim
+
+Pergunta 4: Recomendaria a AGORAMOZ a um colega?
+Tipo: NPS (0 a 10)
+Obrigatória: Sim
+
+Pergunta 5: O que podíamos fazer melhor?
+Tipo: Texto longo
+Obrigatória: Não
+Condição: P4 = 6
+
+Agradecimento: Obrigado! A equipa lê todas as respostas.`;
+
 const EXEMPLO = `Inquérito de Maturidade Digital 2026
 Este inquérito ajuda-nos a perceber como a sua equipa trabalha hoje. Leva 3 minutos.
 
@@ -185,10 +219,12 @@ export function ImportarTexto({
 
       <div className="space-y-4 p-4">
         <p className="max-w-[70ch] text-sm text-[color:var(--muted)]">
-          Do Word, do Google Docs ou de uma mensagem, tal como está. Reconhece secções e o seu
-          texto, perguntas numeradas ou acabadas em «?», opções em lista ou na mesma linha («Sim /
-          Não»), obrigatórias («*», «(obrigatória)»), subtítulos entre parênteses, escalas («1 a
-          5», «0 a 10») e condições («Se sim, …»). Mostra o porquê de cada tipo antes de aplicar.
+          Do Word, do Google Docs ou de uma mensagem, tal como está. Se o texto disser a estrutura
+          — campos «Tipo:», «Obrigatória:», «Opções:», «Subtítulo:», «Texto da secção:»,
+          «Condição:», ou uma tabela com essas colunas — é lida exactamente assim, sem IA. Sem
+          campos, reconhece secções, perguntas numeradas ou acabadas em «?», opções em lista ou
+          em linhas soltas, obrigatórias («*»), escalas («1 a 5», «0 a 10») e condições («Se sim,
+          …»). Mostra de onde veio cada tipo antes de aplicar.
         </p>
 
         <div>
@@ -201,16 +237,28 @@ export function ImportarTexto({
             </label>
             {/* Só com o campo vazio: nunca apaga o que o admin colou. */}
             {texto.length === 0 && (
-              <button
-                type="button"
-                className="min-h-11 text-xs text-[color:var(--muted)] underline underline-offset-4 hover:text-[color:var(--on-surface)]"
-                onClick={() => {
-                  setTexto(EXEMPLO);
-                  textoRef.current?.focus();
-                }}
-              >
-                Inserir exemplo
-              </button>
+              <span className="flex flex-wrap gap-x-4">
+                <button
+                  type="button"
+                  className="min-h-11 text-xs text-[color:var(--muted)] underline underline-offset-4 hover:text-[color:var(--on-surface)]"
+                  onClick={() => {
+                    setTexto(MODELO_FICHA);
+                    textoRef.current?.focus();
+                  }}
+                >
+                  Inserir modelo com campos
+                </button>
+                <button
+                  type="button"
+                  className="min-h-11 text-xs text-[color:var(--muted)] underline underline-offset-4 hover:text-[color:var(--on-surface)]"
+                  onClick={() => {
+                    setTexto(EXEMPLO);
+                    textoRef.current?.focus();
+                  }}
+                >
+                  Inserir exemplo
+                </button>
+              </span>
             )}
           </div>
           <textarea
@@ -432,7 +480,7 @@ function RevisaoProposta({
   onAplicar: () => void;
   onDescartar: () => void;
 }) {
-  const { spec, resumo, avisos, razoes, motor, caiuParaLocal, modelo, partes } = proposta;
+  const { spec, resumo, avisos, razoes, motor, caiuParaLocal, modelo, partes, formato } = proposta;
   const inicio = modo === 'acrescentar' ? base.perguntas.length : 0;
   const novas = spec.perguntas.slice(inicio);
   const porChave = new Map(spec.perguntas.map((p) => [p.chave, p]));
@@ -463,9 +511,26 @@ function RevisaoProposta({
           Proposta
         </h3>
         <span className="rule-label text-[color:var(--muted)]">
-          {motor === 'kimi' ? `Gerado por IA · ${modelo ?? 'Kimi'}` : 'Analisador local'}
+          {formato
+            ? 'Estrutura lida do texto'
+            : motor === 'kimi'
+              ? `Gerado por IA · ${modelo ?? 'Kimi'}`
+              : 'Analisador local'}
         </span>
       </div>
+
+      {formato && (
+        <p className="mt-2 flex items-start gap-2 border border-[color:var(--border)] px-3 py-2 text-sm">
+          <Check aria-hidden className="mt-0.5 size-4 shrink-0" />
+          <span>
+            {formato === 'tabela'
+              ? 'O texto traz uma tabela com as colunas da estrutura'
+              : 'O texto declara a estrutura em campos («Tipo», «Obrigatória», «Opções»…)'}
+            : foi lida tal como está, sem IA — exacta e instantânea. Cada pergunta diz de onde veio
+            o tipo.
+          </span>
+        </p>
+      )}
 
       {caiuParaLocal && (
         <p className="mt-2 flex items-start gap-2 border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-3 py-2 text-sm">
