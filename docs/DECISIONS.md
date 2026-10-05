@@ -271,3 +271,21 @@ omissão, contacto só com consentimento, sem IA na v1, link recuperável.
   os resultados agregam por chave através das versões publicadas.
 **Consequência:** com `SURVEYS=off` nada muda no site nem no painel; ligar é
 aplicar a 0013, pôr `SURVEY_LINK_SECRET` e `SURVEYS=on`.
+
+## D-32 — AGORAFORMS: monólito modular agora, microserviços por gatilho
+
+O fundador pediu a arquitetura completa da plataforma de inquéritos
+(microserviços, Kubernetes, roadmap de 12 meses). Decisão: documentar a
+arquitetura-alvo inteira (`docs/AGORAFORMS_ARQUITETURA.md`) mas **construir
+como monólito modular** sobre Next.js + Supabase + Vercel, com fronteiras de
+módulo explícitas, eventos pela outbox da 0004 e API versionada.
+- **Porquê:** com 1–2 pessoas, microserviços e K8s acrescentam custo fixo e
+  falhas distribuídas sem volume que os justifique; uma transação Postgres
+  hoje dá consistência que serviços separados teriam de reconstruir.
+- **Gatilhos medidos para extrair serviços:** ≥ 2 equipas em paralelo, SLA
+  contratual ≥ 99,9 %, residência de dados não coberta, ou p95/volume acima
+  dos limiares da secção 8 do documento.
+- **Primeiro passo de produto:** a experiência de resposta (Lote R2), não a
+  infraestrutura.
+**Consequência:** cada módulo escreve só nas suas tabelas, por RPC com
+`exigir_papel` + `audit_log`; extrair um serviço passa a ser mover um módulo.

@@ -6,7 +6,8 @@ deixa contacto se quiser, e com consentimento. Os resultados agregam-se no
 `/admin` e exportam-se em CSV.
 
 É o primeiro passo do AGORAFORMS: uso interno da AGORAMOZ, sem IA na v1 (a
-interface está preparada em `lib/inqueritos/ia.ts`).
+interface está preparada em `lib/inqueritos/ia.ts`). A arquitetura da
+plataforma e o roadmap de 12 meses estão em `docs/AGORAFORMS_ARQUITETURA.md`.
 
 ## Estado
 
