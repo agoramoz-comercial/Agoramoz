@@ -13,10 +13,36 @@ plataforma e o roadmap de 12 meses estão em `docs/AGORAFORMS_ARQUITETURA.md`.
 
 | Peça | Estado |
 |---|---|
-| Construtor, partilha, resultados, CSV (`/admin/inqueritos`) | Pronto, **desligado** (`SURVEYS=off`) |
-| Página pública `/i/<token>` e `POST /api/inqueritos` | Pronta, responde 404 enquanto desligado |
-| Migração 0013 (`survey_links`, regras de `responses` e `activities`, RPC) | Pronta; **por aplicar** em produção |
-| Bloco «Inquéritos» no painel | Aparece só com `SURVEYS=on` |
+| Construtor, partilha, resultados, CSV (`/admin/inqueritos`) | **Em produção** (`SURVEYS=on`) |
+| Página pública `/i/<token>` e `POST /api/inqueritos` | **Em produção**; experiência v2 (Lote R) abaixo |
+| Migração 0013 (`survey_links`, regras de `responses` e `activities`, RPC) | **Aplicada** em produção (linhas 23 e 24 de `verificar-estado.sql`) |
+| Bloco «Inquéritos» no painel | Visível (`SURVEYS=on`) |
+
+## Experiência de quem responde (v2)
+
+Uma pergunta de cada vez, num palco de ecrã inteiro na superfície `deep` da
+marca (grão, malha de contorno parada, título em crómio nas boas-vindas).
+
+| Gesto | Efeito |
+|---|---|
+| Letras A–T | Escolhem a opção (escolha única avança; múltipla marca/desmarca) |
+| Dígitos 1–5 / 0–9 | Escolhem na avaliação / no NPS (o 10 por clique, toque ou setas) |
+| Enter | Começa (boas-vindas), segue (campo ou título da pergunta) |
+| Ctrl + Enter | Segue a partir do texto longo |
+| Setas no título | Avançam e recuam |
+| Deslizar (telemóvel) | Esquerda avança, direita volta |
+| Segmentos do progresso | Voltam a perguntas vistas (até 12 cartões) |
+
+- **Os atalhos nunca actuam dentro de um campo de texto**, nem com Ctrl, Cmd
+  ou Alt; avançar por gesto **nunca envia** — enviar é sempre o botão.
+- **Rascunho:** as respostas ficam em `sessionStorage` (morre com o separador),
+  **sem contacto nem token**, e são revalidadas contra o spec actual ao ler. Ao
+  reabrir: «Retomar onde parou» ou «Descartar respostas». Apaga-se ao enviar.
+  A pré-visualização do construtor não guarda nem mede nada.
+- **Telemóvel:** acções numa barra fixa acima da zona segura; NPS em 6 + 5
+  células de 48 px.
+- Código: `components/inqueritos/SurveyRenderer.tsx` e `partes/`; lógica pura
+  em `lib/inqueritos/teclas.ts`, `ritmo.ts`, `rascunho.ts` (com testes).
 
 ## Ligar (do lado do fundador)
 
