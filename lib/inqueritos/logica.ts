@@ -37,9 +37,15 @@ export function percursoDeVisibilidade(): (p: Pergunta, respostas: Respostas) =>
   const vistas = new Set<string>();
   let seccaoEscondida = false;
   return (p, respostas) => {
+    const m = p.mostrarSe;
+    // «Mostrar se P não for X» com P escondida: o salto de P nunca disparou,
+    // logo o bloco aparece (saltos encadeados — o padrão do Forms). As outras
+    // regras precisam de P à vista; uma resposta antiga a P não conta.
     const propria =
-      !p.mostrarSe ||
-      (vistas.has(p.mostrarSe.pergunta) && condicaoCumprida(p.mostrarSe, respostas));
+      !m ||
+      (m.op === 'diferente'
+        ? !vistas.has(m.pergunta) || condicaoCumprida(m, respostas)
+        : vistas.has(m.pergunta) && condicaoCumprida(m, respostas));
     if (p.tipo === 'seccao') seccaoEscondida = !propria;
     const mostra = propria && !seccaoEscondida;
     if (mostra) vistas.add(p.chave);
@@ -47,13 +53,29 @@ export function percursoDeVisibilidade(): (p: Pergunta, respostas: Respostas) =>
   };
 }
 
+/**
+ * Os cartões à vista. Além do percurso, retira o título de uma secção cujas
+ * perguntas ficaram TODAS escondidas (vários saltos da mesma pergunta para
+ * secções diferentes): seria um cartão vazio. Uma secção sem perguntas por
+ * desenho (uma declaração) fica. Secções não têm resposta, por isso isto não
+ * muda o que o servidor aceita.
+ */
 export function visiveis(spec: Pick<SpecInquerito, 'perguntas'>, respostas: Respostas): Pergunta[] {
   const visivel = percursoDeVisibilidade();
+  const marcas = spec.perguntas.map((p) => visivel(p, respostas));
   const resultado: Pergunta[] = [];
-  for (const p of spec.perguntas) {
-    if (visivel(p, respostas)) {
-      resultado.push(p);
+  spec.perguntas.forEach((p, i) => {
+    if (!marcas[i]) return;
+    if (p.tipo === 'seccao') {
+      let temPerguntas = false;
+      let algumaVisivel = false;
+      for (let j = i + 1; j < spec.perguntas.length && spec.perguntas[j]!.tipo !== 'seccao'; j++) {
+        temPerguntas = true;
+        if (marcas[j]) algumaVisivel = true;
+      }
+      if (temPerguntas && !algumaVisivel) return;
     }
-  }
+    resultado.push(p);
+  });
   return resultado;
 }

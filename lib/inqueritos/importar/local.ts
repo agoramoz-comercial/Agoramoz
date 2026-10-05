@@ -41,13 +41,15 @@ export function limparTexto(t: string, opcoes: { readonly tabs?: boolean } = {})
     .replace(/^[ \t]*(?:[\uF000-\uF0FF§Ø]|o(?=\t))[ \t]*/gmu, '• ');
   if (opcoes.tabs)
     return semMarcas
-      .replace(/[\u00A0\u2007\u202F]/g, ' ')
+      .replace(/\p{Zs}/gu, ' ')
       .replace(/[\u200B-\u200D\u2060]/g, '')
       .replace(/[ ]{2,}/g, ' ');
   return semMarcas
     .replace(/[   ]/g, ' ')
     .replace(/[​-‍⁠]/g, '')
     .replace(/\t/g, ' ')
+    // Os outros espaços Unicode (U+2003, U+3000…) também: nenhum regex vê corridas.
+    .replace(/\p{Zs}/gu, ' ')
     .replace(/[ ]{2,}/g, ' ');
 }
 

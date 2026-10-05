@@ -50,7 +50,9 @@ const condicaoImportada = z
   .object({
     pergunta: z.number().int().positive(),
     valor: z.string().min(1).max(200),
-    op: z.enum(['igual', 'diferente']).optional().catch(undefined),
+    // Sem `catch` próprio: uma regra desconhecida deita fora a condição inteira
+    // (o `catch` de fora), em vez de virar «igual» e inverter um salto.
+    op: z.enum(['igual', 'diferente']).optional(),
   })
   .optional()
   .catch(undefined);
@@ -114,7 +116,9 @@ export const rascunhoImportado = z.object({
   /** Blocos que vierem mal são descartados um a um, nunca o rascunho inteiro. */
   blocos: z
     .array(z.unknown())
-    .max(200)
+    // Folgado acima dos 250 blocos do spec: o `normalizar` conta e avisa o que
+    // não couber, em vez de o rascunho inteiro falhar aqui.
+    .max(1_000)
     .transform((lista) =>
       lista.flatMap((b) => {
         const r = blocoImportado.safeParse(b);

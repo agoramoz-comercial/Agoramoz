@@ -630,10 +630,25 @@ const LIKERT_PT = ['Discordo totalmente', 'Discordo', 'Neutro', 'Concordo', 'Con
 function expandirGrelhas(blocos: readonly BlocoLido[]): BlocoLido[] {
   return blocos.flatMap((b): BlocoLido[] => {
     if (b.k !== 'p' || b.tipo?.tipo !== 'grelha') return [b];
-    const colunas = b.opcoes.length >= 2 ? b.opcoes : LIKERT_PT;
+    // «Escala Likert 1-5» sem afirmações é uma escala, não uma grelha.
+    const dito = b.tipoDito ? simplificar(b.tipoDito) : '';
+    const r = intervalo(dito);
+    if (b.afirmacoes.length === 0 && b.opcoes.length < 2 && r) {
+      const t = porIntervalo(dito)!;
+      return [{ ...b, tipo: { ...t, nota: 'Likert sem afirmações: ficou uma escala.' } }];
+    }
+    // Sem colunas escritas: a escala numérica dita (até 11 pontos) ou a de concordância.
+    const numeros =
+      r && r[1] > r[0] && r[1] - r[0] <= 10
+        ? Array.from({ length: r[1] - r[0] + 1 }, (_, i) => String(r[0] + i))
+        : null;
+    const colunas = b.opcoes.length >= 2 ? b.opcoes : (numeros ?? LIKERT_PT);
     const tipoUnica: TipoLido = {
       tipo: 'escolha_unica',
-      nota: 'Likert/grelha do Microsoft Forms: uma pergunta por afirmação, com a mesma escala.',
+      nota:
+        b.afirmacoes.length === 0
+          ? 'Likert sem afirmações: ficou uma pergunta com a escala.'
+          : 'Likert/grelha do Microsoft Forms: uma pergunta por afirmação, com a mesma escala.',
     };
     if (b.afirmacoes.length === 0)
       return [{ ...b, opcoes: [...colunas], tipo: tipoUnica }];

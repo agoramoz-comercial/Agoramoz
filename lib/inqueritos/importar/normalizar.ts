@@ -194,6 +194,7 @@ export function normalizar(
   let ordem = 0;
   let foraDoLimite = 0;
   let contactosRetirados = 0;
+  let saltosDeContacto = 0;
   /** Ordem da secção no rascunho (1, 2…) → o seu índice em `novas`. */
   const seccaoPorOrdem = new Map<number, number>();
   let ordemSeccao = 0;
@@ -239,6 +240,7 @@ export function normalizar(
     }
     if (ehContacto(b.titulo)) {
       contactosRetirados += 1;
+      saltosDeContacto += b.saltos?.length ?? 0;
       continue;
     }
     const chave = novaChave(usadas, 'p');
@@ -341,7 +343,7 @@ export function normalizar(
     });
   if (contactosRetirados > 0)
     avisos.push({
-      texto: `${contactosRetirados} pergunta(s) de nome, email ou telefone foram retiradas: dados de contacto pedem-se no bloco «Contacto no fim», com consentimento.`,
+      texto: `${contactosRetirados} pergunta(s) de nome, email ou telefone foram retiradas: dados de contacto pedem-se no bloco «Contacto no fim», com consentimento.${saltosDeContacto > 0 ? ` Os ${saltosDeContacto} salto(s) que partiam delas também saíram.` : ''}`,
     });
 
   if (!novas.some(temResposta))

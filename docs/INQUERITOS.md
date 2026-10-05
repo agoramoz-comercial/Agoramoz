@@ -91,13 +91,21 @@ subtítulo, opções e condições. Nada é gravado: aplicar muda o construtor e
     perguntas) — exige a 0014 aplicada (`supabase/aplicar-0014.sql`, linha 25
     de `verificar-estado.sql`);
   - **ramificação:** uma secção com condição esconde-se com as suas
-    perguntas; condições «for» e «não for»;
+    perguntas; condições «for» e «não for»; saltos encadeados funcionam (um
+    «não for» sobre uma pergunta que ficou escondida conta como cumprido — o
+    salto nunca disparou); o título de uma secção cujas perguntas ficaram
+    todas escondidas não aparece como cartão vazio;
   - **saltos no texto:** «Se Não, passe para a Secção 3», «(Se respondeu Não,
     avance para a pergunta 10)», «Não → Secção 3», «Sim – ir para o fim»,
     «Lógica: Se Não, ir para a Secção 3» — viram «mostrar só se a resposta
     não for…» nos blocos saltados;
-  - **Likert/grelha:** «Tipo: Likert» + «Afirmações: a; b; c» (+ «Colunas:»
-    ou a escala de 5 pontos por omissão) → uma pergunta por afirmação;
+  - **Likert/grelha:** «Tipo: Likert» + «Afirmações: a; b; c» (+ «Colunas:»,
+    o intervalo dito — «Likert 1-5» dá colunas 1 a 5 — ou a escala de
+    concordância de 5 pontos) → uma pergunta por afirmação; «Likert 1-5» sem
+    afirmações é uma avaliação;
+  - **opções com salto:** com seta («Não → Secção 3») qualquer destino; com
+    «-», «:» ou «(» só com verbo («Não - passe para a P10») ou destino claro
+    («Não: Secção 3») — «Residência - Bloco 3» continua a ser um rótulo;
   - **equivalentes:** Declaração → secção; Ranking → escolha múltipla;
     Upload e Hora → texto curto; Legal → Aceito/Não aceito; Escala de
     opinião → avaliação, NPS ou número conforme o intervalo.

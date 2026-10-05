@@ -32,11 +32,37 @@ const RE_LINHA = new RegExp(
   'iu',
 );
 
-/** «Não → Secção 3», «Não (passe para a P10)», «Sim – ir para o fim». */
-const RE_OPCAO = new RegExp(
-  `^(?<rotulo>.+?)\\s*(?:→|->|=>|\\(|[-–—:])\\s*(?:${VERBO}\\s+)?(?:${PARA}\\s+)?(?:a\\s+|o\\s+)?${DESTINO}\\s*\\)?\\s*\\.?$`,
-  'iu',
-);
+/** Só «secção N» e «pergunta N»: um destino que não se confunde com um rótulo. */
+const DESTINO_CLARO =
+  '(?:(?<s>secç[aã]o|seccao|secao|section) ?(?<ns>\\d{1,3})|(?<p>pergunta|quest[aã]o|question) ?(?<np>\\d{1,3}(?:\\.\\d{1,3})?))';
+
+/**
+ * «Não → Secção 3», «Não (passe para a P10)», «Sim – ir para o fim».
+ * Com seta, qualquer destino. Com «-», «:» ou «(», só com verbo («passe
+ * para…») ou um destino claro («Secção 3»): «Residência - Bloco 3»,
+ * «Material (Parte 2)», «Trimestre - Q1» e «Satisfeito: final» são rótulos.
+ * O texto chega com os espaços já compactados, por isso os regex usam « ?».
+ */
+const RES_OPCAO = [
+  new RegExp(
+    `^(?<rotulo>.+?) ?(?:→|->|=>) ?(?:${VERBO} )?(?:${PARA} )?(?:a |o )?${DESTINO} ?\\.?$`,
+    'iu',
+  ),
+  new RegExp(
+    `^(?<rotulo>.+?) ?(?:\\(|[-–—:]) ?${VERBO} (?:directamente |diretamente )?(?:${PARA} )?(?:a |o )?${DESTINO} ?\\)? ?\\.?$`,
+    'iu',
+  ),
+  new RegExp(
+    `^(?<rotulo>.+?) ?(?:\\(|[-–—:]) ?(?:${PARA} )?(?:a |o )?${DESTINO_CLARO} ?\\)? ?\\.?$`,
+    'iu',
+  ),
+];
+
+/** Uma linha de salto é curta: acima disto nem se tenta. */
+const MAX_LINHA_SALTO = 200;
+
+/** Todos os espaços (também os Unicode) num só: os regex não têm por onde se multiplicar. */
+const compacto = (t: string) => t.replace(/[\s\p{Zs}]+/gu, ' ').trim();
 
 function destino(g: Record<string, string | undefined>): Omit<SaltoLido, 'valor'> {
   if (g.s) return { alvo: 'seccao', numero: g.ns! };
@@ -46,7 +72,9 @@ function destino(g: Record<string, string | undefined>): Omit<SaltoLido, 'valor'
 
 /** Uma linha inteira que é um salto: «Se Não, passe para a Secção 3». */
 export function lerSalto(l: string): SaltoLido | null {
-  const m = RE_LINHA.exec(l.trim());
+  const t = compacto(l);
+  if (t.length > MAX_LINHA_SALTO) return null;
+  const m = RE_LINHA.exec(t);
   if (!m?.groups) return null;
   const valor = m.groups.valor!.trim();
   if (!valor) return null;
@@ -55,7 +83,9 @@ export function lerSalto(l: string): SaltoLido | null {
 
 /** Uma opção com o salto colado: «Não → Secção 3» → rótulo «Não» + salto. */
 export function separarSaltoDeOpcao(opcao: string): { rotulo: string; salto?: SaltoLido } {
-  const m = RE_OPCAO.exec(opcao.trim());
+  const t = compacto(opcao);
+  if (t.length > MAX_LINHA_SALTO) return { rotulo: opcao };
+  const m = RES_OPCAO.map((re) => re.exec(t)).find((x) => x?.groups);
   if (!m?.groups) return { rotulo: opcao };
   const rotulo = m.groups.rotulo!.trim().replace(/[\s,;:–—-]+$/, '');
   if (!rotulo) return { rotulo: opcao };

@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -270,7 +271,9 @@ export function SurveyRenderer(props: Props) {
     track({ name: 'survey_step_viewed', surveyId, step: indice + 1 });
   }, [fase, indice, medir, surveyId]);
 
-  useEffect(() => {
+  // Antes da pintura: uma tecla premida logo a seguir à troca de cartão já
+  // encontra o foco no sítio, e nunca é roubada a meio de escrever.
+  useLayoutEffect(() => {
     if (focarAoMudar.current) headingRef.current?.focus();
   }, [indice, fase]);
 

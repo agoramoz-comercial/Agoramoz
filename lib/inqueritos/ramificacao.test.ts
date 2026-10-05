@@ -247,3 +247,139 @@ describe('o servidor aplica a mesma ramificação', () => {
     expect(certo.ok).toBe(true);
   });
 });
+
+// ── Revisão ECC (code-reviewer) do Lote T ───────────────────────────────────
+
+const doTexto = (t: string) => {
+  const r = normalizar(analisarTexto(t), {
+    base: specInicial('pt'),
+    reservadas: SEM_RESERVADAS,
+    modo: 'substituir',
+  });
+  if (!r.ok) throw new Error(r.motivo);
+  return r;
+};
+const chaveDe = (spec: SpecInquerito, titulo: string) =>
+  spec.perguntas.find((p) => p.titulo === titulo)!.chave;
+
+describe('saltos encadeados (o padrão do Forms)', () => {
+  const r = doTexto(`Teste
+Secção 1: A
+1. Q0? (Sim/Não)
+Se Não, passe para a Secção 3
+Secção 2: B
+2. Q1? (Sim/Não)
+Se Sim, passe para a Secção 4
+3. Q1b?
+Secção 3: C
+4. Q2?
+Secção 4: D
+5. Q3?`);
+  const q0 = chaveDe(r.spec, 'Q0?');
+
+  it('um salto que nunca disparou (pergunta escondida) não esconde o destino de outro', () => {
+    const titulos = visiveis(r.spec, { [q0]: 'o2' }).map((p) => p.titulo);
+    expect(titulos).toEqual(['A', 'Q0?', 'C', 'Q2?', 'D', 'Q3?']);
+  });
+
+  it('o servidor aceita a resposta na secção de destino', async () => {
+    const { validarResposta } = await import('./respostas');
+    const v = validarResposta(r.spec, {
+      respostas: { [q0]: 'o2', [chaveDe(r.spec, 'Q2?')]: 'x' },
+    });
+    expect(v.ok).toBe(true);
+  });
+
+  it('com «Sim» em Q0, o salto de Q1 continua a funcionar', () => {
+    const q1 = chaveDe(r.spec, 'Q1?');
+    const titulos = visiveis(r.spec, { [q0]: 'o1', [q1]: 'o1' }).map((p) => p.titulo);
+    expect(titulos).toEqual(['A', 'Q0?', 'B', 'Q1?', 'D', 'Q3?']);
+  });
+});
+
+describe('cada opção para uma secção diferente', () => {
+  const r = doTexto(`Rotas
+1. Qual área?
+a) Vendas → Secção 2
+b) Compras → Secção 3
+c) Outra → Secção 4
+Secção 2: Vendas
+2. Quanto vende?
+Secção 3: Compras
+3. Quanto compra?
+Secção 4: Outra
+4. Qual?`);
+  const area = chaveDe(r.spec, 'Qual área?');
+
+  it('não deixa um cartão de secção vazio à vista', () => {
+    expect(visiveis(r.spec, { [area]: 'o3' }).map((p) => p.titulo)).toEqual([
+      'Qual área?',
+      'Outra',
+      'Qual?',
+    ]);
+  });
+
+  it('uma secção sem perguntas por desenho (declaração) continua à vista', () => {
+    const spec = {
+      ...specInicial('pt'),
+      perguntas: [
+        { tipo: 'seccao', chave: 'decl', titulo: 'Declaração' },
+        { tipo: 'seccao', chave: 's2', titulo: 'Perguntas' },
+        { tipo: 'texto_curto', chave: 'q', titulo: 'Q', obrigatoria: false, max: 200 },
+      ],
+    } as unknown as SpecInquerito;
+    expect(chaves(visiveis(spec, {}))).toEqual(['decl', 's2', 'q']);
+  });
+});
+
+describe('opções que parecem saltos mas são rótulos', () => {
+  it.each([
+    'Residência - Bloco 3',
+    'Material (Parte 2)',
+    'Trimestre - Q1',
+    'Satisfeito: final',
+    'Outro: end',
+    'Nenhum - fim',
+    'Não sei: P2',
+  ])('«%s» fica como está', (texto) => {
+    expect(separarSaltoDeOpcao(texto)).toEqual({ rotulo: texto });
+  });
+
+  it('com verbo ou destino claro continua a ser salto', () => {
+    expect(separarSaltoDeOpcao('Não - passe para a P10').salto).toMatchObject({
+      alvo: 'pergunta',
+      numero: '10',
+    });
+    expect(separarSaltoDeOpcao('Não: Secção 3').salto).toMatchObject({
+      alvo: 'seccao',
+      numero: '3',
+    });
+  });
+});
+
+describe('texto hostil não bloqueia o servidor', () => {
+  it.each([' ', ' ', '　', ' '])('espaços «%s» em corrida', (esp) => {
+    const inicio = performance.now();
+    expect(lerSalto(`Se${esp.repeat(5000)}x`)).toBeNull();
+    separarSaltoDeOpcao(`a -${esp.repeat(5000)}p`);
+    analisarTexto(`1. Pergunta?\nSe${esp.repeat(2000)}x`);
+    expect(performance.now() - inicio).toBeLessThan(500);
+  });
+});
+
+describe('condição do Kimi com regra desconhecida', () => {
+  it('cai inteira em vez de virar «igual» (que inverteria o salto)', async () => {
+    const { rascunhoImportado } = await import('./importar/esquema');
+    const r = rascunhoImportado.parse({
+      blocos: [
+        { bloco: 'pergunta', titulo: 'A?', tipo: 'escolha_unica', opcoes: ['Sim', 'Não'] },
+        {
+          bloco: 'pergunta',
+          titulo: 'B?',
+          condicao: { pergunta: 1, valor: 'Não', op: 'nao_for' },
+        },
+      ],
+    });
+    expect((r.blocos[1] as { condicao?: unknown }).condicao).toBeUndefined();
+  });
+});

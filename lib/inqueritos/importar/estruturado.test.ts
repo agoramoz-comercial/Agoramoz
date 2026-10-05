@@ -329,3 +329,22 @@ Opções: Preço; Prazo; Qualidade`)!;
     );
   });
 });
+
+describe('Likert sem afirmações (revisão ECC)', () => {
+  it('«Escala Likert 1-5» é uma avaliação, não uma escala de concordância', () => {
+    const lida = analisarEstruturado(
+      'Pergunta 1: Quão satisfeito está?\nTipo: Escala Likert 1-5\nObrigatória: Sim',
+    )!;
+    expect(lida.rascunho.blocos).toHaveLength(1);
+    expect(lida.rascunho.blocos[0]).toMatchObject({ bloco: 'pergunta', tipo: 'avaliacao' });
+  });
+
+  it('com afirmações e «1-5», as colunas são 1 a 5', () => {
+    const lida = analisarEstruturado(
+      'Pergunta 1: Avalie\nTipo: Likert 1-5\nObrigatória: Sim\nAfirmações:\n- Preço\n- Prazo',
+    )!;
+    const blocos = lida.rascunho.blocos;
+    expect(blocos).toHaveLength(2);
+    expect(blocos[0]).toMatchObject({ titulo: 'Preço', opcoes: ['1', '2', '3', '4', '5'] });
+  });
+});

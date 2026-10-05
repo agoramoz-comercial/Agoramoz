@@ -326,7 +326,13 @@ Microsoft Forms e do Typeform».
   até à secção seguinte (o «ir para a secção» do Forms, o «logic jump» do
   Typeform). Muda o significado de condições em secções já existentes — uso
   interno, poucos inquéritos.
-- **Condição «não for»** (`diferente`): sem resposta conta como «não é».
+- **Condição «não for»** (`diferente`): sem resposta conta como «não é»; com
+  a pergunta de origem escondida, conta como cumprida (o salto nunca
+  disparou), para os saltos encadeados levarem ao destino certo. Revisão ECC.
+- **Secção sem perguntas à vista:** `visiveis` não a mostra como cartão vazio
+  (vários saltos da mesma pergunta para secções diferentes). Uma secção sem
+  perguntas por desenho (declaração) fica. Não muda o que o servidor aceita:
+  secções não têm resposta.
 - **Saltos escritos em texto** («Se Não, passe para a Secção 3», «Não →
   Secção 3», «ir para o fim») viram condições «não for» nos blocos saltados.
 - **Tipos que não existem aqui** (Likert/grelha, ranking, upload, hora,
