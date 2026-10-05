@@ -287,9 +287,11 @@ console.log('\nv2 — teclado (1440 px)');
   await p.keyboard.press('4');
   await p.waitForFunction(() => document.querySelector('form h2 span[id$="-titulo"]')?.textContent?.startsWith('Recomendaria'));
   ok('tecla 4 escolhe na avaliação e avança');
-  await p.keyboard.press('9');
+  // «1» seguido de «0» é 10, nunca 0.
+  await p.keyboard.press('1');
+  await p.keyboard.press('0');
   await p.waitForFunction(() => document.querySelector('form h2 span[id$="-titulo"]')?.textContent?.startsWith('Até quando'));
-  ok('tecla 9 escolhe no NPS e avança');
+  ok('teclas 1 0 escolhem 10 no NPS e avançam');
   await p.locator('input[type="date"]').fill('2026-12-31');
   await p.getByRole('button', { name: 'Continuar' }).click();
   await p.getByRole('textbox', { name: 'Mais alguma coisa?' }).fill('nada');
@@ -307,7 +309,7 @@ console.log('\nv2 — teclado (1440 px)');
   confere((await p.getByText('Respondeu a 8 perguntas.').count()) === 1, 'agradecimento diz quantas respondeu');
   confere(
     JSON.stringify(envios[0]?.respostas) ===
-      JSON.stringify({ usa_erp: 'sim', qual_erp: 'SAP', areas: ['financas', 'operacoes'], pessoas: 12, satisfacao: 4, nps: 9, prazo: '2026-12-31', comentario: 'nada' }),
+      JSON.stringify({ usa_erp: 'sim', qual_erp: 'SAP', areas: ['financas', 'operacoes'], pessoas: 12, satisfacao: 4, nps: 10, prazo: '2026-12-31', comentario: 'nada' }),
     'só teclado: respostas exactas',
     JSON.stringify(envios[0]?.respostas),
   );

@@ -769,3 +769,12 @@
   font-size: clamp(1.1875rem, 1.05rem + 0.7vw, 1.5rem);
   line-height: 1.2;
 }
+
+/* No telemóvel a barra de acções do inquérito é fixa em baixo: o que recebe o
+   foco (última opção, texto longo, campos de contacto) rola para cima dela em
+   vez de ficar tapado (WCAG 2.4.11). */
+@media (width < 40rem) {
+  html:has([data-barra-acoes]) {
+    scroll-padding-bottom: 6rem;
+  }
+}

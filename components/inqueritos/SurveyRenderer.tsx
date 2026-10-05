@@ -65,6 +65,12 @@ type Envio = 'idle' | 'enviando' | 'erro' | 'limite';
 
 /** O suficiente para ver a escolha marcada antes de o cartão mudar. */
 const PAUSA_MS = 260;
+/**
+ * NPS por teclado: «1» pode ser o início de «10». Espera-se um pouco mais
+ * antes de avançar, e um «0» dentro desta janela faz 10 — nunca 0, que seria
+ * o contrário do que a pessoa quis dizer.
+ */
+const JANELA_DEZ_MS = 700;
 const AUTOMATICOS = new Set<Pergunta['tipo']>(['escolha_unica', 'avaliacao', 'nps']);
 /** Deslize mínimo, em px, para contar como gesto (o mesmo do diagnóstico). */
 const DESLIZE_PX = 60;
@@ -116,7 +122,7 @@ function dicaDe(p: Pergunta, idioma: Idioma): string | null {
 }
 
 /** O atalho de teclado da pergunta, para quem tem teclado e rato — ou nada. */
-function atalhoDe(p: Pergunta, idioma: Idioma): string | null {
+function atalhoDe(p: Pergunta, idioma: Idioma, ultimo: boolean): string | null {
   switch (p.tipo) {
     case 'escolha_unica':
     case 'escolha_multipla':
@@ -127,9 +133,9 @@ function atalhoDe(p: Pergunta, idioma: Idioma): string | null {
     case 'avaliacao':
       return preencher(INQ.teclasOpcoes, idioma, { de: 1, ate: 5 });
     case 'nps':
-      return preencher(INQ.teclasOpcoes, idioma, { de: 0, ate: 9 });
+      return preencher(INQ.teclasOpcoes, idioma, { de: 0, ate: 10 });
     case 'texto_longo':
-      return t(INQ.teclaCtrlEnter, idioma);
+      return ultimo ? null : t(INQ.teclaCtrlEnter, idioma);
     default:
       return null;
   }
@@ -223,6 +229,8 @@ export function SurveyRenderer(props: Props) {
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
   const vistos = useRef(new Set<number>());
   const toque = useRef<{ x: number; y: number } | null>(null);
+  /** Quando se premiu «1» num NPS (ver JANELA_DEZ_MS), ou nulo. */
+  const umPremido = useRef<number | null>(null);
   /** Um por submissão, criado no primeiro envio: repetir o envio não duplica a resposta. */
   const submissionId = useRef<string | null>(null);
 
@@ -242,7 +250,8 @@ export function SurveyRenderer(props: Props) {
 
   const textoGuardado = useSyncExternalStore(
     subscreverRascunho,
-    () => lerArmazenado(chaveRascunho),
+    // Só as boas-vindas oferecem retomar: fora delas, nem se lê.
+    () => (fase === 'inicio' ? lerArmazenado(chaveRascunho) : null),
     () => null,
   );
   /** Só nas boas-vindas se oferece retomar; depois, o rascunho é o que se está a responder. */
@@ -320,6 +329,9 @@ export function SurveyRenderer(props: Props) {
   }
 
   function definir(chave: string, valor: ValorRascunho) {
+    // Durante um envio o corpo já partiu: mudar uma resposta agora perdia-se
+    // em silêncio e o agradecimento diria o contrário.
+    if (aEnviar.current) return;
     rascunhoRef.current = { ...rascunhoRef.current, [chave]: valor };
     setRascunho(rascunhoRef.current);
     setErro(null);
@@ -432,11 +444,12 @@ export function SurveyRenderer(props: Props) {
     irPara(destino);
   }
 
-  function escolher(chave: string, valor: ValorRascunho) {
+  function escolher(chave: string, valor: ValorRascunho, pausa = PAUSA_MS) {
+    if (aEnviar.current) return;
     definir(chave, valor);
     if (temporizador.current) clearTimeout(temporizador.current);
     const de = indiceRef.current;
-    temporizador.current = setTimeout(() => avancar(de, true), PAUSA_MS);
+    temporizador.current = setTimeout(() => avancar(de, true), pausa);
   }
 
   async function enviar() {
@@ -523,6 +536,8 @@ export function SurveyRenderer(props: Props) {
   }
 
   function onKeyDownTitulo(e: React.KeyboardEvent) {
+    // Uma tecla mantida premida não pode saltar cartões em série.
+    if (e.repeat) return;
     // Como avanço automático: no último cartão valida mas nunca envia —
     // enviar é sempre um gesto explícito no botão.
     if (e.key === 'ArrowRight' || e.key === 'Enter') {
@@ -540,7 +555,22 @@ export function SurveyRenderer(props: Props) {
     const acao = acaoDaTecla(p, e);
     if (!acao) return;
     e.preventDefault();
+    // Mantida premida, uma letra marcava e desmarcava sem parar.
+    if (e.repeat) return;
     if (acao.tipo === 'valor') {
+      if (p.tipo === 'nps') {
+        const um = umPremido.current;
+        umPremido.current = null;
+        if (acao.valor === 0 && um !== null && e.timeStamp - um < JANELA_DEZ_MS) {
+          escolher(p.chave, 10);
+          return;
+        }
+        if (acao.valor === 1) {
+          umPremido.current = e.timeStamp;
+          escolher(p.chave, 1, JANELA_DEZ_MS);
+          return;
+        }
+      }
       escolher(p.chave, acao.valor);
       return;
     }
@@ -718,7 +748,7 @@ export function SurveyRenderer(props: Props) {
   const erroId = `${base}-erro`;
   const passo = preencher(INQ.passo, idioma, { n: indice + 1, total });
   const dica = p ? dicaDe(p, idioma) : null;
-  const atalho = p ? atalhoDe(p, idioma) : null;
+  const atalho = p ? atalhoDe(p, idioma, ultimo) : null;
   const automatico = p !== null && AUTOMATICOS.has(p.tipo) && !ultimo;
   const descritores =
     [
@@ -904,6 +934,7 @@ export function SurveyRenderer(props: Props) {
             da zona segura do iPhone; a partir de `sm`, em linha. Um só par de
             botões — nunca dois «Continuar» na mesma página. */}
         <div
+          data-barra-acoes={palco ? '' : undefined}
           className={cn(
             'flex items-center justify-between gap-3',
             palco
