@@ -4,8 +4,9 @@ import { RPC } from './rpc';
 
 const SQL = readFileSync('supabase/migrations/0006_admin_actions.sql', 'utf-8');
 const SQL13 = readFileSync('supabase/migrations/0013_inqueritos.sql', 'utf-8');
+const SQL15 = readFileSync('supabase/migrations/0015_news.sql', 'utf-8');
 /** Onde as funções do mapa `RPC` podem estar declaradas. */
-const ACCOES = `${SQL}\n${SQL13}`;
+const ACCOES = `${SQL}\n${SQL13}\n${SQL15}`;
 
 /** Lê os parâmetros declarados na migração para cada função (numa ou em várias linhas). */
 function parametrosDe(nome: string): string[] {
@@ -41,13 +42,15 @@ describe('contrato das funções do admin', () => {
       expect(cabecalho, nome).toContain('security definer');
       expect(cabecalho, nome).toContain('set search_path = public, pg_catalog');
     }
-    for (const nome of Object.keys(RPC).filter((n) => SQL13.includes(`function public.${n}(`))) {
-      expect(SQL13, nome).toMatch(
-        new RegExp(`revoke all on function public\\.${nome}\\([^)]*\\) from public, anon;`),
-      );
-      expect(SQL13, nome).toMatch(
-        new RegExp(`grant execute on function public\\.${nome}\\([^)]*\\) to authenticated;`),
-      );
+    for (const fonte of [SQL13, SQL15]) {
+      for (const nome of Object.keys(RPC).filter((n) => fonte.includes(`function public.${n}(`))) {
+        expect(fonte, nome).toMatch(
+          new RegExp(`revoke all on function public\\.${nome}\\([^)]*\\) from public, anon;`),
+        );
+        expect(fonte, nome).toMatch(
+          new RegExp(`grant execute on function public\\.${nome}\\([^)]*\\) to authenticated;`),
+        );
+      }
     }
   });
 

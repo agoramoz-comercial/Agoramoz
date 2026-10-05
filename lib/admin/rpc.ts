@@ -1,5 +1,5 @@
 /**
- * O contrato com as migrações 0006 (acções do CRM) e 0013 (inquéritos).
+ * O contrato com as migrações 0006 (acções do CRM), 0013 (inquéritos) e 0015 (News).
  *
  * Existe como dado, e não espalhado por chamadas, para que um teste o possa
  * comparar com a assinatura real lida do ficheiro SQL. Um parâmetro renomeado
@@ -25,6 +25,46 @@ export const RPC = {
   criar_link: ['p_id', 'p_link_id', 'p_token_hash', 'p_rotulo', 'p_expira', 'p_max'],
   revogar_link: ['p_link_id'],
   registar_exportacao_inquerito: ['p_id', 'p_com_contacto'],
+  // 0015 — AGORAMOZ News (redacção e publicidade)
+  criar_artigo: [
+    'p_slug',
+    'p_idioma',
+    'p_titulo',
+    'p_entrada',
+    'p_seccao',
+    'p_prioridade',
+    'p_analise',
+    'p_fonte_nome',
+    'p_fonte_url',
+  ],
+  guardar_artigo: [
+    'p_id',
+    'p_revisao',
+    'p_slug',
+    'p_titulo',
+    'p_entrada',
+    'p_seccao',
+    'p_nota',
+    'p_fonte_nome',
+    'p_fonte_url',
+  ],
+  publicar_artigo: ['p_id', 'p_revisao'],
+  arquivar_artigo: ['p_id', 'p_revisao'],
+  guardar_anuncio: [
+    'p_id',
+    'p_revisao',
+    'p_slug',
+    'p_titulo',
+    'p_mensagem',
+    'p_ticker',
+    'p_cta',
+    'p_destino',
+    'p_tema',
+    'p_inicio',
+    'p_fim',
+    'p_peso',
+  ],
+  definir_anuncio_activo: ['p_id', 'p_activo'],
 } as const satisfies Record<string, readonly string[]>;
 
 export type NomeRpc = keyof typeof RPC;

@@ -1,5 +1,5 @@
 -- ============================================================================
--- Verificação de estado — 0009 a 0014
+-- Verificação de estado — 0009 a 0015
 -- ============================================================================
 -- SÓ LEITURA. Não cria, não altera e não apaga nada. Pode correr as vezes que
 -- quiser, com o site a funcionar.
@@ -9,7 +9,8 @@
 -- que decidem o deploy ficavam escondidas atrás de uma contagem de colunas.
 --
 -- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
--- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014.
+-- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
+-- a 26 e a 27 para 0015 (News).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -142,4 +143,36 @@ select 25, 'função', 'inquéritos: 200 perguntas + 50 secções (0014)',
                  and pg_get_functiondef(to_regprocedure('public.spec_de_inquerito_valido(jsonb)')) like '%between 1 and 250%'
                  and pg_get_functiondef(to_regprocedure('public.spec_de_inquerito_valido(jsonb)')) like '%<= 524288%'
             then 'ok' else 'EM FALTA - correr aplicar-0014.sql' end
+-- 0015: AGORAMOZ News — tabelas e as funções que a aplicação chama.
+union all
+select 26, 'função', 'news: artigos, gostos, anúncios e as 13 funções (0015)',
+       case when to_regclass('public.news_artigos') is not null
+                 and to_regclass('public.news_gostos') is not null
+                 and to_regclass('public.news_anuncios') is not null
+                 and to_regclass('public.news_anuncio_posicoes') is not null
+                 and to_regclass('public.news_anuncio_vistos') is not null
+                 and to_regprocedure('public.criar_artigo(text, text, text, text, text, text, jsonb, text, text)') is not null
+                 and to_regprocedure('public.guardar_artigo(uuid, integer, text, text, text, text, text, text, text)') is not null
+                 and to_regprocedure('public.publicar_artigo(uuid, integer)') is not null
+                 and to_regprocedure('public.arquivar_artigo(uuid, integer)') is not null
+                 and to_regprocedure('public.guardar_anuncio(uuid, integer, text, text, text, text, text, text, text, timestamptz, timestamptz, integer)') is not null
+                 and to_regprocedure('public.definir_anuncio_activo(uuid, boolean)') is not null
+                 and to_regprocedure('public.artigos_publicados(text, text, integer, timestamptz)') is not null
+                 and to_regprocedure('public.artigo_publicado(text)') is not null
+                 and to_regprocedure('public.gostar_artigo(text, text)') is not null
+                 and to_regprocedure('public.partilhar_artigo(text, text)') is not null
+                 and to_regprocedure('public.anuncios_activos()') is not null
+                 and to_regprocedure('public.registar_impressoes(jsonb, text)') is not null
+                 and to_regprocedure('public.registar_clique_anuncio(uuid, text, text)') is not null
+            then 'ok' else 'EM FALTA - correr aplicar-0015.sql' end
+-- O caminho público do News é só da chave de serviço: anon nunca executa.
+union all
+select 27, 'direitos', 'news: o público não chama as funções nem lê as tabelas (0015)',
+       case when to_regprocedure('public.gostar_artigo(text, text)') is null
+                 then 'EM FALTA - correr aplicar-0015.sql'
+            when has_function_privilege('anon', 'public.gostar_artigo(text, text)', 'execute')
+                 or has_function_privilege('anon', 'public.registar_clique_anuncio(uuid, text, text)', 'execute')
+                 or has_table_privilege('anon', 'public.news_artigos', 'select')
+                 then 'ATENCAO - anon tem acesso; correr aplicar-0015.sql de novo'
+            else 'ok' end
 order by ordem;
