@@ -9,7 +9,7 @@ import { serverEnv } from '@/lib/config/env';
 import { slugDe } from '@/lib/inqueritos/construtor';
 import { fimDoDia } from '@/lib/inqueritos/links';
 import { hashToken, tokenDoLink } from '@/lib/inqueritos/token';
-import { specInicial, specInquerito } from '@/lib/inqueritos/spec';
+import { LIMITES, specInicial, specInquerito } from '@/lib/inqueritos/spec';
 import { log } from '@/lib/log/logger';
 import { RPC, type NomeRpc } from './rpc';
 
@@ -62,6 +62,7 @@ async function executar(
   funcao: NomeRpc,
   argumentos: Record<string, unknown>,
   destino: string,
+  traduzir?: (codigo: string | undefined) => string | undefined,
 ): Promise<unknown> {
   // Falha cedo e em desenvolvimento se alguém passar um argumento que a função
   // não declara: o PostgREST responderia «função não encontrada», que manda
@@ -81,7 +82,8 @@ async function executar(
       reason: funcao,
       errorCode: error.code ?? 'desconhecido',
     });
-    redirect(`${destino}?erro=${encodeURIComponent(mensagemDe(error.code, error.message))}`);
+    const mensagem = traduzir?.(error.code) ?? mensagemDe(error.code, error.message);
+    redirect(`${destino}?erro=${encodeURIComponent(mensagem)}`);
   }
 
   log.info('admin.accao', { outcome: 'accepted', reason: funcao });
@@ -205,8 +207,10 @@ function exigirInqueritos(): void {
 
 const nomeDeInquerito = z.string().trim().min(1).max(160);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-/** O spec tem tecto de 64 KB; o texto do formulário, com folga para o JSON. */
-const MAX_SPEC_TEXTO = 200_000;
+/** O texto do formulário segue o tecto do spec, com folga para o nome e o JSON. */
+const MAX_SPEC_TEXTO = LIMITES.specBytes + 8_192;
+/** O tecto antigo da base (0013): perguntas e secções juntas. */
+const BLOCOS_ANTES_DA_0014 = 50;
 
 function voltarCom(destino: string, erro: string): never {
   redirect(`${destino}?erro=${encodeURIComponent(erro)}`);
@@ -262,7 +266,19 @@ export async function guardarInquerito(formData: FormData): Promise<void> {
   if (!spec.success)
     voltarCom(destino, 'O inquérito tem problemas por corrigir. Nada foi guardado.');
 
-  await executar('guardar_rascunho', { p_id: id, p_nome: nome.data, p_spec: spec.data }, destino);
+  // Com a 0014 por aplicar, a base ainda recusa mais de 50 blocos com 22023.
+  // O zod já aceitou o spec, por isso essa recusa só pode vir daí: diz-se o
+  // passo que falta em vez de «formato inválido».
+  const muitosBlocos = spec.data.perguntas.length > BLOCOS_ANTES_DA_0014;
+  await executar(
+    'guardar_rascunho',
+    { p_id: id, p_nome: nome.data, p_spec: spec.data },
+    destino,
+    (codigo) =>
+      codigo === '22023' && muitosBlocos
+        ? 'A base de dados ainda aceita só 50 perguntas e secções: aplique supabase/aplicar-0014.sql no SQL Editor (linha 25 do verificar-estado). Nada foi guardado.'
+        : undefined,
+  );
   const publicar = formData.get('intencao') === 'publicar';
   if (publicar) await executar('publicar_versao', { p_id: id }, destino);
 

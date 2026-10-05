@@ -42,5 +42,7 @@ describe('0014 — limites do Microsoft Forms', () => {
       "select 25, 'função', 'inquéritos: 200 perguntas + 50 secções (0014)'",
     );
     expect(VERIFICAR).toContain(`between 1 and ${LIMITES.blocos}`);
+    expect(VERIFICAR).toContain(`<= ${LIMITES.specBytes * 2}`);
+    expect(VERIFICAR).toContain("to_regprocedure('public.spec_de_inquerito_valido(jsonb)')");
   });
 });

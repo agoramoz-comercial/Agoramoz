@@ -9,7 +9,8 @@
 -- do que já está gravado muda.
 --
 -- Enquanto não correr isto, gravar um inquérito com mais de 50 blocos falha
--- com «inquérito inválido»; o resto funciona como hoje.
+-- com «Inquérito com formato inválido.» (o painel explica o passo); o resto
+-- funciona como hoje.
 --
 -- Depois, corra verificar-estado.sql: a linha 25 tem de dizer «ok».
 -- ============================================================================

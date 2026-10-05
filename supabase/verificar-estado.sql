@@ -138,8 +138,8 @@ select 24, 'função', 'inquéritos: as 10 funções chamadas pela aplicação (
 -- blocos (200 perguntas + 50 secções).
 union all
 select 25, 'função', 'inquéritos: 200 perguntas + 50 secções (0014)',
-       case when exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-                         where n.nspname = 'public' and p.proname = 'spec_de_inquerito_valido'
-                           and pg_get_functiondef(p.oid) like '%between 1 and 250%')
+       case when to_regprocedure('public.spec_de_inquerito_valido(jsonb)') is not null
+                 and pg_get_functiondef(to_regprocedure('public.spec_de_inquerito_valido(jsonb)')) like '%between 1 and 250%'
+                 and pg_get_functiondef(to_regprocedure('public.spec_de_inquerito_valido(jsonb)')) like '%<= 524288%'
             then 'ok' else 'EM FALTA - correr aplicar-0014.sql' end
 order by ordem;
