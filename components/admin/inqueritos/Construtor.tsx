@@ -765,7 +765,7 @@ function EditorPergunta({
             type="button"
             className={iconeBotao}
             id={`${base}-duplicar`}
-            aria-label={`Duplicar a pergunta ${n}`}
+            aria-label={`Duplicar a ${p.tipo === 'seccao' ? 'secção' : 'pergunta'} ${n}`}
             title="Duplicar"
             disabled={!podeDuplicar}
             onClick={onDuplicar}
@@ -1043,7 +1043,15 @@ function EditorPergunta({
                   if (!nova || !vals) return;
                   onAlterar((q) => ({
                     ...q,
-                    mostrarSe: { pergunta: nova.chave, op: vals.ops[0]!, valor: vals.valores[0]! },
+                    mostrarSe: {
+                      pergunta: nova.chave,
+                      // Um «não for» escolhido de propósito mantém-se se a nova pergunta o aceitar.
+                      op:
+                        q.mostrarSe && vals.ops.includes(q.mostrarSe.op)
+                          ? q.mostrarSe.op
+                          : vals.ops[0]!,
+                      valor: vals.valores[0]!,
+                    },
                   }));
                 }}
               >
@@ -1065,12 +1073,19 @@ function EditorPergunta({
                 <select
                   id={`${base}-cond-op`}
                   className={cn(campo, 'mt-1.5')}
-                  value={p.mostrarSe.op}
+                  // A pergunta-alvo pode ter mudado de tipo: uma regra que já não serve
+                  // mostra-se vazia (com o erro de validação), não disfarçada de «for».
+                  value={possiveis.ops.includes(p.mostrarSe.op) ? p.mostrarSe.op : ''}
                   onChange={(e) => {
                     const op = e.target.value as NonNullable<Pergunta['mostrarSe']>['op'];
                     onAlterar((q) => (q.mostrarSe ? { ...q, mostrarSe: { ...q.mostrarSe, op } } : q));
                   }}
                 >
+                  {!possiveis.ops.includes(p.mostrarSe.op) && (
+                    <option value="" disabled>
+                      (escolha uma regra)
+                    </option>
+                  )}
                   {possiveis.ops.map((op) => (
                     <option key={op} value={op}>
                       {op === 'diferente' ? 'não for' : op === 'inclui' ? 'incluir' : 'for'}
@@ -1080,7 +1095,7 @@ function EditorPergunta({
               </div>
             ) : (
               <p className="pb-3 text-sm text-[color:var(--muted)]">
-                {p.mostrarSe.op === 'inclui' ? 'incluir' : p.mostrarSe.op === 'diferente' ? 'não for' : 'for'}
+                {(possiveis?.ops[0] ?? p.mostrarSe.op) === 'inclui' ? 'incluir' : 'for'}
               </p>
             )}
             <div>

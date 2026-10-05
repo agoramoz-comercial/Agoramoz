@@ -694,7 +694,7 @@ function Condicao({ pergunta, porChave }: { pergunta: Pergunta; porChave: Map<st
   return (
     <span className="border border-dashed border-[color:var(--border)] px-1.5 py-0.5">
       Só se «{alvo?.titulo ?? c.pergunta}»{' '}
-      {c.op === 'inclui' ? 'incluir' : c.op === 'diferente' ? '≠' : '='} {valor}
+      {c.op === 'inclui' ? 'incluir' : c.op === 'diferente' ? 'não for' : 'for'} «{valor}»
     </span>
   );
 }

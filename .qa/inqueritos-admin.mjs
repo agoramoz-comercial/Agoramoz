@@ -228,7 +228,7 @@ for (const largura of [390, 1440]) {
     resumo,
   );
   confere((await p.getByText('Lista de 4 opções; escolhe-se uma.').count()) === 1, 'mostra o porquê de cada tipo');
-  confere((await p.getByText(/Só se «A empresa usa um ERP\?» = Sim/).count()) === 1, 'mostra a condição em linguagem simples');
+  confere((await p.getByText(/Só se «A empresa usa um ERP\?» for «Sim»/).count()) === 1, 'mostra a condição em linguagem simples');
   confere((await p.evaluate(() => document.documentElement.scrollWidth)) <= largura, 'sem scroll horizontal com a proposta');
   await axe(p, `proposta ${largura}`);
   await p.screenshot({ path: `${SAIDA}/inqueritos-importar-${largura}.png`, fullPage: true });
