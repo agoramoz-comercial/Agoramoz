@@ -16,6 +16,8 @@
  *  - Custo e limite por pedido definidos antes de ligar; sem chave, não liga.
  */
 
+import type { RascunhoImportado } from './importar/esquema';
+
 export interface EntradaResumo {
   readonly titulo: string;
   readonly perguntas: readonly {
@@ -37,4 +39,33 @@ export interface ResumoGerado {
 
 export interface ResumoIA {
   resumir(entrada: EntradaResumo): Promise<ResumoGerado>;
+}
+
+/**
+ * «Colar e transformar» (D-33): o texto de um inquérito escrito por alguém da
+ * equipa passa a rascunho estruturado. Ligado por decisão do fundador, com o
+ * Kimi. Regras:
+ *
+ *  - O texto é DADO, delimitado no pedido; o modelo é instruído a ignorar
+ *    ordens que lá venham, e o que devolve é validado por zod e normalizado —
+ *    nunca executado, nunca gravado sem o admin rever e carregar em «Guardar».
+ *  - Não contém respostas nem contactos de ninguém: é o enunciado do
+ *    inquérito. Mesmo assim, o ecrã avisa que o texto vai para o fornecedor.
+ *  - A chave nunca aparece em erros nem em logs; os logs levam só métricas.
+ *  - Falhar nunca bloqueia: quem chama cai para o analisador local.
+ */
+export type ErroImportadorIA = 'timeout' | 'rede' | 'json' | 'esquema' | 'vazio' | `http_${number}`;
+
+export class FalhaImportadorIA extends Error {
+  constructor(readonly codigo: ErroImportadorIA) {
+    super(`importador IA: ${codigo}`);
+    this.name = 'FalhaImportadorIA';
+  }
+}
+
+export interface ImportadorIA {
+  /** O nome do modelo, para mostrar «gerado por IA (modelo)». */
+  readonly modelo: string;
+  /** Lança `FalhaImportadorIA` em qualquer falha. */
+  estruturar(texto: string, idioma: 'pt' | 'en'): Promise<RascunhoImportado>;
 }

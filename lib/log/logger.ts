@@ -52,6 +52,11 @@ const SAFE_FIELDS = [
   // ficou ligada a uma oportunidade. Nunca participantes, nunca o ref.
   'evento',
   'ligada',
+  // Importar inquérito de texto: o motor (`kimi`/`local`) e contagens. Nunca o
+  // texto colado nem as perguntas.
+  'motor',
+  'caracteres',
+  'perguntas',
 ] as const;
 
 type SafeField = (typeof SAFE_FIELDS)[number];

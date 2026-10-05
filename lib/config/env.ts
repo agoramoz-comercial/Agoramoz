@@ -213,6 +213,33 @@ const serverSchema = z.object({
    * equipa. Trocá-lo invalida TODOS os links já partilhados.
    */
   SURVEY_LINK_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres').optional(),
+
+  // ── Importar inquérito de texto com IA (Kimi, Moonshot AI) ───────────────
+  /**
+   * `off` — «Colar e transformar» usa só o analisador local (sem rede).
+   * `kimi` — usa o Kimi e cai para o local se falhar.
+   *
+   * Nenhuma destas variáveis pode partir o site: um valor inválido cai para
+   * o seguro (`.catch`) e a importação diz «IA indisponível». Ao contrário de
+   * SURVEYS ou NEWS_ENGINE, isto é uma ajuda ao admin, não um caminho público.
+   */
+  SURVEY_AI: z.enum(['off', 'kimi']).default('off').catch('off'),
+  /** Chave da plataforma Kimi. Sensível: só na Vercel, nunca no Git nem no chat. */
+  KIMI_API_KEY: z.string().min(20).optional().catch(undefined),
+  KIMI_MODEL: z
+    .string()
+    .regex(/^[a-z0-9][a-z0-9.\-]{1,63}$/)
+    .default('kimi-k2.6')
+    .catch('kimi-k2.6'),
+  /**
+   * Lista fechada: a chave só pode ir para a Moonshot (internacional ou
+   * China). Qualquer outro valor volta ao internacional — nunca a chave para
+   * um host escolhido por configuração.
+   */
+  KIMI_BASE_URL: z
+    .enum(['https://api.moonshot.ai/v1', 'https://api.moonshot.cn/v1'])
+    .default('https://api.moonshot.ai/v1')
+    .catch('https://api.moonshot.ai/v1'),
 })
   .superRefine((env, ctx) => {
     if (env.DIAGNOSTIC_PERSISTENCE !== 'required') return;
@@ -349,6 +376,10 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       ERP_API_KEY: process.env.ERP_API_KEY,
       SURVEYS: process.env.SURVEYS,
       SURVEY_LINK_SECRET: process.env.SURVEY_LINK_SECRET,
+      SURVEY_AI: process.env.SURVEY_AI,
+      KIMI_API_KEY: process.env.KIMI_API_KEY,
+      KIMI_MODEL: process.env.KIMI_MODEL,
+      KIMI_BASE_URL: process.env.KIMI_BASE_URL,
     },
     'servidor',
   );
