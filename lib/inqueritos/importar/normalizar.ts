@@ -52,12 +52,33 @@ export type ResultadoImportacao =
 const cortar = (s: string | undefined, max: number) =>
   s === undefined ? undefined : s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
 
-/** Pedir nome, email ou telefone como pergunta contorna o consentimento: vai para o bloco Contacto. */
-const RE_CONTACTO =
-  /^(?:o seu |a sua |seu |sua |your )?(?:nome(?: completo)?|e-?mail|endereco de e-?mail|telefone|telemovel|celular|whatsapp|contacto|numero de telefone|full name|name|phone(?: number)?|email address)\s*[?:.]?$/;
+/**
+ * Pedir dados pessoais como pergunta contorna o consentimento: vão para o
+ * bloco Contacto. Três formas de pedir: com possessivo («Qual o seu email?»),
+ * com imperativo («Indique o e-mail»), ou como rótulo curto de campo
+ * («Nome e apelido», «Número de telemóvel»). Uma pergunta SOBRE o tema
+ * («Como avalia o atendimento por telefone?») não é um pedido e fica.
+ */
+const DADO_PESSOAL =
+  '(?:nome(?: completo| proprio)?|apelido|e-?mail|correio electronico|telefone|telemovel|celular|whatsapp|contacto(?: telefonico)?|morada|endereco|nif|nuit|data de nascimento|full name|name|surname|phone|address|date of birth)';
+const PREFIXO_DADO = '(?:(?:numero|n|no|endereco) de )?';
+const RE_POSSESSIVO = new RegExp(`\\b(?:seu|sua|vosso|vossa|teu|tua|your) ${PREFIXO_DADO}${DADO_PESSOAL}\\b`);
+const RE_PEDIDO = new RegExp(
+  `^(?:indique|insira|introduza|escreva|deixe|partilhe|informe|enter|provide|please enter) (?:aqui )?(?:o |a |os |as |um |uma |the )?${PREFIXO_DADO}${DADO_PESSOAL}\\b`,
+);
+const RE_CAMPO = new RegExp(`^(?:o |a )?${PREFIXO_DADO}${DADO_PESSOAL}\\b`);
+/** «Nome da empresa», «Email da equipa»: dados da organização, não da pessoa. */
+const RE_NAO_PESSOAL =
+  /\b(?:empresa|organizacao|instituicao|entidade|equipa|projec?to|produto|marca|servico|departamento|website|site|company|organi[sz]ation|team|project|product|brand)\b/;
 
-function ehContacto(titulo: string): boolean {
-  return RE_CONTACTO.test(simplificar(titulo).trim());
+export function ehContacto(titulo: string): boolean {
+  const s = simplificar(titulo)
+    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (RE_NAO_PESSOAL.test(s)) return false;
+  const palavras = s.split(' ').length;
+  return RE_POSSESSIVO.test(s) || RE_PEDIDO.test(s) || (palavras <= 5 && RE_CAMPO.test(s));
 }
 
 function construirPergunta(
@@ -141,7 +162,10 @@ function valorDaCondicao(alvo: Pergunta, dito: string): string | null {
   const s = simplificar(dito).trim();
   if (alvo.tipo === 'escolha_unica' || alvo.tipo === 'escolha_multipla') {
     const igual = alvo.opcoes.find((o) => simplificar(o.rotulo).trim() === s);
-    const comeca = alvo.opcoes.find((o) => simplificar(o.rotulo).trim().startsWith(s));
+    // «Concordo» por «Concordo totalmente» — mas só se for inequívoco, para um
+    // «S» não se agarrar a «Sim» quando também há «Sem opinião».
+    const comecam = alvo.opcoes.filter((o) => simplificar(o.rotulo).trim().startsWith(s));
+    const comeca = s.length >= 2 && comecam.length === 1 ? comecam[0] : undefined;
     return (igual ?? comeca)?.chave ?? null;
   }
   const permitidos = valoresDeCondicao(alvo)?.valores ?? [];

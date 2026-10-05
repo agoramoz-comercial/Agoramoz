@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState, useTransition } from 'react';
+import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import { Check, CornerDownRight, FileText, Loader2, Sparkles, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import type { ResultadoAccaoImportar } from '@/lib/admin/importar-inquerito';
@@ -82,12 +82,15 @@ function motivoDoFallback(codigo: string): string {
   );
 }
 
+// A borda é o único sinal de que o campo existe (fundo igual ao da página):
+// `--muted` dá 5,7:1, acima dos 3:1 do WCAG 1.4.11. O placeholder também.
 const campo =
-  'w-full rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--on-surface)]';
+  'w-full rounded-[--radius-sm] border border-[color:var(--muted)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--on-surface)] placeholder:text-[color:var(--muted)]';
 
 export function ImportarTexto({
   id,
   base,
+  baseInvalida = false,
   iaDisponivel,
   modeloIA,
   importar,
@@ -96,6 +99,8 @@ export function ImportarTexto({
   id: string;
   /** O último spec válido do construtor. */
   base: SpecInquerito;
+  /** O inquérito tem erros por corrigir: a base enviada não seria o que se vê. */
+  baseInvalida?: boolean;
   iaDisponivel: boolean;
   modeloIA?: string;
   importar: (entrada: EntradaImportar) => Promise<ResultadoAccaoImportar>;
@@ -108,10 +113,26 @@ export function ImportarTexto({
   const [proposta, setProposta] = useState<Proposta | null>(null);
   /** O modo com que a proposta foi feita: mudar o rádio depois não a reinterpreta. */
   const [modoDaProposta, setModoDaProposta] = useState<'substituir' | 'acrescentar'>('substituir');
+  /**
+   * A base sobre a qual a proposta foi calculada. A proposta é o inquérito
+   * INTEIRO; aplicá-la depois de o admin mudar o construtor apagaria essas
+   * mudanças. O construtor troca a referência a cada alteração válida.
+   */
+  const [baseDaProposta, setBaseDaProposta] = useState<SpecInquerito | null>(null);
+  const desactualizada = proposta !== null && baseDaProposta !== base;
   const [erro, setErro] = useState<string | null>(null);
   const [aCorrer, iniciar] = useTransition();
   const tituloProposta = useRef<HTMLHeadingElement>(null);
   const erroRef = useRef<HTMLParagraphElement>(null);
+  const textoRef = useRef<HTMLTextAreaElement>(null);
+
+  // O foco segue o resultado depois de ele existir no DOM (efeito, não rAF).
+  useEffect(() => {
+    if (proposta) tituloProposta.current?.focus();
+  }, [proposta]);
+  useEffect(() => {
+    if (erro) erroRef.current?.focus();
+  }, [erro]);
 
   function transformar() {
     setErro(null);
@@ -126,17 +147,16 @@ export function ImportarTexto({
       }
       if (!r.ok) {
         setErro(r.motivo);
-        requestAnimationFrame(() => erroRef.current?.focus());
         return;
       }
-      setProposta(r);
+      setBaseDaProposta(pedido.base);
       setModoDaProposta(pedido.modo);
-      requestAnimationFrame(() => tituloProposta.current?.focus());
+      setProposta(r);
     });
   }
 
   function aplicar() {
-    if (!proposta) return;
+    if (!proposta || desactualizada) return;
     const { resumo } = proposta;
     const n = resumo.perguntas;
     const s = resumo.seccoes;
@@ -149,6 +169,7 @@ export function ImportarTexto({
 
   const tamanho = texto.length;
   const grande = tamanho > MAX_TEXTO;
+  const bloqueado = texto.trim().length === 0 || grande || baseInvalida;
 
   return (
     <div className="border border-[color:var(--border)]">
@@ -178,15 +199,22 @@ export function ImportarTexto({
             >
               Texto do inquérito
             </label>
-            <button
-              type="button"
-              className="min-h-11 text-xs text-[color:var(--muted)] underline underline-offset-4 hover:text-[color:var(--on-surface)]"
-              onClick={() => setTexto(EXEMPLO)}
-            >
-              Inserir exemplo
-            </button>
+            {/* Só com o campo vazio: nunca apaga o que o admin colou. */}
+            {texto.length === 0 && (
+              <button
+                type="button"
+                className="min-h-11 text-xs text-[color:var(--muted)] underline underline-offset-4 hover:text-[color:var(--on-surface)]"
+                onClick={() => {
+                  setTexto(EXEMPLO);
+                  textoRef.current?.focus();
+                }}
+              >
+                Inserir exemplo
+              </button>
+            )}
           </div>
           <textarea
+            ref={textoRef}
             id={`${ids}-texto`}
             className={cn(
               campo,
@@ -194,20 +222,30 @@ export function ImportarTexto({
             )}
             value={texto}
             spellCheck={false}
-            aria-describedby={`${ids}-contador`}
+            aria-describedby={`${ids}-contador ${ids}-limite`}
             aria-invalid={grande || undefined}
             placeholder={'Título do inquérito\n\nSecção 1: …\n1. Primeira pergunta? *\na) Opção\nb) Opção'}
             onChange={(e) => setTexto(e.target.value)}
           />
-          <p
-            id={`${ids}-contador`}
-            className={cn(
-              'mt-1 text-right text-xs tabular-nums',
-              grande ? 'text-[color:var(--signal)]' : 'text-[color:var(--muted)]',
-            )}
-          >
-            {tamanho.toLocaleString('pt-PT')} de {MAX_TEXTO.toLocaleString('pt-PT')} caracteres
-          </p>
+          <div className="mt-1 flex flex-wrap items-start justify-between gap-x-3 text-xs">
+            {/* Anunciado só ao passar o limite; a contagem em si não é viva
+                (mudaria a cada tecla). */}
+            <p id={`${ids}-limite`} aria-live="polite" className="text-[color:var(--signal)]">
+              {grande && (
+                <span className="flex items-start gap-1.5">
+                  <TriangleAlert aria-hidden className="mt-0.5 size-3 shrink-0" />
+                  Excede o limite em {(tamanho - MAX_TEXTO).toLocaleString('pt-PT')} caracteres:
+                  encurte o texto para poder transformar.
+                </span>
+              )}
+            </p>
+            <p
+              id={`${ids}-contador`}
+              className="ml-auto text-right text-[color:var(--muted)] tabular-nums"
+            >
+              {tamanho.toLocaleString('pt-PT')} de {MAX_TEXTO.toLocaleString('pt-PT')} caracteres
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -261,8 +299,14 @@ export function ImportarTexto({
             type="button"
             size="sm"
             className="gap-2"
-            disabled={aCorrer || texto.trim().length === 0 || grande}
-            onClick={transformar}
+            // A correr, o botão fica focável (aria-disabled em vez de disabled):
+            // desligá-lo tirava o foco a quem carregou nele.
+            disabled={!aCorrer && bloqueado}
+            aria-disabled={aCorrer || undefined}
+            aria-busy={aCorrer || undefined}
+            onClick={() => {
+              if (!aCorrer) transformar();
+            }}
           >
             {aCorrer ? (
               <Loader2 aria-hidden className="size-4 animate-spin motion-reduce:animate-none" />
@@ -276,7 +320,13 @@ export function ImportarTexto({
               : 'Transformar'}
           </Button>
           <p role="status" className="text-xs text-[color:var(--muted)]">
-            {aCorrer && motor === 'kimi' ? 'Pode levar alguns segundos.' : ''}
+            {aCorrer
+              ? motor === 'kimi'
+                ? 'A transformar com o Kimi. Pode levar alguns segundos.'
+                : 'A transformar…'
+              : baseInvalida
+                ? 'Corrija primeiro os problemas assinalados no inquérito.'
+                : ''}
           </p>
         </div>
 
@@ -285,7 +335,7 @@ export function ImportarTexto({
             ref={erroRef}
             tabIndex={-1}
             role="alert"
-            className="flex items-start gap-2 border border-[color:var(--color-signal-600)] px-3 py-2 text-sm outline-none"
+            className="flex scroll-mt-28 items-start gap-2 border border-[color:var(--color-signal-600)] px-3 py-2 text-sm outline-none"
           >
             <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
             {erro}
@@ -295,12 +345,16 @@ export function ImportarTexto({
         {proposta && (
           <RevisaoProposta
             proposta={proposta}
-            base={base}
+            base={baseDaProposta ?? base}
+            desactualizada={desactualizada}
             modo={modoDaProposta}
             tituloRef={tituloProposta}
             idTitulo={`${ids}-proposta`}
             onAplicar={aplicar}
-            onDescartar={() => setProposta(null)}
+            onDescartar={() => {
+              setProposta(null);
+              textoRef.current?.focus();
+            }}
           />
         )}
       </div>
@@ -323,26 +377,37 @@ function Radio({
   titulo: string;
   nota: string;
 }) {
+  const idNota = useId();
+  // O nome acessível é só o título; a nota (privacidade, porque está
+  // desligado) é a descrição. Só o título esmaece: a nota explica o estado e
+  // tem de manter o contraste.
   return (
-    <label
-      className={cn(
-        'flex min-h-11 cursor-pointer items-start gap-2.5 py-1 text-sm',
-        desligado && 'cursor-not-allowed opacity-60',
-      )}
-    >
+    <div className="flex min-h-11 items-start gap-2.5 py-1 text-sm">
       <input
         type="radio"
+        id={`${idNota}-r`}
         name={nome}
         className="mt-0.5 size-4 shrink-0"
         checked={marcado}
         disabled={desligado}
+        aria-describedby={idNota}
         onChange={onEscolher}
       />
       <span>
-        <span className="font-medium">{titulo}</span>
-        <span className="block text-xs text-[color:var(--muted)]">{nota}</span>
+        <label
+          htmlFor={`${idNota}-r`}
+          className={cn(
+            'font-medium',
+            desligado ? 'cursor-not-allowed text-[color:var(--muted)]' : 'cursor-pointer',
+          )}
+        >
+          {titulo}
+        </label>
+        <span id={idNota} className="block text-xs text-[color:var(--muted)]">
+          {nota}
+        </span>
       </span>
-    </label>
+    </div>
   );
 }
 
@@ -350,6 +415,7 @@ function Radio({
 function RevisaoProposta({
   proposta,
   base,
+  desactualizada,
   modo,
   tituloRef,
   idTitulo,
@@ -357,7 +423,9 @@ function RevisaoProposta({
   onDescartar,
 }: {
   proposta: Proposta;
+  /** A base do momento do pedido — não a actual. */
   base: SpecInquerito;
+  desactualizada: boolean;
   modo: 'substituir' | 'acrescentar';
   tituloRef: React.RefObject<HTMLHeadingElement | null>;
   idTitulo: string;
@@ -386,7 +454,12 @@ function RevisaoProposta({
   return (
     <section aria-labelledby={idTitulo} className="border-t border-[color:var(--border)] pt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 id={idTitulo} ref={tituloRef} tabIndex={-1} className="text-sm font-medium outline-none">
+        <h3
+          id={idTitulo}
+          ref={tituloRef}
+          tabIndex={-1}
+          className="scroll-mt-28 text-sm font-medium outline-none"
+        >
           Proposta
         </h3>
         <span className="rule-label text-[color:var(--muted)]">
@@ -397,11 +470,14 @@ function RevisaoProposta({
       {caiuParaLocal && (
         <p className="mt-2 flex items-start gap-2 border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-3 py-2 text-sm">
           <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
-          {motivoDoFallback(caiuParaLocal)} — usei o analisador local. Reveja com atenção.
+          <span>
+            <span className="sr-only">Aviso: </span>
+            {motivoDoFallback(caiuParaLocal)} — usei o analisador local. Reveja com atenção.
+          </span>
         </p>
       )}
 
-      <ul className="mt-3 flex flex-wrap gap-2" aria-label="Resumo">
+      <ul role="list" className="mt-3 flex flex-wrap gap-2" aria-label="Resumo">
         {chips.map((c) => (
           <li
             key={c}
@@ -425,7 +501,7 @@ function RevisaoProposta({
         </p>
       )}
 
-      <ol className="mt-4 border-l border-[color:var(--border)]">
+      <ol role="list" className="mt-4 border-l border-[color:var(--border)]">
         {novas.map((p, i) => {
           const posicao = inicio + i + 1;
           const avisosDaPergunta = avisos.filter((a) => a.pergunta === posicao).map((a) => a.texto);
@@ -476,7 +552,10 @@ function RevisaoProposta({
                 </p>
               )}
               {'opcoes' in p && (
-                <p className="mt-1.5 text-sm">{p.opcoes.map((o) => o.rotulo).join(' · ')}</p>
+                <p className="mt-1.5 text-sm">
+                  <span className="sr-only">Opções: </span>
+                  {p.opcoes.map((o) => o.rotulo).join(' · ')}
+                </p>
               )}
               {razoes[p.chave] && (
                 <p className="mt-1.5 flex items-start gap-1.5 text-xs text-[color:var(--muted)]">
@@ -495,8 +574,24 @@ function RevisaoProposta({
 
       <Avisos lista={avisos.filter((a) => a.pergunta === undefined).map((a) => a.texto)} geral />
 
+      {desactualizada && (
+        <p
+          role="status"
+          className="mt-4 flex items-start gap-2 border border-[color:var(--color-signal-600)] px-3 py-2 text-sm"
+        >
+          <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+          O inquérito mudou desde esta proposta. Carregue em «Transformar» de novo para não perder
+          essas alterações.
+        </p>
+      )}
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button type="button" size="sm" className="gap-2" onClick={onAplicar}>
+        <Button
+          type="button"
+          size="sm"
+          className="gap-2"
+          disabled={desactualizada}
+          onClick={onAplicar}
+        >
           <Check aria-hidden className="size-4" />
           {modo === 'substituir' ? 'Aplicar: substituir o inquérito' : 'Aplicar: juntar ao fim'}
         </Button>
@@ -529,11 +624,14 @@ function Condicao({ pergunta, porChave }: { pergunta: Pergunta; porChave: Map<st
 function Avisos({ lista, geral }: { lista: readonly string[]; geral?: boolean }) {
   if (lista.length === 0) return null;
   return (
-    <ul className={cn('space-y-1 text-xs', geral ? 'mt-3' : 'mt-1.5')}>
-      {lista.map((t) => (
-        <li key={t} className="flex items-start gap-1.5 text-[color:var(--signal)]">
+    <ul role="list" className={cn('space-y-1 text-xs', geral ? 'mt-3' : 'mt-1.5')}>
+      {lista.map((t, i) => (
+        <li key={i} className="flex items-start gap-1.5 text-[color:var(--signal)]">
           <TriangleAlert aria-hidden className="mt-0.5 size-3 shrink-0" />
-          {t}
+          <span>
+            <span className="sr-only">Aviso: </span>
+            {t}
+          </span>
         </li>
       ))}
     </ul>

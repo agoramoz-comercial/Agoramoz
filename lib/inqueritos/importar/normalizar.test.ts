@@ -3,7 +3,7 @@ import { SEM_RESERVADAS } from '../construtor';
 import { specInicial, specInquerito, type Pergunta } from '../spec';
 import type { RascunhoImportado } from './esquema';
 import { analisarTexto } from './local';
-import { normalizar } from './normalizar';
+import { ehContacto, normalizar } from './normalizar';
 
 const BASE = specInicial('pt');
 const subst = (r: RascunhoImportado) =>
@@ -101,6 +101,49 @@ describe('normalizar — correcções explicadas', () => {
     const r = ok(subst({ blocos: [p('Qual o seu cargo?'), p('Email'), p('Nome completo:')] }));
     expect(r.spec.perguntas.map((q) => q.titulo)).toEqual(['Qual o seu cargo?']);
     expect(r.avisos.some((a) => /Contacto no fim/.test(a.texto))).toBe(true);
+  });
+
+  it('pedidos de dados pessoais saem em qualquer forma; perguntas sobre o tema ficam', () => {
+    const pedidos = [
+      'Qual é o seu nome?',
+      'Qual o seu email?',
+      'Indique o seu e-mail',
+      'Insira o número de telemóvel',
+      'Nome e apelido',
+      'Número de telemóvel',
+      'Contacto telefónico',
+      'Qual a sua data de nascimento?',
+      'NUIT',
+      'Morada completa',
+      'What is your email?',
+      'Nome do responsável',
+    ];
+    const ficam = [
+      'Qual o nome da sua empresa?',
+      'Nome da empresa',
+      'Como avalia o atendimento por telefone?',
+      'Qual o seu cargo?',
+      'Prefere ser contactado por que canal?',
+      'Quantos funcionários tem a empresa?',
+    ];
+    for (const t of pedidos) expect(ehContacto(t), t).toBe(true);
+    for (const t of ficam) expect(ehContacto(t), t).toBe(false);
+  });
+
+  it('condição por prefixo só quando é inequívoca', () => {
+    const opcoes = ['Sim', 'Sem opinião', 'Não'];
+    const r = ok(
+      subst({
+        blocos: [
+          p('Usa?', { tipo: 'escolha_unica', opcoes }),
+          p('Ambígua?', { condicao: { pergunta: 1, valor: 'S' } }),
+          p('Clara?', { condicao: { pergunta: 1, valor: 'Sem' } }),
+        ],
+      }),
+    );
+    const [, ambigua, clara] = r.spec.perguntas as Pergunta[];
+    expect(ambigua!.mostrarSe).toBeUndefined();
+    expect(clara!.mostrarSe?.valor).toBe((r.spec.perguntas[0] as Extract<Pergunta, { tipo: 'escolha_unica' }>).opcoes[1]!.chave);
   });
 
   it('escolha com uma só opção passa a texto; repetidas e vazias saem', () => {

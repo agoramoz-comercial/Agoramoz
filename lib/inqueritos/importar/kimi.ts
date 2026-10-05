@@ -73,7 +73,9 @@ Regras:
 
 /** As mensagens do pedido — exportadas para os testes verem exactamente o que sai. */
 export function mensagensKimi(texto: string, idioma: 'pt' | 'en') {
-  const limpo = texto.split(INICIO).join('').split(FIM).join('');
+  // Neutraliza os caracteres e não só o marcador exacto: tirar «<<<FIM…>>>» de
+  // «<<<FIM_<<<FIM_DO_INQUERITO>>>DO_INQUERITO>>>» voltaria a formá-lo.
+  const limpo = texto.replace(/<<<|>>>/g, (m) => (m === '<<<' ? '‹‹‹' : '›››'));
   return [
     { role: 'system' as const, content: promptDeSistema(idioma) },
     { role: 'user' as const, content: `${INICIO}\n${limpo}\n${FIM}` },

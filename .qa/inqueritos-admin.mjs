@@ -188,7 +188,113 @@ console.log('\nleitura');
   confere((await p.getByRole('button', { name: 'Guardar rascunho' }).count()) === 0, 'sem construtor');
   confere((await p.getByRole('button', { name: /Fechar o inquérito/ }).count()) === 0, 'sem fechar/reabrir');
   confere((await p.getByText('O seu papel permite ver, não editar.').count()) === 1, 'diz porquê');
+  confere((await p.getByRole('heading', { name: 'Colar e transformar' }).count()) === 0, 'leitura: sem «Colar e transformar»');
   await axe(p, 'vista de leitura');
+  await ctx.close();
+}
+
+// ── Colar e transformar (D-33): só o analisador local — a QA não tem chave ──
+for (const largura of [390, 1440]) {
+  console.log(`\ncolar e transformar — ${largura} px`);
+  const ctx = await b.newContext({ viewport: { width: largura, height: 900 }, reducedMotion: 'reduce' });
+  const p = await ctx.newPage();
+  const erros = [];
+  p.on('pageerror', (e) => erros.push(e.message));
+  await p.goto(`${BASE}/qa/inqueritos`, { waitUntil: 'load' });
+  const perguntas = (n) => p.getByRole('heading', { name: new RegExp(`^Perguntas \\(${n} de 50\\)`) });
+
+  confere((await p.getByRole('heading', { name: 'Colar e transformar' }).count()) === 1, 'painel presente');
+  const transformar = p.getByRole('button', { name: 'Transformar' });
+  confere(await transformar.isDisabled(), 'sem texto, «Transformar» está desligado');
+  confere(await p.getByRole('radio', { name: /Kimi \(IA\)/ }).isDisabled(), 'sem IA configurada, Kimi desligado');
+
+  await p.getByRole('button', { name: 'Inserir exemplo' }).click();
+  confere(
+    await p.evaluate(() => document.activeElement?.tagName === 'TEXTAREA'),
+    '«Inserir exemplo» deixa o foco no texto',
+  );
+  confere(
+    (await p.getByRole('button', { name: 'Inserir exemplo' }).count()) === 0,
+    'com texto, «Inserir exemplo» desaparece (nunca apaga o colado)',
+  );
+  await transformar.click();
+  const proposta = p.getByRole('heading', { name: 'Proposta' });
+  await proposta.waitFor();
+  confere(await p.evaluate(() => document.activeElement?.textContent === 'Proposta'), 'o foco vai para a proposta');
+  const resumo = (await p.getByRole('list', { name: 'Resumo' }).textContent()) ?? '';
+  confere(
+    ['8 perguntas', '2 secções', '2 obrigatórias', '1 condição'].every((t) => resumo.includes(t)),
+    'resumo: 8 perguntas, 2 secções, 2 obrigatórias, 1 condição',
+    resumo,
+  );
+  confere((await p.getByText('Lista de 4 opções; escolhe-se uma.').count()) === 1, 'mostra o porquê de cada tipo');
+  confere((await p.getByText(/Só se «A empresa usa um ERP\?» = Sim/).count()) === 1, 'mostra a condição em linguagem simples');
+  confere((await p.evaluate(() => document.documentElement.scrollWidth)) <= largura, 'sem scroll horizontal com a proposta');
+  await axe(p, `proposta ${largura}`);
+  await p.screenshot({ path: `${SAIDA}/inqueritos-importar-${largura}.png`, fullPage: true });
+
+  await p.getByRole('button', { name: 'Aplicar: substituir o inquérito' }).click();
+  await perguntas(10).waitFor();
+  ok('substituir: 10 blocos (8 perguntas + 2 secções)');
+  confere(
+    await p.evaluate(() => document.activeElement?.textContent?.startsWith('Inquérito substituído: 8 perguntas, 2 secções')),
+    'o foco vai para a confirmação',
+  );
+  confere(
+    ((await p.getByRole('complementary', { name: 'Pré-visualização' }).textContent()) ?? '').includes('Inquérito de Maturidade Digital 2026'),
+    'a pré-visualização mostra o inquérito importado',
+  );
+  confere((await p.getByText('Alterações por guardar').count()) === 1, 'fica por guardar (nada gravado)');
+
+  await p.getByRole('button', { name: 'Desfazer importação' }).click();
+  await perguntas(3).waitFor();
+  ok('desfazer volta às 3 perguntas originais');
+
+  await p.getByRole('radio', { name: /Juntar ao fim/ }).check();
+  await transformar.click();
+  await proposta.waitFor();
+  await p.getByRole('button', { name: 'Aplicar: juntar ao fim' }).click();
+  await perguntas(13).waitFor();
+  ok('juntar ao fim: 3 + 10 blocos');
+  await p.getByRole('button', { name: 'Fechar', exact: true }).click();
+  confere(
+    await p.evaluate(() => document.activeElement?.textContent?.startsWith('Perguntas (13 de 50)')),
+    '«Fechar» leva o foco às perguntas',
+  );
+  confere(erros.length === 0, 'sem erros na página', erros.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+{
+  console.log('\ncolar e transformar — Kimi pedido sem chave');
+  const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/qa/inqueritos?ia=1`, { waitUntil: 'load' });
+  confere(await p.getByRole('radio', { name: /Kimi \(IA\)/ }).isChecked(), 'com IA, o Kimi vem escolhido');
+  const campoTexto = p.getByRole('textbox', { name: 'Texto do inquérito' });
+  await campoTexto.fill('x'.repeat(20_001));
+  confere(
+    (await p.getByText('Excede o limite em 1 caracteres').count()) === 1 &&
+      (await p.getByRole('button', { name: 'Transformar' }).isDisabled()),
+    'acima do limite: diz quanto excede (não só pela cor) e não transforma',
+  );
+  await campoTexto.fill('1. Usa um ERP? (Sim/Não)\n2. Se sim, qual?\n3. Qual o seu email?');
+  await p.getByRole('button', { name: 'Transformar' }).click();
+  await p.getByRole('heading', { name: 'Proposta' }).waitFor();
+  confere(
+    (await p.getByText(/A IA não está configurada no servidor — usei o analisador local/).count()) === 1,
+    'cai para o analisador local e diz porquê',
+  );
+  confere(
+    (await p.getByText(/Contacto no fim/).count()) >= 1 &&
+      (await p.getByText('Qual o seu email?', { exact: true }).count()) === 0,
+    '«Qual o seu email?» sai da proposta (dados pessoais só com consentimento)',
+  );
+  await axe(p, 'proposta com aviso de fallback');
+  await p.getByRole('button', { name: 'Descartar proposta' }).click();
+  confere(
+    await p.evaluate(() => document.activeElement?.tagName === 'TEXTAREA'),
+    '«Descartar» devolve o foco ao texto',
+  );
   await ctx.close();
 }
 

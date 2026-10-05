@@ -56,8 +56,9 @@ const NOME_CAMPO: Record<CampoContacto, string> = {
   organizacao: 'Organização',
 };
 
+// Borda em `--muted` (5,7:1): é o único contorno do campo (WCAG 1.4.11).
 const campo =
-  'w-full min-h-11 rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--on-surface)]';
+  'w-full min-h-11 rounded-[--radius-sm] border border-[color:var(--muted)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--on-surface)] placeholder:text-[color:var(--muted)]';
 const rotulo = 'block text-xs font-medium text-[color:var(--muted)]';
 const iconeBotao =
   'grid size-11 place-items-center rounded-[--radius-xs] text-[color:var(--muted)] hover:bg-[color:var(--surface-raised)] hover:text-[color:var(--on-surface)] disabled:opacity-30 disabled:hover:bg-transparent';
@@ -95,7 +96,18 @@ export function Construtor({
   const [tipoNovo, setTipoNovo] = useState<TipoPergunta>('escolha_unica');
   /** O inquérito antes da última importação, para «Desfazer» (uma vez). */
   const [antesDaImportacao, setAntesDaImportacao] = useState<SpecInquerito | null>(null);
+  /** O spec que a importação pôs: «Desfazer» só vale enquanto nada mudou depois. */
+  const [aplicado, setAplicado] = useState<SpecInquerito | null>(null);
   const [importado, setImportado] = useState<string | null>(null);
+  // Depois de «Guardar», o spec inicial muda: a confirmação e o «Desfazer» da
+  // importação já não dizem a verdade (ajuste de estado durante o render).
+  const [inicialVisto, setInicialVisto] = useState(specInicial);
+  if (inicialVisto !== specInicial) {
+    setInicialVisto(specInicial);
+    setImportado(null);
+    setAntesDaImportacao(null);
+    setAplicado(null);
+  }
   /** O id a focar depois da próxima mudança à lista de perguntas, e o recurso. */
   const focoPendente = useRef<{ id: string; recurso: string } | null>(null);
 
@@ -156,15 +168,21 @@ export function Construtor({
 
   function aplicarImportacao(novo: SpecInquerito, resumo: string) {
     setAntesDaImportacao(spec);
+    setAplicado(novo);
     setSpec(novo);
     setImportado(resumo);
     focoPendente.current = { id: `${base}-importado`, recurso: `${base}-importado` };
+  }
+
+  function irParaPerguntas() {
+    document.getElementById(`${base}-perguntas`)?.focus();
   }
 
   function desfazerImportacao() {
     if (!antesDaImportacao) return;
     setSpec(antesDaImportacao);
     setAntesDaImportacao(null);
+    setAplicado(null);
     setImportado('Importação desfeita: o inquérito voltou ao que era.');
     focoPendente.current = { id: `${base}-importado`, recurso: `${base}-importado` };
   }
@@ -213,15 +231,16 @@ export function Construtor({
         )}
 
         {importado && (
+          // Sem role=status: recebe o foco (que já o lê); uma região viva
+          // focada é lida pela metade ou duas vezes.
           <div
             id={`${base}-importado`}
             tabIndex={-1}
-            role="status"
-            className="flex flex-wrap items-center justify-between gap-3 border border-[color:var(--on-surface)] px-4 py-3 text-sm outline-none"
+            className="flex scroll-mt-28 flex-wrap items-center justify-between gap-3 border border-[color:var(--on-surface)] px-4 py-3 text-sm outline-none"
           >
             <span>{importado}</span>
             <span className="flex gap-2">
-              {antesDaImportacao && (
+              {antesDaImportacao && spec === aplicado && (
                 <Button
                   type="button"
                   variant="outline"
@@ -233,11 +252,16 @@ export function Construtor({
                   Desfazer importação
                 </Button>
               )}
+              <Button type="button" variant="ghost" size="sm" onClick={irParaPerguntas}>
+                Ir para as perguntas
+              </Button>
               <button
                 type="button"
                 onClick={() => {
                   setImportado(null);
                   setAntesDaImportacao(null);
+                  // O botão desaparece: o foco segue para as perguntas.
+                  irParaPerguntas();
                 }}
                 className="min-h-11 text-[color:var(--muted)] underline"
               >
@@ -294,6 +318,7 @@ export function Construtor({
             <ImportarTexto
               id={id}
               base={previa}
+              baseInvalida={!validacao.success}
               iaDisponivel={iaDisponivel}
               modeloIA={modeloIA}
               importar={importar}
@@ -314,7 +339,10 @@ export function Construtor({
           />
         </Seccao>
 
-        <Seccao titulo={`Perguntas (${spec.perguntas.length} de ${LIMITES.perguntas})`}>
+        <Seccao
+          titulo={`Perguntas (${spec.perguntas.length} de ${LIMITES.perguntas})`}
+          idTitulo={`${base}-perguntas`}
+        >
           <ol className="space-y-4">
             {spec.perguntas.map((p, i) => (
               <li key={p.chave}>
@@ -557,11 +585,25 @@ function Botoes({ podeGuardar, podePublicar }: { podeGuardar: boolean; podePubli
   );
 }
 
-function Seccao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  const id = useId();
+function Seccao({
+  titulo,
+  idTitulo,
+  children,
+}: {
+  titulo: string;
+  /** Com id, o título pode receber foco (destino de «Ir para…»). */
+  idTitulo?: string;
+  children: React.ReactNode;
+}) {
+  const gerado = useId();
+  const id = idTitulo ?? gerado;
   return (
     <section aria-labelledby={id}>
-      <h2 id={id} className="mb-3 text-sm font-medium">
+      <h2
+        id={id}
+        tabIndex={idTitulo ? -1 : undefined}
+        className="mb-3 scroll-mt-28 text-sm font-medium outline-none"
+      >
         {titulo}
       </h2>
       {children}
