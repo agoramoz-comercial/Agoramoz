@@ -778,3 +778,97 @@
     scroll-padding-bottom: 6rem;
   }
 }
+
+/* ── AGORAMOZ News: o «outdoor» (Times Square / Nasdaq MarketSite) ─────────
+   Painel de LED: matriz de pontos e linhas de varrimento por cima do tema,
+   faixa a correr em baixo. O texto é sempre DOM real (lê-se, traduz-se,
+   selecciona-se); a textura é decoração, `pointer-events: none`. */
+.outdoor {
+  container-type: inline-size;
+}
+.outdoor-led::before,
+.outdoor-led::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.outdoor-led::before {
+  background-image: radial-gradient(rgb(255 255 255 / 0.13) 0.6px, transparent 0.9px);
+  background-size: 4px 4px;
+  mix-blend-mode: overlay;
+}
+.outdoor-led::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0) 0,
+    rgb(0 0 0 / 0) 2px,
+    rgb(0 0 0 / 0.16) 3px
+  );
+}
+.outdoor-titulo {
+  text-shadow: 0 0 18px rgb(255 255 255 / 0.18);
+}
+@keyframes outdoor-ticker {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@keyframes outdoor-entra {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .outdoor-faixa {
+    animation: outdoor-ticker 38s linear infinite;
+  }
+  .outdoor[data-pausa='sim'] .outdoor-faixa {
+    animation-play-state: paused;
+  }
+  .outdoor-criativo {
+    animation: outdoor-entra 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+:root[data-motion='reduced'] .outdoor-faixa,
+:root[data-motion='reduced'] .outdoor-criativo {
+  animation: none;
+}
+
+/* ── AGORAMOZ News: o jornal ───────────────────────────────────────────────
+   Serifa editorial só no jornal (títulos e corpo); a marca, rótulos e números
+   continuam em Archivo / Chakra Petch, como num terminal financeiro. */
+.jornal-serifa {
+  font-family: var(--font-jornal), Georgia, 'Times New Roman', serif;
+}
+.jornal-regra {
+  border-top: 3px double var(--on-surface);
+}
+@keyframes jornal-manchetes {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .jornal-manchetes {
+    animation: jornal-manchetes 60s linear infinite;
+  }
+  .jornal-manchetes-caixa:hover .jornal-manchetes,
+  .jornal-manchetes-caixa:focus-within .jornal-manchetes {
+    animation-play-state: paused;
+  }
+}
+:root[data-motion='reduced'] .jornal-manchetes {
+  animation: none;
+}

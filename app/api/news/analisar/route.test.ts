@@ -287,3 +287,30 @@ describe('evento para o painel', () => {
     expect(registar).not.toHaveBeenCalled();
   });
 });
+
+describe('com o jornal ligado (NEWS_BLOG=on), a análise é só da redacção', () => {
+  it('sem sessão: 404 e o motor não é chamado', async () => {
+    vi.doMock('@/lib/auth/session', () => ({
+      currentSession: async () => null,
+      podeEscrever: () => false,
+    }));
+    const motor = motorResponde(EXEMPLO_LOVABLE);
+    const POST = await carregarRota({ ...LIGADO, NEWS_BLOG: 'on', SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k'.repeat(40) });
+    const r = await POST(pedido(POR_URL));
+    expect(r.status).toBe(404);
+    expect(motor).not.toHaveBeenCalled();
+    vi.doUnmock('@/lib/auth/session');
+  });
+
+  it('com sessão de quem escreve: analisa', async () => {
+    vi.doMock('@/lib/auth/session', () => ({
+      currentSession: async () => ({ userId: 'u', papel: 'comercial', nome: 'N', email: null }),
+      podeEscrever: (p: string) => p === 'admin' || p === 'comercial',
+    }));
+    motorResponde(EXEMPLO_LOVABLE);
+    const POST = await carregarRota({ ...LIGADO, NEWS_BLOG: 'on', SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'k'.repeat(40) });
+    const r = await POST(pedido(POR_URL));
+    expect(r.status).toBe(200);
+    vi.doUnmock('@/lib/auth/session');
+  });
+});

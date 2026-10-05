@@ -176,3 +176,10 @@ export function estadoDoInquerito(
   if (!publicada) return 'rascunho';
   return activo ? 'aberto' : 'fechado';
 }
+
+/** AGORAMOZ News (0015): o estado de um artigo, como a redacção o vê. */
+export const ESTADO_ARTIGO: Record<'rascunho' | 'publicado' | 'arquivado', Rotulo> = {
+  rascunho: { texto: 'Rascunho', tom: 'neutro', nota: 'Só a equipa vê. Reveja e publique.' },
+  publicado: { texto: 'Publicado', tom: 'bom', nota: 'No jornal, aberto a gostos e partilhas.' },
+  arquivado: { texto: 'Arquivado', tom: 'aviso', nota: 'Saiu do jornal; o endereço deixa de abrir.' },
+};

@@ -119,12 +119,27 @@ const opcional = (max: number) =>
     .trim()
     .max(max)
     .transform((v) => (v === '' ? null : v));
+/** Moçambique não tem hora de verão: Maputo é sempre UTC+2. */
+const FUSO_MAPUTO = '+02:00';
+
+/** `2026-10-10T09:00` (o que o campo `datetime-local` envia) lido na hora de Maputo. */
+export function horaDeMaputo(valor: string): string {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(valor) ? `${valor}:00${FUSO_MAPUTO}` : valor;
+}
+
+/** O inverso, para preencher o campo: ISO → `AAAA-MM-DDTHH:MM` em Maputo. */
+export function paraCampoDeMaputo(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(new Date(iso).getTime() + 2 * 3_600_000);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 16);
+}
+
 const dataOpcional = z
   .string()
   .trim()
   .transform((v, ctx) => {
     if (v === '') return null;
-    const d = new Date(v);
+    const d = new Date(horaDeMaputo(v));
     if (Number.isNaN(d.getTime())) {
       ctx.addIssue({ code: 'custom', message: 'Data inválida.' });
       return z.NEVER;

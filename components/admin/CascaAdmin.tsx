@@ -19,6 +19,7 @@ const ENTRADAS: readonly Entrada[] = [
   { href: '/admin/contactos', texto: 'Contactos', icone: 'contactos' },
   { href: '/admin/organizacoes', texto: 'Organizações', icone: 'organizacoes' },
   { href: '/admin/inqueritos', texto: 'Inquéritos', icone: 'inqueritos' },
+  { href: '/admin/news', texto: 'News', icone: 'news' },
   { href: '/admin/aquisicao', texto: 'Aquisição', icone: 'aquisicao' },
   { href: '/admin/fila', texto: 'Fila', icone: 'fila' },
   { href: '/admin/equipa', texto: 'Equipa', icone: 'equipa' },
@@ -33,14 +34,19 @@ export interface SessaoVisivel {
 export function CascaAdmin({
   sessao,
   inqueritos = false,
+  news = false,
   children,
 }: {
   sessao: SessaoVisivel;
   /** `SURVEYS=on`. Desligado, a entrada não aparece — as páginas dariam 404. */
   inqueritos?: boolean;
+  /** `NEWS_BLOG=on`. Desligado, a redacção do News não aparece. */
+  news?: boolean;
   children: React.ReactNode;
 }) {
-  const entradas = inqueritos ? ENTRADAS : ENTRADAS.filter((e) => e.icone !== 'inqueritos');
+  const entradas = ENTRADAS.filter(
+    (e) => (inqueritos || e.icone !== 'inqueritos') && (news || e.icone !== 'news'),
+  );
   return (
     <div className="flex w-full flex-col lg:flex-row">
       <aside className="border-b border-[color:var(--border)] lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">

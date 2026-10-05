@@ -1,5 +1,6 @@
 import { NextResponse, after } from 'next/server';
 import { registarEventoServidor, type PropsEscalares } from '@/lib/analytics/servidor';
+import { currentSession, podeEscrever } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/config/env';
 import { clientKey, createMemoryRateLimiter, type RateLimiter } from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
@@ -82,6 +83,16 @@ export async function POST(request: Request) {
   if (env.NEWS_ENGINE === 'off' || !env.LOVABLE_NEWS_FUNCTION_URL || !env.LOVABLE_NEWS_API_KEY) {
     log.warn('news.falhou', { correlationId, reason: 'motor-desligado', outcome: 'rejected' });
     return fail(503, correlationId);
+  }
+
+  // Com o jornal ligado, a análise é trabalho da redacção: só a equipa que
+  // escreve (admin, comercial) gasta o motor. Para os outros, a rota não existe.
+  if (env.NEWS_BLOG === 'on') {
+    const sessao = await currentSession();
+    if (!sessao || !podeEscrever(sessao.papel)) {
+      log.warn('news.falhou', { correlationId, reason: 'sem-sessao', outcome: 'rejected' });
+      return fail(404, correlationId);
+    }
   }
 
   const contentType = request.headers.get('content-type') ?? '';

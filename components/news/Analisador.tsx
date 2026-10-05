@@ -130,7 +130,19 @@ function mensagemDoStatus(status: number, idioma: Idioma): string {
   return t(texto, idioma);
 }
 
-export function Analisador({ idioma }: { idioma: Idioma }) {
+export interface RelatorioPronto {
+  readonly analise: Analise;
+  readonly idioma: IdiomaMotor;
+}
+
+export function Analisador({
+  idioma,
+  depoisDoRelatorio,
+}: {
+  idioma: Idioma;
+  /** No admin: o que fazer com o relatório (ex.: «Criar rascunho de artigo»). */
+  depoisDoRelatorio?: (r: RelatorioPronto) => React.ReactNode;
+}) {
   const [modo, setModo] = useState<'url' | 'texto'>('url');
   const [url, setUrl] = useState('');
   const [texto, setTexto] = useState('');
@@ -409,6 +421,7 @@ export function Analisador({ idioma }: { idioma: Idioma }) {
             idiomaConteudo={estado.idioma}
             tituloRef={tituloRef}
           />
+          {depoisDoRelatorio?.({ analise: estado.analise, idioma: estado.idioma })}
         </div>
       )}
     </div>

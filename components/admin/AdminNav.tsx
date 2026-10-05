@@ -10,6 +10,7 @@ import {
   Inbox,
   LayoutDashboard,
   ListChecks,
+  Newspaper,
   Radar,
   UserCog,
   Users,
@@ -34,6 +35,7 @@ const ICONES = {
   organizacoes: Building2,
   aquisicao: Radar,
   inqueritos: ListChecks,
+  news: Newspaper,
   fila: Inbox,
   equipa: UserCog,
 } satisfies Record<string, LucideIcon>;

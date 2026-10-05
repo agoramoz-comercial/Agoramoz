@@ -214,6 +214,15 @@ const serverSchema = z.object({
    */
   SURVEY_LINK_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres').optional(),
 
+  // ── AGORAMOZ News (jornal) ──────────────────────────────────────────────
+  /**
+   * `off` — `/news` continua a ser a ferramenta de análise pública de hoje.
+   * `on` — `/news` passa a jornal (artigos publicados pela equipa, gostos,
+   * partilhas e o outdoor de anúncios) e a análise fica só no /admin. Só
+   * depois de aplicar supabase/aplicar-0015.sql (ver docs/NEWS.md).
+   */
+  NEWS_BLOG: z.enum(['off', 'on']).default('off'),
+
   // ── Importar inquérito de texto com IA (Kimi, Moonshot AI) ───────────────
   /**
    * `off` — «Colar e transformar» usa só o analisador local (sem rede).
@@ -287,6 +296,12 @@ const serverSchema = z.object({
     if (env.ERP_PROVIDER !== 'http') return;
     for (const nome of ['ERP_URL', 'ERP_API_KEY'] as const) {
       if (!env[nome]) ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando ERP_PROVIDER=http' });
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.NEWS_BLOG !== 'on') return;
+    for (const nome of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const) {
+      if (!env[nome]) ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando NEWS_BLOG=on' });
     }
   })
   .superRefine((env, ctx) => {
@@ -375,6 +390,7 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       ERP_URL: process.env.ERP_URL,
       ERP_API_KEY: process.env.ERP_API_KEY,
       SURVEYS: process.env.SURVEYS,
+      NEWS_BLOG: process.env.NEWS_BLOG,
       SURVEY_LINK_SECRET: process.env.SURVEY_LINK_SECRET,
       SURVEY_AI: process.env.SURVEY_AI,
       KIMI_API_KEY: process.env.KIMI_API_KEY,

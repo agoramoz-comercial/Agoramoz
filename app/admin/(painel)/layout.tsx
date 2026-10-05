@@ -22,6 +22,7 @@ export default async function PainelLayout({ children }: { children: React.React
     <CascaAdmin
       sessao={{ nome: sessao.nome, email: sessao.email, papel: sessao.papel }}
       inqueritos={serverEnv().SURVEYS === 'on'}
+      news={serverEnv().NEWS_BLOG === 'on'}
     >
       {children}
     </CascaAdmin>

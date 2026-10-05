@@ -174,6 +174,13 @@ describe('anúncios — destino, campanha e rotação', () => {
     expect(lerAnuncios(null)).toEqual([]);
   });
 
+  it('as datas do formulário são lidas na hora de Maputo (UTC+2)', async () => {
+    const { horaDeMaputo, paraCampoDeMaputo } = await import('./anuncios');
+    expect(new Date(horaDeMaputo('2026-10-10T09:00')).toISOString()).toBe('2026-10-10T07:00:00.000Z');
+    expect(paraCampoDeMaputo('2026-10-10T07:00:00.000Z')).toBe('2026-10-10T09:00');
+    expect(paraCampoDeMaputo(null)).toBe('');
+  });
+
   it('o formulário do anúncio recusa destino perigoso e fim antes do início', () => {
     const base = {
       slug: 'agentes-ia',
