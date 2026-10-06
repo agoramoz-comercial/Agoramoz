@@ -433,18 +433,18 @@
 /* -------------------------------------------------------------------------
    Cartão de fundador.
 
-   Repouso: retrato a cores numa janela quadrada, nome e cargo na
-   faixa por baixo. Estado activo: chapa de sinal por cima do retrato, com a
-   responsabilidade e o LinkedIn.
+   Repouso: retrato de estúdio, sobre vermelho, numa janela quadrada; nome e
+   cargo na faixa por baixo. Estado activo: chapa de tinta por cima do
+   retrato, com a responsabilidade e o LinkedIn.
 
-   A cor é legítima aqui pela regra que já existe no topo deste ficheiro —
-   «o CTA primário e o estado ativo». O cartão activo é o estado activo.
+   A chapa é TINTA e não sinal desde que os retratos passaram a ter fundo
+   vermelho (2026-10-06): vermelho sobre vermelho apagava a pessoa no hover e,
+   em toque, a chapa colava-se ao retrato num só bloco vermelho. O vermelho
+   fica no retrato; a chapa dá-lhe o contraponto.
 
-   `--color-signal-700` FIXO e não `var(--signal)`: o token semântico muda com
-   a superfície (#b82200 em claro, #ff3b10 em escuro) e a secção aparece em
-   três páginas. Giz sobre #b82200 dá 5,48:1 — AA, calculado, não estimado.
-   Giz sobre #ff3b10 daria 2,6:1 e reprovaria. A chapa fixa é o que torna o
-   contraste independente da superfície onde o cartão for colocado.
+   `--color-ink-950` FIXO e não um token de superfície: a secção aparece em
+   três páginas, claras e escuras. Giz sobre #0a0a0b dá ~17:1 — AA com folga,
+   independente da superfície onde o cartão for colocado.
    ------------------------------------------------------------------------- */
 .perfil-cartao {
   position: relative;
@@ -484,7 +484,7 @@
      oposta, como se fosse outro elemento. */
   align-items: flex-start;
   gap: 1rem;
-  background: var(--color-signal-700);
+  background: var(--color-ink-950);
   color: var(--color-chalk);
   padding: 1.5rem;
 }
@@ -506,19 +506,17 @@
 
     /* Opaca onde há texto, translúcida no topo: o retrato atravessa a chapa
        como fantasma e o cartão activo continua a ser uma pessoa, não um
-       rectângulo vermelho.
+       rectângulo escuro.
 
-       O corte a 54% não é estético. Giz sobre o vermelho puro dá 5,48:1 — AA.
-       Sobre o vermelho com um píxel BRANCO do retrato por baixo a 14% já dá
-       4,40:1 e reprovaria. Como o texto vive nos 40% de baixo mesmo no cartão
-       mais estreito, deixar essa faixa opaca garante que nenhum brilho da pele
-       pode chegar ao texto — a garantia é geométrica, não uma aposta sobre
-       onde a linha vai cair. */
+       O corte a 54% não é estético: o texto vive nos 40% de baixo mesmo no
+       cartão mais estreito, e essa faixa opaca garante que nenhum brilho do
+       retrato chega por baixo do texto — a garantia é geométrica, não uma
+       aposta sobre onde a linha vai cair. */
     background: linear-gradient(
       to top,
-      var(--color-signal-700) 0%,
-      var(--color-signal-700) 54%,
-      color-mix(in srgb, var(--color-signal-700) 62%, transparent) 100%
+      var(--color-ink-950) 0%,
+      var(--color-ink-950) 54%,
+      color-mix(in srgb, var(--color-ink-950) 55%, transparent) 100%
     );
   }
 

@@ -2,79 +2,44 @@ import { chromium } from '@playwright/test';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 /**
- * Os retratos dos fundadores, a cores, compostos no quadrado 1280×1280.
+ * Os retratos dos fundadores — estúdio vermelho — no quadrado 1280×1280.
  *
- * Entrada: os recortes a cores com alfa (u2net + alpha matting) — os mesmos de
- * que saíram os retratos monocromáticos de ce1e784. Não estão no repositório;
- * passam-se por `ORIGEM` (pasta com `gerson-cru.png` e `sheinaz-cru.png`).
+ * Entrada: os cartazes das redes (1080×1350), com o retrato sobre vermelho de
+ * estúdio e, por baixo, o nome, o cargo e a barra de contactos. Não estão no
+ * repositório; passam-se por `ORIGEM` (pasta com `gerson-cartaz.png` e
+ * `sheinaz-cartaz.png`).
  *
- * Enquadramento, em píxeis do quadrado por píxel do recorte:
+ * O texto do cartaz não entra no site (o nome e o cargo já estão no cartão).
+ * O corte é medido, não escolhido: procura-se a primeira linha, abaixo de
+ * y=900, com pelo menos 20 píxeis brancos (R, G e B > 235) — o topo do nome —
+ * e o quadrado acaba 8 px acima dela. Depois escala-se para 1280 (o tamanho
+ * de sempre: os imports não mudam).
  *
- * - **Sheinaz** — o de ce1e784, recuperado por registo do alfa (IoU 0,999):
- *   escala 1,259, deslocamento (−210, 43). A geometria não muda; só a cor.
- * - **Gerson** — a fotografia de origem tem 768px de largura: com a escala de
- *   ce1e784 (1,2095) o tronco acabava em x=214 e x=1143, cortado a direito,
- *   com vazio dos dois lados. Agora a largura do recorte cobre o quadrado
- *   (1280/768), como os ombros da Sheinaz, e o topo do chapéu fica à altura
- *   do topo da cabeça dela. O rosto fica maior que o dela — decisão pedida.
+ * Enquadramento: o Gerson usa a largura toda e é a referência. A Sheinaz é
+ * enquadrada para o topo da cabeça cair à mesma altura do topo do chapéu,
+ * centrada na cabeça — a regra que o site já seguia. Sem isto, a cabeça dela
+ * ficava a meio do quadrado, debaixo de um terço de vermelho vazio.
  *
- * Sem monocromia e sem correcção de tons: é a cor da fotografia.
+ * Duas provas antes de gravar: nenhum branco de texto nas últimas 12 linhas
+ * do quadrado, e os cantos de cima são vermelho de estúdio (o corte não
+ * apanhou a barra preta nem outra coisa).
  *
- * Uma limpeza, no Gerson: acima da aba direita do chapéu o recorte deixou
- * passar um tufo do fundo laranja da fotografia (R≈140–205, G≈80–100, contra o
- * castanho do chapéu, R≈85–105 — medido). Em monocromia lia-se como fiapos
- * cinzentos; a cores salta à vista. Apaga-se só nessa janela e só nos píxeis
- * com essa cor.
+ * Sem correcção de cor: é a cor da fotografia.
  */
 const ORIGEM = process.env.ORIGEM;
-if (!ORIGEM) throw new Error('ORIGEM: pasta com gerson-cru.png e sheinaz-cru.png');
+if (!ORIGEM) throw new Error('ORIGEM: pasta com gerson-cartaz.png e sheinaz-cartaz.png');
 const L = 1280;
+const NOMES = ['gerson', 'sheinaz'];
 
 const dataUrl = (f) => 'data:image/png;base64,' + readFileSync(f).toString('base64');
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
 const p = await b.newPage();
 
 const saida = await p.evaluate(
-  async ({ gerson, sheinaz, L }) => {
+  async ({ fontes, L }) => {
     const carregar = (src) => new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => falha(new Error('imagem ilegível')); i.src = src; });
-    const [ig, is] = await Promise.all([carregar(gerson), carregar(sheinaz)]);
-    // As constantes de enquadramento só valem para ESTES recortes. Outro ficheiro seria composto em silêncio.
-    if (ig.width !== 768 || ig.height !== 1364) throw new Error(`gerson-cru.png: ${ig.width}×${ig.height}, esperado 768×1364`);
-    if (is.width !== 1254 || is.height !== 1254) throw new Error(`sheinaz-cru.png: ${is.width}×${is.height}, esperado 1254×1254`);
-
-    /** Primeira linha com alfa relevante, num canvas já desenhado. */
-    const topo = (g) => {
-      const a = g.getImageData(0, 0, L, L).data;
-      for (let y = 0; y < L; y++) for (let x = 0; x < L; x++) if (a[(y * L + x) * 4 + 3] > 128) return y;
-      return 0;
-    };
-    const compor = (img, s, dx, dy) => {
-      const c = new OffscreenCanvas(L, L);
-      const g = c.getContext('2d', { willReadFrequently: true });
-      g.imageSmoothingQuality = 'high';
-      g.drawImage(img, dx, dy, img.width * s, img.height * s);
-      return { c, g };
-    };
-
-    const sh = compor(is, 1.259, -210, 43);
-    const topoSheinaz = topo(sh.g);
-
-    // Gerson: primeiro a escala nova com dy=0, para medir onde fica o chapéu; depois alinha.
-    const s = L / ig.width;
-    const ensaio = compor(ig, s, 0, 0);
-    const ge = compor(ig, s, 0, topoSheinaz - topo(ensaio.g));
-
-    const JANELA = { x: 930, y: 440, w: 170, h: 120 };
-    const zona = ge.g.getImageData(JANELA.x, JANELA.y, JANELA.w, JANELA.h);
-    let apagados = 0;
-    for (let i = 0; i < zona.data.length; i += 4) {
-      const [r, g] = [zona.data[i], zona.data[i + 1]];
-      if (zona.data[i + 3] > 0 && r > 135 && r - g > 55) {
-        zona.data[i + 3] = 0;
-        apagados++;
-      }
-    }
-    ge.g.putImageData(zona, JANELA.x, JANELA.y);
+    const branco = (d, i) => d[i] > 235 && d[i + 1] > 235 && d[i + 2] > 235;
+    const vermelho = (d, i) => d[i] > 150 && d[i + 1] < 40 && d[i + 2] < 60;
 
     const png = async (c) => {
       const blob = await c.convertToBlob({ type: 'image/png' });
@@ -83,15 +48,77 @@ const saida = await p.evaluate(
       for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
       return btoa(bin);
     };
-    return { gerson: await png(ge.c), sheinaz: await png(sh.c), topoSheinaz, escalaGerson: s, apagados };
-  },
-  { gerson: dataUrl(`${ORIGEM}/gerson-cru.png`), sheinaz: dataUrl(`${ORIGEM}/sheinaz-cru.png`), L },
-);
 
-for (const nome of ['gerson', 'sheinaz']) {
-  writeFileSync(`public/equipa/${nome}.png`, Buffer.from(saida[nome], 'base64'));
-}
-// Na janela havia 2751 píxeis do fundo (medido). Muito fora disso: janela ou entrada erradas.
-if (saida.apagados < 1000 || saida.apagados > 6000) throw new Error(`limpeza anómala: ${saida.apagados} píxeis`);
-console.log(`topo da cabeça da Sheinaz: y=${saida.topoSheinaz}; escala do Gerson: ${saida.escalaGerson.toFixed(4)}; píxeis do fundo apagados: ${saida.apagados}`);
+    const resultado = {};
+    let fraccaoTopo = null;
+    for (const [nome, src] of Object.entries(fontes)) {
+      const img = await carregar(src);
+      // As regras do corte só valem para ESTE formato de cartaz.
+      if (img.width !== 1080 || img.height !== 1350) throw new Error(`${nome}: ${img.width}×${img.height}, esperado 1080×1350`);
+
+      const c = new OffscreenCanvas(img.width, img.height);
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, img.width, img.height).data;
+
+      let topoTexto = -1;
+      for (let y = 900; y < img.height && topoTexto < 0; y++) {
+        let n = 0;
+        for (let x = 0; x < img.width; x++) if (branco(d, (y * img.width + x) * 4)) n++;
+        if (n >= 20) topoTexto = y;
+      }
+      if (topoTexto < 0) throw new Error(`${nome}: texto do cartaz não encontrado abaixo de y=900`);
+
+      // Topo da pessoa: a primeira linha com 20+ píxeis que não são estúdio.
+      let topo = -1;
+      for (let y = 0; y < topoTexto && topo < 0; y++) {
+        let n = 0;
+        for (let x = 0; x < img.width; x++) if (!vermelho(d, (y * img.width + x) * 4)) n++;
+        if (n >= 20) topo = y;
+      }
+      // Centro da cabeça: média das colunas que não são estúdio nos 300 px abaixo do topo.
+      let soma = 0;
+      let conta = 0;
+      for (let y = topo; y < Math.min(topo + 300, topoTexto); y++)
+        for (let x = 0; x < img.width; x++) if (!vermelho(d, (y * img.width + x) * 4)) { soma += x; conta++; }
+      const centro = soma / conta;
+
+      // O primeiro (o Gerson) usa a largura toda e é a referência; os seguintes
+      // são enquadrados para o topo da cabeça cair à mesma fracção do quadrado.
+      const fundo = topoTexto - 8;
+      let lado, y0;
+      if (fraccaoTopo === null) {
+        lado = fundo;
+        y0 = 0;
+        fraccaoTopo = topo / lado;
+      } else {
+        lado = Math.min(img.width, Math.round((fundo - topo) / (1 - fraccaoTopo)));
+        y0 = Math.max(0, Math.round(topo - fraccaoTopo * lado));
+      }
+      const x0 = Math.round(Math.min(Math.max(centro - lado / 2, 0), img.width - lado));
+      const q = new OffscreenCanvas(L, L);
+      const gq = q.getContext('2d', { willReadFrequently: true });
+      gq.imageSmoothingQuality = 'high';
+      gq.drawImage(img, x0, y0, lado, lado, 0, 0, L, L);
+
+      const dq = gq.getImageData(0, 0, L, L).data;
+      let brancosNoFundo = 0;
+      for (let y = L - 12; y < L; y++) for (let x = 0; x < L; x++) if (branco(dq, (y * L + x) * 4)) brancosNoFundo++;
+      const cantos = [[4, 4], [L - 5, 4], [4, L - 5], [L - 5, L - 5]].map(([x, y]) => vermelho(dq, (y * L + x) * 4));
+
+      resultado[nome] = { png: await png(q), topoTexto, topo, lado, x0, y0, brancosNoFundo, cantos };
+    }
+    return resultado;
+  },
+  { fontes: Object.fromEntries(NOMES.map((n) => [n, dataUrl(`${ORIGEM}/${n}-cartaz.png`)])), L },
+);
 await b.close();
+
+for (const nome of NOMES) {
+  const r = saida[nome];
+  if (r.brancosNoFundo > 0) throw new Error(`${nome}: ${r.brancosNoFundo} píxeis de texto no fundo do quadrado`);
+  // Os ombros descem até ao fundo; basta que os cantos de cima sejam estúdio.
+  if (!r.cantos[0] || !r.cantos[1]) throw new Error(`${nome}: cantos de cima não são vermelho de estúdio (${r.cantos})`);
+  writeFileSync(`public/equipa/${nome}.png`, Buffer.from(r.png, 'base64'));
+  console.log(`${nome}: texto a y=${r.topoTexto}; topo da cabeça a y=${r.topo}; quadrado ${r.lado}px em (${r.x0}, ${r.y0}); cantos estúdio ${r.cantos.map((c) => (c ? 'sim' : 'não')).join('/')}`);
+}

@@ -13,9 +13,9 @@ import sheinaz from '@/public/equipa/sheinaz.png';
 /**
  * Perfis de quem lidera.
  *
- * Em repouso: retrato a cores (`.qa/retratos.mjs`) numa janela quadrada, numeral techno, nome
- * e cargo. No estado activo: chapa de sinal sobre o retrato, com a
- * responsabilidade e a ligação ao LinkedIn.
+ * Em repouso: retrato de estúdio sobre vermelho (`.qa/retratos.mjs`) numa
+ * janela quadrada, numeral techno, nome e cargo. No estado activo: chapa de
+ * tinta sobre o retrato, com a responsabilidade e a ligação ao LinkedIn.
  *
  * Três decisões que não são de gosto:
  *
