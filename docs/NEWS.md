@@ -13,6 +13,7 @@ servidor em `app/api/news/analisar/route.ts`.
 | Rota `/api/news/analisar` | No ar |
 | Motor real (Lovable) | **Ligado em 2026-09-30** (projecto `aqmetakutmbyqzahzhyz`). Primeira análise real: notícia da AIM sobre o Porto de Maputo, HTTP 200 em ~29 s, todas as secções presentes, 0 itens descartados |
 | Jornal público, redacção e publicidade (fase 2, Lote V) | **Ligado em 2026-10-06** (`NEWS_BLOG=on`, deploy `dpl_BFSxgRXHUjY54kBwmFK3frBiekfA`). A 0015 foi aplicada em duas partes e provada numa pré-visualização contra a base real antes de ligar a produção |
+| Incidente de 2026-10-06 | Das ~02:44 às ~14:50 UTC a base ficou com o CPU a 100 % e o pool da API esgotado (`PGRST003`): o `/news` pendurava ~60 s e a analítica falhava. O jornal foi desligado em produção, o site ganhou prazos (`lib/news/tempo.ts`: 4 s nas leituras, 3 s nas rotas; o clique redirecciona sempre) e botões sem duplo envio, e preparou-se a 0016 (`lock_timeout` 4 s nas funções do News, `statement_timeout` 15 s na chave de serviço). Religado às ~14:58 UTC (`dpl_2f9Anvfeb51dZU7SG87Ts9WHYoop`) depois de a pré-visualização provar a base de volta. A causa exacta do CPU fica por confirmar com o `pg_stat_activity` |
 
 ## Ligar o motor (passo do responsável pela conta Lovable)
 
@@ -119,8 +120,9 @@ confirmar primeiro e só depois mudar o texto.
    criar (`42883` no SQL, `PGRST202` no site). Para colar em dois passos:
    `aplicar-0015-parte1.sql` e depois `aplicar-0015-parte2.sql` (cada um
    repetível; a parte 2 sozinha completa uma 0015 cortada).
-2. Correr `supabase/verificar-estado.sql`: as linhas **26** e **27** têm de
-   dizer `ok`.
+2. Correr `supabase/aplicar-0016.sql` (prazos na base; repetível).
+   Depois `supabase/verificar-estado.sql`: as linhas **26**, **27** e **28**
+   têm de dizer `ok`.
 3. Vercel → `agoramoz` → Settings → Environment Variables: `NEWS_BLOG` =
    `on` (Production). Não há segredo novo. Pedir o redeploy.
 4. Em `/admin/news`: analisar uma notícia → «Criar rascunho de artigo» →
