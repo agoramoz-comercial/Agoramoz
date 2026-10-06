@@ -123,10 +123,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   };
 
   const caminho = (url: string) => new URL(url).pathname;
+  const artigos = await artigosDoJornal();
+  // A primeira página do jornal muda a cada artigo publicado: o seu lastmod é o
+  // do artigo mais recente dessa edição (nunca anterior à revisão da página).
+  const jornal = (e: MetadataRoute.Sitemap[number]) => {
+    const edicao = caminho(e.url) === '/news' ? '/news/' : caminho(e.url) === '/en/news' ? '/en/news/' : null;
+    if (!edicao) return e;
+    const datas = artigos
+      .filter((a) => caminho(a.url).startsWith(edicao))
+      .map((a) => new Date(a.lastModified ?? 0).getTime());
+    const base = new Date(e.lastModified ?? 0).getTime();
+    return { ...e, lastModified: new Date(Math.max(base, ...datas)) };
+  };
   return [
-    ...portugues.map((e) => ({ ...e, ...hreflang(caminho(e.url), false) })),
-    ...ingles.map((e, i) => ({ ...e, ...hreflang(ROTAS_BILINGUES[i]!, true) })),
-    ...(await artigosDoJornal()),
+    ...portugues.map((e) => ({ ...jornal(e), ...hreflang(caminho(e.url), false) })),
+    ...ingles.map((e, i) => ({ ...jornal(e), ...hreflang(ROTAS_BILINGUES[i]!, true) })),
+    ...artigos,
   ];
 }
 

@@ -107,6 +107,12 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'no-referrer' },
         ],
       },
+      {
+        // Pré-visualizações de QA (só com ADMIN_PREVIEW, nunca em produção):
+        // fora dos motores de busca mesmo que algum dia respondam.
+        source: '/qa/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nosnippet' }],
+      },
     ];
   },
 };

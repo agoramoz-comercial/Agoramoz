@@ -33,6 +33,25 @@ const PUBLICAS = [
 ] as const;
 
 describe('0015 — AGORAMOZ News', () => {
+  it('um gosto, uma partilha ou uma impressão não mudam a data editorial (updated_at)', () => {
+    expect(MIGRACAO).toContain(
+      'when (old.gostos is not distinct from new.gostos and old.partilhas is not distinct from new.partilhas)',
+    );
+    expect(MIGRACAO).toContain('when (old.impressoes is not distinct from new.impressoes');
+  });
+
+  it('a revisão nula não salta o bloqueio optimista; publicar e arquivar têm guarda de estado', () => {
+    expect(MIGRACAO).not.toMatch(/revisao <> p_revisao/);
+    expect(corpoDe('publicar_artigo')).toContain("if a.estado = 'publicado' then");
+    expect(corpoDe('arquivar_artigo')).toContain("if a.estado <> 'publicado' then");
+  });
+
+  it('as impressões de um lote são agregadas e tratadas por ordem fixa', () => {
+    const corpo = corpoDe('registar_impressoes');
+    expect(corpo).toContain('select distinct');
+    expect(corpo).toContain('order by 1, 2');
+  });
+
   it('o ficheiro de aplicar contém a migração, palavra por palavra', () => {
     expect(APLICAR.endsWith(MIGRACAO)).toBe(true);
   });
@@ -99,8 +118,9 @@ describe('0015 — AGORAMOZ News', () => {
   it('o clique devolve o destino guardado, nunca um vindo de fora', () => {
     expect(cabecalhoDe('registar_clique_anuncio')).not.toMatch(/p_destino/);
     expect(corpoDe('registar_clique_anuncio')).toContain("'destino', n.destino");
-    // O destino é um caminho do site ou https — validado na própria tabela.
-    expect(MIGRACAO).toContain("destino ~ '^/[a-z0-9/_-]{0,119}$'");
+    // O destino é um caminho do site (nunca `//host`) ou https — validado na própria tabela.
+    expect(MIGRACAO).toContain("(destino ~ '^/[a-z0-9/_-]{0,119}$' and destino !~ '//')");
+    expect(MIGRACAO).toContain('add constraint news_anuncios_destino_valido');
   });
 
   it('as acções da equipa verificam o papel e ficam na auditoria', () => {

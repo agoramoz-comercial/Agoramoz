@@ -4,6 +4,7 @@ import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Artigo } from '@/components/news/jornal/paginas';
 import { caminhoDoArtigo, caminhoDoJornal } from '@/components/news/jornal/ligacoes';
 import { jornalLigado, obterPublicado } from '@/lib/news/jornal-servidor';
+import { NOME_DA_SECCAO } from '@/lib/news/artigo';
 import { buildMetadata } from '@/lib/seo/site';
 
 const IDIOMA = 'pt' as const;
@@ -13,21 +14,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const a = await obterPublicado(slug);
   if (!a || a.idioma !== IDIOMA) return {};
+  const base = buildMetadata({
+    title: a.titulo,
+    description: a.entrada ?? a.titulo,
+    path: caminhoDoArtigo(a.slug, IDIOMA),
+    imagemPropria: true,
+    bilingue: false,
+  });
   return {
-    ...buildMetadata({
-      title: a.titulo,
-      description: a.entrada ?? a.titulo,
-      path: caminhoDoArtigo(a.slug, IDIOMA),
-      imagemPropria: true,
-      bilingue: false,
-    }),
+    ...base,
+    // A base traz o og:url (e o resto); aqui só se juntam os campos de artigo.
     openGraph: {
+      ...base.openGraph,
       type: 'article',
       title: a.titulo,
       description: a.entrada ?? undefined,
       publishedTime: a.publicado_em,
       modifiedTime: a.actualizado_em,
-      section: a.seccao,
+      section: NOME_DA_SECCAO[a.seccao][IDIOMA],
       locale: 'pt_PT',
       siteName: 'AGORAMOZ',
     },

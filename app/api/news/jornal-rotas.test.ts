@@ -136,7 +136,7 @@ describe('GET /api/news/anuncio/[id] — o clique', async () => {
 
   it('303 para o destino GUARDADO, com a campanha e o lugar', async () => {
     rpc.mockResolvedValue({ data: { destino: '/solucoes/agentes-ia', slug: 'agentes-ia' }, error: null });
-    const r = await pedido(ANUNCIO, `?p=topo&t=${TOKEN}`);
+    const r = await pedido(ANUNCIO, `?p=topo&k=${'c'.repeat(64)}`);
     expect(r.status).toBe(303);
     const destino = new URL(r.headers.get('location')!);
     expect(destino.origin).toBe('https://agoramoz.com');
@@ -147,7 +147,15 @@ describe('GET /api/news/anuncio/[id] — o clique', async () => {
       utm_campaign: 'agentes-ia',
       utm_content: 'topo',
     });
-    expect(rpc.mock.calls[0]![1].p_chave_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(rpc.mock.calls[0]![1].p_chave_hash).toBe('c'.repeat(64));
+  });
+
+  it('o token em claro no URL é ignorado; uma chave com forma errada não conta como única', async () => {
+    rpc.mockResolvedValue({ data: { destino: '/diagnostico', slug: 'diag' }, error: null });
+    await pedido(ANUNCIO, `?p=topo&t=${TOKEN}`);
+    expect(rpc.mock.calls.at(-1)![1].p_chave_hash).toBeNull();
+    await pedido(ANUNCIO, '?p=topo&k=XYZ');
+    expect(rpc.mock.calls.at(-1)![1].p_chave_hash).toBeNull();
   });
 
   it('o URL do pedido nunca escolhe o destino', async () => {

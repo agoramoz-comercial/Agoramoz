@@ -865,10 +865,25 @@
     animation: jornal-manchetes 60s linear infinite;
   }
   .jornal-manchetes-caixa:hover .jornal-manchetes,
-  .jornal-manchetes-caixa:focus-within .jornal-manchetes {
+  .jornal-manchetes-caixa:focus-within .jornal-manchetes,
+  .jornal-manchetes-caixa[data-pausa='sim'] .jornal-manchetes {
     animation-play-state: paused;
+  }
+}
+.jornal-manchetes-caixa {
+  position: relative;
+}
+/* Parada, a faixa não precisa da segunda cópia nem do botão de pausa. */
+@media (prefers-reduced-motion: reduce) {
+  .jornal-manchetes-copia,
+  .jornal-manchetes-pausa {
+    display: none;
   }
 }
 :root[data-motion='reduced'] .jornal-manchetes {
   animation: none;
+}
+:root[data-motion='reduced'] .jornal-manchetes-copia,
+:root[data-motion='reduced'] .jornal-manchetes-pausa {
+  display: none;
 }

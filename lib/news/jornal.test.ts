@@ -254,6 +254,43 @@ describe('leitor anónimo', () => {
     expect(chaveDoLeitor('curto', 'artigo-1')).toBeNull();
     expect(chaveDoLeitor(42, 'artigo-1')).toBeNull();
   });
+
+  it('a chave calculada no browser é a mesma que o servidor calcularia', async () => {
+    const { chaveDoLeitor } = await import('./leitor-servidor');
+    const { chaveNoBrowser } = await import('./leitor');
+    const t = 'b'.repeat(32);
+    const id = '00000000-0000-4000-8000-0000000000a1';
+    expect(await chaveNoBrowser(t, id)).toBe(chaveDoLeitor(t, id));
+  });
+});
+
+describe('RSS', () => {
+  it('escapa o texto, tira caracteres de controlo e data a última alteração', async () => {
+    const { rssDoJornal } = await import('./rss');
+    const xml = rssDoJornal(
+      [
+        {
+          id: '00000000-0000-4000-8000-000000000001',
+          slug: 'petroleo-sobe-a1',
+          idioma: 'pt',
+          titulo: 'Petróleo <sobe> & "ganha"\u0007',
+          entrada: null,
+          seccao: 'energia',
+          prioridade: null,
+          publicado_em: '2026-10-05T10:00:00+00:00',
+          actualizado_em: '2026-10-06T08:00:00+00:00',
+          gostos: 0,
+          partilhas: 0,
+        },
+      ],
+      'pt',
+      'https://agoramoz.com',
+    );
+    expect(xml).toContain('<title>Petróleo &lt;sobe&gt; &amp; &quot;ganha&quot;</title>');
+    expect(xml).not.toMatch(/[\u0000-\u0008]/);
+    expect(xml).toContain('<lastBuildDate>Tue, 06 Oct 2026 08:00:00 GMT</lastBuildDate>');
+    expect(xml).toContain('<link>https://agoramoz.com/news/petroleo-sobe-a1</link>');
+  });
 });
 
 describe('partilha', () => {

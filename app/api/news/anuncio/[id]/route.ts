@@ -6,7 +6,6 @@ import { clientKey, createMemoryRateLimiter } from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
 import { comUtm, destinoSeguro, POSICOES_ANUNCIO, type PosicaoAnuncio } from '@/lib/news/anuncios';
 import { jornalLigado } from '@/lib/news/jornal-servidor';
-import { chaveDoLeitor } from '@/lib/news/leitor-servidor';
 
 /**
  * O clique num anúncio do outdoor: conta e manda (303) para o destino
@@ -23,6 +22,8 @@ export const dynamic = 'force-dynamic';
 
 const limite = createMemoryRateLimiter({ max: 30, windowMs: 600_000 });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+/** `k`: a chave do leitor JÁ derivada no browser (`sha256(token:id)`) — o token nunca vem no URL. */
+const CHAVE = /^[0-9a-f]{64}$/;
 
 function irPara(destino: string, request: Request) {
   return NextResponse.redirect(new URL(destino, request.url), {
@@ -42,6 +43,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     ? (p as PosicaoAnuncio)
     : null;
 
+  const k = url.searchParams.get('k');
+  const chave = k && CHAVE.test(k) ? k : null;
+
   const db = dbAdmin();
   const conta = limite.check(await clientKey(request)).allowed;
   if (!db) return irPara('/news', request);
@@ -49,7 +53,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { data, error } = await db.rpc('registar_clique_anuncio', {
     p_id: id,
     p_posicao: conta ? posicao : null,
-    p_chave_hash: conta ? chaveDoLeitor(url.searchParams.get('t'), id) : null,
+    p_chave_hash: conta ? chave : null,
   });
   if (error) {
     log.warn('news.anuncio_clique', { correlationId, reason: 'base', errorCode: error.code ?? 'desconhecido', outcome: 'failed' });

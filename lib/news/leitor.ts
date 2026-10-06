@@ -35,6 +35,21 @@ export function tokenDoLeitor(armazem: Pick<Storage, 'getItem' | 'setItem'> | nu
   }
 }
 
+/**
+ * A chave por anúncio, calculada NO BROWSER: `sha256(token:id)` em hex — a
+ * mesma que o servidor calcularia. É o que vai no URL do clique, para o token
+ * em si nunca aparecer em URLs, históricos ou registos de acesso (e o mesmo
+ * leitor não ser seguível de anúncio para anúncio). `null` sem Web Crypto.
+ */
+export async function chaveNoBrowser(token: string, id: string): Promise<string | null> {
+  try {
+    const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${token}:${id}`));
+    return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return null;
+  }
+}
+
 /** Os artigos de que este browser gostou (só para o botão aparecer marcado). */
 export function gostosGuardados(armazem: Pick<Storage, 'getItem'> | null): Set<string> {
   if (!armazem) return new Set();

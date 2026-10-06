@@ -6,7 +6,8 @@ import type { Idioma } from '@/content/types';
 import { fonteJornal } from '@/lib/fonts/jornal';
 import type { AnuncioPublico } from '@/lib/news/anuncios';
 import { NOME_DA_SECCAO, tempoDeLeitura, type ArtigoCompleto, type ArtigoDaLista } from '@/lib/news/artigo';
-import { ORG_ID } from '@/lib/seo/schema/ids';
+import { articleId, ORG_ID } from '@/lib/seo/schema/ids';
+import { IDENTITY, SITE } from '@/content/site';
 import { absolute } from '@/lib/seo/site';
 import { Outdoor } from '../Outdoor';
 import { ArtigoCorpo } from './ArtigoCorpo';
@@ -47,23 +48,33 @@ export function PaginaArtigo({
   const minutos = tempoDeLeitura(a.analise);
   const cta = ctaDoArtigo(a.seccao, a.slug, idioma);
   const en = idioma === 'en';
+  // Autor e editor por extenso (com o mesmo @id da organização): o Google não
+  // resolve com fiabilidade um @id que só existe noutro bloco JSON-LD.
+  const organizacao = { '@type': 'Organization', '@id': ORG_ID, name: SITE.name, url: absolute('/') };
   const ld = {
     '@type': 'NewsArticle',
-    '@id': `${url}#artigo`,
+    '@id': articleId(caminho),
     headline: a.titulo.slice(0, 110),
     description: a.entrada ?? undefined,
+    // Endereço estável da imagem do artigo (1200×630), sem o sufixo que o
+    // Next acrescenta à rota `opengraph-image`.
+    image: [absolute(`${caminho}/imagem`)],
     inLanguage: idioma,
     datePublished: a.publicado_em,
     dateModified: a.actualizado_em,
     articleSection: NOME_DA_SECCAO[a.seccao][idioma],
+    isAccessibleForFree: true,
     mainEntityOfPage: url,
     url,
-    author: { '@id': ORG_ID },
-    publisher: { '@id': ORG_ID },
+    author: { ...organizacao, name: 'AGORAMOZ News', url: absolute(caminhoDoJornal(idioma)) },
+    publisher: { ...organizacao, logo: { '@type': 'ImageObject', ...IDENTITY.logo } },
   };
 
   return (
-    <div className={`${fonteJornal.variable} bg-[color:var(--surface)] pb-24 text-[color:var(--on-surface)]`} data-surface="light">
+    <div
+      className={`${fonteJornal.variable} bg-[color:var(--surface)] pb-24 text-[color:var(--on-surface)]`}
+      data-surface="light"
+    >
       <JsonLd graph={{ '@context': 'https://schema.org', '@graph': [ld] }} />
       <Container className="pt-10">
         {trilho}
@@ -81,17 +92,26 @@ export function PaginaArtigo({
               {a.titulo}
             </h1>
             {a.entrada && (
-              <p className="jornal-serifa mt-5 text-[1.375rem] leading-snug text-[color:var(--muted)]">{a.entrada}</p>
+              <p className="jornal-serifa mt-5 text-[1.375rem] leading-snug text-[color:var(--muted)]">
+                {a.entrada}
+              </p>
             )}
             <p className="mt-6 flex flex-wrap gap-x-3 gap-y-1 border-y border-[color:var(--border)] py-3 text-sm text-[color:var(--muted)]">
-              <span className="font-medium text-[color:var(--on-surface)]">{en ? 'AGORAMOZ News desk' : 'Redacção AGORAMOZ News'}</span>
+              <span className="font-medium text-[color:var(--on-surface)]">
+                {en ? 'AGORAMOZ News desk' : 'Redacção AGORAMOZ News'}
+              </span>
               <time dateTime={a.publicado_em}>{dataLonga(a.publicado_em, idioma)}</time>
               <span>
                 {minutos} {en ? 'min read' : 'min de leitura'}
               </span>
               {a.fonte_nome &&
                 (a.fonte_url ? (
-                  <a href={a.fonte_url} target="_blank" rel="noopener noreferrer nofollow" className="underline underline-offset-4">
+                  <a
+                    href={a.fonte_url}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="underline underline-offset-4"
+                  >
                     {en ? 'Source' : 'Fonte'}: {a.fonte_nome}
                   </a>
                 ) : (
@@ -113,7 +133,7 @@ export function PaginaArtigo({
               meio={
                 anuncios.length > 0 ? (
                   <div className="my-12">
-                    <Outdoor anuncios={anuncios} posicao="artigo" />
+                    <Outdoor idioma={idioma} anuncios={anuncios} posicao="artigo" />
                   </div>
                 ) : undefined
               }
@@ -121,7 +141,9 @@ export function PaginaArtigo({
           </div>
 
           {a.nota_editorial && (
-            <p className="jornal-serifa mt-12 border-t border-[color:var(--border)] pt-5 text-[1.0625rem] italic">{a.nota_editorial}</p>
+            <p className="jornal-serifa mt-12 border-t border-[color:var(--border)] pt-5 text-[1.0625rem] italic">
+              {a.nota_editorial}
+            </p>
           )}
           <p className="mt-6 text-xs text-[color:var(--muted)]">
             {en
@@ -134,8 +156,14 @@ export function PaginaArtigo({
             <Partilhar slug={a.slug} url={url} titulo={a.titulo} idioma={idioma} />
           </div>
 
-          <aside aria-labelledby="artigo-cta" className="mt-12 bg-[color:var(--color-ink-950)] p-8 text-[color:var(--color-chalk)]">
-            <h2 id="artigo-cta" className="font-display text-[length:var(--text-h3)] font-bold tracking-[-0.02em]">
+          <aside
+            aria-labelledby="artigo-cta"
+            className="mt-12 bg-[color:var(--color-ink-950)] p-8 text-[color:var(--color-chalk)]"
+          >
+            <h2
+              id="artigo-cta"
+              className="font-display text-[length:var(--text-h3)] font-bold tracking-[-0.02em]"
+            >
               {cta.titulo}
             </h2>
             <p className="mt-3 max-w-[56ch] text-[color:var(--color-steel-300)]">{cta.texto}</p>
@@ -150,13 +178,16 @@ export function PaginaArtigo({
 
         {anuncios.length > 0 && (
           <div className="mt-14">
-            <Outdoor anuncios={anuncios} posicao="fim" />
+            <Outdoor idioma={idioma} anuncios={anuncios} posicao="fim" />
           </div>
         )}
 
         {relacionados.length > 0 && (
           <section aria-labelledby="artigo-relacionados" className="mt-14">
-            <h2 id="artigo-relacionados" className="border-t-4 border-[color:var(--on-surface)] pt-2 font-display text-[length:var(--text-micro)] font-semibold tracking-[0.18em] uppercase">
+            <h2
+              id="artigo-relacionados"
+              className="border-t-4 border-[color:var(--on-surface)] pt-2 font-display text-[length:var(--text-micro)] font-semibold tracking-[0.18em] uppercase"
+            >
               {en ? `More in ${NOME_DA_SECCAO[a.seccao].en}` : `Mais em ${NOME_DA_SECCAO[a.seccao].pt}`}
             </h2>
             <ul className="mt-4 grid gap-8 sm:grid-cols-3">

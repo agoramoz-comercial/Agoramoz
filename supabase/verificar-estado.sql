@@ -169,10 +169,39 @@ select 26, 'função', 'news: artigos, gostos, anúncios e as 13 funções (0015
 union all
 select 27, 'direitos', 'news: o público não chama as funções nem lê as tabelas (0015)',
        case when to_regprocedure('public.gostar_artigo(text, text)') is null
+                 or to_regclass('public.news_anuncio_vistos') is null
                  then 'EM FALTA - correr aplicar-0015.sql'
-            when has_function_privilege('anon', 'public.gostar_artigo(text, text)', 'execute')
-                 or has_function_privilege('anon', 'public.registar_clique_anuncio(uuid, text, text)', 'execute')
-                 or has_table_privilege('anon', 'public.news_artigos', 'select')
-                 then 'ATENCAO - anon tem acesso; correr aplicar-0015.sql de novo'
+            -- As 7 funções públicas: só a chave de serviço, nunca anon nem
+            -- utilizadores com sessão (esses passam pelas funções de admin).
+            when exists (
+                   select 1
+                     from unnest(array[
+                            'public.artigos_publicados(text, text, integer, timestamptz)',
+                            'public.artigo_publicado(text)',
+                            'public.gostar_artigo(text, text)',
+                            'public.partilhar_artigo(text, text)',
+                            'public.anuncios_activos()',
+                            'public.registar_impressoes(jsonb, text)',
+                            'public.registar_clique_anuncio(uuid, text, text)'
+                          ]) as f(assinatura)
+                     cross join unnest(array['anon', 'authenticated']) as r(papel)
+                    where has_function_privilege(r.papel, f.assinatura, 'execute')
+                 )
+              or exists (
+                   select 1
+                     from unnest(array['public.news_artigos', 'public.news_gostos', 'public.news_anuncios',
+                                       'public.news_anuncio_posicoes', 'public.news_anuncio_vistos']) as t(tabela)
+                    where has_table_privilege('anon', t.tabela, 'select')
+                       or has_table_privilege('anon', t.tabela, 'insert')
+                       or has_table_privilege('authenticated', t.tabela, 'insert')
+                       or has_table_privilege('authenticated', t.tabela, 'update')
+                       or has_table_privilege('authenticated', t.tabela, 'delete')
+                 )
+                 then 'ATENCAO - acesso a mais; correr aplicar-0015.sql de novo'
+            when not has_function_privilege('service_role', 'public.gostar_artigo(text, text)', 'execute')
+                 then 'ATENCAO - a chave de serviço não executa; correr aplicar-0015.sql de novo'
+            -- A versão revista da 0015: a regra do destino recusa `//host`.
+            when not exists (select 1 from pg_constraint where conname = 'news_anuncios_destino_valido')
+                 then 'DESACTUALIZADA - correr aplicar-0015.sql de novo'
             else 'ok' end
 order by ordem;

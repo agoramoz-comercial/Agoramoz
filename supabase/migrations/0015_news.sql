@@ -39,7 +39,7 @@ create table if not exists public.news_artigos (
     check (jsonb_typeof(analise) = 'object' and octet_length(analise::text) <= 262144),
   nota_editorial text check (nota_editorial is null or length(trim(nota_editorial)) between 1 and 2000),
   fonte_nome text check (fonte_nome is null or length(trim(fonte_nome)) between 1 and 120),
-  fonte_url text check (fonte_url is null or (length(fonte_url) <= 2048 and fonte_url ~ '^https://[^\s/]+')),
+  fonte_url text,
   autor_id uuid references auth.users(id) on delete set null,
   publicado_em timestamptz,
   gostos integer not null default 0 check (gostos >= 0),
@@ -50,14 +50,28 @@ create table if not exists public.news_artigos (
 );
 
 create index if not exists news_artigos_jornal_idx
-  on public.news_artigos (estado, idioma, publicado_em desc);
+  on public.news_artigos (idioma, publicado_em desc) where estado = 'publicado';
 create index if not exists news_artigos_seccao_idx
   on public.news_artigos (seccao, publicado_em desc) where estado = 'publicado';
 
+-- A fonte é um endereço https, sem espaços (regra com nome, reaplicada em
+-- cada execução para corrigir bases onde a versão anterior já existia).
+alter table public.news_artigos drop constraint if exists news_artigos_fonte_url_check;
+alter table public.news_artigos drop constraint if exists news_artigos_fonte_url_valida;
+alter table public.news_artigos add constraint news_artigos_fonte_url_valida check (
+  fonte_url is null or (length(fonte_url) <= 2048 and fonte_url ~ '^https://[^\s/]+' and fonte_url !~ '\s')
+);
+
+-- `updated_at` é a data editorial (o `dateModified` do artigo e o `lastmod`
+-- do sitemap): um gosto ou uma partilha NÃO o mexem — só as edições.
 drop trigger if exists news_artigos_set_updated_at on public.news_artigos;
 create trigger news_artigos_set_updated_at
   before update on public.news_artigos
-  for each row execute function public.set_updated_at();
+  for each row
+  when (old.gostos is not distinct from new.gostos and old.partilhas is not distinct from new.partilhas)
+  execute function public.set_updated_at();
+
+create index if not exists news_artigos_autor_idx on public.news_artigos (autor_id);
 
 alter table public.news_artigos enable row level security;
 revoke all on public.news_artigos from public, anon, authenticated, service_role;
@@ -95,12 +109,8 @@ create table if not exists public.news_anuncios (
   mensagem text check (mensagem is null or length(trim(mensagem)) between 1 and 160),
   ticker text check (ticker is null or length(trim(ticker)) between 1 and 160),
   cta text not null check (length(trim(cta)) between 2 and 28),
-  -- Um caminho do próprio site ou um endereço https. Só a equipa o escreve, e
-  -- o clique lê-o daqui: um URL partilhado nunca escolhe para onde se vai.
-  destino text not null check (
-    destino ~ '^/[a-z0-9/_-]{0,119}$'
-    or (length(destino) <= 300 and destino ~ '^https://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(/[A-Za-z0-9/_.~%-]*)?$')
-  ),
+  -- A regra do destino está em `news_anuncios_destino_valido`, abaixo.
+  destino text not null,
   tema text not null default 'tinta' check (tema in ('tinta', 'sinal', 'crescimento', 'energia')),
   activo boolean not null default false,
   inicio timestamptz,
@@ -117,10 +127,29 @@ create table if not exists public.news_anuncios (
   constraint news_anuncios_periodo check (fim is null or inicio is null or fim > inicio)
 );
 
+-- Um caminho do próprio site (nunca `//host`, que o browser leva para fora)
+-- ou um endereço https sem credenciais nem query. Só a equipa o escreve, e o
+-- clique lê-o daqui: um URL partilhado nunca escolhe para onde se vai.
+-- A mesma regra de `destinoSeguro` (lib/news/anuncios.ts).
+alter table public.news_anuncios drop constraint if exists news_anuncios_destino_check;
+alter table public.news_anuncios drop constraint if exists news_anuncios_destino_valido;
+alter table public.news_anuncios add constraint news_anuncios_destino_valido check (
+  (destino ~ '^/[a-z0-9/_-]{0,119}$' and destino !~ '//')
+  or (length(destino) <= 300 and destino ~ '^https://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(/[A-Za-z0-9/_.~%-]*)?$')
+);
+
+-- Os contadores (impressões, cliques) não são uma edição do anúncio.
 drop trigger if exists news_anuncios_set_updated_at on public.news_anuncios;
 create trigger news_anuncios_set_updated_at
   before update on public.news_anuncios
-  for each row execute function public.set_updated_at();
+  for each row
+  when (old.impressoes is not distinct from new.impressoes
+        and old.alcance_unico is not distinct from new.alcance_unico
+        and old.cliques is not distinct from new.cliques
+        and old.cliques_unicos is not distinct from new.cliques_unicos)
+  execute function public.set_updated_at();
+
+create index if not exists news_anuncios_autor_idx on public.news_anuncios (autor_id);
 
 alter table public.news_anuncios enable row level security;
 revoke all on public.news_anuncios from public, anon, authenticated, service_role;
@@ -153,6 +182,9 @@ create table if not exists public.news_anuncio_vistos (
   created_at timestamptz not null default now(),
   primary key (anuncio_id, tipo, chave_hash)
 );
+
+-- Para poder purgar por idade (alcance «único» numa janela, ver docs/NEWS.md).
+create index if not exists news_anuncio_vistos_created_idx on public.news_anuncio_vistos (created_at);
 
 alter table public.news_anuncio_vistos enable row level security;
 revoke all on public.news_anuncio_vistos from public, anon, authenticated, service_role;
@@ -222,7 +254,7 @@ begin
   if not found then
     raise exception 'Artigo não encontrado.' using errcode = 'P0002';
   end if;
-  if a.revisao <> p_revisao then
+  if a.revisao is distinct from p_revisao then
     raise exception 'O artigo mudou entretanto.' using errcode = '40001';
   end if;
   -- Um link já partilhado não pode deixar de funcionar.
@@ -264,8 +296,11 @@ begin
   if not found then
     raise exception 'Artigo não encontrado.' using errcode = 'P0002';
   end if;
-  if a.revisao <> p_revisao then
+  if a.revisao is distinct from p_revisao then
     raise exception 'O artigo mudou entretanto.' using errcode = '40001';
+  end if;
+  if a.estado = 'publicado' then
+    raise exception 'O artigo já está publicado.' using errcode = '22023';
   end if;
 
   update public.news_artigos
@@ -296,8 +331,11 @@ begin
   if not found then
     raise exception 'Artigo não encontrado.' using errcode = 'P0002';
   end if;
-  if a.revisao <> p_revisao then
+  if a.revisao is distinct from p_revisao then
     raise exception 'O artigo mudou entretanto.' using errcode = '40001';
+  end if;
+  if a.estado <> 'publicado' then
+    raise exception 'Só um artigo publicado pode ser arquivado.' using errcode = '22023';
   end if;
 
   update public.news_artigos set estado = 'arquivado', revisao = revisao + 1 where id = p_id;
@@ -352,7 +390,7 @@ begin
   if not found then
     raise exception 'Anúncio não encontrado.' using errcode = 'P0002';
   end if;
-  if n.revisao <> p_revisao then
+  if n.revisao is distinct from p_revisao then
     raise exception 'O anúncio mudou entretanto.' using errcode = '40001';
   end if;
 
@@ -564,7 +602,7 @@ security definer
 set search_path = public, pg_catalog
 as $$
 declare
-  v_item jsonb;
+  v_par record;
   v_id uuid;
   v_posicao text;
   v_novo integer;
@@ -577,16 +615,19 @@ begin
     raise exception 'Chave inválida.' using errcode = '22023';
   end if;
 
-  for v_item in select * from jsonb_array_elements(p_itens) loop
-    if (v_item->>'id') is null
-       or (v_item->>'id') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
-      continue;
-    end if;
-    v_id := (v_item->>'id')::uuid;
-    v_posicao := v_item->>'posicao';
-    if v_posicao is null or v_posicao not in ('topo', 'feed', 'artigo', 'fim') then
-      continue;
-    end if;
+  -- Cada (anúncio, lugar) conta UMA vez por lote, e os pares são tratados por
+  -- ordem fixa: dois lotes concorrentes bloqueiam as linhas na mesma ordem
+  -- (sem deadlock), e repetir o mesmo id no lote não multiplica impressões.
+  for v_par in
+    select distinct e->>'id' as id, e->>'posicao' as posicao
+      from jsonb_array_elements(p_itens) e
+     where jsonb_typeof(e) = 'object'
+       and (e->>'id') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+       and (e->>'posicao') in ('topo', 'feed', 'artigo', 'fim')
+     order by 1, 2
+  loop
+    v_id := v_par.id::uuid;
+    v_posicao := v_par.posicao;
     -- Só anúncios no ar contam: um id inventado não cria nada.
     perform 1 from public.news_anuncios n
      where n.id = v_id and n.activo

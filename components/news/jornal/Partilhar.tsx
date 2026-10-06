@@ -95,6 +95,7 @@ export function Partilhar({
           try {
             await navigator.clipboard.writeText(url);
             setCopiado('sim');
+            setTimeout(() => setCopiado(null), 4000);
             contar(slug, 'copiar');
           } catch {
             setCopiado('erro');

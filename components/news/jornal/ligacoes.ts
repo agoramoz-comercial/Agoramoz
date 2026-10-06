@@ -30,18 +30,22 @@ export function ctaDoArtigo(
     return {
       href: `/en/diagnostico?${utm}`,
       titulo: 'What does this mean for your business?',
-      texto: 'A strategic diagnostic maps the risks and opportunities of this scenario to your operation — in minutes.',
+      texto: 'A strategic diagnostic maps the risks and opportunities of this scenario to your operation.',
       botao: 'Request the strategic diagnostic',
     };
   }
-  const destinos: Partial<Record<SeccaoJornal, { href: string; texto: string }>> = {
+  const destinos: Partial<Record<SeccaoJornal, { href: string; texto: string; botao: string }>> = {
     energia: {
       href: '/mz/energia-mineracao',
-      texto: 'Software, automação e agentes de IA para energia, mineração e serviços industriais em Moçambique.',
+      texto:
+        'Qualificação de fornecedores, gestão documental e acompanhamento de oportunidades para energia, mineração e serviços industriais em Moçambique.',
+      botao: 'Ver solução para energia',
     },
     tecnologia: {
       href: '/solucoes/agentes-ia',
-      texto: 'Agentes de IA que leem, decidem e executam dentro dos processos da sua empresa.',
+      texto:
+        'Agentes de IA ancorados nas fontes da sua empresa, com citação da origem e aprovação humana nas decisões críticas.',
+      botao: 'Ver agentes de IA',
     },
   };
   const d = destinos[seccao];
@@ -50,12 +54,12 @@ export function ctaDoArtigo(
         href: `${d.href}?${utm}`,
         titulo: 'O que isto muda no seu negócio?',
         texto: d.texto,
-        botao: 'Ver a solução',
+        botao: d.botao,
       }
     : {
         href: `/diagnostico?${utm}`,
         titulo: 'O que isto muda no seu negócio?',
-        texto: 'O diagnóstico estratégico liga os riscos e as oportunidades deste cenário à sua operação — em poucos minutos.',
+        texto: 'O diagnóstico estratégico liga os riscos e as oportunidades deste cenário à sua operação.',
         botao: 'Solicitar Diagnóstico Estratégico',
       };
 }

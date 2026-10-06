@@ -6,16 +6,25 @@ import { jornalLigado } from '@/lib/news/jornal-servidor';
 import { NEWS } from '@/content/i18n/news';
 import { ligacao } from '@/lib/i18n/rotas';
 import { caminhoNoIdioma, t } from '@/lib/i18n/texto';
-import { buildMetadata } from '@/lib/seo/site';
+import { absolute, buildMetadata } from '@/lib/seo/site';
 
 const IDIOMA = 'en' as const;
 
-export const metadata: Metadata = buildMetadata({
+const BASE = buildMetadata({
   title: t(NEWS.metaTitulo, IDIOMA),
   description: t(NEWS.metaDescricao, IDIOMA),
   path: caminhoNoIdioma('/news', IDIOMA),
   imagemPropria: true,
 });
+
+/** O RSS do jornal anunciado no `<head>` (leitores de feeds e agregadores). */
+export const metadata: Metadata = {
+  ...BASE,
+  alternates: {
+    ...BASE.alternates,
+    types: { 'application/rss+xml': absolute('/en/news/feed.xml') },
+  },
+};
 
 /**
  * Com `NEWS_BLOG=on`, o jornal (artigos publicados pela redacção). Com `off`,
@@ -38,7 +47,10 @@ export default async function NewsEnPage({
           idioma={IDIOMA}
           items={[
             { name: t(NEWS.inicio, IDIOMA), path: ligacao('/', IDIOMA).href },
-            { name: t(NEWS.trilho, IDIOMA), path: caminhoNoIdioma('/news', IDIOMA) },
+            {
+              name: t(NEWS.trilho, IDIOMA),
+              path: caminhoNoIdioma('/news', IDIOMA),
+            },
           ]}
           className="mb-10"
         />

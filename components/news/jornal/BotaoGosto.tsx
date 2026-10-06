@@ -77,7 +77,9 @@ export function BotaoGosto({
     }
     const token = tokenDoLeitor(armazem);
     if (!token) {
-      setErro(idioma === 'en' ? 'Your browser blocks site storage.' : 'O browser bloqueia o armazenamento do site.');
+      setErro(
+        idioma === 'en' ? 'Your browser blocks site storage.' : 'O browser bloqueia o armazenamento do site.',
+      );
       return;
     }
     setErro(null);
@@ -99,7 +101,9 @@ export function BotaoGosto({
     } catch {
       marcados.delete(slug);
       totais.set(slug, Math.max(0, (totais.get(slug) ?? inicial + 1) - 1));
-      setErro(idioma === 'en' ? 'Could not register. Try again.' : 'Não foi possível registar. Tente de novo.');
+      setErro(
+        idioma === 'en' ? 'Could not register. Try again.' : 'Não foi possível registar. Tente de novo.',
+      );
     } finally {
       aEnviar.delete(slug);
       avisar();
@@ -120,8 +124,14 @@ export function BotaoGosto({
         }`}
       >
         <Heart className={`size-4 ${gostei ? 'fill-current' : ''}`} aria-hidden="true" />
-        {gostei ? (idioma === 'en' ? 'Liked' : 'Gostei') : idioma === 'en' ? 'Like' : 'Gostar'}
-        <span className="font-techno tabular-nums">{gostos.toLocaleString(idioma === 'en' ? 'en-GB' : 'pt-PT')}</span>
+        {/* Nome fixo («Gostar, N gostos»); o estado diz-se com aria-pressed. */}
+        <span aria-hidden="true">
+          {gostei ? (idioma === 'en' ? 'Liked' : 'Gostei') : idioma === 'en' ? 'Like' : 'Gostar'}
+        </span>
+        <span className="sr-only">{idioma === 'en' ? 'Like' : 'Gostar'}</span>
+        <span className="font-techno tabular-nums">
+          {gostos.toLocaleString(idioma === 'en' ? 'en-GB' : 'pt-PT')}
+        </span>
         <span className="sr-only">{idioma === 'en' ? 'likes' : 'gostos'}</span>
       </button>
       {erro && (

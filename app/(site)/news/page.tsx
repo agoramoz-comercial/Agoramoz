@@ -5,16 +5,25 @@ import { PrimeiraPagina, seccaoDe } from '@/components/news/jornal/paginas';
 import { jornalLigado } from '@/lib/news/jornal-servidor';
 import { NEWS } from '@/content/i18n/news';
 import { t } from '@/lib/i18n/texto';
-import { buildMetadata } from '@/lib/seo/site';
+import { absolute, buildMetadata } from '@/lib/seo/site';
 
 const IDIOMA = 'pt' as const;
 
-export const metadata: Metadata = buildMetadata({
+const BASE = buildMetadata({
   title: t(NEWS.metaTitulo, IDIOMA),
   description: t(NEWS.metaDescricao, IDIOMA),
   path: '/news',
   imagemPropria: true,
 });
+
+/** O RSS do jornal anunciado no `<head>` (leitores de feeds e agregadores). */
+export const metadata: Metadata = {
+  ...BASE,
+  alternates: {
+    ...BASE.alternates,
+    types: { 'application/rss+xml': absolute('/news/feed.xml') },
+  },
+};
 
 /**
  * Com `NEWS_BLOG=on`, o jornal (artigos publicados pela redacção). Com `off`,

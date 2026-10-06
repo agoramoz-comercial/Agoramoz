@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Analisador, type RelatorioPronto } from '@/components/news/Analisador';
 import { Button } from '@/components/ui/Button';
 import type { ResultadoRascunho } from '@/lib/admin/news-actions';
+import { unstable_rethrow } from 'next/navigation';
 
 type Criar = (entrada: { analise: unknown; idioma: string }) => Promise<ResultadoRascunho>;
 
@@ -46,9 +47,16 @@ function CriarRascunho({ relatorio, criar }: { relatorio: RelatorioPronto; criar
             if (aCriar) return;
             setErro(null);
             comecar(async () => {
-              const r = await criar({ analise: relatorio.analise, idioma: relatorio.idioma });
-              // No sucesso a acção abre o editor; só um erro volta aqui.
-              if (r && !r.ok) setErro(r.motivo);
+              try {
+                const r = await criar({ analise: relatorio.analise, idioma: relatorio.idioma });
+                // No sucesso a acção abre o editor; só um erro volta aqui.
+                if (r && !r.ok) setErro(r.motivo);
+              } catch (e) {
+                // O redireccionamento para o editor segue o seu caminho; uma falha
+                // de rede fica aqui, com a mensagem, em vez do ecrã de erro.
+                unstable_rethrow(e);
+                setErro('Não foi possível criar o rascunho agora. Tente de novo.');
+              }
             });
           }}
         >

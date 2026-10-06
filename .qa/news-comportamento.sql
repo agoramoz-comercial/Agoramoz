@@ -78,10 +78,11 @@ begin
   if (select activo from public.news_anuncios where id = v_anuncio) then
     raise exception '5: anúncio nasceu ligado';
   end if;
-  foreach r in array array[1, 2, 3] loop
+  foreach r in array array[1, 2, 3, 4, 5, 6] loop
     begin
       perform public.guardar_anuncio(null, null, 'mau-' || r, 'Mau destino', null, null, 'Ir',
-        (array['javascript:alert(1)', 'http://inseguro.test', '//evil.test'])[r], 'tinta', null, null, 1);
+        (array['javascript:alert(1)', 'http://inseguro.test', '//evil.test', '//evil', '//134744072',
+               '/solucoes//evil'])[r], 'tinta', null, null, 1);
       raise exception '5: destino malicioso % aceite', r;
     exception when check_violation then null;
     end;
@@ -212,6 +213,76 @@ begin
     raise exception 'D: direitos a mais';
   end if;
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- E. Revisão ECC: data editorial, lote de impressões, transições e revisão nula
+-- ---------------------------------------------------------------------------
+-- Data editorial antiga (como dono, sem o gatilho) para ver se os contadores a mexem.
+alter table public.news_artigos disable trigger news_artigos_set_updated_at;
+update public.news_artigos set updated_at = '2020-01-01T00:00:00Z'
+ where id = (select valor::uuid from qa where chave = 'artigo');
+alter table public.news_artigos enable trigger news_artigos_set_updated_at;
+
+set local role service_role;
+do $$
+declare n int;
+begin
+  perform public.gostar_artigo('petroleo-sobe-qa1', repeat('e', 64));
+  perform public.partilhar_artigo('petroleo-sobe-qa1', 'whatsapp');
+  -- O mesmo anúncio três vezes no mesmo lugar e no mesmo lote conta uma vez.
+  n := public.registar_impressoes(jsonb_build_array(
+         jsonb_build_object('id', (select valor from qa where chave = 'anuncio'), 'posicao', 'artigo'),
+         jsonb_build_object('id', (select valor from qa where chave = 'anuncio'), 'posicao', 'artigo'),
+         jsonb_build_object('id', (select valor from qa where chave = 'anuncio'), 'posicao', 'artigo')),
+       null);
+  if n <> 1 then raise exception 'E: lote repetido contou %', n; end if;
+end $$;
+reset role;
+
+do $$
+begin
+  if (select updated_at from public.news_artigos where id = (select valor::uuid from qa where chave = 'artigo'))
+     <> '2020-01-01T00:00:00Z'::timestamptz then
+    raise exception 'E: gosto/partilha mexeu na data editorial';
+  end if;
+end $$;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000bb01', true);
+do $$
+declare v_id uuid; v_rev int;
+begin
+  v_id := (select valor::uuid from qa where chave = 'artigo');
+  v_rev := (select revisao from public.news_artigos where id = v_id);
+  -- Publicar o que já está publicado: recusado.
+  begin
+    perform public.publicar_artigo(v_id, v_rev);
+    raise exception 'E: publicou duas vezes';
+  exception when sqlstate '22023' then null;
+  end;
+  -- Revisão nula não salta o bloqueio optimista.
+  begin
+    perform public.arquivar_artigo(v_id, null);
+    raise exception 'E: revisão nula aceite';
+  exception when sqlstate '40001' then null;
+  end;
+  -- Arquivar um rascunho: recusado.
+  v_id := public.criar_artigo('rascunho-qa-e', 'pt', 'Rascunho QA', null, 'economia', null,
+    '{"titulo":{"titulo":"x"}}'::jsonb, null, null);
+  begin
+    perform public.arquivar_artigo(v_id, 1);
+    raise exception 'E: arquivou um rascunho';
+  exception when sqlstate '22023' then null;
+  end;
+  -- Fonte com espaços: recusada.
+  begin
+    perform public.criar_artigo('fonte-espaco-qa', 'pt', 'Título QA', null, 'economia', null,
+      '{}'::jsonb, null, 'https://exemplo.test/a b');
+    raise exception 'E: fonte com espaço aceite';
+  exception when check_violation then null;
+  end;
+end $$;
+reset role;
 
 select 'news-comportamento: tudo verde' as resultado;
 rollback;

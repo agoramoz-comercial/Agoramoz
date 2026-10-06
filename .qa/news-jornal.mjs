@@ -135,7 +135,7 @@ for (const [w, h] of LARGURAS) {
 
     if (w === 390) {
       // Gosto: optimista, número do servidor, 1 por browser e lembrado.
-      const botoes = p.getByRole('button', { name: /^(Gostar|Gostei)/ });
+      const botoes = p.getByRole('button', { name: /^Gostar/ });
       confere((await botoes.count()) === 2, 'gosto: botão no topo e no fim do artigo');
       const botao = botoes.first();
       confere((await botao.getAttribute('aria-pressed')) === 'false', 'gosto: começa por marcar');
@@ -160,7 +160,7 @@ for (const [w, h] of LARGURAS) {
       confere(pedidos.gosto.length === 1, 'gosto: segundo clique não envia nada');
       await p.reload({ waitUntil: 'networkidle' });
       confere(
-        (await p.getByRole('button', { name: /^(Gostar|Gostei)/ }).nth(1).getAttribute('aria-pressed')) === 'true',
+        (await p.getByRole('button', { name: /^Gostar/ }).nth(1).getAttribute('aria-pressed')) === 'true',
         'gosto: lembrado depois de recarregar',
       );
 
@@ -204,8 +204,8 @@ for (const [w, h] of LARGURAS) {
       await p.waitForTimeout(500);
       const clique = pedidos.cliques[0] ?? '';
       confere(
-        /\/api\/news\/anuncio\/[0-9a-f-]{36}\?p=artigo&t=[0-9a-f]{32}$/.test(clique),
-        'clique: vai pela rota com o lugar e o token anónimo',
+        /\/api\/news\/anuncio\/[0-9a-f-]{36}\?p=artigo&k=[0-9a-f]{64}$/.test(clique),
+        'clique: vai pela rota com o lugar e a chave derivada (nunca o token)',
         clique,
       );
     }
@@ -223,9 +223,9 @@ console.log('\n— outdoor em movimento');
   await p.goto(`${BASE}/qa/jornal`, { waitUntil: 'networkidle' });
   const topo = p.locator('aside[aria-label="Publicidade"]').first();
   await p.mouse.move(5, 895);
-  const antes = await topo.locator('.outdoor-titulo').textContent();
+  const antes = await topo.locator('.outdoor-criativo .outdoor-titulo').textContent();
   await p.waitForTimeout(7600);
-  const depois = await topo.locator('.outdoor-titulo').textContent();
+  const depois = await topo.locator('.outdoor-criativo .outdoor-titulo').textContent();
   confere(antes !== depois, 'roda o criativo a cada 7 s', `(${antes} → ${depois})`);
   await topo.getByRole('button', { name: 'Pausar os anúncios' }).focus();
   await p.keyboard.press('Enter');
@@ -234,12 +234,12 @@ console.log('\n— outdoor em movimento');
   await p.mouse.move(5, 895);
   confere((await topo.getAttribute('data-pausa')) === 'sim', 'pausa pelo botão (teclado)');
   confere(
-    (await topo.getByRole('button', { name: 'Retomar os anúncios' }).getAttribute('aria-pressed')) === 'true',
-    'o botão diz «Retomar» e aria-pressed=true',
+    (await topo.getByRole('button', { name: 'Pausar os anúncios' }).getAttribute('aria-pressed')) === 'true',
+    'o botão fica aria-pressed=true (nome fixo)',
   );
-  const parado = await topo.locator('.outdoor-titulo').textContent();
+  const parado = await topo.locator('.outdoor-criativo .outdoor-titulo').textContent();
   await p.waitForTimeout(7600);
-  confere((await topo.locator('.outdoor-titulo').textContent()) === parado, 'pausado não roda');
+  confere((await topo.locator('.outdoor-criativo .outdoor-titulo').textContent()) === parado, 'pausado não roda');
   await ctx.close();
 }
 {

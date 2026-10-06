@@ -5,6 +5,8 @@ import { NOME_DA_SECCAO, type ArtigoDaLista } from './artigo';
 
 function escapar(s: string): string {
   return s
+    // Caracteres de controlo são ilegais em XML 1.0: um só invalidava o feed.
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -38,7 +40,11 @@ export function rssDoJornal(artigos: readonly ArtigoDaLista[], idioma: Idioma, b
         ? 'Business analysis for decision-makers in Mozambique and Portuguese-speaking markets.'
         : 'Análise de negócio para quem decide em Moçambique e nos mercados lusófonos.'
     }</description>
-    <language>${idioma === 'en' ? 'en' : 'pt'}</language>
+    <language>${idioma === 'en' ? 'en' : 'pt-PT'}</language>${
+      artigos.length
+        ? `\n    <lastBuildDate>${new Date(Math.max(...artigos.map((a) => Date.parse(a.actualizado_em)))).toUTCString()}</lastBuildDate>`
+        : ''
+    }
 ${itens}
   </channel>
 </rss>
