@@ -1,12 +1,12 @@
--- ============================================================================
+
+
+
 -- APLICAR NO SQL EDITOR DO SUPABASE — projecto nixltrbdplqjadfytryd
 -- 0015 em DUAS PARTES — PARTE 2 de 2: caminho público, direitos e recarga
--- ============================================================================
 -- Correr DEPOIS da parte 1. Cria as funções públicas do jornal (lista,
 -- artigo, gosto, partilha, anúncios, impressões, clique), fecha os direitos
 -- e recarrega a cache da API (notify pgrst) no fim.
---
--- 1. Abrir este ficheiro em «Raw», Ctrl+A, Ctrl+C.
+-- 1. No GitHub, botão «Copy raw file» (ou Raw, Ctrl+A, Ctrl+C).
 -- 2. SQL Editor: consulta NOVA e vazia, colar, Run. Esperado: «Success».
 -- 3. Depois, correr verificar-estado.sql (linhas 26 e 27 em «ok»).
 -- ===== fim do cabeçalho: daqui para baixo é a migração 0015, sem alterações =====

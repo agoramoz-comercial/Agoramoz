@@ -1,12 +1,12 @@
--- ============================================================================
+
+
+
 -- APLICAR NO SQL EDITOR DO SUPABASE — projecto nixltrbdplqjadfytryd
 -- 0015 em DUAS PARTES — PARTE 1 de 2: tabelas e funções da redacção
--- ============================================================================
 -- Para quem achar o aplicar-0015.sql grande demais para colar de uma vez.
 -- As duas partes juntas são a migração 0015 palavra por palavra (um teste
 -- garante-o). Ambas são repetíveis: pode correr cada uma as vezes que quiser.
---
--- 1. Abrir este ficheiro em «Raw», Ctrl+A, Ctrl+C.
+-- 1. No GitHub, botão «Copy raw file» (ou Raw, Ctrl+A, Ctrl+C).
 -- 2. SQL Editor: consulta NOVA e vazia, colar, Run. Esperado: «Success».
 -- 3. Depois, a PARTE 2 (aplicar-0015-parte2.sql), da mesma forma.
 -- ===== fim do cabeçalho: daqui para baixo é a migração 0015, sem alterações =====
