@@ -12,7 +12,7 @@ servidor em `app/api/news/analisar/route.ts`.
 | Páginas, relatório, navegação, sitemap, OG | No ar |
 | Rota `/api/news/analisar` | No ar |
 | Motor real (Lovable) | **Ligado em 2026-09-30** (projecto `aqmetakutmbyqzahzhyz`). Primeira análise real: notícia da AIM sobre o Porto de Maputo, HTTP 200 em ~29 s, todas as secções presentes, 0 itens descartados |
-| Jornal público, redacção e publicidade (fase 2, Lote V) | **Construído, desligado** (`NEWS_BLOG=off`). Liga-se depois de aplicar a 0015 — ver «Ligar o jornal» |
+| Jornal público, redacção e publicidade (fase 2, Lote V) | **Ligado em 2026-10-06** (`NEWS_BLOG=on`, deploy `dpl_BFSxgRXHUjY54kBwmFK3frBiekfA`). A 0015 foi aplicada em duas partes e provada numa pré-visualização contra a base real antes de ligar a produção |
 
 ## Ligar o motor (passo do responsável pela conta Lovable)
 
