@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ErroLeitura } from '@/components/admin/energia/partes';
 import { requireModulo } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import { COLUNAS_OPORTUNIDADE, dataCurta, oportunidadeDe } from '@/lib/energia/leitura';
-import { MEMO, PRIORIDADE, SECTORES, textoFase } from '@/lib/energia/modelo';
+import { hojeEmMaputo, MEMO, PRIORIDADE, SECTORES, textoFase } from '@/lib/energia/modelo';
 
 export const metadata = { title: 'Opportunity Memo — Espaço CEnO' };
 
@@ -20,7 +21,8 @@ export default async function MemoPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const supabase = await createSessionClient();
-  const { data } = await supabase.from('ceno_oportunidades').select(COLUNAS_OPORTUNIDADE).eq('id', id).maybeSingle();
+  const { data, error } = await supabase.from('ceno_oportunidades').select(COLUNAS_OPORTUNIDADE).eq('id', id).maybeSingle();
+  if (error) return <ErroLeitura />;
   if (!data) notFound();
   const op = oportunidadeDe(data as unknown as Record<string, unknown>);
   const memo = op.memo as Record<string, string | undefined>;
@@ -38,7 +40,7 @@ export default async function MemoPage({ params }: { params: Promise<{ id: strin
         <p className="mt-2 text-sm text-[color:var(--muted)]">
           {[op.organizacao, SECTORES[op.sector as keyof typeof SECTORES], textoFase(op.fase)].filter(Boolean).join(' · ')}
           {op.score_total !== null && op.prioridade && ` · score ${op.score_total}/40 (${PRIORIDADE[op.prioridade].texto})`}
-          {` · actualizado ${dataCurta(op.updated_at.slice(0, 10))}`}
+          {` · actualizado ${dataCurta(op.updated_at ? hojeEmMaputo(new Date(op.updated_at)) : null)}`}
         </p>
       </header>
       <ol className="mt-6 grid gap-5">

@@ -8,6 +8,7 @@
 --   cc01 — a dona do espaço (comercial, com o módulo `energia`)
 --   cc02 — um administrador SEM o módulo
 --   cc03 — outra pessoa COM o módulo (prova que o módulo não abre o espaço alheio)
+--   cc04 — papel `leitura` COM o módulo (lê o seu espaço, não escreve)
 -- ============================================================================
 
 begin;
@@ -15,14 +16,17 @@ begin;
 insert into auth.users (id) values
   ('00000000-0000-0000-0000-00000000cc01'),
   ('00000000-0000-0000-0000-00000000cc02'),
-  ('00000000-0000-0000-0000-00000000cc03');
+  ('00000000-0000-0000-0000-00000000cc03'),
+  ('00000000-0000-0000-0000-00000000cc04');
 insert into public.profiles (id, role, display_name) values
   ('00000000-0000-0000-0000-00000000cc01', 'comercial', 'QA Dona'),
   ('00000000-0000-0000-0000-00000000cc02', 'admin', 'QA Admin'),
-  ('00000000-0000-0000-0000-00000000cc03', 'leitura', 'QA Outra');
+  ('00000000-0000-0000-0000-00000000cc03', 'comercial', 'QA Outra'),
+  ('00000000-0000-0000-0000-00000000cc04', 'leitura', 'QA Leitura');
 insert into public.acessos_modulo (user_id, modulo) values
   ('00000000-0000-0000-0000-00000000cc01', 'energia'),
-  ('00000000-0000-0000-0000-00000000cc03', 'energia');
+  ('00000000-0000-0000-0000-00000000cc03', 'energia'),
+  ('00000000-0000-0000-0000-00000000cc04', 'energia');
 
 create temporary table qa (chave text primary key, valor text);
 grant all on qa to public;
@@ -194,6 +198,86 @@ begin
   end;
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- E. Revisões ECC: leitura não escreve; palavra-passe provisória fecha o
+--    espaço mesmo pela API; o audit_log não mostra o espaço à equipa; o score
+--    de uma oportunidade qualificada não desce abaixo de 24.
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000cc04', true);
+
+do $$
+begin
+  begin
+    perform public.guardar_oportunidade(null, null, 'Leitura', null, 'gas', null, null, 'baixa',
+      null, null, 'USD', null, 'x', '2026-10-09', null);
+    raise exception 'E1: leitura escreveu no espaço';
+  exception when sqlstate '42501' then null;
+  end;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000cc01', true);
+select set_config('request.jwt.claims', '{"app_metadata": {"trocar_palavra_passe": true}}', true);
+
+do $$
+declare v_op uuid := (select valor::uuid from qa where chave = 'op');
+begin
+  if public.tem_modulo('energia') then raise exception 'E2: troca pendente mantém o módulo'; end if;
+  if (select count(*) from public.ceno_oportunidades) <> 0 then
+    raise exception 'E3: troca pendente ainda lê pela API';
+  end if;
+  begin
+    perform public.registar_ceno(v_op, 'nota', null, 'antes de trocar');
+    raise exception 'E4: troca pendente escreveu';
+  exception when sqlstate '42501' then null;
+  end;
+end;
+$$;
+
+select set_config('request.jwt.claims', '{"app_metadata": {"trocar_palavra_passe": false}}', true);
+
+do $$
+declare v_op uuid := (select valor::uuid from qa where chave = 'op'); r int;
+begin
+  if not public.tem_modulo('energia') then raise exception 'E5: depois de trocar, sem módulo'; end if;
+  r := (select revisao from public.ceno_oportunidades where id = v_op);
+  begin
+    perform public.avaliar_oportunidade(v_op, r, 0::smallint, 0::smallint, 0::smallint, 0::smallint,
+      0::smallint, 0::smallint, 0::smallint, 0::smallint);
+    raise exception 'E6: score de uma qualificada desceu abaixo de 24';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.guardar_memo_ceno(v_op, r, jsonb_build_object(
+      'oportunidade', repeat('ç', 4000), 'organizacao', repeat('ç', 4000), 'problema', repeat('ç', 4000),
+      'solucao', repeat('ç', 4000), 'valor', repeat('ç', 4000), 'receita', repeat('ç', 4000),
+      'recursos', repeat('ç', 4000), 'dependencias', repeat('ç', 4000), 'riscos', repeat('ç', 4000)));
+    raise exception 'E7: memo acima de 64 KB aceite';
+  exception when sqlstate '22023' then null;
+  end;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000cc02', true);
+
+do $$
+begin
+  if exists (select 1 from public.audit_log where entity_type = 'ceno') then
+    raise exception 'E8: a equipa vê a actividade do espaço no audit_log';
+  end if;
+end;
+$$;
+
+reset role;
+do $$
+begin
+  if not exists (select 1 from public.audit_log where entity_type = 'ceno') then
+    raise exception 'E9: o dono da base deixou de ver a auditoria do espaço';
+  end if;
+end;
+$$;
+set local role authenticated;
 
 -- ---------------------------------------------------------------------------
 -- D. Direitos: o visitante anónimo não executa nada; o perfil inactivo perde o acesso

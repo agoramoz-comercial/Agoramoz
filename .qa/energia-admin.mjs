@@ -107,6 +107,29 @@ for (const largura of [390, 768, 1440]) {
     await p.screenshot({ path: `${SAIDA}/energia-${vista}-${largura}.png`, fullPage: true });
   }
 
+  if (largura === 1440) {
+    console.log(' · rascunho (o que se escreveu sobrevive a um erro)');
+    await p.goto(`${BASE}/qa/energia?vista=ficha`, { waitUntil: 'load' });
+    const campo = p.locator('textarea[name="solucao"]');
+    await campo.fill('Texto do memo que ainda não foi gravado.');
+    // O redireccionamento de uma acção com erro volta à mesma página com ?erro=.
+    await p.goto(`${BASE}/qa/energia?vista=ficha&erro=Teste`, { waitUntil: 'load' });
+    await p.waitForTimeout(300);
+    confere(
+      (await campo.inputValue()) === 'Texto do memo que ainda não foi gravado.',
+      'depois de um erro, o memo escrito volta ao campo',
+    );
+    confere((await p.getByText('Repusemos o que tinha escrito').count()) >= 1, 'e diz que o repôs');
+    // Gravado com sucesso (submit marca o formulário; ?ok= limpa o rascunho dele).
+    await p.evaluate(() => sessionStorage.setItem('ceno:enviado', 'memo-00000000-0000-4000-8000-000000000001'));
+    await p.goto(`${BASE}/qa/energia?vista=ficha&ok=memo`, { waitUntil: 'load' });
+    await p.waitForTimeout(300);
+    confere(
+      (await p.evaluate(() => sessionStorage.getItem('ceno:rascunho:memo-00000000-0000-4000-8000-000000000001'))) === null,
+      'depois de gravar, o rascunho desse bloco é apagado',
+    );
+  }
+
   confere(erros.length === 0, 'sem erros na consola', erros.slice(0, 3).join(' | '));
   await ctx.close();
 }

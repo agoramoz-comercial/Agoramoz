@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
-import { CAIXA, CamposStakeholder, EnergiaNav, H2, Mensagens } from '@/components/admin/energia/partes';
+import { GuardaRascunho } from '@/components/admin/energia/GuardaRascunho';
+import { CAIXA, CamposStakeholder, EnergiaNav, ErroLeitura, H2, Mensagens } from '@/components/admin/energia/partes';
 import { AdminHeading } from '@/components/admin/primitives';
 import { guardarStakeholder } from '@/lib/admin/energia-actions';
 import { requireModulo } from '@/lib/auth/modulos';
@@ -44,6 +45,7 @@ export default async function StakeholderCenoPage({
       .eq('stakeholder_id', id),
   ]);
 
+  if (st.error || ligacoes.error) return <ErroLeitura />;
   // Não existe — ou não é dela, que para a RLS é o mesmo.
   if (!st.data) notFound();
   const s = stakeholderDe(st.data as unknown as Record<string, unknown>);
@@ -81,6 +83,7 @@ export default async function StakeholderCenoPage({
         <h2 className={H2}>Dados do stakeholder</h2>
         <input type="hidden" name="id" value={s.id} />
         <input type="hidden" name="revisao" value={s.revisao} />
+        <GuardaRascunho chave={`stakeholder-${s.id}`} />
         <CamposStakeholder v={s} />
         <div>
           <BotaoEnviar size="sm" aEnviar="A guardar…">

@@ -59,7 +59,7 @@ export function CascaAdmin({
   );
   return (
     <div className="flex w-full flex-col lg:flex-row">
-      <aside className="border-b border-[color:var(--border)] lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
+      <aside className="border-b border-[color:var(--border)] print:hidden lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
         {/* A borda vive no <aside>, que estica com a página; o conteúdo fica
             fixo no ecrã ao fazer scroll. */}
         <div className="px-5 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto">
@@ -104,7 +104,7 @@ export function CascaAdmin({
       <main
         id="conteudo"
         data-surface="tint"
-        className="min-h-screen min-w-0 flex-1 bg-[color:var(--surface)] px-4 py-8 text-[color:var(--on-surface)] sm:px-5 lg:px-10 lg:py-10"
+        className="min-h-screen min-w-0 flex-1 bg-[color:var(--surface)] px-4 py-8 text-[color:var(--on-surface)] sm:px-5 lg:px-10 lg:py-10 print:p-0"
       >
         <div className="mx-auto max-w-[88rem]">{children}</div>
       </main>

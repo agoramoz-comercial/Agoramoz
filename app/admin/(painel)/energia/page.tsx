@@ -1,4 +1,5 @@
 import { PainelEnergia } from '@/components/admin/energia/Painel';
+import { ErroLeitura } from '@/components/admin/energia/partes';
 import { requireModulo } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import { COLUNAS_OPORTUNIDADE, oportunidadeDe } from '@/lib/energia/leitura';
@@ -18,13 +19,8 @@ export default async function EnergiaPage() {
     supabase.from('ceno_registos').select('oportunidade_id, metadata').eq('tipo', 'fase').limit(5000),
   ]);
 
-  if (ops.error) {
-    return (
-      <p role="alert" className="border border-[color:var(--color-signal-600)] px-4 py-3 text-sm text-[color:var(--color-signal-700)]">
-        Não foi possível ler o Espaço CEnO agora. Recarregue dentro de instantes.
-      </p>
-    );
-  }
+  // Uma só falha já tornaria os indicadores falsos (0 % de decisores, sem conversões): nada de meio painel.
+  if (ops.error || ligacoes.error || mudancas.error) return <ErroLeitura />;
 
   return (
     <PainelEnergia

@@ -13,6 +13,7 @@ import {
   percentagem,
   PRIORIDADE,
   scorecard,
+  SCORE_MINIMO,
   textoFase,
   type MudancaFase,
 } from '@/lib/energia/modelo';
@@ -38,10 +39,11 @@ export function PainelEnergia({
   const decisores = new Set(comDecisor);
   const sc = scorecard(ops, decisores, mudancas, instante);
   const principal = kpiPrincipal(ops, decisores);
-  const comAlertas = ops
+  const todasComAlertas = ops
     .map((o) => ({ o, alertas: alertasDe(o, instante) }))
-    .filter((x) => x.alertas.length > 0)
-    .slice(0, 12);
+    .filter((x) => x.alertas.length > 0);
+  const comAlertas = todasComAlertas.slice(0, 12);
+  const alertasForaDaLista = todasComAlertas.length - comAlertas.length;
   const proximas = ops
     .filter((o) => estaActiva(o.fase) && o.proxima_data)
     .sort((a, b) => (a.proxima_data ?? '').localeCompare(b.proxima_data ?? ''))
@@ -97,7 +99,7 @@ export function PainelEnergia({
               <Kpi
                 rotulo="Taxa de qualificação"
                 valor={percentagem(sc.taxaQualificacao)}
-                nota={`${sc.qualificadas} de ${sc.analisadas} avaliadas com score ≥ 24`}
+                nota={`${sc.qualificadas} de ${sc.analisadas} avaliadas com score ≥ ${SCORE_MINIMO}`}
               />
             </li>
             <li>
@@ -146,6 +148,13 @@ export function PainelEnergia({
                       </div>
                     </li>
                   ))}
+                  {alertasForaDaLista > 0 && (
+                    <li>
+                      <Link href="/admin/energia/oportunidades" className="text-sm underline">
+                        E mais {alertasForaDaLista} com alertas — ver todas
+                      </Link>
+                    </li>
+                  )}
                 </ul>
               )}
             </Bloco>
@@ -192,7 +201,7 @@ export function PainelEnergia({
               </li>
             </ul>
             <p className="mt-4 text-xs text-[color:var(--muted)]">
-              Etapas: {FASES.length} + perdida e arquivada. {textoFase('qualificada')} exige score ≥ 24.
+              Etapas: {FASES.length} + perdida e arquivada. {textoFase('qualificada')} exige score ≥ {SCORE_MINIMO}.
             </p>
           </Bloco>
         </div>

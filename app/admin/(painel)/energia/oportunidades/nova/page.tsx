@@ -1,4 +1,5 @@
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
+import { GuardaRascunho } from '@/components/admin/energia/GuardaRascunho';
 import { CAIXA, CamposOportunidade, EnergiaNav, H2, Mensagens } from '@/components/admin/energia/partes';
 import { AdminHeading } from '@/components/admin/primitives';
 import { criarOportunidade } from '@/lib/admin/energia-actions';
@@ -19,6 +20,7 @@ export default async function NovaOportunidadePage({ searchParams }: { searchPar
       <Mensagens erro={erro} textos={{}} />
       <form action={criarOportunidade} className={CAIXA}>
         <h2 className={H2}>Sinal de mercado</h2>
+        <GuardaRascunho chave="nova-oportunidade" />
         <CamposOportunidade />
         <div>
           <BotaoEnviar size="sm" aEnviar="A registar…">

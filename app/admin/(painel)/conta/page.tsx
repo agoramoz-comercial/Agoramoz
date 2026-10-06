@@ -29,7 +29,7 @@ export default async function ContaPage({
     data: { user },
   } = await supabase.auth.getUser();
   const obrigatoria = trocaObrigatoria(user?.app_metadata);
-  const mensagemErro = erro && erro in MENSAGEM ? MENSAGEM[erro as keyof typeof MENSAGEM] : null;
+  const mensagemErro = erro && Object.hasOwn(MENSAGEM, erro) ? MENSAGEM[erro as keyof typeof MENSAGEM] : null;
 
   return (
     <div className="max-w-xl">

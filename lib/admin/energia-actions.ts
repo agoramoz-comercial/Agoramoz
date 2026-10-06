@@ -15,7 +15,7 @@ import {
   formularioStakeholder,
   memoParaGravar,
 } from '@/lib/energia/formularios';
-import { CRITERIOS, MEMO, podePassarPara } from '@/lib/energia/modelo';
+import { CRITERIOS, MEMO, podePassarPara, SCORE_MINIMO } from '@/lib/energia/modelo';
 import { executar, voltarCom } from './executar';
 
 /**
@@ -35,7 +35,8 @@ async function exigirEnergia(): Promise<void> {
   if (!modulos.includes('energia')) redirect('/admin');
 }
 
-const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? '');
+/** O browser conta uma mudança de linha como 1 no `maxLength` mas envia CRLF: normalizar. */
+const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? '').replace(/\r\n?/g, '\n');
 
 function idDe(formData: FormData, campo: string, destino: string): string {
   const v = texto(formData, campo).trim();
@@ -75,6 +76,7 @@ function camposOportunidade(formData: FormData) {
     proximaAccao: texto(formData, 'proximaAccao'),
     proximaData: texto(formData, 'proximaData'),
     responsavel: texto(formData, 'responsavel'),
+    fase: texto(formData, 'fase') || undefined,
   });
 }
 
@@ -147,7 +149,7 @@ export async function avaliarOportunidade(formData: FormData): Promise<void> {
     destino,
   );
   mudou(`${BASE}/oportunidades`, destino);
-  redirect(`${destino}?ok=avaliada#score`);
+  redirect(`${destino}?ok=avaliada`);
 }
 
 export async function mudarFaseCeno(formData: FormData): Promise<void> {
@@ -161,9 +163,9 @@ export async function mudarFaseCeno(formData: FormData): Promise<void> {
     motivo: texto(formData, 'motivo'),
   });
   if (!f.success) voltarCom(destino, primeiroErro(f.error.issues));
-  // A mesma regra que a base impõe, dita antes de lá chegar.
-  const total = formData.get('score') === '' ? null : Number(formData.get('score'));
-  const passagem = podePassarPara(f.data.fase, Number.isFinite(total) ? total : null, f.data.motivo);
+  // O score mínimo verifica-o a base, com o valor que ela tem (não um campo
+  // escondido que pode estar desactualizado noutra janela).
+  const passagem = podePassarPara(f.data.fase, SCORE_MINIMO, f.data.motivo);
   if (!passagem.ok) voltarCom(destino, passagem.motivo ?? 'Etapa inválida.');
   await executar(
     'mudar_fase_ceno',
@@ -183,7 +185,7 @@ export async function guardarMemo(formData: FormData): Promise<void> {
   if (!f.success) voltarCom(destino, primeiroErro(f.error.issues));
   await executar('guardar_memo_ceno', { p_id: id, p_revisao: revisao, p_memo: memoParaGravar(f.data) }, destino);
   mudou(destino);
-  redirect(`${destino}?ok=memo#memo`);
+  redirect(`${destino}?ok=memo`);
 }
 
 export async function ligarStakeholder(formData: FormData): Promise<void> {
@@ -198,7 +200,7 @@ export async function ligarStakeholder(formData: FormData): Promise<void> {
     destino,
   );
   mudou(destino, `${BASE}/stakeholders/${f.data.stakeholder}`);
-  redirect(`${destino}?ok=ligado#stakeholders`);
+  redirect(`${destino}?ok=ligado`);
 }
 
 export async function desligarStakeholder(formData: FormData): Promise<void> {
@@ -208,7 +210,7 @@ export async function desligarStakeholder(formData: FormData): Promise<void> {
   const stakeholder = idDe(formData, 'stakeholder', destino);
   await executar('desligar_stakeholder', { p_oportunidade: id, p_stakeholder: stakeholder }, destino);
   mudou(destino, `${BASE}/stakeholders/${stakeholder}`);
-  redirect(`${destino}?ok=desligado#stakeholders`);
+  redirect(`${destino}?ok=desligado`);
 }
 
 export async function registarCeno(formData: FormData): Promise<void> {
@@ -227,7 +229,7 @@ export async function registarCeno(formData: FormData): Promise<void> {
     destino,
   );
   mudou(destino);
-  redirect(`${destino}?ok=registo#registo`);
+  redirect(`${destino}?ok=registo`);
 }
 
 export async function guardarDocumento(formData: FormData): Promise<void> {
@@ -247,7 +249,7 @@ export async function guardarDocumento(formData: FormData): Promise<void> {
     destino,
   );
   mudou(destino);
-  redirect(`${destino}?ok=documento#sala`);
+  redirect(`${destino}?ok=documento`);
 }
 
 // ── Stakeholders ──────────────────────────────────────────────────────────────

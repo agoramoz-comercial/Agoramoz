@@ -1,4 +1,5 @@
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
+import { GuardaRascunho } from '@/components/admin/energia/GuardaRascunho';
 import { CAIXA, CamposStakeholder, EnergiaNav, H2, Mensagens } from '@/components/admin/energia/partes';
 import { AdminHeading } from '@/components/admin/primitives';
 import { criarStakeholder } from '@/lib/admin/energia-actions';
@@ -19,6 +20,7 @@ export default async function NovoStakeholderPage({ searchParams }: { searchPara
       <Mensagens erro={erro} textos={{}} />
       <form action={criarStakeholder} className={CAIXA}>
         <h2 className={H2}>Dados do stakeholder</h2>
+        <GuardaRascunho chave="novo-stakeholder" />
         <CamposStakeholder />
         <div>
           <BotaoEnviar size="sm" aEnviar="A registar…">

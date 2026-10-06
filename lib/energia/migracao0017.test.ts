@@ -69,7 +69,8 @@ describe('0017 — Espaço CEnO', () => {
 
   it('cada tabela do espaço só se lê pela dona, com o módulo, e nunca se escreve directamente', () => {
     for (const t of TABELAS) expect(MIGRACAO).toContain(`'${t}'`);
-    expect(MIGRACAO).toContain("using (dono = auth.uid() and public.tem_modulo(''energia''))");
+    // `(select …)`: avaliado uma vez por consulta, não por linha.
+    expect(MIGRACAO).toContain("using (dono = (select auth.uid()) and (select public.tem_modulo(''energia'')))");
     expect(MIGRACAO).toContain(
       "execute format('revoke all on public.%I from public, anon, authenticated, service_role', t);",
     );
@@ -77,13 +78,18 @@ describe('0017 — Espaço CEnO', () => {
     // Nenhuma política de insert/update/delete em lado nenhum (o `for update`
     // dos `select … for update` é bloqueio de linha, não política).
     expect(MIGRACAO).not.toMatch(/create policy[^;]*\bfor (insert|update|delete|all)\b/i);
-    expect(MIGRACAO.match(/create policy/g)?.length).toBe(2);
+    // A do módulo, a das cinco tabelas (no ciclo) e a do audit_log.
+    expect(MIGRACAO.match(/create policy/g)?.length).toBe(3);
+  });
+
+  it('a equipa deixa de ler as linhas ceno.* do audit_log pela API', () => {
+    expect(MIGRACAO).toContain("using (public.is_staff() and entity_type is distinct from 'ceno');");
   });
 
   it('o acesso ao módulo só se concede por SQL do dono da base', () => {
     expect(MIGRACAO).toContain('revoke all on public.acessos_modulo from public, anon, authenticated, service_role;');
     expect(MIGRACAO).toContain('grant select on public.acessos_modulo to authenticated;');
-    expect(MIGRACAO).toContain('for select to authenticated using (user_id = auth.uid())');
+    expect(MIGRACAO).toContain('for select to authenticated using (user_id = (select auth.uid()))');
   });
 
   it('a guarda interna não é chamável de fora e exige papel activo e módulo', () => {
@@ -92,6 +98,9 @@ describe('0017 — Espaço CEnO', () => {
     expect(guarda).toContain('public.exigir_papel(');
     expect(guarda).toContain('public.tem_modulo(p_modulo)');
     expect(corpoDe('tem_modulo')).toContain('p.active');
+    // Palavra-passe provisória por trocar: sem acesso, nem pela API directa.
+    expect(corpoDe('tem_modulo')).toContain("auth.jwt() -> 'app_metadata' ->> 'trocar_palavra_passe'");
+    expect(guarda).not.toContain("'leitura'");
   });
 
   it('toda a função de escrita exige o módulo, verifica o dono e desiste de locks em 4 s', () => {

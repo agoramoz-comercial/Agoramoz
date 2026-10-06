@@ -195,6 +195,12 @@ begin
   if o.revisao is distinct from p_revisao then
     raise exception 'O registo mudou entretanto.' using errcode = '40001';
   end if;
+  -- Numa etapa já qualificada (4+), o score não pode descer abaixo do mínimo:
+  -- primeiro volta-se a etapa, com registo, e depois reavalia-se.
+  if public.ceno_ordem_fase(o.fase) >= 4
+     and coalesce(p_dor + p_urgencia + p_decisor + p_capacidade + p_adequacao + p_controlo + p_informacao + p_valor, -1) < 24 then
+    raise exception 'Esta oportunidade já está qualificada: o score tem de ficar em 24 ou mais.' using errcode = '22023';
+  end if;
 
   update public.ceno_oportunidades
      set c_dor = p_dor, c_urgencia = p_urgencia, c_decisor = p_decisor, c_capacidade = p_capacidade,
@@ -305,6 +311,10 @@ begin
     end if;
   end loop;
 
+  if octet_length(p_memo::text) > 65536 then
+    raise exception 'O memo é demasiado longo. Encurte algumas secções.' using errcode = '22023';
+  end if;
+
   select * into o from public.ceno_oportunidades where id = p_id and dono = auth.uid() for update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
@@ -332,7 +342,9 @@ as $$
 begin
   perform public.exigir_modulo('energia');
 
-  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid();
+  -- Bloquear a oportunidade primeiro, na mesma ordem que mudar_fase_ceno: sem
+  -- isto, a chave estrangeira e o «on conflict» das pastas cruzam-se (deadlock).
+  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid() for no key update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
   end if;
@@ -387,7 +399,9 @@ begin
   if p_tipo not in ('nota', 'reuniao', 'decisao') then
     raise exception 'Tipo de registo inválido.' using errcode = '22023';
   end if;
-  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid();
+  -- Bloquear a oportunidade primeiro, na mesma ordem que mudar_fase_ceno: sem
+  -- isto, a chave estrangeira e o «on conflict» das pastas cruzam-se (deadlock).
+  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid() for no key update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
   end if;
@@ -421,7 +435,9 @@ as $$
 begin
   perform public.exigir_modulo('energia');
 
-  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid();
+  -- Bloquear a oportunidade primeiro, na mesma ordem que mudar_fase_ceno: sem
+  -- isto, a chave estrangeira e o «on conflict» das pastas cruzam-se (deadlock).
+  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid() for no key update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
   end if;

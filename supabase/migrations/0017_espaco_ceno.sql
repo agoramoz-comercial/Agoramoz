@@ -38,9 +38,12 @@ revoke all on public.acessos_modulo from public, anon, authenticated, service_ro
 grant select on public.acessos_modulo to authenticated;
 drop policy if exists acessos_modulo_select on public.acessos_modulo;
 create policy acessos_modulo_select on public.acessos_modulo
-  for select to authenticated using (user_id = auth.uid());
+  for select to authenticated using (user_id = (select auth.uid()));
 
--- Quem está a pedir tem o módulo e um perfil activo?
+-- Quem está a pedir tem o módulo, um perfil activo, e já trocou a
+-- palavra-passe provisória? A marca `trocar_palavra_passe` vem no JWT
+-- (app_metadata, que o utilizador não edita). Sem esta condição, quem tivesse
+-- a palavra-passe provisória lia o espaço pela API sem passar pelo site.
 create or replace function public.tem_modulo(p_modulo text)
 returns boolean
 language sql
@@ -53,7 +56,8 @@ as $$
       from public.acessos_modulo a
       join public.profiles p on p.id = a.user_id
      where a.user_id = auth.uid() and a.modulo = p_modulo and p.active
-  );
+  )
+  and coalesce(auth.jwt() -> 'app_metadata' ->> 'trocar_palavra_passe', 'false') <> 'true';
 $$;
 
 revoke all on function public.tem_modulo(text) from public, anon;
@@ -68,7 +72,7 @@ security definer
 set search_path = public, pg_catalog
 as $$
 begin
-  perform public.exigir_papel(array['admin', 'comercial', 'leitura']::public.user_role[]);
+  perform public.exigir_papel(array['admin', 'comercial']::public.user_role[]);
   if not public.tem_modulo(p_modulo) then
     raise exception 'Sem acesso.' using errcode = '42501';
   end if;
@@ -209,6 +213,7 @@ create table if not exists public.ceno_oportunidades (
 );
 
 create index if not exists ceno_oportunidades_dono_idx on public.ceno_oportunidades (dono, fase, proxima_data);
+create index if not exists ceno_oportunidades_dono_prox_idx on public.ceno_oportunidades (dono, proxima_data);
 
 drop trigger if exists ceno_oportunidades_set_updated_at on public.ceno_oportunidades;
 create trigger ceno_oportunidades_set_updated_at
@@ -244,6 +249,7 @@ create table if not exists public.ceno_registos (
 );
 
 create index if not exists ceno_registos_oportunidade_idx on public.ceno_registos (oportunidade_id, ocorreu_em desc);
+create index if not exists ceno_registos_dono_idx on public.ceno_registos (dono, tipo);
 
 -- As doze pastas da sala de oportunidade (sem ficheiros: cada pasta aponta
 -- para onde o documento vive — SharePoint, Drive — por https).
@@ -278,11 +284,20 @@ begin
     execute format('grant select on public.%I to authenticated', t);
     execute format('drop policy if exists %I on public.%I', t || '_select', t);
     execute format(
-      'create policy %I on public.%I for select to authenticated using (dono = auth.uid() and public.tem_modulo(''energia''))',
+      'create policy %I on public.%I for select to authenticated using (dono = (select auth.uid()) and (select public.tem_modulo(''energia'')))',
       t || '_select', t);
   end loop;
 end;
 $$;
+
+
+-- O `audit_log` é legível por toda a equipa (0001). As linhas do espaço só têm
+-- a acção e o id, mas até isso diria que o espaço existe e quando é usado:
+-- ficam fora da leitura pela API. O dono da base (SQL Editor) vê tudo.
+drop policy if exists audit_log_select on public.audit_log;
+create policy audit_log_select on public.audit_log
+  for select to authenticated
+  using (public.is_staff() and entity_type is distinct from 'ceno');
 
 
 -- ---------------------------------------------------------------------------
@@ -471,6 +486,12 @@ begin
   if o.revisao is distinct from p_revisao then
     raise exception 'O registo mudou entretanto.' using errcode = '40001';
   end if;
+  -- Numa etapa já qualificada (4+), o score não pode descer abaixo do mínimo:
+  -- primeiro volta-se a etapa, com registo, e depois reavalia-se.
+  if public.ceno_ordem_fase(o.fase) >= 4
+     and coalesce(p_dor + p_urgencia + p_decisor + p_capacidade + p_adequacao + p_controlo + p_informacao + p_valor, -1) < 24 then
+    raise exception 'Esta oportunidade já está qualificada: o score tem de ficar em 24 ou mais.' using errcode = '22023';
+  end if;
 
   update public.ceno_oportunidades
      set c_dor = p_dor, c_urgencia = p_urgencia, c_decisor = p_decisor, c_capacidade = p_capacidade,
@@ -581,6 +602,10 @@ begin
     end if;
   end loop;
 
+  if octet_length(p_memo::text) > 65536 then
+    raise exception 'O memo é demasiado longo. Encurte algumas secções.' using errcode = '22023';
+  end if;
+
   select * into o from public.ceno_oportunidades where id = p_id and dono = auth.uid() for update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
@@ -608,7 +633,9 @@ as $$
 begin
   perform public.exigir_modulo('energia');
 
-  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid();
+  -- Bloquear a oportunidade primeiro, na mesma ordem que mudar_fase_ceno: sem
+  -- isto, a chave estrangeira e o «on conflict» das pastas cruzam-se (deadlock).
+  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid() for no key update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
   end if;
@@ -663,7 +690,9 @@ begin
   if p_tipo not in ('nota', 'reuniao', 'decisao') then
     raise exception 'Tipo de registo inválido.' using errcode = '22023';
   end if;
-  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid();
+  -- Bloquear a oportunidade primeiro, na mesma ordem que mudar_fase_ceno: sem
+  -- isto, a chave estrangeira e o «on conflict» das pastas cruzam-se (deadlock).
+  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid() for no key update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
   end if;
@@ -697,7 +726,9 @@ as $$
 begin
   perform public.exigir_modulo('energia');
 
-  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid();
+  -- Bloquear a oportunidade primeiro, na mesma ordem que mudar_fase_ceno: sem
+  -- isto, a chave estrangeira e o «on conflict» das pastas cruzam-se (deadlock).
+  perform 1 from public.ceno_oportunidades where id = p_oportunidade and dono = auth.uid() for no key update;
   if not found then
     raise exception 'Oportunidade não encontrada.' using errcode = 'P0002';
   end if;

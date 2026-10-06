@@ -232,7 +232,32 @@ select 29, 'espaço', 'Espaço CEnO: acesso por módulo, tabelas privadas e fun�
                  or to_regprocedure('public.tem_modulo(text)') is null
                  then 'EM FALTA - correr aplicar-0017-parte2.sql'
             when has_function_privilege('anon', 'public.mudar_fase_ceno(uuid, integer, text, text, text)', 'execute')
-                 or has_table_privilege('authenticated', 'public.ceno_oportunidades', 'insert')
-                 then 'ATENCAO - acesso a mais; correr aplicar-0017-parte1.sql e parte2.sql de novo'
+                 or not has_function_privilege('authenticated', 'public.tem_modulo(text)', 'execute')
+                 or exists (
+                   select 1 from pg_class c
+                    where c.relnamespace = 'public'::regnamespace
+                      and c.relname in ('ceno_stakeholders', 'ceno_oportunidades', 'ceno_oportunidade_stakeholders',
+                                        'ceno_registos', 'ceno_documentos', 'acessos_modulo')
+                      and (not c.relrowsecurity
+                           or has_table_privilege('anon', c.oid, 'select, insert, update, delete')
+                           or has_table_privilege('authenticated', c.oid, 'insert, update, delete'))
+                 )
+                 or not exists (
+                   select 1 from pg_proc p
+                    where p.oid = 'public.mudar_fase_ceno(uuid, integer, text, text, text)'::regprocedure
+                      and 'lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))
+                 )
+                 or not exists (
+                   select 1 from pg_proc p
+                    where p.oid = 'public.tem_modulo(text)'::regprocedure
+                      and p.prosrc like '%trocar_palavra_passe%'
+                 )
+                 or not exists (
+                   select 1 from pg_policy pol
+                    where pol.polrelid = 'public.audit_log'::regclass
+                      and pol.polname = 'audit_log_select'
+                      and pg_get_expr(pol.polqual, pol.polrelid) like '%ceno%'
+                 )
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0017-parte1.sql e parte2.sql de novo'
             else 'ok' end
 order by ordem;

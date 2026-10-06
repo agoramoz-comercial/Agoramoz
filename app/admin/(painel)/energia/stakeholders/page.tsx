@@ -11,18 +11,21 @@ import { RELACOES, TIPOS_STAKEHOLDER } from '@/lib/energia/modelo';
 export const metadata = { title: 'Stakeholders — Espaço CEnO' };
 
 /** Caracteres com significado nos filtros do PostgREST: retirados da pesquisa. */
-const RESERVADOS = /[%_,().*\\]/g;
+const RESERVADOS = /[%_,().*\\"]/g;
 
 export default async function StakeholdersCenoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; tipo?: string; inactivos?: string }>;
+  searchParams: Promise<{ q?: string | string[]; tipo?: string | string[]; inactivos?: string | string[] }>;
 }) {
   await requireModulo('energia');
   const p = await searchParams;
-  const q = (p.q ?? '').replace(RESERVADOS, ' ').trim().slice(0, 80);
-  const tipo = p.tipo && p.tipo in TIPOS_STAKEHOLDER ? p.tipo : undefined;
-  const inactivos = p.inactivos === '1';
+  // `?q=a&q=b` chega como lista: fica o primeiro.
+  const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? '';
+  const q = um(p.q).replace(RESERVADOS, ' ').trim().slice(0, 80);
+  const tipoPedido = um(p.tipo);
+  const tipo = tipoPedido && Object.hasOwn(TIPOS_STAKEHOLDER, tipoPedido) ? tipoPedido : undefined;
+  const inactivos = um(p.inactivos) === '1';
 
   const supabase = await createSessionClient();
   let consulta = supabase.from('ceno_stakeholders').select(COLUNAS_STAKEHOLDER).order('organizacao').limit(300);

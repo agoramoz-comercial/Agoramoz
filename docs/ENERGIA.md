@@ -24,8 +24,11 @@ Decisão em [D-36](DECISIONS.md).
 | Outra conta com o módulo | O seu próprio espaço, vazio | Só as suas | `P0002` nas linhas de outra pessoa |
 | `anon` | Não | Não | Não |
 
-O `audit_log` (que toda a equipa lê) leva só `ceno.<acção>` e o id, nunca
-conteúdo. A governança com o CEO faz-se pelo **Opportunity Memo**: a vista de
+O `audit_log` leva só `ceno.<acção>` e o id, nunca conteúdo. Essas linhas
+também não são legíveis pela equipa através da API (a política
+`audit_log_select` exclui `entity_type = 'ceno'`); o dono da base vê-as no SQL
+Editor. Com a palavra-passe provisória por trocar, a base fecha o espaço
+mesmo a pedidos feitos directamente à API: `tem_modulo` lê a marca do JWT. A governança com o CEO faz-se pelo **Opportunity Memo**: a vista de
 impressão (`/admin/energia/oportunidades/<id>/memo`) gera um PDF para o
 comité. Partilha-se o memo, não a conta.
 
@@ -38,6 +41,8 @@ comité. Partilha-se o memo, não a conta.
 - Cada mudança de etapa fica registada (`ceno_registos`, tipo `fase`).
 - Um valor potencial sem evidência não se grava.
 - Duas janelas abertas não se sobrepõem em silêncio (`revisao`, erro `40001`).
+- Numa etapa já qualificada, o score não desce abaixo de 24.
+- O memo inteiro cabe em 64 KB (a mensagem diz para encurtar).
 
 As probabilidades por etapa (`lib/energia/modelo.ts`, `PROBABILIDADE`) são um
 **pressuposto de referência**, não dado medido. Ajustar quando houver
@@ -54,6 +59,7 @@ atingiram.
 - **Regras da palavra-passe nova:** 12 a 72 caracteres, diferente da actual.
   A troca reautentica a pessoa e depois limpa a marca no servidor, com a
   chave de serviço.
+- Ao trocar, o token é renovado e **todas as outras sessões terminam**.
 - Qualquer conta da equipa pode usar «Mudar palavra-passe» no menu.
 - Nenhuma palavra-passe entra no Git, nos logs ou neste documento.
 
@@ -104,7 +110,8 @@ Os dados ficam guardados e deixam de estar visíveis.
 | Acesso por módulo | `lib/auth/modulos.ts` |
 | Troca de palavra-passe | `lib/auth/palavra-passe.ts`, `lib/auth/actions.ts`, `middleware.ts` |
 | Páginas | `app/admin/(painel)/energia/**`, `components/admin/energia/*` |
-| QA visual | `/qa/energia?vista=…` (só com `ADMIN_PREVIEW=on`) e `.qa/energia-admin.mjs` |
+| Rascunhos no browser (não perder texto num erro) | `components/admin/energia/GuardaRascunho.tsx` |
+| QA visual | `/qa/energia?vista=…` (só com `ADMIN_PREVIEW=on`, fora da Vercel) e `.qa/energia-admin.mjs` |
 
 ## Fase 2 (não activa)
 

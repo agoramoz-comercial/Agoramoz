@@ -35,6 +35,7 @@ import {
   URGENCIAS,
 } from '@/lib/energia/modelo';
 import { AJUDA, AREA, CAIXA, CamposOportunidade, EnergiaNav, H2, Opcoes, ROTULO } from './partes';
+import { GuardaRascunho } from './GuardaRascunho';
 
 export interface StakeholderLigado {
   readonly stakeholder: Stakeholder;
@@ -80,7 +81,7 @@ export function FichaOportunidade({
 }) {
   const alertas = alertasDe(op, new Date(agora));
   const ordem = ordemDe(op.fase);
-  const naoLigados = stakeholders.filter((s) => !ligados.some((l) => l.stakeholder.id === s.id));
+  const naoLigados = stakeholders.filter((s) => s.activo && !ligados.some((l) => l.stakeholder.id === s.id));
   const qualificada = ordem !== null && ordem >= ORDEM_QUALIFICADA;
   const memo = op.memo as Record<string, string | undefined>;
 
@@ -104,6 +105,9 @@ export function FichaOportunidade({
           <StateBadge key={a} rotulo={ALERTA[a]} />
         ))}
       </div>
+      <p className="mb-8 text-sm text-[color:var(--muted)]">
+        Cada bloco grava-se em separado: guarde um antes de passar ao seguinte.
+      </p>
 
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-8">
@@ -136,7 +140,7 @@ export function FichaOportunidade({
               <dd>
                 <DataHora valor={op.fase_desde} />
               </dd>
-              {op.motivo_perda && (
+              {op.fase === 'perdida' && op.motivo_perda && (
                 <>
                   <dt className="text-[color:var(--muted)]">Motivo da perda</dt>
                   <dd>{op.motivo_perda}</dd>
@@ -152,7 +156,6 @@ export function FichaOportunidade({
             </h2>
             <input type="hidden" name="id" value={op.id} />
             <input type="hidden" name="revisao" value={op.revisao} />
-            <input type="hidden" name="score" value={op.score_total ?? ''} />
             <p className="text-sm">
               Agora: <strong>{textoFase(op.fase)}</strong>
               {ordem !== null && FASES[ordem] && (
@@ -265,6 +268,7 @@ export function FichaOportunidade({
             </h2>
             <form action={registarCeno} className="grid gap-4">
               <input type="hidden" name="id" value={op.id} />
+              <GuardaRascunho chave={`registo-${op.id}`} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <label htmlFor="reg-tipo" className={ROTULO}>
@@ -354,7 +358,7 @@ export function FichaOportunidade({
                       <input type="hidden" name="id" value={op.id} />
                       <input type="hidden" name="stakeholder" value={s.id} />
                       <BotaoEnviar size="sm" variant="ghost" aEnviar="A retirar…">
-                        Retirar
+                        Retirar<span className="sr-only"> {s.pessoa ?? s.organizacao}</span>
                       </BotaoEnviar>
                     </form>
                   </li>
@@ -415,6 +419,7 @@ export function FichaOportunidade({
             <p className={AJUDA}>Uma ou duas páginas. Obrigatório nas prioridades A.</p>
             <input type="hidden" name="id" value={op.id} />
             <input type="hidden" name="revisao" value={op.revisao} />
+            <GuardaRascunho chave={`memo-${op.id}`} />
             {MEMO.map((m, i) => (
               <div key={m.chave} className="grid gap-2">
                 <label htmlFor={`memo-${m.chave}`} className={ROTULO}>
@@ -468,7 +473,7 @@ export function FichaOportunidade({
                         <input type="hidden" name="nota" value={d?.nota ?? ''} />
                         <div className="grid gap-1">
                           <label htmlFor={`doc-${i + 1}-estado`} className="text-xs text-[color:var(--muted)]">
-                            Estado
+                            Estado<span className="sr-only"> da pasta {i + 1}, {nome}</span>
                           </label>
                           <select id={`doc-${i + 1}-estado`} name="estado" defaultValue={d?.estado ?? 'em_falta'} className={inputClass}>
                             <Opcoes valores={ESTADOS_DOCUMENTO} />
@@ -476,12 +481,12 @@ export function FichaOportunidade({
                         </div>
                         <div className="grid gap-1">
                           <label htmlFor={`doc-${i + 1}-ligacao`} className="text-xs text-[color:var(--muted)]">
-                            Ligação https (SharePoint, Drive…)
+                            Ligação https (SharePoint, Drive…)<span className="sr-only"> da pasta {i + 1}</span>
                           </label>
                           <input id={`doc-${i + 1}-ligacao`} name="ligacao" type="url" defaultValue={d?.ligacao ?? ''} className={inputClass} />
                         </div>
                         <BotaoEnviar size="sm" variant="outline" aEnviar="…">
-                          Gravar
+                          Gravar<span className="sr-only"> a pasta {i + 1}</span>
                         </BotaoEnviar>
                       </form>
                     </li>
@@ -498,6 +503,8 @@ export function FichaOportunidade({
             </h2>
             <input type="hidden" name="id" value={op.id} />
             <input type="hidden" name="revisao" value={op.revisao} />
+            <input type="hidden" name="fase" value={op.fase} />
+            <GuardaRascunho chave={`dados-${op.id}`} />
             <CamposOportunidade v={op} />
             <div>
               <BotaoEnviar size="sm" aEnviar="A guardar…">

@@ -12,6 +12,7 @@ import {
   TIPOS_STAKEHOLDER,
   TODAS_AS_FASES,
   URGENCIAS,
+  estaActiva,
   type EstadoFase,
 } from './modelo';
 
@@ -31,10 +32,12 @@ const opcional = (max: number) =>
     .transform((v) => (v === '' ? null : v));
 
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
+/** `2026-02-31` passa no formato e no `Date.parse` (vira 3 de Março): aqui não. */
+const dataReal = (v: string) => DATA.test(v) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
 const dataOpcional = z
   .string()
   .trim()
-  .refine((v) => v === '' || (DATA.test(v) && !Number.isNaN(Date.parse(v))), 'Data inválida.')
+  .refine((v) => v === '' || dataReal(v), 'Data inválida.')
   .transform((v) => (v === '' ? null : v));
 
 /** «1 500 000», «1500000,50» ou «1500000.50» → número; vazio → nulo. */
@@ -63,9 +66,19 @@ export const formularioOportunidade = z
     valorMax: valorOpcional,
     moeda: z.enum(MOEDAS),
     valorEvidencia: opcional(500),
-    proximaAccao: z.string().trim().min(1, 'Uma oportunidade activa precisa de próxima acção.').max(300),
-    proximaData: z.string().trim().regex(DATA, 'Indique a data da próxima acção.'),
+    proximaAccao: opcional(300),
+    proximaData: dataOpcional,
     responsavel: opcional(120),
+    /** A etapa actual (a base volta a verificar): fechadas não precisam de próxima acção. */
+    fase: z.string().default('sinal'),
+  })
+  .refine((f) => !estaActiva(f.fase) || f.proximaAccao !== null, {
+    message: 'Uma oportunidade activa precisa de próxima acção.',
+    path: ['proximaAccao'],
+  })
+  .refine((f) => !estaActiva(f.fase) || f.proximaData !== null, {
+    message: 'Indique a data da próxima acção.',
+    path: ['proximaData'],
   })
   .refine((f) => f.valorMin === null || f.valorMax === null || f.valorMax >= f.valorMin, {
     message: 'O valor máximo não pode ser menor do que o mínimo.',
@@ -118,12 +131,19 @@ export const formularioFase = z.object({
   motivo: opcional(500),
 });
 
-export const formularioMemo = z.object(
-  Object.fromEntries(MEMO.map((m) => [m.chave, z.string().max(4000, 'Cada secção tem no máximo 4000 caracteres.')])) as Record<
-    (typeof MEMO)[number]['chave'],
-    z.ZodString
-  >,
-);
+/** O limite da coluna `memo` (64 KB). Acentos ocupam 2 bytes: 12 × 4000 caracteres pode não caber. */
+const MEMO_BYTES = 65_000;
+
+export const formularioMemo = z
+  .object(
+    Object.fromEntries(MEMO.map((m) => [m.chave, z.string().max(4000, 'Cada secção tem no máximo 4000 caracteres.')])) as Record<
+      (typeof MEMO)[number]['chave'],
+      z.ZodString
+    >,
+  )
+  .refine((m) => new TextEncoder().encode(JSON.stringify(memoParaGravar(m))).length <= MEMO_BYTES, {
+    message: 'O memo é demasiado longo. Encurte algumas secções — é para uma ou duas páginas.',
+  });
 
 /** Só as secções escritas vão para a base (vazias não ocupam espaço nem contam como feitas). */
 export function memoParaGravar(m: Record<string, string>): Record<string, string> {

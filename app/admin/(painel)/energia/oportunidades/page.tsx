@@ -30,7 +30,7 @@ export default async function OportunidadesCenoPage({
   const p = await searchParams;
   const fase = TODAS_AS_FASES.includes(p.fase as never) ? p.fase : undefined;
   const prioridade = PRIORIDADES.includes(p.prioridade as Prioridade) ? p.prioridade : undefined;
-  const sector = p.sector && p.sector in SECTORES ? p.sector : undefined;
+  const sector = p.sector && Object.hasOwn(SECTORES, p.sector) ? p.sector : undefined;
   const todas = p.vista === 'todas';
 
   const supabase = await createSessionClient();

@@ -212,7 +212,7 @@ export function ManualEnergia() {
                     Perdida / arquivada
                   </th>
                   <td className={TD}>Sem adequação ou avanço</td>
-                  <td className={TD}>Motivo obrigatório</td>
+                  <td className={TD}>Perdida: motivo obrigatório. Arquivada: sem condição (suspensa, fora do pipeline).</td>
                   <td className={`${TD} text-right`}>—</td>
                 </tr>
               </tbody>

@@ -26,6 +26,7 @@ import {
 } from './modelo';
 import {
   formularioDocumento,
+  formularioMemo,
   formularioOportunidade,
   formularioRegisto,
   formularioStakeholder,
@@ -262,6 +263,25 @@ describe('formulários', () => {
     expect(formularioDocumento.safeParse({ pasta: '5', estado: 'pronto', ligacao: 'http://x.test', nota: '' }).success).toBe(false);
     expect(formularioDocumento.safeParse({ pasta: '5', estado: 'pronto', ligacao: 'https://x.sharepoint.com/a', nota: '' }).success).toBe(true);
     expect(formularioDocumento.safeParse({ pasta: '13', estado: 'pronto', ligacao: '', nota: '' }).success).toBe(false);
+  });
+
+  it('fechadas não precisam de próxima acção; activas sim', () => {
+    for (const fase of ['valor_realizado', 'perdida', 'arquivada'])
+      expect(formularioOportunidade.safeParse({ ...base, fase, proximaAccao: '', proximaData: '' }).success).toBe(true);
+    expect(formularioOportunidade.safeParse({ ...base, fase: 'proposta', proximaData: '' }).success).toBe(false);
+  });
+
+  it('datas impossíveis são recusadas (31 de Fevereiro não vira 3 de Março)', () => {
+    expect(formularioOportunidade.safeParse({ ...base, proximaData: '2026-02-31' }).success).toBe(false);
+    expect(formularioOportunidade.safeParse({ ...base, proximaData: '2028-02-29' }).success).toBe(true);
+  });
+
+  it('memo: acima do limite da base (64 KB) é recusado com uma mensagem humana', () => {
+    const cheio = Object.fromEntries(MEMO.map((m) => [m.chave, 'ç'.repeat(4000)]));
+    const r = formularioMemo.safeParse(cheio);
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0]?.message).toMatch(/demasiado longo/);
+    expect(formularioMemo.safeParse({ ...cheio, ...Object.fromEntries(MEMO.slice(6).map((m) => [m.chave, ''])) }).success).toBe(true);
   });
 
   it('memo: só as secções escritas são gravadas', () => {

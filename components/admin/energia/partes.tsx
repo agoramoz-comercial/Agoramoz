@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { inputClass } from '@/components/form/Field';
 import type { Oportunidade, Stakeholder } from '@/lib/energia/leitura';
 import {
+  estaActiva,
   FONTES,
   MOEDAS,
   RELACOES,
@@ -71,15 +72,24 @@ export function Mensagens({
           role="alert"
           className="mb-6 border border-[color:var(--color-signal-600)] px-4 py-3 text-sm text-[color:var(--color-signal-700)]"
         >
-          {erro}
+          {erro.slice(0, 300)}
         </p>
       )}
-      {ok && textos[ok] && (
+      {ok && Object.hasOwn(textos, ok) && (
         <p role="status" className="mb-6 border border-[color:var(--border)] px-4 py-3 text-sm">
           {textos[ok]}
         </p>
       )}
     </>
+  );
+}
+
+/** Uma leitura falhou: dizê-lo, em vez de mostrar zeros ou listas vazias como se fossem reais. */
+export function ErroLeitura({ texto = 'Não foi possível ler o Espaço CEnO agora. Recarregue dentro de instantes.' }: { texto?: string }) {
+  return (
+    <p role="alert" className="border border-[color:var(--color-signal-600)] px-4 py-3 text-sm text-[color:var(--color-signal-700)]">
+      {texto}
+    </p>
   );
 }
 
@@ -136,6 +146,8 @@ function Campo({
 
 /** Os campos de base de uma oportunidade (criar e editar usam os mesmos). */
 export function CamposOportunidade({ v }: { v?: Oportunidade }) {
+  // Fechadas (valor realizado, perdida, arquivada) não precisam de próxima acção.
+  const activa = !v || estaActiva(v.fase);
   return (
     <>
       <Campo id="op-titulo" rotulo="Título">
@@ -193,10 +205,10 @@ export function CamposOportunidade({ v }: { v?: Oportunidade }) {
       </fieldset>
       <div className="grid gap-5 sm:grid-cols-[1fr_12rem]">
         <Campo id="op-accao" rotulo="Próxima acção" ajuda="Concreta. «Manter contacto» não é uma acção.">
-          <input id="op-accao" name="proximaAccao" required maxLength={300} defaultValue={v?.proxima_accao ?? ''} aria-describedby="op-accao-ajuda" className={inputClass} />
+          <input id="op-accao" name="proximaAccao" required={activa} maxLength={300} defaultValue={v?.proxima_accao ?? ''} aria-describedby="op-accao-ajuda" className={inputClass} />
         </Campo>
         <Campo id="op-data" rotulo="Data">
-          <input id="op-data" name="proximaData" type="date" required defaultValue={v?.proxima_data ?? ''} className={inputClass} />
+          <input id="op-data" name="proximaData" type="date" required={activa} defaultValue={v?.proxima_data ?? ''} className={inputClass} />
         </Campo>
       </div>
       <Campo id="op-responsavel" rotulo="Responsável" ajuda="Uma única pessoa.">

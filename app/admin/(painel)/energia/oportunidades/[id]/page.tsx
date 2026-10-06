@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { FichaOportunidade } from '@/components/admin/energia/Ficha';
-import { Mensagens } from '@/components/admin/energia/partes';
+import { ErroLeitura, Mensagens } from '@/components/admin/energia/partes';
 import { requireModulo } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import {
@@ -54,6 +54,8 @@ export default async function OportunidadeCenoPage({
     supabase.from('ceno_documentos').select('pasta, estado, ligacao, nota').eq('oportunidade_id', id).order('pasta'),
   ]);
 
+  // Uma falha de leitura não é «não existe»; e uma lista vazia por erro não é «nenhum ligado».
+  if (op.error || ligacoes.error || stakeholders.error || registos.error || documentos.error) return <ErroLeitura />;
   // Não existe — ou não é dela, que para a RLS é o mesmo.
   if (!op.data) notFound();
 
