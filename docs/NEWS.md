@@ -115,6 +115,10 @@ confirmar primeiro e só depois mudar o texto.
 ## Ligar o jornal (passos do fundador)
 
 1. SQL Editor do Supabase: correr `supabase/aplicar-0015.sql` (repetível).
+   O ficheiro tem ~30 KB e uma colagem cortada deixa as funções públicas por
+   criar (`42883` no SQL, `PGRST202` no site). Para colar em dois passos:
+   `aplicar-0015-parte1.sql` e depois `aplicar-0015-parte2.sql` (cada um
+   repetível; a parte 2 sozinha completa uma 0015 cortada).
 2. Correr `supabase/verificar-estado.sql`: as linhas **26** e **27** têm de
    dizer `ok`.
 3. Vercel → `agoramoz` → Settings → Environment Variables: `NEWS_BLOG` =

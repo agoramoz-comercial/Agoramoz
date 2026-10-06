@@ -56,6 +56,23 @@ describe('0015 — AGORAMOZ News', () => {
     expect(APLICAR.endsWith(MIGRACAO)).toBe(true);
   });
 
+  it('as duas partes (para colar em dois passos) somam a migração, palavra por palavra', () => {
+    const FIM = '-- ===== fim do cabeçalho: daqui para baixo é a migração 0015, sem alterações =====\n';
+    const corpo = (f: string) => {
+      const texto = readFileSync(f, 'utf-8');
+      const i = texto.indexOf(FIM);
+      expect(i).toBeGreaterThan(0);
+      return texto.slice(i + FIM.length);
+    };
+    const parte1 = corpo('supabase/aplicar-0015-parte1.sql');
+    const parte2 = corpo('supabase/aplicar-0015-parte2.sql');
+    expect(parte1 + parte2).toBe(MIGRACAO);
+    // A parte 2 começa no caminho público e acaba a recarregar a cache da API.
+    expect(parte2).toContain('create or replace function public.artigos_publicados(');
+    expect(parte1).not.toContain('public.artigos_publicados(');
+    expect(parte2.trimEnd().endsWith("notify pgrst, 'reload schema';")).toBe(true);
+  });
+
   it('é repetível: só formas idempotentes de criação', () => {
     expect(MIGRACAO).not.toMatch(/create table (?!if not exists)/);
     expect(MIGRACAO).not.toMatch(/create (unique )?index (?!if not exists)/);
