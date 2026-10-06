@@ -6,6 +6,7 @@ import { POSICOES_ANUNCIO } from '@/lib/news/anuncios';
 import { TOKEN } from '@/lib/news/leitor';
 import { chaveDoLeitor } from '@/lib/news/leitor-servidor';
 import { falhar, lerEntrada } from '@/lib/news/rota';
+import { comLimite, LIMITE_ROTA_MS } from '@/lib/news/tempo';
 
 /**
  * Impressões do outdoor, em lote (até 8), enviadas por `sendBeacon`. Responde
@@ -44,10 +45,13 @@ export async function POST(request: Request) {
   // Um item por chamada: cada anúncio tem a sua chave de leitor.
   const resultados = await Promise.all(
     e.dados.itens.map((item) =>
-      db.rpc('registar_impressoes', {
-        p_itens: [item],
-        p_chave_hash: e.dados.token ? chaveDoLeitor(e.dados.token, item.id) : null,
-      }),
+      comLimite(
+        db.rpc('registar_impressoes', {
+          p_itens: [item],
+          p_chave_hash: e.dados.token ? chaveDoLeitor(e.dados.token, item.id) : null,
+        }),
+        LIMITE_ROTA_MS,
+      ),
     ),
   );
   const falhas = resultados.filter((r) => r.error).length;

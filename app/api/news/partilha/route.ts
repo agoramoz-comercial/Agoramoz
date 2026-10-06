@@ -6,6 +6,7 @@ import { createMemoryRateLimiter } from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
 import { CANAIS_PARTILHA } from '@/lib/news/partilha';
 import { falhar, lerEntrada } from '@/lib/news/rota';
+import { comLimite, LIMITE_ROTA_MS } from '@/lib/news/tempo';
 
 /** Conta uma partilha de um artigo publicado, por canal (sem saber quem). */
 
@@ -26,7 +27,10 @@ export async function POST(request: Request) {
 
   const db = dbAdmin();
   if (!db) return falhar(503, correlationId);
-  const { data, error } = await db.rpc('partilhar_artigo', { p_slug: e.dados.slug, p_canal: e.dados.canal });
+  const { data, error } = await comLimite(
+    db.rpc('partilhar_artigo', { p_slug: e.dados.slug, p_canal: e.dados.canal }),
+    LIMITE_ROTA_MS,
+  );
   if (error) {
     log.warn('news.partilha', { correlationId, reason: 'base', errorCode: error.code ?? 'desconhecido', outcome: 'failed' });
     return falhar(error.code === 'P0002' ? 404 : 503, correlationId);

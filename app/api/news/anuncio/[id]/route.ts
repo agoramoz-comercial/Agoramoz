@@ -6,6 +6,7 @@ import { clientKey, createMemoryRateLimiter } from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
 import { comUtm, destinoSeguro, POSICOES_ANUNCIO, type PosicaoAnuncio } from '@/lib/news/anuncios';
 import { jornalLigado } from '@/lib/news/jornal-servidor';
+import { comLimite, LIMITE_ROTA_MS } from '@/lib/news/tempo';
 
 /**
  * O clique num anúncio do outdoor: conta e manda (303) para o destino
@@ -50,11 +51,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const conta = limite.check(await clientKey(request)).allowed;
   if (!db) return irPara('/news', request);
 
-  const { data, error } = await db.rpc('registar_clique_anuncio', {
-    p_id: id,
-    p_posicao: conta ? posicao : null,
-    p_chave_hash: conta ? chave : null,
-  });
+  // Com a base lenta, quem clicou não fica à espera: vai para o jornal.
+  const { data, error } = await comLimite(
+    db.rpc('registar_clique_anuncio', {
+      p_id: id,
+      p_posicao: conta ? posicao : null,
+      p_chave_hash: conta ? chave : null,
+    }),
+    LIMITE_ROTA_MS,
+  );
   if (error) {
     log.warn('news.anuncio_clique', { correlationId, reason: 'base', errorCode: error.code ?? 'desconhecido', outcome: 'failed' });
     return irPara('/news', request);

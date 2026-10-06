@@ -180,3 +180,31 @@ describe('GET /api/news/anuncio/[id] — o clique', async () => {
     expect(new URL((await pedido(ANUNCIO)).headers.get('location')!).pathname).toBe('/news');
   });
 });
+
+describe('base pendurada (PGRST003 a 2026-10-06): as rotas respondem dentro do prazo', () => {
+
+  it('o clique redirecciona para o jornal em vez de esperar pela base', async () => {
+    // Relógio real: o prazo (3 s) só começa depois de passos assíncronos da rota.
+    const { GET } = await import('./anuncio/[id]/route');
+    rpc.mockReturnValue(new Promise(() => {}));
+    const inicio = Date.now();
+    const r = await GET(
+      new Request(`https://agoramoz.com/api/news/anuncio/${ANUNCIO}?p=topo`, {
+        headers: { 'x-forwarded-for': '198.51.100.201' },
+      }),
+      { params: Promise.resolve({ id: ANUNCIO }) },
+    );
+    expect(Date.now() - inicio).toBeLessThan(4500);
+    expect(r.status).toBe(303);
+    expect(new URL(r.headers.get('location')!).pathname).toBe('/news');
+  }, 8000);
+
+  it('o gosto devolve 503 em vez de pendurar o pedido', async () => {
+    const { POST } = await import('./gosto/route');
+    rpc.mockReturnValue(new Promise(() => {}));
+    const inicio = Date.now();
+    const r = await POST(post('/api/news/gosto', { slug: 'artigo-a1', token: TOKEN }));
+    expect(Date.now() - inicio).toBeLessThan(4500);
+    expect(r.status).toBe(503);
+  }, 8000);
+});

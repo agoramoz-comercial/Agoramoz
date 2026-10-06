@@ -1,9 +1,10 @@
 import Link from 'next/link';
+import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { notFound } from 'next/navigation';
 import { AdminHeading, DataHora, StateBadge } from '@/components/admin/primitives';
 import { inputClass } from '@/components/form/Field';
 import { ArtigoCorpo } from '@/components/news/jornal/ArtigoCorpo';
-import { Button, buttonVariants } from '@/components/ui/Button';
+import { buttonVariants } from '@/components/ui/Button';
 import { ESTADO_ARTIGO } from '@/lib/admin/labels';
 import { arquivarArtigo, guardarArtigo, publicarArtigo } from '@/lib/admin/news-actions';
 import { createSessionClient } from '@/lib/auth/client';
@@ -230,9 +231,9 @@ export default async function ArtigoAdminPage({
                 />
               </div>
               <div>
-                <Button type="submit" size="sm" variant="outline">
+                <BotaoEnviar size="sm" variant="outline" aEnviar="A guardar…">
                   Guardar alterações
-                </Button>
+                </BotaoEnviar>
               </div>
             </form>
 
@@ -250,9 +251,9 @@ export default async function ArtigoAdminPage({
                   Revi o título, a entrada e o conteúdo, e confirmo que podem sair com o nome AGORAMOZ.
                 </label>
                 <div>
-                  <Button type="submit" size="sm">
+                  <BotaoEnviar size="sm" aEnviar="A publicar…">
                     {a.estado === 'arquivado' ? 'Voltar a publicar' : 'Publicar no jornal'}
-                  </Button>
+                  </BotaoEnviar>
                 </div>
               </form>
             ) : (
@@ -266,9 +267,9 @@ export default async function ArtigoAdminPage({
                   publicar depois.
                 </p>
                 <div>
-                  <Button type="submit" size="sm" variant="outline">
+                  <BotaoEnviar size="sm" variant="outline" aEnviar="A arquivar…">
                     Arquivar
-                  </Button>
+                  </BotaoEnviar>
                 </div>
               </form>
             )}

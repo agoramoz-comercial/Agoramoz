@@ -7,6 +7,7 @@ import { log } from '@/lib/log/logger';
 import { TOKEN } from '@/lib/news/leitor';
 import { chaveDoLeitor } from '@/lib/news/leitor-servidor';
 import { falhar, lerEntrada } from '@/lib/news/rota';
+import { comLimite, LIMITE_ROTA_MS } from '@/lib/news/tempo';
 
 /**
  * Gosto num artigo publicado: um por browser (hash do token anónimo + artigo).
@@ -31,7 +32,10 @@ export async function POST(request: Request) {
   const db = dbAdmin();
   if (!db) return falhar(503, correlationId);
   const chave = chaveDoLeitor(e.dados.token, e.dados.slug)!;
-  const { data, error } = await db.rpc('gostar_artigo', { p_slug: e.dados.slug, p_chave_hash: chave });
+  const { data, error } = await comLimite(
+    db.rpc('gostar_artigo', { p_slug: e.dados.slug, p_chave_hash: chave }),
+    LIMITE_ROTA_MS,
+  );
   if (error) {
     const status = error.code === 'P0002' ? 404 : 503;
     log.warn('news.gosto', { correlationId, reason: 'base', errorCode: error.code ?? 'desconhecido', outcome: 'failed' });

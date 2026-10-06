@@ -1,5 +1,5 @@
 import { inputClass } from '@/components/form/Field';
-import { Button } from '@/components/ui/Button';
+import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { paraCampoDeMaputo, TEMAS_ANUNCIO, type TemaAnuncio } from '@/lib/news/anuncios';
 
 /**
@@ -159,9 +159,9 @@ export function FormularioAnuncio({
         </div>
       </div>
       <div>
-        <Button type="submit" size="sm">
+        <BotaoEnviar size="sm" aEnviar="A gravar…">
           {textoBotao}
-        </Button>
+        </BotaoEnviar>
       </div>
     </form>
   );

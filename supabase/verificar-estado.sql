@@ -10,7 +10,7 @@
 --
 -- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
--- a 26 e a 27 para 0015 (News).
+-- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -204,4 +204,16 @@ select 27, 'direitos', 'news: o público não chama as funções nem lê as tabe
             when not exists (select 1 from pg_constraint where conname = 'news_anuncios_destino_valido')
                  then 'DESACTUALIZADA - correr aplicar-0015.sql de novo'
             else 'ok' end
+-- 0016: as funções do News desistem de um lock em 4 s (não encravam o pool).
+union all
+select 28, 'prazo', 'news: as funções desistem de esperar por locks (0016)',
+       case when to_regprocedure('public.artigos_publicados(text, text, integer, timestamptz)') is null
+                 then 'EM FALTA - correr aplicar-0015.sql e depois aplicar-0016.sql'
+            when exists (
+                   select 1 from pg_proc p
+                    where p.oid = 'public.artigos_publicados(text, text, integer, timestamptz)'::regprocedure
+                      and 'lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))
+                 )
+                 then 'ok'
+            else 'EM FALTA - correr aplicar-0016.sql' end
 order by ordem;

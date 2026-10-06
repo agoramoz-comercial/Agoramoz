@@ -1,10 +1,10 @@
 import Link from 'next/link';
+import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { notFound } from 'next/navigation';
 import { FormularioAnuncio } from '@/components/admin/news/FormularioAnuncio';
 import { AdminHeading, StateBadge } from '@/components/admin/primitives';
 import { BarrasHorizontais, Bloco } from '@/components/admin/painel/Blocos';
 import { Outdoor } from '@/components/news/Outdoor';
-import { Button } from '@/components/ui/Button';
 import { definirAnuncioActivo, guardarAnuncio } from '@/lib/admin/news-actions';
 import { conversoesPorCampanha } from '@/lib/admin/news-metricas';
 import { createSessionClient } from '@/lib/auth/client';
@@ -111,9 +111,9 @@ export default async function AnuncioPage({
               <form action={definirAnuncioActivo}>
                 <input type="hidden" name="id" value={a.id} />
                 <input type="hidden" name="activo" value={a.activo ? 'nao' : 'sim'} />
-                <Button type="submit" size="sm" variant={a.activo ? 'outline' : 'signal'}>
+                <BotaoEnviar size="sm" variant={a.activo ? 'outline' : 'signal'} aEnviar="A gravar…">
                   {a.activo ? 'Desligar' : 'Ligar no jornal'}
-                </Button>
+                </BotaoEnviar>
               </form>
             )}
             <Link href="/admin/news/publicidade" className="text-sm underline underline-offset-4">
