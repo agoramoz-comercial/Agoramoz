@@ -7,6 +7,7 @@ import {
   ESTADOS_DOCUMENTO,
   FASES,
   FONTES,
+  kpiPrincipal,
   MEMO,
   PAPEIS_LIGACAO,
   PASTAS,
@@ -188,6 +189,19 @@ describe('scorecard', () => {
     expect(s.propostaParaAcordo).toBe(0.5);
     expect(s.acordos).toBe(1);
     expect(s.perdidas).toBe(1);
+  });
+
+  it('KPI principal: prioritárias activas com problema, decisor, modelo económico e próxima decisão', () => {
+    const pronta = { problema: 'Custo de energia alto', memo: { receita: 'Fee de estruturação', proxima_decisao: 'Comité 12/11' } };
+    const ops = [
+      { ...op({ id: 'p1', prioridade: 'A', score_total: 34 }), ...pronta },
+      { ...op({ id: 'p2', prioridade: 'B', score_total: 26 }), ...pronta },
+      { ...op({ id: 'p3', prioridade: 'B', score_total: 25 }), problema: null },
+      { ...op({ id: 'p4', prioridade: 'A', score_total: 35, fase: 'perdida' }), ...pronta },
+      { ...op({ id: 'p5', prioridade: 'incubacao', score_total: 18 }), ...pronta },
+    ];
+    expect(kpiPrincipal(ops, new Set(['p1', 'p3']))).toEqual({ prontas: 1, prioritarias: 3, razao: 1 / 3 });
+    expect(kpiPrincipal([], new Set()).razao).toBeNull();
   });
 
   it('valor central do intervalo', () => {

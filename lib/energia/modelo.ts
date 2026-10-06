@@ -426,6 +426,28 @@ export function scorecard(
   };
 }
 
+/**
+ * O KPI principal do sistema: das oportunidades prioritárias activas (A e B),
+ * quantas têm problema validado (escrito), decisor ou sponsor identificado,
+ * modelo económico preliminar (secção «receita» do memo) e próxima decisão
+ * registada (secção «proxima_decisao»). Nulo sem prioritárias.
+ */
+export function kpiPrincipal(
+  ops: readonly (OportunidadeResumo & { readonly problema?: string | null })[],
+  comDecisor: ReadonlySet<string>,
+): { readonly prontas: number; readonly prioritarias: number; readonly razao: number | null } {
+  const texto = (v: unknown) => typeof v === 'string' && v.trim().length > 0;
+  const prioritarias = ops.filter((o) => estaActiva(o.fase) && (o.prioridade === 'A' || o.prioridade === 'B'));
+  const prontas = prioritarias.filter(
+    (o) =>
+      texto(o.problema) &&
+      comDecisor.has(o.id) &&
+      texto(o.memo?.['receita']) &&
+      texto(o.memo?.['proxima_decisao']),
+  ).length;
+  return { prontas, prioritarias: prioritarias.length, razao: prioritarias.length === 0 ? null : prontas / prioritarias.length };
+}
+
 /** Moeda em pt-PT, sem casas decimais (são estimativas, não cotações). */
 export function formatarValor(v: number, moeda: string): string {
   return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: moeda, maximumFractionDigits: 0 }).format(v);
