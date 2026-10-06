@@ -166,6 +166,10 @@ describe('anúncios — destino, campanha e rotação', () => {
     const ordem = rotacao([ad('a', 2), ad('b', 2), ad('c', 2)]);
     expect(primeiroDoLugar(ordem, 'topo')).not.toBe(primeiroDoLugar(ordem, 'feed'));
     expect(primeiroDoLugar([], 'topo')).toBe(0);
+    // Com dois anúncios de pesos diferentes, topo e meio da lista abrem em anúncios diferentes.
+    const dois = rotacao([ad('a', 3), ad('b', 1)]);
+    expect(dois[primeiroDoLugar(dois, 'topo')]!.id).not.toBe(dois[primeiroDoLugar(dois, 'feed')]!.id);
+    expect(dois[primeiroDoLugar(dois, 'artigo')]!.id).not.toBe(dois[primeiroDoLugar(dois, 'fim')]!.id);
   });
 
   it('lê da base só anúncios com forma certa', () => {

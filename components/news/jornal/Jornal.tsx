@@ -208,7 +208,7 @@ export function Jornal({
                 <ol className="mt-2 divide-y divide-[color:var(--border)]">
                   {destaque.map((a, i) => (
                     <li key={a.id} className="flex gap-4 py-4">
-                      <span aria-hidden="true" className="font-techno text-2xl font-semibold text-[color:var(--color-steel-400)] tabular-nums">
+                      <span aria-hidden="true" className="font-techno text-2xl font-semibold text-[color:var(--muted)] tabular-nums">
                         {String(i + 2).padStart(2, '0')}
                       </span>
                       <div className="min-w-0">

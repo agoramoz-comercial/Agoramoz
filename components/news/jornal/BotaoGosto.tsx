@@ -7,8 +7,31 @@ import { gostosGuardados, guardarGosto, tokenDoLeitor } from '@/lib/news/leitor'
 /**
  * Gosto num artigo: anónimo, um por browser. Optimista — o número sobe logo
  * e acerta com o valor do servidor; numa falha volta atrás e diz porquê.
+ *
+ * O artigo tem o botão no topo e no fim: os dois lêem o MESMO estado (uma loja
+ * por página, por artigo), para marcar um marcar os dois. O que o browser já
+ * marcou noutra visita vem do localStorage.
  */
-const semSubscricao = () => () => {};
+
+const ouvintes = new Set<() => void>();
+/** Último total conhecido por artigo (do servidor, ou o optimista em curso). */
+const totais = new Map<string, number>();
+/** Gostos marcados nesta página (antes de o servidor confirmar). */
+const marcados = new Set<string>();
+const aEnviar = new Set<string>();
+
+function avisar(): void {
+  for (const f of ouvintes) f();
+}
+
+function subscrever(f: () => void): () => void {
+  ouvintes.add(f);
+  window.addEventListener('storage', f);
+  return () => {
+    ouvintes.delete(f);
+    window.removeEventListener('storage', f);
+  };
+}
 
 function jaGostou(slug: string): boolean {
   try {
@@ -27,21 +50,25 @@ export function BotaoGosto({
   inicial: number;
   idioma: 'pt' | 'en';
 }) {
-  const [gostos, setGostos] = useState(inicial);
-  const [marquei, setMarquei] = useState(false);
-  const [aEnviar, setAEnviar] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  // O que este browser já marcou antes (localStorage), lido como loja externa:
-  // no servidor e na hidratação é `false`; depois, o valor guardado.
-  const guardado = useSyncExternalStore(
-    semSubscricao,
-    () => jaGostou(slug),
+  const gostei = useSyncExternalStore(
+    subscrever,
+    () => marcados.has(slug) || jaGostou(slug),
     () => false,
   );
-  const gostei = marquei || guardado;
+  const gostos = useSyncExternalStore(
+    subscrever,
+    () => totais.get(slug) ?? inicial,
+    () => inicial,
+  );
+  const ocupado = useSyncExternalStore(
+    subscrever,
+    () => aEnviar.has(slug),
+    () => false,
+  );
 
   async function gostar() {
-    if (gostei || aEnviar) return;
+    if (gostei || aEnviar.has(slug)) return;
     let armazem: Storage | null = null;
     try {
       armazem = window.localStorage;
@@ -54,9 +81,10 @@ export function BotaoGosto({
       return;
     }
     setErro(null);
-    setAEnviar(true);
-    setMarquei(true);
-    setGostos((g) => g + 1);
+    aEnviar.add(slug);
+    marcados.add(slug);
+    totais.set(slug, (totais.get(slug) ?? inicial) + 1);
+    avisar();
     try {
       const r = await fetch('/api/news/gosto', {
         method: 'POST',
@@ -66,14 +94,15 @@ export function BotaoGosto({
       if (!r.ok) throw new Error(String(r.status));
       const corpo: unknown = await r.json();
       const total = (corpo as { gostos?: unknown }).gostos;
-      if (typeof total === 'number') setGostos(total);
+      if (typeof total === 'number') totais.set(slug, total);
       guardarGosto(armazem, slug);
     } catch {
-      setMarquei(false);
-      setGostos((g) => Math.max(0, g - 1));
+      marcados.delete(slug);
+      totais.set(slug, Math.max(0, (totais.get(slug) ?? inicial + 1) - 1));
       setErro(idioma === 'en' ? 'Could not register. Try again.' : 'Não foi possível registar. Tente de novo.');
     } finally {
-      setAEnviar(false);
+      aEnviar.delete(slug);
+      avisar();
     }
   }
 
@@ -83,7 +112,7 @@ export function BotaoGosto({
         type="button"
         onClick={gostar}
         aria-pressed={gostei}
-        aria-disabled={aEnviar || gostei}
+        aria-disabled={ocupado || gostei}
         className={`inline-flex min-h-11 items-center gap-2 border px-4 font-display text-sm font-semibold transition-colors ${
           gostei
             ? 'border-[color:var(--color-signal-600)] bg-[color:var(--color-signal-600)] text-white'

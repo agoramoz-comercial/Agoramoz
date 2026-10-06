@@ -107,7 +107,11 @@ export function rotacao(anuncios: readonly AnuncioPublico[]): AnuncioPublico[] {
 /** Que anúncio abre em cada lugar da página: lugares diferentes começam em anúncios diferentes. */
 export function primeiroDoLugar(ordem: readonly AnuncioPublico[], posicao: PosicaoAnuncio): number {
   if (ordem.length === 0) return 0;
-  return (POSICOES_ANUNCIO.indexOf(posicao) * 3) % ordem.length;
+  // Os anúncios distintos pela ordem em que aparecem; cada lugar abre no
+  // seguinte, para a mesma página não mostrar o mesmo criativo duas vezes.
+  const distintos = [...new Set(ordem.map((a) => a.id))];
+  const alvo = distintos[POSICOES_ANUNCIO.indexOf(posicao) % distintos.length];
+  return Math.max(0, ordem.findIndex((a) => a.id === alvo));
 }
 
 // ── Formulário do admin ──────────────────────────────────────────────────────
