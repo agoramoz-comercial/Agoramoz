@@ -1,5 +1,6 @@
 /**
- * O contrato com as migrações 0006 (acções do CRM), 0013 (inquéritos) e 0015 (News).
+ * O contrato com as migrações 0006 (acções do CRM), 0013 (inquéritos), 0015
+ * (News) e 0017 (Espaço CEnO).
  *
  * Existe como dado, e não espalhado por chamadas, para que um teste o possa
  * comparar com a assinatura real lida do ficheiro SQL. Um parâmetro renomeado
@@ -65,6 +66,62 @@ export const RPC = {
     'p_peso',
   ],
   definir_anuncio_activo: ['p_id', 'p_activo'],
+  // 0017 — Espaço CEnO (só a dona, com o módulo `energia`)
+  guardar_stakeholder: [
+    'p_id',
+    'p_revisao',
+    'p_organizacao',
+    'p_pessoa',
+    'p_cargo',
+    'p_pais',
+    'p_sector',
+    'p_tipo',
+    'p_interesse',
+    'p_poder',
+    'p_relacao',
+    'p_ultima',
+    'p_proxima_accao',
+    'p_proxima_data',
+    'p_origem',
+    'p_consentimento',
+    'p_responsavel',
+    'p_activo',
+  ],
+  guardar_oportunidade: [
+    'p_id',
+    'p_revisao',
+    'p_titulo',
+    'p_organizacao',
+    'p_sector',
+    'p_problema',
+    'p_fonte',
+    'p_urgencia',
+    'p_valor_min',
+    'p_valor_max',
+    'p_moeda',
+    'p_valor_evidencia',
+    'p_proxima_accao',
+    'p_proxima_data',
+    'p_responsavel',
+  ],
+  avaliar_oportunidade: [
+    'p_id',
+    'p_revisao',
+    'p_dor',
+    'p_urgencia',
+    'p_decisor',
+    'p_capacidade',
+    'p_adequacao',
+    'p_controlo',
+    'p_informacao',
+    'p_valor',
+  ],
+  mudar_fase_ceno: ['p_id', 'p_revisao', 'p_fase', 'p_nota', 'p_motivo'],
+  guardar_memo_ceno: ['p_id', 'p_revisao', 'p_memo'],
+  ligar_stakeholder: ['p_oportunidade', 'p_stakeholder', 'p_papel'],
+  desligar_stakeholder: ['p_oportunidade', 'p_stakeholder'],
+  registar_ceno: ['p_oportunidade', 'p_tipo', 'p_decisao', 'p_corpo'],
+  guardar_documento_ceno: ['p_oportunidade', 'p_pasta', 'p_estado', 'p_ligacao', 'p_nota'],
 } as const satisfies Record<string, readonly string[]>;
 
 export type NomeRpc = keyof typeof RPC;

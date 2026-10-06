@@ -10,7 +10,8 @@
 --
 -- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
--- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News).
+-- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News), a 29 para
+-- 0017 (Espaço CEnO).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -216,4 +217,22 @@ select 28, 'prazo', 'news: as funções desistem de esperar por locks (0016)',
                  )
                  then 'ok'
             else 'EM FALTA - correr aplicar-0016.sql' end
+-- 0017: Espaço CEnO — tabelas, funções, e o visitante anónimo de fora.
+union all
+select 29, 'espaço', 'Espaço CEnO: acesso por módulo, tabelas privadas e funções (0017)',
+       case when to_regclass('public.acessos_modulo') is null
+                 or to_regclass('public.ceno_oportunidades') is null
+                 or to_regclass('public.ceno_stakeholders') is null
+                 or to_regclass('public.ceno_registos') is null
+                 or to_regclass('public.ceno_documentos') is null
+                 or to_regclass('public.ceno_oportunidade_stakeholders') is null
+                 then 'EM FALTA - correr aplicar-0017-parte1.sql'
+            when to_regprocedure('public.guardar_documento_ceno(uuid, smallint, text, text, text)') is null
+                 or to_regprocedure('public.mudar_fase_ceno(uuid, integer, text, text, text)') is null
+                 or to_regprocedure('public.tem_modulo(text)') is null
+                 then 'EM FALTA - correr aplicar-0017-parte2.sql'
+            when has_function_privilege('anon', 'public.mudar_fase_ceno(uuid, integer, text, text, text)', 'execute')
+                 or has_table_privilege('authenticated', 'public.ceno_oportunidades', 'insert')
+                 then 'ATENCAO - acesso a mais; correr aplicar-0017-parte1.sql e parte2.sql de novo'
+            else 'ok' end
 order by ordem;
