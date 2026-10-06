@@ -223,8 +223,8 @@ function Vista({ vista }: { vista: string | undefined }) {
 }
 
 export default async function PreVisualizacaoEnergia({ searchParams }: { searchParams: Promise<{ vista?: string }> }) {
-  // Duas chaves: a variável ligada E não estar em produção na Vercel.
-  if (process.env.ADMIN_PREVIEW !== 'on' || process.env.VERCEL_ENV === 'production') notFound();
+  // Só fora da Vercel (pré-visualização incluída) e com a variável ligada.
+  if (process.env.ADMIN_PREVIEW !== 'on' || process.env.VERCEL_ENV !== undefined) notFound();
   const { vista } = await searchParams;
   return (
     <div data-surface="light" className="min-h-screen bg-[color:var(--surface)] text-[color:var(--on-surface)]">

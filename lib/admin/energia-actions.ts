@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { modulosDaSessao } from '@/lib/auth/modulos';
+import { requireRole } from '@/lib/auth/session';
 import {
   formularioAvaliacao,
   formularioDocumento,
@@ -27,7 +28,9 @@ import { executar, voltarCom } from './executar';
 const BASE = '/admin/energia';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Escrever no espaço: papel com escrita, troca de palavra-passe feita, e o módulo. */
 async function exigirEnergia(): Promise<void> {
+  await requireRole(['admin', 'comercial']);
   const modulos = await modulosDaSessao();
   if (!modulos.includes('energia')) redirect('/admin');
 }

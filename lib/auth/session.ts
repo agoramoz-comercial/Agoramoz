@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createSessionClient } from './client';
+import { trocaObrigatoria } from './palavra-passe';
 
 /**
  * Quem está autenticado, e o que pode fazer.
@@ -19,6 +20,8 @@ export interface Sessao {
   readonly email: string | null;
   readonly nome: string;
   readonly papel: Papel;
+  /** Palavra-passe provisória por trocar: só a página da conta é permitida. */
+  readonly trocaPendente: boolean;
 }
 
 /**
@@ -50,6 +53,7 @@ export async function currentSession(): Promise<Sessao | null> {
     email: user.email ?? null,
     nome: perfil.display_name as string,
     papel: perfil.role as Papel,
+    trocaPendente: trocaObrigatoria(user.app_metadata),
   };
 }
 
@@ -71,6 +75,9 @@ export async function requireStaff(): Promise<Sessao> {
  */
 export async function requireRole(papeis: readonly Papel[]): Promise<Sessao> {
   const sessao = await requireStaff();
+  // As acções não passam todas pelo middleware: a troca obrigatória também se
+  // impõe aqui, antes de qualquer escrita.
+  if (sessao.trocaPendente) redirect('/admin/conta');
   if (!papeis.includes(sessao.papel)) redirect('/admin');
   return sessao;
 }

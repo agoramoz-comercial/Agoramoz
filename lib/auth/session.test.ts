@@ -56,6 +56,7 @@ describe('sessão', () => {
       email: UTILIZADOR.email,
       nome: 'Pessoa',
       papel: 'comercial',
+      trocaPendente: false,
     });
   });
 
@@ -98,6 +99,16 @@ describe('guardas de página', () => {
   it('papel suficiente passa', async () => {
     perfil.mockResolvedValue({ data: { role: 'admin', display_name: 'A', active: true } });
     await expect(requireRole(['admin'])).resolves.toMatchObject({ papel: 'admin' });
+  });
+
+  it('com a palavra-passe provisória por trocar, nenhuma acção passa: vai para a conta', async () => {
+    // As Server Actions não passam todas pelo middleware; o guarda impõe-no também.
+    getUser.mockResolvedValue({
+      data: { user: { ...UTILIZADOR, app_metadata: { trocar_palavra_passe: true } } },
+      error: null,
+    });
+    await expect(requireStaff()).resolves.toMatchObject({ trocaPendente: true });
+    await expect(requireRole(['comercial'])).rejects.toThrow('redirect:/admin/conta');
   });
 
   it('sem sessão, o guarda de papel também manda para a entrada', async () => {

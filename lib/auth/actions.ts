@@ -152,6 +152,7 @@ let trocasPorConta: RateLimiter | null = null;
  * 3. Muda-a pelo Supabase Auth.
  * 4. Retira a marca com a chave de serviço — `app_metadata` não é editável
  *    pelo próprio utilizador, e é por isso que a marca é de confiança.
+ * 5. Renova o token (sem a marca) e termina as outras sessões.
  *
  * Nenhuma palavra-passe vai para o log, nem em hash.
  */
@@ -206,6 +207,18 @@ export async function mudarPalavraPasse(formData: FormData): Promise<void> {
       });
       redirect(`${CONTA}?erro=indisponivel`);
     }
+  }
+
+  // Um token novo, já sem a marca (a base lê-a do JWT); e todas as outras
+  // sessões terminadas — quem tivesse entrado com a palavra-passe antiga fica
+  // de fora, que é o objectivo de a trocar.
+  const { error: erroRefresh } = await supabase.auth.refreshSession();
+  const { error: erroOutras } = await supabase.auth.signOut({ scope: 'others' });
+  if (erroRefresh || erroOutras) {
+    log.warn('admin.palavra_passe_sessoes', {
+      outcome: 'failed',
+      errorCode: (erroRefresh ?? erroOutras)?.code ?? 'desconhecido',
+    });
   }
 
   log.info('admin.palavra_passe_mudada', { outcome: 'accepted', entityType: 'perfil', entityId: user.id });
