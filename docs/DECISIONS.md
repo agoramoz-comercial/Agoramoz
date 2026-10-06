@@ -363,3 +363,37 @@ público (WSJ/Bloomberg), com gosto, partilha e publicidade em «outdoor»
 
 **Consequência:** com `NEWS_BLOG=off` (omissão) nada muda para o público.
 Ligar é aplicar a 0015, confirmar as linhas 26–27 e pôr `NEWS_BLOG=on`.
+
+## D-36 — Espaço CEnO: o pipeline de oportunidades privado da Chief Energy Officer
+
+O fundador pediu um ambiente de trabalho no `/admin` para a Chief Energy
+Officer, com a estrutura do documento «Opportunity Operating System», que
+**só ela** possa ver.
+- **Privacidade na base, não na interface** (decisão dele: «só ela», nem o
+  CEO nem os admins). Cada linha tem `dono`; a RLS só devolve as da própria
+  conta, e só com o módulo `energia` (`acessos_modulo`). Escreve-se apenas
+  por RPC `security definer`, que verifica o módulo e o dono. Sem o módulo,
+  `/admin/energia` dá 404 e o menu não mostra a entrada.
+- **O `audit_log` não leva conteúdo**, só a acção e o id, porque toda a
+  equipa o lê.
+- **Papel `comercial`** no resto do admin (decisão dele).
+- **Separado do CRM comercial,** como o documento pede («pipeline separado do
+  pipeline comercial comum»). O CRM actual é visível a toda a equipa e não
+  serve para dados privados.
+- **O documento recomenda não começar por software próprio.** O fundador
+  pediu o espaço, por isso a v1 é deliberadamente pequena:
+  - sem integrações;
+  - a sala documental guarda ligações para SharePoint ou Drive, não ficheiros;
+  - o agente de IA e as automações por email ficam para a fase 2, depois das
+    4 semanas de validação.
+- **As probabilidades por etapa são um pressuposto declarado,** não dado
+  medido, e o manual diz como recalibrá-las.
+- **A palavra-passe dada no chat é só provisória:** uma marca em
+  `app_metadata` obriga a escolher outra no primeiro acesso, e a troca
+  reautentica a pessoa. Nenhuma palavra-passe entra no Git.
+
+**Consequência:**
+- Se a conta dela se perder, a recuperação é por SQL do fundador.
+- O CEO só vê o que ela partilhar: o memo em PDF.
+- Activar é: aplicar a 0017, confirmar a linha 29, criar a conta e correr o
+  bloco de `docs/ENERGIA.md`.
