@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { trocaObrigatoria } from '@/lib/auth/palavra-passe';
 
 /**
  * Guarda da área administrativa.
@@ -30,6 +31,7 @@ import type { NextRequest } from 'next/server';
  */
 
 const ENTRADA = '/admin/entrar';
+const CONTA = '/admin/conta';
 
 function naoExiste(request: NextRequest): NextResponse {
   const url = request.nextUrl.clone();
@@ -85,6 +87,18 @@ export async function middleware(request: NextRequest) {
     destino.pathname = '/admin';
     destino.search = '';
     return NextResponse.redirect(destino);
+  }
+
+  // Conta criada com palavra-passe provisória: nada abre antes de a trocar.
+  // A marca vive em `app_metadata`, que só a chave de serviço escreve, e vem
+  // no `user` que `getUser()` acabou de validar — sem consulta extra.
+  if (trocaObrigatoria(user.app_metadata) && request.nextUrl.pathname !== CONTA) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = CONTA;
+    destino.search = '';
+    const redireccao = NextResponse.redirect(destino);
+    for (const c of resposta.cookies.getAll()) redireccao.cookies.set(c);
+    return redireccao;
   }
 
   return resposta;

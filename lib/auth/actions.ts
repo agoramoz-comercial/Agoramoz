@@ -8,8 +8,10 @@ import {
   sourceFromHeaders,
   type RateLimiter,
 } from '@/lib/http/rate-limit';
+import { dbAdmin } from '@/lib/db/client';
 import { log } from '@/lib/log/logger';
 import { createSessionClient } from './client';
+import { MARCA_TROCA, trocaObrigatoria, validarTroca } from './palavra-passe';
 
 /**
  * Entrada e saída da área administrativa.
@@ -134,4 +136,78 @@ export async function sair(): Promise<void> {
   await supabase.auth.signOut();
   log.info('admin.logout', { outcome: 'accepted' });
   redirect('/admin/entrar');
+}
+
+const CONTA = '/admin/conta';
+let trocasPorConta: RateLimiter | null = null;
+
+/**
+ * Trocar a palavra-passe — obrigatório no primeiro acesso de uma conta criada
+ * com palavra-passe provisória (marca `trocar_palavra_passe` em
+ * `app_metadata`, que o middleware impõe).
+ *
+ * 1. Valida as regras (12+ caracteres, confirmada, diferente da actual).
+ * 2. Reautentica com a actual: uma sessão aberta num computador esquecido não
+ *    chega para mudar a palavra-passe.
+ * 3. Muda-a pelo Supabase Auth.
+ * 4. Retira a marca com a chave de serviço — `app_metadata` não é editável
+ *    pelo próprio utilizador, e é por isso que a marca é de confiança.
+ *
+ * Nenhuma palavra-passe vai para o log, nem em hash.
+ */
+export async function mudarPalavraPasse(formData: FormData): Promise<void> {
+  const actual = String(formData.get('actual') ?? '');
+  const nova = String(formData.get('nova') ?? '');
+  const confirmacao = String(formData.get('confirmacao') ?? '');
+
+  const supabase = await createSessionClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) redirect('/admin/entrar');
+
+  trocasPorConta ??= createMemoryRateLimiter({ max: 5, windowMs: 10 * 60_000 });
+  const contaHash = await hashForStorage(user.id);
+  if (!trocasPorConta.check(contaHash).allowed) redirect(`${CONTA}?erro=tentativas`);
+
+  const erro = validarTroca(actual, nova, confirmacao);
+  if (erro) redirect(`${CONTA}?erro=${erro}`);
+
+  const { error: erroActual } = await supabase.auth.signInWithPassword({ email: user.email, password: actual });
+  if (erroActual) {
+    log.warn('admin.palavra_passe_recusada', {
+      outcome: 'rejected',
+      reason: 'actual',
+      entityType: 'conta',
+      entityId: contaHash.slice(0, 16),
+    });
+    redirect(`${CONTA}?erro=actual`);
+  }
+
+  const { error: erroNova } = await supabase.auth.updateUser({ password: nova });
+  if (erroNova) {
+    log.warn('admin.palavra_passe_recusada', {
+      outcome: 'rejected',
+      reason: 'servico',
+      errorCode: erroNova.code ?? 'desconhecido',
+    });
+    redirect(`${CONTA}?erro=recusada`);
+  }
+
+  if (trocaObrigatoria(user.app_metadata)) {
+    const admin = dbAdmin();
+    const { error: erroMarca } = admin
+      ? await admin.auth.admin.updateUserById(user.id, { app_metadata: { [MARCA_TROCA]: false } })
+      : { error: { code: 'sem_chave_de_servico' } };
+    if (erroMarca) {
+      log.error('admin.palavra_passe_marca_falhou', {
+        outcome: 'failed',
+        errorCode: ('code' in erroMarca && erroMarca.code) || 'desconhecido',
+      });
+      redirect(`${CONTA}?erro=indisponivel`);
+    }
+  }
+
+  log.info('admin.palavra_passe_mudada', { outcome: 'accepted', entityType: 'perfil', entityId: user.id });
+  redirect(`${CONTA}?ok=1`);
 }

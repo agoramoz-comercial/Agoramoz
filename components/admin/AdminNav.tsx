@@ -8,12 +8,14 @@ import {
   Building2,
   ClipboardCheck,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   ListChecks,
   Newspaper,
   Radar,
   UserCog,
   Users,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -38,6 +40,8 @@ const ICONES = {
   news: Newspaper,
   fila: Inbox,
   equipa: UserCog,
+  energia: Zap,
+  conta: KeyRound,
 } satisfies Record<string, LucideIcon>;
 
 export interface Entrada {

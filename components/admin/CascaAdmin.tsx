@@ -14,6 +14,7 @@ import { sair } from '@/lib/auth/actions';
 
 const ENTRADAS: readonly Entrada[] = [
   { href: '/admin', texto: 'Painel', icone: 'painel' },
+  { href: '/admin/energia', texto: 'Espaço CEnO', icone: 'energia' },
   { href: '/admin/diagnosticos', texto: 'Diagnósticos', icone: 'diagnosticos' },
   { href: '/admin/oportunidades', texto: 'Oportunidades', icone: 'oportunidades' },
   { href: '/admin/contactos', texto: 'Contactos', icone: 'contactos' },
@@ -35,6 +36,7 @@ export function CascaAdmin({
   sessao,
   inqueritos = false,
   news = false,
+  energia = false,
   children,
 }: {
   sessao: SessaoVisivel;
@@ -42,10 +44,18 @@ export function CascaAdmin({
   inqueritos?: boolean;
   /** `NEWS_BLOG=on`. Desligado, a redacção do News não aparece. */
   news?: boolean;
+  /**
+   * Quem tem o módulo `energia` (`acessos_modulo`). Para todos os outros —
+   * administradores incluídos — o Espaço CEnO não aparece nem existe (404).
+   */
+  energia?: boolean;
   children: React.ReactNode;
 }) {
   const entradas = ENTRADAS.filter(
-    (e) => (inqueritos || e.icone !== 'inqueritos') && (news || e.icone !== 'news'),
+    (e) =>
+      (inqueritos || e.icone !== 'inqueritos') &&
+      (news || e.icone !== 'news') &&
+      (energia || e.icone !== 'energia'),
   );
   return (
     <div className="flex w-full flex-col lg:flex-row">
@@ -67,6 +77,13 @@ export function CascaAdmin({
             <div className="lg:mt-3">
               <StateBadge rotulo={PAPEL[sessao.papel]} />
             </div>
+
+            <Link
+              href="/admin/conta"
+              className="inline-flex min-h-11 items-center text-sm text-[color:var(--muted)] underline hover:text-[color:var(--on-surface)] lg:mt-2"
+            >
+              Mudar palavra-passe
+            </Link>
 
             {/* Sair é uma acção, logo é um POST. Nunca uma ligação: um `GET` que
               altera estado é accionável por um `<img>` numa página qualquer. */}

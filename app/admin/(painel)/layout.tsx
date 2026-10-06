@@ -1,4 +1,5 @@
 import { CascaAdmin } from '@/components/admin/CascaAdmin';
+import { modulosDaSessao } from '@/lib/auth/modulos';
 import { requireStaff } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/config/env';
 
@@ -18,11 +19,13 @@ import { serverEnv } from '@/lib/config/env';
 
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
   const sessao = await requireStaff();
+  const modulos = await modulosDaSessao();
   return (
     <CascaAdmin
       sessao={{ nome: sessao.nome, email: sessao.email, papel: sessao.papel }}
       inqueritos={serverEnv().SURVEYS === 'on'}
       news={serverEnv().NEWS_BLOG === 'on'}
+      energia={modulos.includes('energia')}
     >
       {children}
     </CascaAdmin>
