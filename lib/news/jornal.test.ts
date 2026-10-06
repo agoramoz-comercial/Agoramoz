@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   comUtm,
   destinoSeguro,
@@ -23,7 +23,6 @@ import { EXEMPLO_LOVABLE } from './exemplo';
 import { CHAVE_GOSTOS, CHAVE_TOKEN, gostosGuardados, guardarGosto, tokenDoLeitor } from './leitor';
 import { ligacaoDePartilha } from './partilha';
 
-vi.mock('server-only', () => ({}));
 
 const ANALISE = normalizar(EXEMPLO_LOVABLE.analysis)!;
 

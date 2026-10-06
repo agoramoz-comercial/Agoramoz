@@ -33,6 +33,10 @@ const BLOCKS = [
     p: 'Este website não utiliza cookies de publicidade nem de perfilagem de terceiros. A medição de utilização é agregada e não identifica visitantes individualmente.',
   },
   {
+    h: 'Gostos e publicidade no AGORAMOZ News',
+    p: 'Para contar um gosto por pessoa e medir quantas pessoas viram ou clicaram cada anúncio, o seu browser guarda um código aleatório (localStorage), criado no próprio browser e sem qualquer ligação ao seu nome, email ou conta. O servidor nunca guarda esse código: guarda apenas um resumo criptográfico (hash) dele, diferente para cada artigo e para cada anúncio, que não permite seguir a sua leitura de página para página. Pode apagá-lo a qualquer momento limpando os dados do site no browser. Os anúncios não usam cookies nem scripts de terceiros: o clique passa pelo nosso servidor, que o conta e encaminha para a página anunciada.',
+  },
+  {
     h: 'Segurança',
     p: 'Os dados submetidos são transmitidos por ligação cifrada. O acesso interno é limitado às pessoas que precisam dele para responder ao seu pedido.',
   },

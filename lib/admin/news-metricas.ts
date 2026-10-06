@@ -1,4 +1,3 @@
-import 'server-only';
 import type { createSessionClient } from '@/lib/auth/client';
 
 type Cliente = Awaited<ReturnType<typeof createSessionClient>>;

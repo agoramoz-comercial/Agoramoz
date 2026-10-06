@@ -4,32 +4,35 @@ import { SECTOR_PAGES, mercadosDoSector } from '@/content/registry';
 
 afterEach(() => vi.useRealTimers());
 
+/** O sitemap é assíncrono (lê os artigos do jornal); sem jornal ligado, só as páginas fixas. */
+const ENTRADAS = await sitemap();
+
 describe('lastmod do sitemap', () => {
   /**
    * O defeito que o lote G corrige: páginas com a hora do build como
    * `lastmod`. Com o relógio posto em 2030, qualquer data «agora» apareceria
    * como 2030 — e nenhuma pode.
    */
-  it('nenhuma entrada usa a hora do build', () => {
+  it('nenhuma entrada usa a hora do build', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2030-06-15T12:34:56Z'));
-    const comData = sitemap().filter((e) => e.lastModified);
+    const comData = (await sitemap()).filter((e) => e.lastModified);
     expect(comData.length).toBeGreaterThan(40);
     const doBuild = comData.filter((e) => new Date(e.lastModified!).getUTCFullYear() === 2030).map((e) => e.url);
     expect(doBuild).toEqual([]);
   });
 
-  it('dois builds seguidos dão o mesmo sitemap', () => {
+  it('dois builds seguidos dão o mesmo sitemap', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2030-01-01T00:00:00Z'));
-    const a = JSON.stringify(sitemap());
+    const a = JSON.stringify(await sitemap());
     vi.setSystemTime(new Date('2031-01-01T00:00:00Z'));
-    expect(JSON.stringify(sitemap())).toBe(a);
+    expect(JSON.stringify(await sitemap())).toBe(a);
   });
 
-  it('todas as datas são datas de calendário válidas, sem hora, e não futuras', () => {
+  it('todas as datas são datas de calendário válidas, sem hora, e não futuras', async () => {
     const hoje = Date.now();
-    for (const e of sitemap()) {
+    for (const e of await sitemap()) {
       const d = new Date(e.lastModified!);
       expect(Number.isNaN(d.getTime()), e.url).toBe(false);
       expect(d.getUTCHours() + d.getUTCMinutes(), e.url).toBe(0);
@@ -39,7 +42,7 @@ describe('lastmod do sitemap', () => {
 });
 
 describe('hreflang no sitemap', () => {
-  const entradas = sitemap();
+  const entradas = ENTRADAS;
   const urls = new Set(entradas.map((e) => e.url));
   const de = (url: string) => entradas.find((e) => e.url === url);
   const idiomas = (url: string) => (de(url)?.alternates?.languages ?? {}) as Record<string, string>;

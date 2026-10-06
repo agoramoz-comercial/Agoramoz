@@ -12,6 +12,7 @@ import { SOLUTIONS_EN } from '@/content/en/solutions';
 import { absolute, alternativasDeIdioma } from '@/lib/seo/site';
 import { caminhoNoIdioma } from '@/lib/i18n/texto';
 import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
+import { jornalLigado, listarPublicados } from '@/lib/news/jornal-servidor';
 
 /**
  * A data da última alteração de CONTEÚDO de cada página sem data própria no
@@ -37,7 +38,7 @@ const REVISTO_EM = {
 const em = (rota: keyof typeof REVISTO_EM) => new Date(REVISTO_EM[rota]);
 
 /** Gerado a partir do registry: uma nova vertical entra aqui sozinha. */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const statics: MetadataRoute.Sitemap = [
     { url: absolute('/'), lastModified: em('/'), priority: 1 },
     { url: absolute('/diagnostico'), lastModified: em('/diagnostico'), priority: 0.9 },
@@ -125,5 +126,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...portugues.map((e) => ({ ...e, ...hreflang(caminho(e.url), false) })),
     ...ingles.map((e, i) => ({ ...e, ...hreflang(ROTAS_BILINGUES[i]!, true) })),
+    ...(await artigosDoJornal()),
   ];
+}
+
+/**
+ * Os artigos publicados do AGORAMOZ News, com a data REAL da última alteração.
+ * Com o jornal desligado ou a base em baixo, ficam de fora — o resto do
+ * sitemap nunca depende disto.
+ */
+async function artigosDoJornal(): Promise<MetadataRoute.Sitemap> {
+  if (!jornalLigado()) return [];
+  const [pt, en] = await Promise.all([listarPublicados('pt', null, 100), listarPublicados('en', null, 100)]);
+  return [...(pt ?? []), ...(en ?? [])].map((a) => ({
+    url: absolute(`${a.idioma === 'en' ? '/en' : ''}/news/${a.slug}`),
+    lastModified: new Date(a.actualizado_em),
+    priority: 0.5,
+  }));
 }

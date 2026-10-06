@@ -10,7 +10,14 @@ import { log } from '@/lib/log/logger';
  * arquivar), mas o painel precisa de saber quantas se fazem e com que
  * prioridade. Fica o facto, sem o conteúdo: nunca o URL, nunca o texto.
  */
-export const EVENTOS_DE_ROTA = ['news_analisada', 'news_falhou'] as const;
+export const EVENTOS_DE_ROTA = [
+  'news_analisada',
+  'news_falhou',
+  // Jornal (0015): contagens já estão nas tabelas; aqui entram no funil.
+  'news_gosto',
+  'news_partilha',
+  'anuncio_clique',
+] as const;
 export type EventoDeRota = (typeof EVENTOS_DE_ROTA)[number];
 
 /** Só escalares: um objecto aninhado seria um sítio onde algo pessoal se esconde. */

@@ -1,4 +1,3 @@
-import 'server-only';
 import { redirect } from 'next/navigation';
 import { createSessionClient } from '@/lib/auth/client';
 import { log } from '@/lib/log/logger';
