@@ -338,3 +338,28 @@ Microsoft Forms e do Typeform».
 - **Tipos que não existem aqui** (Likert/grelha, ranking, upload, hora,
   legal) importam-se para o equivalente mais próximo, e a proposta diz o que
   se fez. A Likert expande-se numa pergunta por afirmação, com a mesma escala.
+
+## D-35 — AGORAMOZ News: redacção interna → jornal público, com publicidade medida
+
+O fundador pediu que o News passe a sistema interno que alimenta um jornal
+público (WSJ/Bloomberg), com gosto, partilha e publicidade em «outdoor»
+(Times Square/Nasdaq) que leve ao serviço e conte quem agiu.
+- **Rascunho + aprovação humana** (decisão dele): a análise nunca publica
+  sozinha; publicar exige papel com escrita e a confirmação «Revi…».
+- **O motor passa para o /admin** com `NEWS_BLOG=on`: o custo de IA deixa de
+  estar exposto ao público.
+- **Gosto anónimo, um por browser** (decisão dele): código aleatório no
+  `localStorage`, hash por artigo/anúncio no servidor; sem cookies, sem conta.
+- **Só anúncios da AGORAMOZ na v1** (decisão dele): terceiros exigem
+  contrato, preço e facturação — lote próprio.
+- **O clique passa pelo servidor** (`/api/news/anuncio/<id>` → 303 para o
+  destino guardado, com UTM): conta mesmo sem JavaScript, nunca é um
+  redireccionamento aberto, e liga o anúncio às conversões pela
+  `utm_campaign`. As conversões são uma estimativa e o painel di-lo.
+- **Sem cotações nem números inventados** na faixa a correr: só os nossos
+  títulos. Sem imagens de stock: a imagem de cada artigo é tipográfica.
+- **Revisões ECC** (BD, segurança, React/a11y, SEO, marketing) aplicadas
+  antes do primeiro deploy: ver o commit «News V5b».
+
+**Consequência:** com `NEWS_BLOG=off` (omissão) nada muda para o público.
+Ligar é aplicar a 0015, confirmar as linhas 26–27 e pôr `NEWS_BLOG=on`.
