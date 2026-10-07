@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { chaves, dataOpcional, marcado, opcional, valorOpcional } from '@/lib/forms/campos';
 import {
   CRITERIOS,
   DECISOES,
@@ -21,36 +22,6 @@ import {
  * confiança: cada campo é validado aqui E pelos CHECK da 0017. Os textos de
  * erro dizem o que fazer, porque aparecem no ecrã tal como estão.
  */
-
-const chaves = <T extends Record<string, string>>(o: T) => Object.keys(o) as [keyof T & string, ...(keyof T & string)[]];
-
-const opcional = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max, `No máximo ${max} caracteres.`)
-    .transform((v) => (v === '' ? null : v));
-
-const DATA = /^\d{4}-\d{2}-\d{2}$/;
-/** `2026-02-31` passa no formato e no `Date.parse` (vira 3 de Março): aqui não. */
-const dataReal = (v: string) => DATA.test(v) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
-const dataOpcional = z
-  .string()
-  .trim()
-  .refine((v) => v === '' || dataReal(v), 'Data inválida.')
-  .transform((v) => (v === '' ? null : v));
-
-/** «1 500 000», «1500000,50» ou «1500000.50» → número; vazio → nulo. */
-const valorOpcional = z
-  .string()
-  .trim()
-  .transform((v) => v.replace(/[\s ]/g, '').replace(',', '.'))
-  .refine((v) => v === '' || /^\d{1,14}(\.\d{1,2})?$/.test(v), 'Valor inválido: use só números.')
-  .transform((v) => (v === '' ? null : Number(v)));
-
-const marcado = z
-  .union([z.literal('on'), z.literal('1'), z.literal(''), z.undefined(), z.null()])
-  .transform((v) => v === 'on' || v === '1');
 
 export const formularioOportunidade = z
   .object({
