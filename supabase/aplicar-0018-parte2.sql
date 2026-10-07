@@ -1,0 +1,474 @@
+
+-- APLICAR NO SQL EDITOR DO SUPABASE — projecto nixltrbdplqjadfytryd
+-- 0018 em DUAS PARTES — PARTE 2 de 2: funções de escrita do Gabinete do Fundador
+-- Só DEPOIS da parte 1. Repetível.
+-- 1. No GitHub, botão «Copy raw file» (ou Raw, Ctrl+A, Ctrl+C).
+-- 2. SQL Editor: consulta NOVA e vazia, colar, Run. Esperado: «Success».
+-- 3. Depois, verificar-estado.sql: a linha 30 tem de dizer «ok».
+-- ===== fim do cabeçalho: daqui para baixo é a migração 0018, sem alterações =====
+-- ---------------------------------------------------------------------------
+-- Funções de escrita
+-- ---------------------------------------------------------------------------
+
+-- Cria (p_id nulo) ou altera uma decisão.
+create or replace function public.guardar_decisao(
+  p_id uuid,
+  p_revisao integer,
+  p_titulo text,
+  p_contexto text,
+  p_chapeu text,
+  p_estado text,
+  p_decisao text,
+  p_responsavel text,
+  p_consultados text,
+  p_indicador text,
+  p_data_revisao date,
+  p_recorrente boolean,
+  p_quem_decidiu text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+declare
+  d public.gab_decisoes;
+  v_id uuid;
+  v_estado text := coalesce(p_estado, 'exige_minha');
+begin
+  perform public.exigir_modulo('direcao');
+
+  if v_estado = 'decidida' and (nullif(trim(p_decisao), '') is null or p_quem_decidiu is null) then
+    raise exception 'Para fechar a decisão, escreva o que se decidiu e quem decidiu.' using errcode = '22023';
+  end if;
+  if v_estado not in ('decidida', 'eliminar')
+     and (nullif(trim(p_responsavel), '') is null or p_data_revisao is null) then
+    raise exception 'Uma decisão em aberto precisa de responsável e data de revisão.' using errcode = '22023';
+  end if;
+
+  if p_id is null then
+    insert into public.gab_decisoes
+      (dono, titulo, contexto, chapeu, estado, decisao, responsavel, consultados, indicador, data_revisao,
+       recorrente, quem_decidiu, decidida_em)
+    values
+      (auth.uid(), trim(p_titulo), nullif(trim(p_contexto), ''), p_chapeu, v_estado, nullif(trim(p_decisao), ''),
+       nullif(trim(p_responsavel), ''), nullif(trim(p_consultados), ''), nullif(trim(p_indicador), ''),
+       p_data_revisao, coalesce(p_recorrente, false),
+       case when v_estado = 'decidida' then p_quem_decidiu end,
+       case when v_estado = 'decidida' then now() end)
+    returning id into v_id;
+  else
+    select * into d from public.gab_decisoes where id = p_id and dono = auth.uid() for update;
+    if not found then
+      raise exception 'Decisão não encontrada.' using errcode = 'P0002';
+    end if;
+    if d.revisao is distinct from p_revisao then
+      raise exception 'O registo mudou entretanto.' using errcode = '40001';
+    end if;
+    update public.gab_decisoes
+       set titulo = trim(p_titulo),
+           contexto = nullif(trim(p_contexto), ''),
+           chapeu = p_chapeu,
+           estado = v_estado,
+           decisao = nullif(trim(p_decisao), ''),
+           responsavel = nullif(trim(p_responsavel), ''),
+           consultados = nullif(trim(p_consultados), ''),
+           indicador = nullif(trim(p_indicador), ''),
+           data_revisao = p_data_revisao,
+           recorrente = coalesce(p_recorrente, false),
+           quem_decidiu = case when v_estado = 'decidida' then p_quem_decidiu end,
+           -- A data em que ficou decidida não muda a cada edição.
+           decidida_em = case when v_estado = 'decidida' then coalesce(d.decidida_em, now()) end,
+           revisao = revisao + 1
+     where id = p_id;
+    v_id := p_id;
+  end if;
+
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id)
+  values (auth.uid(), 'user', 'gabinete.guardar_decisao', 'gabinete', v_id::text);
+  return v_id;
+end;
+$$;
+
+-- Cria (p_id nulo) ou altera uma prioridade do trimestre.
+create or replace function public.guardar_prioridade(
+  p_id uuid,
+  p_revisao integer,
+  p_trimestre text,
+  p_tipo text,
+  p_resultado text,
+  p_indicador text,
+  p_meta text,
+  p_estado text,
+  p_nota text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+declare
+  p public.gab_prioridades;
+  v_id uuid;
+begin
+  perform public.exigir_modulo('direcao');
+
+  if exists (select 1 from public.gab_prioridades
+              where dono = auth.uid() and trimestre = p_trimestre and tipo = p_tipo
+                and id is distinct from p_id) then
+    raise exception 'Já existe uma prioridade deste tipo neste trimestre: edite essa em vez de criar outra.'
+      using errcode = '22023';
+  end if;
+
+  if p_id is null then
+    insert into public.gab_prioridades (dono, trimestre, tipo, resultado, indicador, meta, estado, nota)
+    values (auth.uid(), p_trimestre, p_tipo, trim(p_resultado), nullif(trim(p_indicador), ''),
+            nullif(trim(p_meta), ''), coalesce(p_estado, 'em_curso'), nullif(trim(p_nota), ''))
+    returning id into v_id;
+  else
+    select * into p from public.gab_prioridades where id = p_id and dono = auth.uid() for update;
+    if not found then
+      raise exception 'Prioridade não encontrada.' using errcode = 'P0002';
+    end if;
+    if p.revisao is distinct from p_revisao then
+      raise exception 'O registo mudou entretanto.' using errcode = '40001';
+    end if;
+    update public.gab_prioridades
+       set trimestre = p_trimestre,
+           tipo = p_tipo,
+           resultado = trim(p_resultado),
+           indicador = nullif(trim(p_indicador), ''),
+           meta = nullif(trim(p_meta), ''),
+           estado = coalesce(p_estado, 'em_curso'),
+           nota = nullif(trim(p_nota), ''),
+           revisao = revisao + 1
+     where id = p_id;
+    v_id := p_id;
+  end if;
+
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id)
+  values (auth.uid(), 'user', 'gabinete.guardar_prioridade', 'gabinete', v_id::text);
+  return v_id;
+end;
+$$;
+
+-- Cria (p_id nulo) ou altera um projecto. `p_prontidao` são os sete critérios,
+-- por esta ordem: contrato, escopo, responsável, capacidade, aceitação,
+-- dependências, pagamento.
+create or replace function public.guardar_projeto(
+  p_id uuid,
+  p_revisao integer,
+  p_nome text,
+  p_cliente text,
+  p_fase text,
+  p_responsavel text,
+  p_sponsor text,
+  p_resultado text,
+  p_escopo text,
+  p_moeda text,
+  p_receita_contratada numeric,
+  p_receita_faturada numeric,
+  p_receita_recebida numeric,
+  p_custos_variaveis numeric,
+  p_prontidao boolean[],
+  p_risco text,
+  p_proxima_accao text,
+  p_proxima_data date,
+  p_ligacao text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+declare
+  o public.gab_projetos;
+  v_id uuid;
+  v_fase text := coalesce(p_fase, 'diagnostico');
+  v_falta text[] := array[]::text[];
+  v_nomes text[] := array['contrato', 'escopo aprovado', 'responsável', 'capacidade reservada',
+                          'critérios de aceitação', 'dependências', 'condições de pagamento'];
+  i integer;
+begin
+  perform public.exigir_modulo('direcao');
+
+  if p_prontidao is null or array_length(p_prontidao, 1) is distinct from 7 then
+    raise exception 'Critérios de prontidão inválidos.' using errcode = '22023';
+  end if;
+  if v_fase in ('implementacao', 'ativacao', 'evolucao') then
+    for i in 1..7 loop
+      if not coalesce(p_prontidao[i], false) then
+        v_falta := v_falta || v_nomes[i];
+      end if;
+    end loop;
+    if array_length(v_falta, 1) > 0 then
+      raise exception 'Para implementar falta: %.', array_to_string(v_falta, ', ') using errcode = '22023';
+    end if;
+  end if;
+  if v_fase not in ('encerrado', 'suspenso')
+     and (nullif(trim(p_proxima_accao), '') is null or p_proxima_data is null) then
+    raise exception 'Um projecto activo precisa de próxima acção e data.' using errcode = '22023';
+  end if;
+  if (p_receita_faturada is not null and p_receita_contratada is not null and p_receita_faturada > p_receita_contratada)
+     or (p_receita_recebida is not null and p_receita_faturada is not null and p_receita_recebida > p_receita_faturada) then
+    raise exception 'A receita recebida não pode passar a faturada, nem a faturada a contratada.' using errcode = '22023';
+  end if;
+
+  if p_id is null then
+    insert into public.gab_projetos
+      (dono, nome, cliente, fase, responsavel, sponsor, resultado, escopo, moeda,
+       receita_contratada, receita_faturada, receita_recebida, custos_variaveis,
+       pronto_contrato, pronto_escopo, pronto_responsavel, pronto_capacidade, pronto_aceitacao,
+       pronto_dependencias, pronto_pagamento, risco, proxima_accao, proxima_data, ligacao)
+    values
+      (auth.uid(), trim(p_nome), nullif(trim(p_cliente), ''), v_fase, nullif(trim(p_responsavel), ''),
+       nullif(trim(p_sponsor), ''), nullif(trim(p_resultado), ''), nullif(trim(p_escopo), ''),
+       coalesce(p_moeda, 'MZN'), p_receita_contratada, p_receita_faturada, p_receita_recebida, p_custos_variaveis,
+       coalesce(p_prontidao[1], false), coalesce(p_prontidao[2], false), coalesce(p_prontidao[3], false),
+       coalesce(p_prontidao[4], false), coalesce(p_prontidao[5], false), coalesce(p_prontidao[6], false),
+       coalesce(p_prontidao[7], false), coalesce(p_risco, 'baixo'), nullif(trim(p_proxima_accao), ''),
+       p_proxima_data, nullif(trim(p_ligacao), ''))
+    returning id into v_id;
+  else
+    select * into o from public.gab_projetos where id = p_id and dono = auth.uid() for update;
+    if not found then
+      raise exception 'Projecto não encontrado.' using errcode = 'P0002';
+    end if;
+    if o.revisao is distinct from p_revisao then
+      raise exception 'O registo mudou entretanto.' using errcode = '40001';
+    end if;
+    update public.gab_projetos
+       set nome = trim(p_nome),
+           cliente = nullif(trim(p_cliente), ''),
+           fase = v_fase,
+           responsavel = nullif(trim(p_responsavel), ''),
+           sponsor = nullif(trim(p_sponsor), ''),
+           resultado = nullif(trim(p_resultado), ''),
+           escopo = nullif(trim(p_escopo), ''),
+           moeda = coalesce(p_moeda, 'MZN'),
+           receita_contratada = p_receita_contratada,
+           receita_faturada = p_receita_faturada,
+           receita_recebida = p_receita_recebida,
+           custos_variaveis = p_custos_variaveis,
+           pronto_contrato = coalesce(p_prontidao[1], false),
+           pronto_escopo = coalesce(p_prontidao[2], false),
+           pronto_responsavel = coalesce(p_prontidao[3], false),
+           pronto_capacidade = coalesce(p_prontidao[4], false),
+           pronto_aceitacao = coalesce(p_prontidao[5], false),
+           pronto_dependencias = coalesce(p_prontidao[6], false),
+           pronto_pagamento = coalesce(p_prontidao[7], false),
+           risco = coalesce(p_risco, 'baixo'),
+           proxima_accao = nullif(trim(p_proxima_accao), ''),
+           proxima_data = p_proxima_data,
+           ligacao = nullif(trim(p_ligacao), ''),
+           revisao = revisao + 1
+     where id = p_id;
+    v_id := p_id;
+  end if;
+
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id)
+  values (auth.uid(), 'user', 'gabinete.guardar_projeto', 'gabinete', v_id::text);
+  return v_id;
+end;
+$$;
+
+-- Cria (p_id nulo) ou altera um movimento de tesouraria. Um saldo é sempre um
+-- facto na sua data (data efectiva = data indicada).
+create or replace function public.guardar_movimento(
+  p_id uuid,
+  p_revisao integer,
+  p_tipo text,
+  p_descricao text,
+  p_projeto uuid,
+  p_valor numeric,
+  p_moeda text,
+  p_data_prevista date,
+  p_data_efectiva date
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+declare
+  m public.gab_tesouraria;
+  v_id uuid;
+  v_efectiva date := case when p_tipo = 'saldo' then p_data_prevista else p_data_efectiva end;
+begin
+  perform public.exigir_modulo('direcao');
+
+  if p_projeto is not null then
+    perform 1 from public.gab_projetos where id = p_projeto and dono = auth.uid() for key share;
+    if not found then
+      raise exception 'Projecto não encontrado.' using errcode = 'P0002';
+    end if;
+  end if;
+
+  if p_id is null then
+    insert into public.gab_tesouraria (dono, tipo, descricao, projeto_id, valor, moeda, data_prevista, data_efectiva)
+    values (auth.uid(), p_tipo, trim(p_descricao), p_projeto, p_valor, coalesce(p_moeda, 'MZN'),
+            p_data_prevista, v_efectiva)
+    returning id into v_id;
+  else
+    select * into m from public.gab_tesouraria where id = p_id and dono = auth.uid() for update;
+    if not found then
+      raise exception 'Movimento não encontrado.' using errcode = 'P0002';
+    end if;
+    if m.revisao is distinct from p_revisao then
+      raise exception 'O registo mudou entretanto.' using errcode = '40001';
+    end if;
+    update public.gab_tesouraria
+       set tipo = p_tipo,
+           descricao = trim(p_descricao),
+           projeto_id = p_projeto,
+           valor = p_valor,
+           moeda = coalesce(p_moeda, 'MZN'),
+           data_prevista = p_data_prevista,
+           data_efectiva = v_efectiva,
+           revisao = revisao + 1
+     where id = p_id;
+    v_id := p_id;
+  end if;
+
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id)
+  values (auth.uid(), 'user', 'gabinete.guardar_movimento', 'gabinete', v_id::text);
+  return v_id;
+end;
+$$;
+
+-- Cria (p_id nulo) ou altera uma pessoa da equipa (para a capacidade).
+create or replace function public.guardar_pessoa(
+  p_id uuid,
+  p_revisao integer,
+  p_nome text,
+  p_funcao text,
+  p_area text,
+  p_horas_semana numeric,
+  p_activa boolean
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+declare
+  s public.gab_pessoas;
+  v_id uuid;
+begin
+  perform public.exigir_modulo('direcao');
+
+  if p_id is null then
+    insert into public.gab_pessoas (dono, nome, funcao, area, horas_semana, activa)
+    values (auth.uid(), trim(p_nome), nullif(trim(p_funcao), ''), coalesce(p_area, 'tecnologia'),
+            p_horas_semana, coalesce(p_activa, true))
+    returning id into v_id;
+  else
+    select * into s from public.gab_pessoas where id = p_id and dono = auth.uid() for update;
+    if not found then
+      raise exception 'Pessoa não encontrada.' using errcode = 'P0002';
+    end if;
+    if s.revisao is distinct from p_revisao then
+      raise exception 'O registo mudou entretanto.' using errcode = '40001';
+    end if;
+    update public.gab_pessoas
+       set nome = trim(p_nome),
+           funcao = nullif(trim(p_funcao), ''),
+           area = coalesce(p_area, 'tecnologia'),
+           horas_semana = p_horas_semana,
+           activa = coalesce(p_activa, true),
+           revisao = revisao + 1
+     where id = p_id;
+    v_id := p_id;
+  end if;
+
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id)
+  values (auth.uid(), 'user', 'gabinete.guardar_pessoa', 'gabinete', v_id::text);
+  return v_id;
+end;
+$$;
+
+-- Aloca (ou actualiza) horas por semana de uma pessoa a um projecto.
+create or replace function public.guardar_alocacao(
+  p_pessoa uuid,
+  p_projeto uuid,
+  p_horas_semana numeric,
+  p_ate date
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+begin
+  perform public.exigir_modulo('direcao');
+
+  -- Bloquear os pais primeiro, sempre pela mesma ordem (pessoa, projecto).
+  perform 1 from public.gab_pessoas where id = p_pessoa and dono = auth.uid() for no key update;
+  if not found then
+    raise exception 'Pessoa não encontrada.' using errcode = 'P0002';
+  end if;
+  perform 1 from public.gab_projetos where id = p_projeto and dono = auth.uid() for no key update;
+  if not found then
+    raise exception 'Projecto não encontrado.' using errcode = 'P0002';
+  end if;
+
+  insert into public.gab_alocacoes (pessoa_id, projeto_id, dono, horas_semana, ate)
+  values (p_pessoa, p_projeto, auth.uid(), p_horas_semana, p_ate)
+  on conflict (pessoa_id, projeto_id)
+  do update set horas_semana = excluded.horas_semana, ate = excluded.ate;
+
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id)
+  values (auth.uid(), 'user', 'gabinete.guardar_alocacao', 'gabinete', p_projeto::text);
+end;
+$$;
+
+create or replace function public.remover_alocacao(p_pessoa uuid, p_projeto uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $$
+begin
+  perform public.exigir_modulo('direcao');
+
+  delete from public.gab_alocacoes
+   where pessoa_id = p_pessoa and projeto_id = p_projeto and dono = auth.uid();
+  if not found then
+    raise exception 'Alocação não encontrada.' using errcode = 'P0002';
+  end if;
+
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id)
+  values (auth.uid(), 'user', 'gabinete.remover_alocacao', 'gabinete', p_projeto::text);
+end;
+$$;
+
+
+-- ---------------------------------------------------------------------------
+-- Direitos: só utilizadores autenticados (e a guarda decide o resto).
+-- ---------------------------------------------------------------------------
+
+revoke all on function public.guardar_decisao(uuid, integer, text, text, text, text, text, text, text, text, date, boolean, text) from public, anon;
+revoke all on function public.guardar_prioridade(uuid, integer, text, text, text, text, text, text, text) from public, anon;
+revoke all on function public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text) from public, anon;
+revoke all on function public.guardar_movimento(uuid, integer, text, text, uuid, numeric, text, date, date) from public, anon;
+revoke all on function public.guardar_pessoa(uuid, integer, text, text, text, numeric, boolean) from public, anon;
+revoke all on function public.guardar_alocacao(uuid, uuid, numeric, date) from public, anon;
+revoke all on function public.remover_alocacao(uuid, uuid) from public, anon;
+grant execute on function public.guardar_decisao(uuid, integer, text, text, text, text, text, text, text, text, date, boolean, text) to authenticated;
+grant execute on function public.guardar_prioridade(uuid, integer, text, text, text, text, text, text, text) to authenticated;
+grant execute on function public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text) to authenticated;
+grant execute on function public.guardar_movimento(uuid, integer, text, text, uuid, numeric, text, date, date) to authenticated;
+grant execute on function public.guardar_pessoa(uuid, integer, text, text, text, numeric, boolean) to authenticated;
+grant execute on function public.guardar_alocacao(uuid, uuid, numeric, date) to authenticated;
+grant execute on function public.remover_alocacao(uuid, uuid) to authenticated;
+
+-- As funções de escrita desistem de esperar por um lock ao fim de 4 s (0016).
+alter function public.guardar_decisao(uuid, integer, text, text, text, text, text, text, text, text, date, boolean, text) set lock_timeout = '4s';
+alter function public.guardar_prioridade(uuid, integer, text, text, text, text, text, text, text) set lock_timeout = '4s';
+alter function public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text) set lock_timeout = '4s';
+alter function public.guardar_movimento(uuid, integer, text, text, uuid, numeric, text, date, date) set lock_timeout = '4s';
+alter function public.guardar_pessoa(uuid, integer, text, text, text, numeric, boolean) set lock_timeout = '4s';
+alter function public.guardar_alocacao(uuid, uuid, numeric, date) set lock_timeout = '4s';
+alter function public.remover_alocacao(uuid, uuid) set lock_timeout = '4s';
+
+notify pgrst, 'reload schema';

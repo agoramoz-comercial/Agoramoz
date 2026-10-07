@@ -11,7 +11,7 @@
 -- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
 -- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News), a 29 para
--- 0017 (Espaço CEnO).
+-- 0017 (Espaço CEnO), a 30 para 0018 (Gabinete do Fundador).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -212,7 +212,7 @@ select 28, 'prazo', 'news: as funções desistem de esperar por locks (0016)',
                  then 'EM FALTA - correr aplicar-0015.sql e depois aplicar-0016.sql'
             when exists (
                    select 1 from pg_proc p
-                    where p.oid = 'public.artigos_publicados(text, text, integer, timestamptz)'::regprocedure
+                    where p.oid = to_regprocedure('public.artigos_publicados(text, text, integer, timestamptz)')
                       and 'lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))
                  )
                  then 'ok'
@@ -244,12 +244,12 @@ select 29, 'espaço', 'Espaço CEnO: acesso por módulo, tabelas privadas e fun�
                  )
                  or not exists (
                    select 1 from pg_proc p
-                    where p.oid = 'public.mudar_fase_ceno(uuid, integer, text, text, text)'::regprocedure
+                    where p.oid = to_regprocedure('public.mudar_fase_ceno(uuid, integer, text, text, text)')
                       and 'lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))
                  )
                  or not exists (
                    select 1 from pg_proc p
-                    where p.oid = 'public.tem_modulo(text)'::regprocedure
+                    where p.oid = to_regprocedure('public.tem_modulo(text)')
                       and p.prosrc like '%trocar_palavra_passe%'
                  )
                  or not exists (
@@ -259,5 +259,47 @@ select 29, 'espaço', 'Espaço CEnO: acesso por módulo, tabelas privadas e fun�
                       and pg_get_expr(pol.polqual, pol.polrelid) like '%ceno%'
                  )
                  then 'ATENCAO - protecção incompleta; correr aplicar-0017-parte1.sql e parte2.sql de novo'
+            else 'ok' end
+-- 0018: Gabinete do Fundador — módulo `direcao`, tabelas privadas e funções.
+union all
+select 30, 'gabinete', 'Gabinete do Fundador: módulo direcao, tabelas privadas e funções (0018)',
+       case when to_regclass('public.gab_decisoes') is null
+                 or to_regclass('public.gab_prioridades') is null
+                 or to_regclass('public.gab_projetos') is null
+                 or to_regclass('public.gab_tesouraria') is null
+                 or to_regclass('public.gab_pessoas') is null
+                 or to_regclass('public.gab_alocacoes') is null
+                 then 'EM FALTA - correr aplicar-0018-parte1.sql'
+            when to_regprocedure('public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text)') is null
+                 or to_regprocedure('public.remover_alocacao(uuid, uuid)') is null
+                 then 'EM FALTA - correr aplicar-0018-parte2.sql'
+            when has_function_privilege('anon', 'public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text)', 'execute')
+                 or exists (
+                   select 1 from pg_class c
+                    where c.relnamespace = 'public'::regnamespace
+                      and c.relname in ('gab_decisoes', 'gab_prioridades', 'gab_projetos', 'gab_tesouraria',
+                                        'gab_pessoas', 'gab_alocacoes')
+                      and (not c.relrowsecurity
+                           or has_table_privilege('anon', c.oid, 'select, insert, update, delete')
+                           or has_table_privilege('authenticated', c.oid, 'insert, update, delete'))
+                 )
+                 or not exists (
+                   select 1 from pg_constraint k
+                    where k.conrelid = to_regclass('public.acessos_modulo')
+                      and k.conname = 'acessos_modulo_modulo_check'
+                      and pg_get_constraintdef(k.oid) like '%direcao%'
+                 )
+                 or not exists (
+                   select 1 from pg_proc p
+                    where p.oid = to_regprocedure('public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text)')
+                      and 'lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))
+                 )
+                 or not exists (
+                   select 1 from pg_policy pol
+                    where pol.polrelid = 'public.audit_log'::regclass
+                      and pol.polname = 'audit_log_select'
+                      and pg_get_expr(pol.polqual, pol.polrelid) like '%gabinete%'
+                 )
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0018-parte1.sql e parte2.sql de novo'
             else 'ok' end
 order by ordem;

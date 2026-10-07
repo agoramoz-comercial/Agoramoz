@@ -6,8 +6,9 @@ const SQL = readFileSync('supabase/migrations/0006_admin_actions.sql', 'utf-8');
 const SQL13 = readFileSync('supabase/migrations/0013_inqueritos.sql', 'utf-8');
 const SQL15 = readFileSync('supabase/migrations/0015_news.sql', 'utf-8');
 const SQL17 = readFileSync('supabase/migrations/0017_espaco_ceno.sql', 'utf-8');
+const SQL18 = readFileSync('supabase/migrations/0018_gabinete.sql', 'utf-8');
 /** Onde as funções do mapa `RPC` podem estar declaradas. */
-const ACCOES = `${SQL}\n${SQL13}\n${SQL15}\n${SQL17}`;
+const ACCOES = `${SQL}\n${SQL13}\n${SQL15}\n${SQL17}\n${SQL18}`;
 
 /** Lê os parâmetros declarados na migração para cada função (numa ou em várias linhas). */
 function parametrosDe(nome: string): string[] {
@@ -33,7 +34,7 @@ describe('contrato das funções do admin', () => {
       const fim = ACCOES.indexOf('$$;', inicio);
       const corpo = ACCOES.slice(inicio, fim);
       // `exigir_modulo` (0017) chama `exigir_papel` e exige ainda o módulo.
-      expect(corpo, `sem verificação de papel: ${nome}`).toMatch(/exigir_papel|exigir_modulo\('energia'\)/);
+      expect(corpo, `sem verificação de papel: ${nome}`).toMatch(/exigir_papel|exigir_modulo\('(energia|direcao)'\)/);
     }
   });
 
@@ -44,7 +45,7 @@ describe('contrato das funções do admin', () => {
       expect(cabecalho, nome).toContain('security definer');
       expect(cabecalho, nome).toContain('set search_path = public, pg_catalog');
     }
-    for (const fonte of [SQL13, SQL15, SQL17]) {
+    for (const fonte of [SQL13, SQL15, SQL17, SQL18]) {
       for (const nome of Object.keys(RPC).filter((n) => fonte.includes(`function public.${n}(`))) {
         expect(fonte, nome).toMatch(
           new RegExp(`revoke all on function public\\.${nome}\\([^)]*\\) from public, anon;`),
