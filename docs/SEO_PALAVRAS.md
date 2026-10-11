@@ -68,10 +68,14 @@ Mesmo método (Firecrawl, motor web, localização Moçambique), só leitura.
 | 1 | automação de processos empresariais (Moçambique) | `/solucoes/automacao-de-processos` | Automação de processos empresariais em Moçambique |
 | 1 | software para energia / mineração (Moçambique) | `/mz/energia-mineracao` | já existente: «Sistemas digitais para energia, mineração e serviços industriais em Moçambique» |
 | 2 | software à medida / desenvolvimento de software (Moçambique) | `/solucoes/software-empresarial` | Software à medida para empresas em Moçambique |
-| 2 | integração de sistemas, gestão de acessos e recuperação (Moçambique) | `/solucoes/infraestrutura-digital` | Integração de sistemas e segurança em Moçambique |
+| 2 | integração de sistemas (Moçambique) | `/solucoes/integracao-de-sistemas` | Integração de sistemas empresariais em Moçambique (Lote Y) |
+| 2 | infraestrutura digital, gestão de acessos e recuperação (Moçambique) | `/solucoes/infraestrutura-digital` | Infraestrutura digital segura em Moçambique (deixou «integração» à página nova, para não competirem) |
+| 3 | suporte pós-lançamento / evolução de sistemas | `/solucoes/estabilizacao-e-evolucao` | Suporte e evolução de sistemas em Moçambique |
+| — | objeções comerciais, segurança, setores | `/faq`, `/seguranca-qualidade`, `/setores` | Páginas de apoio à decisão; o `FAQPage` não dá resultado rico (restrito a governo e saúde), o valor é o texto |
 | 2 | AI agents / process automation / custom software (Mozambique, EN) | `/en/solucoes/*` | «… in Mozambique» |
 | 3 | criação de sites / websites (Maputo, Moçambique) | `/solucoes/websites-avancados` | Criação de websites para empresas em Moçambique |
 | — | AGORAMOZ (marca) | `/` | inalterado: «AGORAMOZ — …» |
+| — | hub do mercado | `/mz` | Infraestrutura operacional digital em Moçambique (Lote Y: deixou «software» e «automação» às páginas de solução) |
 
 **Trade-off assumido — «em Moçambique» só no título.** As páginas de solução
 servem também Portugal e Brasil, e o H1 e o corpo não nomeiam o país; o Google

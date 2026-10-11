@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SOLUTIONS } from '@/content/registry';
+import { COUNTRIES, GLOBAL_MARKETS, SOLUTIONS } from '@/content/registry';
+import { INDICE_SOLUCOES } from '@/content/i18n/paginas';
 import { SOLUTIONS_EN } from '@/content/en/solutions';
 
 /**
@@ -38,5 +39,31 @@ describe('títulos das soluções', () => {
   it('nenhum título se repete entre soluções', () => {
     const titulos = casos.map((c) => c.s.seo.title);
     expect(new Set(titulos).size).toBe(titulos.length);
+  });
+});
+
+/**
+ * Descrições fora das soluções (revisão SEO do Lote Y): o índice de soluções,
+ * as homepages por mercado e os dez mercados globais caem na mesma regra de
+ * 120–160 caracteres. Sem este teste, «Sete capacidades» passou com 114.
+ */
+describe('descrições das outras páginas indexáveis', () => {
+  const descricoes: [string, string][] = [
+    ['índice pt', INDICE_SOLUCOES.metaDescricao.pt],
+    ['índice en', INDICE_SOLUCOES.metaDescricao.en],
+    ...Object.entries(COUNTRIES).map(([c, p]) => [`país ${c}`, p.seo.description] as [string, string]),
+    ...Object.entries(GLOBAL_MARKETS).flatMap(([c, m]) => [
+      [`global ${c} pt`, m.seo.description.pt] as [string, string],
+      [`global ${c} en`, m.seo.description.en] as [string, string],
+    ]),
+  ];
+
+  it.each(descricoes)('%s: entre 120 e 160 caracteres', (_, d) => {
+    expect(d.length).toBeGreaterThanOrEqual(120);
+    expect(d.length).toBeLessThanOrEqual(160);
+  });
+
+  it.each(Object.entries(COUNTRIES))('país %s: título com a marca cabe em 60 caracteres', (_, p) => {
+    expect((p.seo.title + MARCA).length).toBeLessThanOrEqual(60);
   });
 });

@@ -93,7 +93,7 @@ export default function PerfilPage() {
           id="h-solucoes-perfil"
           eyebrow="O que fazemos"
           title="Sete capacidades, um sistema."
-          lead="Não são cinco produtos avulsos: são as peças de uma mesma infraestrutura, e um diagnóstico decide quais fazem falta."
+          lead="Não são produtos avulsos: são as peças de uma mesma infraestrutura, e um diagnóstico decide quais fazem falta."
           max="wide"
         />
         <SolutionsGrid />

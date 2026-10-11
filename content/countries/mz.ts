@@ -76,7 +76,7 @@ export const mz: Country = {
     },
   ],
   seo: {
-    title: 'Software empresarial e automação em Moçambique',
+    title: 'Infraestrutura operacional digital em Moçambique',
     description:
       'Organizamos processos, dados e sistemas: diagnóstico, software, automação, integrações, IA e infraestrutura adaptados à operação em Moçambique.',
   },

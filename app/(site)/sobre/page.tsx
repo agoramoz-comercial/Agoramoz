@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -47,7 +48,11 @@ export default function SobrePage() {
             <h2 className="font-display text-[length:var(--text-h3)] font-semibold">O que não fazemos</h2>
             <p className="mt-3 text-[color:var(--muted)]">
               Não prometemos aumentos de vendas nem recomendamos tecnologia antes de compreender o processo,
-              a segurança e o custo de operação. {SOBRE_2026.prova}
+              a segurança e o custo de operação. {SOBRE_2026.prova} As objeções mais comuns estão nas{' '}
+              <Link href="/faq" className="text-[color:var(--accent)] underline underline-offset-4">
+                perguntas frequentes
+              </Link>
+              .
             </p>
           </div>
           <div>

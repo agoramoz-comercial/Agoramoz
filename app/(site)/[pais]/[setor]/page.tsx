@@ -70,7 +70,7 @@ export default async function SetorPage({ params }: Props) {
         path={`/${pais}/${setor}`}
         areaServed={country.name}
       />
-      <FaqJsonLd items={page.faq} />
+      <FaqJsonLd items={page.faq} path={`/${pais}/${setor}`} />
 
       {/* 1 + 2 — identificação e hero orientado ao resultado */}
       <Section surface="deep" contour>

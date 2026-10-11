@@ -8,7 +8,7 @@ export const estabilizacaoEEvolucaoEn: SolutionPage = {
 
   hero: {
     eyebrow: 'Service',
-    h1: 'Go-live starts the usage. It does not end the responsibility.',
+    h1: 'Going live starts usage. It does not end our responsibility.',
     lead: 'Stabilisation resolves real blockers, follows adoption and confirms the system supports the operation. Evolution prioritises improvements by usage, risk and value.',
   },
 

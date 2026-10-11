@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -49,6 +50,17 @@ export default function ComoTrabalhamosPage() {
             </p>
           ))}
         </div>
+        <p className="mt-10 max-w-[60ch] text-[color:var(--muted)]">
+          O detalhe do que fica documentado em cada projeto está em{' '}
+          <Link href="/seguranca-qualidade" className="text-[color:var(--accent)] underline underline-offset-4">
+            segurança, privacidade e qualidade
+          </Link>
+          ; o que acontece depois do arranque, em{' '}
+          <Link href="/solucoes/estabilizacao-e-evolucao" className="text-[color:var(--accent)] underline underline-offset-4">
+            estabilização e evolução
+          </Link>
+          .
+        </p>
       </Section>
 
       <Section surface="tint" aria-labelledby="h-prova-ct">
