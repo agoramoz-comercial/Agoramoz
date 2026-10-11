@@ -44,34 +44,35 @@ export const pt: Country = {
       'Em Portugal a objeção habitual não é o preço — é se a solução integra com o ERP e quem fica responsável pela manutenção.',
   },
   hero: {
-    eyebrow: 'AGORAMOZ Portugal',
-    headline: 'A ferramenta já existe. O que falta é ligá-la ao resto da operação.',
-    lead: 'A maioria das empresas portuguesas já investiu em ERP, CRM e plataformas próprias. O custo escondido está no trabalho manual entre elas: exportar, reintroduzir, conferir, reenviar. Construímos a camada que falta.',
+    eyebrow: 'Produtividade operacional e integração',
+    headline: 'Devolva trabalho qualificado às pessoas qualificadas.',
+    lead: 'Quando as equipas copiam informação, reconciliam ficheiros e acompanham manualmente processos entre sistemas, a empresa utiliza talento especializado em trabalho evitável. A AGORAMOZ diagnostica os bloqueios, integra os sistemas existentes e automatiza o fluxo entre eles, com segurança, documentação e adoção.',
   },
   positioning:
-    'Não propomos substituir o que já funciona. Ligamos os sistemas existentes, automatizamos o trabalho entre eles e devolvemos horas de equipa qualificada a trabalho qualificado.',
+    'Menos trabalho entre sistemas e mais controlo sobre o processo: informação captada uma vez, regras que encaminham trabalho, exceções visíveis, decisões responsáveis e indicadores produzidos pela operação.',
+  problemsHeading: 'A empresa já tem ferramentas. O trabalho continua fragmentado.',
   problems: [
     {
-      title: 'Trabalho entre sistemas',
+      title: 'O CRM não comunica com a operação',
       body: 'Os dados existem em três plataformas e alguém passa a manhã a copiá-los de uma para a outra, com o risco de erro que isso traz.',
     },
     {
-      title: 'Propostas demoradas',
-      body: 'Preparar uma proposta técnica exige reunir informação dispersa por pastas, emails e pessoas. O cliente espera dias por algo que devia demorar horas.',
+      title: 'Aprovações que dependem de email',
+      body: 'O pedido fica numa caixa de correio até alguém se lembrar dele. Não há prazo, responsável visível nem registo da decisão.',
     },
     {
-      title: 'Conformidade tratada no fim',
-      body: 'RGPD, controlo de acessos e registo de tratamento são resolvidos depois da ferramenta estar escolhida — quando já é caro mudar.',
+      title: 'Folhas paralelas e relatórios manuais',
+      body: 'As equipas mantêm folhas ao lado das ferramentas e os relatórios exigem consolidação manual antes de cada reunião.',
     },
     {
-      title: 'Produtividade limitada pelo processo',
-      body: 'A equipa é competente e o sistema obriga-a a tarefas que não exigem competência nenhuma.',
+      title: 'Privacidade tratada no fim',
+      body: 'Finalidade, minimização, acessos e retenção são decididos depois de a ferramenta estar escolhida — quando já é caro mudar. Incorporamo-los no desenho; a validação jurídica pertence às partes competentes.',
     },
   ],
   seo: {
-    title: 'Automação, integração e IA para empresas em Portugal',
+    title: 'Automação empresarial e integração em Portugal',
     description:
-      'A AGORAMOZ liga os sistemas que a sua empresa já usa, automatiza o trabalho manual entre eles e reduz tarefas administrativas. Diagnóstico antes da proposta.',
+      'Reduza trabalho manual e ligue processos, dados e sistemas. Diagnóstico, automação, integrações, software e IA para operações empresariais em Portugal.',
   },
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };

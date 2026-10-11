@@ -70,8 +70,8 @@ export default async function PaisPage({ params }: Props) {
         <SectionHeading
           id="h-prob-pais"
           eyebrow="O problema"
-          title={`O que encontramos em empresas ${c.demonym}.`}
-          lead={c.voice.proofLanguage}
+          title={c.problemsHeading ?? `O que encontramos em empresas ${c.demonym}.`}
+          lead={c.problemsLead ?? c.voice.proofLanguage}
         />
         <ProblemGrid items={c.problems} />
       </Section>

@@ -43,34 +43,35 @@ export const br: Country = {
       'No Brasil a pergunta é se aguenta volume: quantas transações por dia, com qual latência e qual custo por operação.',
   },
   hero: {
-    eyebrow: 'AGORAMOZ Brasil',
-    headline: 'O processo que funciona com 50 pedidos por dia quebra com 500.',
-    lead: 'Operações brasileiras crescem em volume antes de crescer em estrutura. O que era um ajuste manual vira gargalo diário, e o custo por transação sobe justamente quando a escala devia baixá-lo. Construímos infraestrutura que aguenta o volume.',
+    eyebrow: 'Operações digitais para escala',
+    headline: 'Quando o volume cresce, cada ineficiência também cresce.',
+    lead: 'Uma tarefa manual de poucos minutos, multiplicada por milhares de pedidos, clientes, documentos ou interações, transforma-se em custo, atraso e risco operacional. A AGORAMOZ conecta processos, dados e sistemas para que operações de maior volume cresçam com mais controle.',
   },
   positioning:
-    'Trabalhamos com operações de maior volume e times distribuídos, onde cada minuto de trabalho manual é multiplicado por milhares de transações por mês.',
+    'Um fluxo preparado para volume, exceções e melhoria, ligando entrada, qualificação, distribuição, execução, documentos, integrações, indicadores e suporte.',
+  problemsHeading: 'Escala sem integração multiplica o retrabalho.',
   problems: [
     {
-      title: 'O gargalo é manual',
-      body: 'Um passo do processo depende de uma pessoa conferir e repassar. Esse passo define a capacidade máxima da operação inteira.',
+      title: 'Leads entram por vários canais',
+      body: 'Cada canal tem a sua fila e a sua planilha. Ninguém vê o funil inteiro, e parte da demanda fica sem resposta.',
     },
     {
-      title: 'Time distribuído, informação centralizada em ninguém',
+      title: 'Cada time com controles próprios',
       body: 'Filiais, home office e parceiros trabalham com versões diferentes da mesma informação.',
     },
     {
-      title: 'Custo por transação que não cai',
-      body: 'O volume dobrou, o time dobrou. A escala não gerou ganho porque o processo não mudou.',
+      title: 'Dados copiados entre plataformas',
+      body: 'Um passo do processo depende de uma pessoa conferir e repassar. Esse passo define a capacidade máxima da operação inteira.',
     },
     {
-      title: 'Atendimento repetitivo',
-      body: 'A maior parte das solicitações é a mesma pergunta em palavras diferentes — respondida manualmente, uma a uma.',
+      title: 'Exceções e indicadores atrasados',
+      body: 'Aprovações dependem de mensagens, exceções exigem intervenção constante e a gestão recebe os indicadores quando já é tarde para agir.',
     },
   ],
   seo: {
-    title: 'Automação, IA e software para operações de alto volume no Brasil',
+    title: 'Automação, sistemas empresariais e IA no Brasil',
     description:
-      'A AGORAMOZ constrói infraestrutura digital para operações brasileiras que cresceram em volume: automação, integração e agentes de IA com supervisão humana.',
+      'Integre processos, dados e times distribuídos. Diagnóstico, software, automação, IA e infraestrutura para operações empresariais de maior volume.',
   },
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };

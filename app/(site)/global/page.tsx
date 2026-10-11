@@ -14,23 +14,23 @@ const INICIO = 'Início';
 const LANG = 'pt-PT';
 
 const COPIA = {
-  eyebrow: { pt: 'Mercados', en: 'Markets' },
+  eyebrow: { pt: 'Infraestrutura operacional digital', en: 'Operational digital infrastructure' },
   /** Só o <title>: o H1 continua a ser `title`. O que se pesquisa, não a frase. */
   metaTitulo: {
-    pt: 'Automação documental e agentes de IA em dez mercados',
-    en: 'Document automation and AI agents in ten markets',
+    pt: 'Infraestrutura operacional digital e automação',
+    en: 'Operational digital infrastructure and automation',
   },
   title: {
-    pt: 'Onde entramos a seguir, e porquê.',
-    en: 'Where we go next, and why.',
+    pt: 'Transforme operações fragmentadas num sistema que funciona.',
+    en: 'Turn fragmented operations into a system that works.',
   },
   lead: {
-    pt: 'Devolvemos horas qualificadas a empresas que perdem dinheiro em trabalho documental — documentos que entram, são verificados, resumidos e reportados à mão. Preço fixo por fase, aprovação humana em cada decisão.',
-    en: 'We give qualified hours back to companies losing money on document work — documents that arrive, get checked, summarised and reported by hand. Fixed price per phase, human approval on every decision.',
+    pt: 'Ligamos processos, dados e sistemas: diagnóstico, automação, software, agentes de IA e infraestrutura, entregues por fases controladas.',
+    en: 'Connect processes, data and systems. Diagnostic, automation, enterprise software, AI agents and digital infrastructure delivered in controlled stages.',
   },
   nota: {
-    pt: 'Operamos em Moçambique, Portugal e Brasil. Os mercados abaixo são onde entramos a seguir: temos a competência e a língua, e ainda não temos operação local. Está escrito assim de propósito.',
-    en: 'We operate in Mozambique, Portugal and Brazil. The markets below are where we go next: we have the capability and the language, and we do not yet have a local operation. That is stated deliberately.',
+    pt: 'Operamos em Moçambique, Portugal e Brasil; os mercados abaixo são onde entramos a seguir, sem operação local ainda. Antes de entregar fora destes três, acordamos entidade contratante e lei aplicável, moeda e impostos, localização e transferência de dados, língua e horário, segurança, subcontratados, aceitação e suporte. Não descrevemos um projeto como conforme em todo o mundo sem revisão por jurisdição.',
+    en: 'We operate in Mozambique, Portugal and Brazil; the markets below are where we go next, without a local operation yet. Before delivering outside those three, we agree the contracting entity and governing law, currency and tax, data location and transfers, working language and service hours, security, subcontractors, acceptance and support. We do not describe a project as globally compliant without jurisdiction-specific review.',
   },
 } as const;
 

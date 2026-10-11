@@ -246,6 +246,10 @@ export interface Country {
   hero: { eyebrow: string; headline: string; lead: string };
   /** Porque é que este mercado é diferente. Texto próprio, não traduzido. */
   positioning: string;
+  /** Título da secção de problemas no hub do país (Website Final 2026, §5–7). */
+  problemsHeading?: string;
+  /** Texto de abertura dessa secção; sem ele, usa-se `voice.proofLanguage`. */
+  problemsLead?: string;
   problems: Problem[];
   seo: SeoMeta;
   updatedAt: string;

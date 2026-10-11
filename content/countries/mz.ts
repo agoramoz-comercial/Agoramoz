@@ -48,34 +48,37 @@ export const mz: Country = {
       'Em Moçambique a prova que conta é conseguir mostrar o sistema a funcionar, não uma apresentação.',
   },
   hero: {
-    eyebrow: 'AGORAMOZ Moçambique',
-    headline: 'Organize o crescimento antes que ele desorganize a operação.',
-    lead: 'Muitas empresas moçambicanas crescem mais depressa do que os processos que as sustentam. Pedidos chegam por WhatsApp, dados vivem em folhas de cálculo e a informação depende de quem está presente nesse dia. Construímos o sistema que segura esse crescimento.',
+    eyebrow: 'Infraestrutura operacional digital em Moçambique',
+    headline: 'Organize o crescimento antes que a operação perca o controlo.',
+    lead: 'Quando pedidos, dados e tarefas estão divididos entre WhatsApp, email, folhas de cálculo e sistemas que não comunicam, a empresa perde tempo, visibilidade e oportunidades. A AGORAMOZ diagnostica o processo, liga o que já existe e implementa o sistema necessário, por fases controladas.',
   },
   positioning:
-    'Trabalhamos com empresas que já têm procura e precisam de estrutura: organizar pedidos, clientes, fornecedores e operações num único sistema, sem substituir tudo o que já funciona.',
+    'Não substituímos automaticamente tudo o que já funciona. Avaliamos o que deve ser mantido, integrado, automatizado ou substituído — e a arquitetura considera conectividade, energia, moeda, fornecedores, talento disponível e capacidade de adoção.',
+  problemsHeading: 'O problema não é utilizar WhatsApp ou folhas de cálculo.',
+  problemsLead:
+    'É depender deles para controlar toda a operação. À medida que a empresa cresce, os processos acumulam exceções, ficheiros, mensagens e decisões informais.',
   problems: [
     {
-      title: 'O negócio vive no WhatsApp',
+      title: 'Pedidos chegam por vários canais',
       body: 'Pedidos, cotações e confirmações passam por conversas individuais. Quando alguém sai de férias, a informação sai com a pessoa.',
     },
     {
-      title: 'Folhas de cálculo como sistema',
+      title: 'A mesma informação em vários locais',
       body: 'Vários ficheiros, várias versões, ninguém sabe qual é a atual. O erro só aparece quando já custou dinheiro.',
     },
     {
-      title: 'Crescimento sem visibilidade',
-      body: 'A empresa está a faturar mais, mas a gestão não consegue dizer com confiança onde está a margem nem onde está o atraso.',
+      title: 'O conhecimento está em poucas pessoas',
+      body: 'Um ou dois colaboradores sabem como tudo funciona. As aprovações ficam paradas à espera deles — isso é um risco operacional, não uma vantagem.',
     },
     {
-      title: 'Dependência de pessoas-chave',
-      body: 'Um ou dois colaboradores sabem como tudo funciona. Isso é um risco operacional, não uma vantagem.',
+      title: 'Relatórios que chegam tarde',
+      body: 'A gestão não vê o bloqueio atual. As decisões são tomadas com dados incompletos e é difícil responsabilizar equipas.',
     },
   ],
   seo: {
-    title: 'Software, automação e IA para empresas em Moçambique',
+    title: 'Software empresarial e automação em Moçambique',
     description:
-      'A AGORAMOZ constrói websites, software e automações para empresas moçambicanas organizarem pedidos, clientes e operações num único sistema. Comece por um diagnóstico.',
+      'Organizamos processos, dados e sistemas: diagnóstico, software, automação, integrações, IA e infraestrutura adaptados à operação em Moçambique.',
   },
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };
