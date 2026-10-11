@@ -6,7 +6,6 @@ import { Accordion } from '@/components/ui/Accordion';
 import { DiagnosticForm } from '@/components/form/DiagnosticForm';
 import { FaqJsonLd } from '@/components/seo/JsonLd';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
-import { OFFER } from '@/content/site';
 import type { Idioma } from '@/content/types';
 import { caminhoNoIdioma, t } from '@/lib/i18n/texto';
 
@@ -34,7 +33,7 @@ export function Diagnostico({ idioma, trilho }: { idioma: Idioma; trilho: React.
           <div>
             <div className="rule flex items-baseline gap-4 pt-6">
               <span className="rule-label text-[color:var(--muted)]">{t(DIAGNOSTICO.eyebrow, idioma)}</span>
-              <span className="rule-label text-[color:var(--accent)]">{OFFER.name}</span>
+              <span className="rule-label text-[color:var(--accent)]">{t(DIAGNOSTICO.nome, idioma)}</span>
             </div>
             <SplitHeading
               as="h1"

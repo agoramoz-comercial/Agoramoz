@@ -84,6 +84,18 @@ export function ProcessTimeline({ idioma = 'pt' }: { idioma?: Idioma }) {
             </span>
             <h3 className="mt-3 font-display text-[length:var(--text-h3)] font-semibold">{s.title}</h3>
             <p className="mt-3 max-w-[44ch] text-[color:var(--muted)]">{s.body}</p>
+            {'entrega' in s && (
+              <dl className="mt-4 grid max-w-[44ch] gap-2 text-sm">
+                <div>
+                  <dt className="rule-label text-[color:var(--muted)]">{idioma === 'en' ? 'Deliverable' : 'Entregável'}</dt>
+                  <dd className="mt-1">{s.entrega}</dd>
+                </div>
+                <div>
+                  <dt className="rule-label text-[color:var(--muted)]">{idioma === 'en' ? 'Decision' : 'Decisão'}</dt>
+                  <dd className="mt-1">{s.gate}</dd>
+                </div>
+              </dl>
+            )}
           </li>
         ))}
       </ol>

@@ -25,15 +25,45 @@ export const SYSTEM_FLOW_EN = {
 
 export const PROCESS_EN = {
   eyebrow: 'How we work',
-  title: 'Technology after the diagnostic.',
-  lead: 'The tool is a technical decision, not the product. First we understand the process, the volume, the delay and the likely cost of the inefficiency.',
+  title: 'We remove one uncertainty at each stage.',
+  lead: 'We do not start by building. We start by understanding the decision, the process, the users and the expected outcome. The client approves each stage before committing to the next.',
   steps: [
-    { title: 'Diagnostic', body: 'We map the process, the volumes, the delays, the errors and the likely cost of the inefficiency.' },
-    { title: 'Architecture', body: 'We define the flow, the data, the integrations, the responsibilities and the acceptance criteria.' },
-    { title: 'Prototype', body: 'We demonstrate the experience and validate the logic before the full implementation.' },
-    { title: 'Implementation', body: 'We develop, integrate, test and document.' },
-    { title: 'Activation', body: 'We train the team, follow the usage and fix technical blockers.' },
-    { title: 'Evolution', body: 'We improve the system based on usage, data and economic priority.' },
+    {
+      title: 'Framing',
+      body: 'Is there a problem important and suitable enough?',
+      entrega: 'Preliminary problem, sponsor, process and eligibility.',
+      gate: 'Proceed, reframe or stop.',
+    },
+    {
+      title: 'Diagnostic',
+      body: 'Where is the cause, and which intervention is defensible?',
+      entrega: 'Current map, baseline, conceptual architecture, options, business case and roadmap.',
+      gate: 'Do nothing, fix, buy, integrate, pilot or build.',
+    },
+    {
+      title: 'Pilot',
+      body: 'Does the solution work in a real, limited context?',
+      entrega: 'Prototype or working flow, minimum integration, users and metrics.',
+      gate: 'Scale, revise or cancel.',
+    },
+    {
+      title: 'Implementation',
+      body: 'Does the solution meet the requirements and acceptance criteria?',
+      entrega: 'Configuration, development, integrations, security, tests, documentation and training.',
+      gate: 'Accept, fix or postpone go-live.',
+    },
+    {
+      title: 'Stabilisation',
+      body: 'Does the operation use the system consistently?',
+      entrega: 'Support, fixes, adoption and first measurement.',
+      gate: 'Move to evolution, extend stabilisation or close.',
+    },
+    {
+      title: 'Evolution',
+      body: 'Which improvement creates the most value now?',
+      entrega: 'Prioritised backlog, releases and measurement.',
+      gate: 'Execute, postpone or drop each item.',
+    },
   ],
 } as const;
 

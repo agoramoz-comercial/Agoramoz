@@ -6,13 +6,13 @@ import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { FlowDiagram } from '@/components/home/FlowDiagram';
 import { ProofSection } from '@/components/sections/ProofSection';
 import { FinalCta } from '@/components/sections/FinalCta';
-import { PROCESS, PROOF, PROOF_SECTION, RISK_REDUCTION } from '@/content/site';
+import { CLIENT_RESPONSIBILITIES, PROCESS, PROOF, PROOF_SECTION, RISK_REDUCTION } from '@/content/site';
 import { buildMetadata } from '@/lib/seo/site';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Como trabalhamos: diagnóstico antes da tecnologia',
+  title: 'Como trabalhamos: fases, entregáveis e decisões',
   description:
-    'Diagnóstico, arquitetura, protótipo, implementação, ativação e evolução. A ferramenta é uma decisão técnica — vem depois de compreender o processo.',
+    'Enquadramento, diagnóstico, piloto, implementação, estabilização e evolução. O cliente aprova cada fase antes de assumir o compromisso da seguinte.',
   path: '/como-trabalhamos',
 });
 
@@ -40,7 +40,18 @@ export default function ComoTrabalhamosPage() {
         </div>
       </Section>
 
-      <Section surface="light" aria-labelledby="h-prova-ct">
+      <Section surface="light" aria-labelledby="h-resp-ct">
+        <SectionHeading id="h-resp-ct" eyebrow={CLIENT_RESPONSIBILITIES.eyebrow} title={CLIENT_RESPONSIBILITIES.title} max="wide" />
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          {CLIENT_RESPONSIBILITIES.points.map((p) => (
+            <p key={p} className="border-l-2 border-[color:var(--accent)] pl-5 text-[color:var(--muted)]">
+              {p}
+            </p>
+          ))}
+        </div>
+      </Section>
+
+      <Section surface="tint" aria-labelledby="h-prova-ct">
         <SectionHeading id="h-prova-ct" eyebrow={PROOF_SECTION.eyebrow} title={PROOF_SECTION.title} lead={PROOF_SECTION.lead} max="wide" />
         <ProofSection items={PROOF} />
       </Section>

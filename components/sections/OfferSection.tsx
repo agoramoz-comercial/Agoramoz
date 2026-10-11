@@ -4,7 +4,6 @@ import { MagneticButton } from '@/components/motion/MagneticButton';
 import { SplitHeading } from '@/components/motion/SplitHeading';
 import { Reveal } from '@/components/motion/Reveal';
 import { DiagnosticoEmbutido } from '@/components/form/DiagnosticoEmbutido';
-import { OFFER } from '@/content/site';
 import { CHROME } from '@/content/i18n/chrome';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
 import { OFERTA } from '@/content/i18n/paginas';
@@ -37,7 +36,7 @@ export function OfferSection({
         <div className="lg:col-span-5">
           <div className="flex items-baseline gap-4">
             <span className="rule-label text-[color:var(--muted)]">{t(DIAGNOSTICO.eyebrow, idioma)}</span>
-            <span className="rule-label text-[color:var(--accent)]">{OFFER.name}</span>
+            <span className="rule-label text-[color:var(--accent)]">{t(DIAGNOSTICO.nome, idioma)}</span>
           </div>
 
           <SplitHeading
@@ -81,7 +80,7 @@ export function OfferSection({
       <div className="lg:col-span-6">
         <div className="flex items-baseline gap-4">
           <span className="rule-label text-[color:var(--muted)]">{t(DIAGNOSTICO.eyebrow, idioma)}</span>
-          <span className="rule-label text-[color:var(--accent)]">{OFFER.name}</span>
+          <span className="rule-label text-[color:var(--accent)]">{t(DIAGNOSTICO.nome, idioma)}</span>
         </div>
 
         <SplitHeading

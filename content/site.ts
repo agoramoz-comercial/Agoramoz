@@ -138,22 +138,24 @@ export const NAV = {
 /* ------------------------------------------------- oferta de entrada (§9/13) */
 
 export const OFFER = {
-  name: 'AGORA Opportunity Diagnostic',
+  name: 'Diagnóstico Operacional Digital',
   eyebrow: 'Oferta de entrada',
-  title: 'Comece pelo sistema que resolve o bloqueio mais importante.',
+  title: 'Saiba onde intervir antes de comprar tecnologia.',
   promise:
-    'Um diagnóstico para identificar onde a sua empresa perde oportunidades, tempo ou capacidade operacional — e qual a arquitetura de maior impacto.',
+    'O diagnóstico transforma um problema pouco definido numa decisão executiva com processo, prioridades, riscos, opções e próximos passos claros.',
   deliverables: [
-    'Entrevista com os responsáveis pelo processo',
-    'Mapa do processo atual, ponta a ponta',
-    'Identificação das fricções e dos pontos de perda',
-    'Análise dos dados que já existem na empresa',
-    'Prioridades ordenadas por impacto e esforço',
-    'Arquitetura recomendada',
-    'Plano de implementação',
-    'Proposta de execução apenas quando existir adequação',
+    'Definição do problema e mapa atual',
+    'Inventário de sistemas e dados relevantes',
+    'Baseline e matriz de bloqueios',
+    'Riscos e dependências',
+    'Desenho conceptual do processo futuro',
+    'Opções e prioridades',
+    'Arquitetura conceptual',
+    'Estimativa paramétrica e premissas',
+    'Roadmap e recomendação executiva',
+    'Decisão sobre piloto ou implementação',
   ],
-  note: 'Conversa objetiva. Problema definido. Próximos passos claros.',
+  note: 'O diagnóstico pode concluir que não deve investir. Essa recomendação também é um resultado.',
 } as const;
 
 /* ------------------------------------------------------- sistema e processo */
@@ -175,15 +177,58 @@ export const SYSTEM_FLOW = {
 
 export const PROCESS = {
   eyebrow: 'Como trabalhamos',
-  title: 'Tecnologia depois do diagnóstico.',
-  lead: 'A ferramenta é uma decisão técnica, não o produto. Primeiro percebemos o processo, o volume, o atraso e o custo provável da ineficiência.',
+  title: 'Reduzimos uma incerteza em cada fase.',
+  lead: 'Não começamos por desenvolver. Começamos por compreender a decisão, o processo, os utilizadores e o resultado esperado. O cliente aprova cada fase antes de assumir o compromisso da seguinte.',
   steps: [
-    { title: 'Diagnóstico', body: 'Mapeamos o processo, os volumes, os atrasos, os erros e o custo provável da ineficiência.' },
-    { title: 'Arquitetura', body: 'Definimos o fluxo, os dados, as integrações, as responsabilidades e os critérios de aceitação.' },
-    { title: 'Protótipo', body: 'Demonstramos a experiência e validamos a lógica antes da implementação completa.' },
-    { title: 'Implementação', body: 'Desenvolvemos, integramos, testamos e documentamos.' },
-    { title: 'Ativação', body: 'Formamos a equipa, acompanhamos a utilização e corrigimos bloqueios técnicos.' },
-    { title: 'Evolução', body: 'Melhoramos o sistema com base em utilização, dados e prioridade económica.' },
+    {
+      title: 'Enquadramento',
+      body: 'Existe um problema suficientemente importante e adequado?',
+      entrega: 'Problema preliminar, sponsor, processo e elegibilidade.',
+      gate: 'Avançar, reenquadrar ou não prosseguir.',
+    },
+    {
+      title: 'Diagnóstico',
+      body: 'Onde está a causa e que intervenção é defensável?',
+      entrega: 'Mapa atual, baseline, arquitetura conceptual, opções, business case e roadmap.',
+      gate: 'Não fazer, corrigir, comprar, integrar, pilotar ou desenvolver.',
+    },
+    {
+      title: 'Piloto',
+      body: 'A solução funciona num contexto real e limitado?',
+      entrega: 'Protótipo ou fluxo funcional, integração mínima, utilizadores e métricas.',
+      gate: 'Escalar, rever ou cancelar.',
+    },
+    {
+      title: 'Implementação',
+      body: 'A solução cumpre requisitos e critérios de aceitação?',
+      entrega: 'Configuração, desenvolvimento, integrações, segurança, testes, documentação e formação.',
+      gate: 'Aceitar, corrigir ou adiar a entrada em produção.',
+    },
+    {
+      title: 'Estabilização',
+      body: 'A operação utiliza o sistema de forma consistente?',
+      entrega: 'Suporte, correções, adoção e medição inicial.',
+      gate: 'Entrar em evolução, prolongar a estabilização ou encerrar.',
+    },
+    {
+      title: 'Evolução',
+      body: 'Que melhoria cria maior valor agora?',
+      entrega: 'Backlog priorizado, releases e medição.',
+      gate: 'Executar, adiar ou abandonar cada item.',
+    },
+  ],
+} as const;
+
+/** O que o cliente assume para que as fases funcionem (Website Final 2026, §9). */
+export const CLIENT_RESPONSIBILITIES = {
+  eyebrow: 'Responsabilidades do cliente',
+  title: 'Um sistema adoptado precisa de decisões dos dois lados.',
+  points: [
+    'Nomear sponsor e owner operacional.',
+    'Disponibilizar utilizadores, dados e documentação autorizada.',
+    'Tomar decisões nos gates.',
+    'Validar requisitos, protótipos, testes e aceitação.',
+    'Preparar comunicação, formação e adoção.',
   ],
 } as const;
 
