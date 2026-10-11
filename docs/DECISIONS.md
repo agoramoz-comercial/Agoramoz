@@ -397,3 +397,30 @@ Officer, com a estrutura do documento «Opportunity Operating System», que
 - O CEO só vê o que ela partilhar: o memo em PDF.
 - Activar é: aplicar a 0017, confirmar a linha 29, criar a conta e correr o
   bloco de `docs/ENERGIA.md`.
+
+## D-37 — Gabinete do Fundador: o Work Operating System v1, privado do fundador
+
+O fundador colou o documento «AGORAMOZ Work Operating System» e pediu que essa
+arquitectura existisse no `/admin`, visível **só para ele**. Escolheu «5
+registos + painéis».
+- **Mesmo padrão do Espaço CEnO (D-36), outro módulo (`direcao`).** Privacidade
+  na base: `dono` em cada linha, RLS só de leitura, escrita só por RPC que
+  verifica módulo e dono, `audit_log` sem conteúdo e escondido da equipa. Sem o
+  módulo, `/admin/gabinete` dá 404 — também para administradores e para a CEnO.
+- **Peças de ecrã partilhadas** (`components/admin/espaco/`) em vez de copiar
+  as do CEnO; o CEnO passou a importá-las, com a QA dele a provar que nada
+  mudou.
+- **Tensão com o documento:** ele recomenda Microsoft 365 e «não construir uma
+  plataforma personalizada agora». A v1 fica deliberadamente pequena — cinco
+  registos dentro do admin que já existe, sem integrações nem automações,
+  ficheiros por ligação https. O registo técnico fica para a v2.
+- **Nada inventado:** sem saldo de partida não há caixa; sem decisões
+  recorrentes fechadas, a métrica de delegação diz o que falta; sem câmbio
+  entre moedas; o pipeline do CRM aparece em contagem porque o CRM não guarda
+  valor.
+
+**Consequência:**
+- Os números são os que o fundador registar; o painel serve a reunião
+  executiva semanal se for actualizado antes dela.
+- Activar é: aplicar a 0018, confirmar a linha 30 e correr o bloco de
+  `docs/GABINETE.md` (cria o perfil `admin` só se faltar; nunca rebaixa).
