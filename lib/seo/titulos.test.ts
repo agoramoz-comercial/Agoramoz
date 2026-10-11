@@ -19,9 +19,9 @@ const casos = [
 ];
 
 describe('títulos das soluções', () => {
-  it('há cinco soluções em cada idioma', () => {
-    expect(casos.filter((c) => c.idioma === 'pt')).toHaveLength(5);
-    expect(casos.filter((c) => c.idioma === 'en')).toHaveLength(5);
+  it('há sete soluções em cada idioma', () => {
+    expect(casos.filter((c) => c.idioma === 'pt')).toHaveLength(7);
+    expect(casos.filter((c) => c.idioma === 'en')).toHaveLength(7);
   });
 
   it.each(casos)('$idioma $s.slug: título com a marca cabe em 60 caracteres e nomeia o país', ({ s, local }) => {

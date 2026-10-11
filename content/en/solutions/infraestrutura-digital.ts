@@ -8,16 +8,16 @@ import type { SolutionPage } from '../../types';
 export const infraestruturaDigitalEn: SolutionPage = {
   slug: 'infraestrutura-digital',
   label: 'Digital infrastructure',
-  short: 'Integration, security, monitoring and continuity.',
+  short: 'Environments, access, monitoring, recovery and continuity.',
 
   hero: {
     eyebrow: 'Solution',
-    h1: 'The question is not whether something will fail. It is whether anyone notices before the customer does.',
-    lead: 'Architecture, integrations, security, monitoring and documentation: the layer that decides whether the systems you already have keep working, stay maintainable and remain yours.',
+    h1: 'The technical foundation that keeps the operation available and under control.',
+    lead: 'Software and automation depend on environments, access, integrations, monitoring, recovery and accountability. We implement only the complexity that is justified — and define who responds when something fails.',
   },
 
   result:
-    'Move from a set of tools that work out of habit to an infrastructure that is documented, observable and recoverable — where a failure is detected, diagnosed and fixed instead of discovered by a customer.',
+    'Knowing when it failed, where it failed and who responds — and being able to restore the operation, not just hold a copy.',
 
   problems: [
     {
@@ -39,12 +39,14 @@ export const infraestruturaDigitalEn: SolutionPage = {
   ],
 
   useCases: [
-    'Know an integration has failed the moment it fails, not when data goes missing',
-    'Reconstruct what happened in an incident, with enough logging to fix the cause',
-    'Remove the access of someone leaving the company in one place, with effect across every system',
-    'Test restoring a backup and know how long it actually takes',
-    'Hand a system over to another team without losing the ability to maintain it',
-    'Assess the real running cost before scaling, instead of finding out on the invoice',
+    'Cloud and environments',
+    'Connectivity and integrations',
+    'Identities and access',
+    'Monitoring and logs',
+    'Backups and recovery',
+    'Availability and continuity',
+    'Configuration and documentation',
+    'Support and operational response',
   ],
 
   components: [
@@ -98,6 +100,10 @@ export const infraestruturaDigitalEn: SolutionPage = {
       q: 'How much does it cost to keep this running after handover?',
       a: 'We estimate the running cost — hosting, licences, services — during the diagnostic and present it before the proposal, not after the invoice. An architecture that is cheap to build and expensive to run is a bad decision that only comes to light in the third month.',
     },
+    {
+      q: 'Which principles do you follow?',
+      a: 'Necessity: implement only the complexity that is justified. Security by design: access, data, dependencies and incidents considered from the architecture. Observability: know when it failed, where and who responds. Recoverability: prepare the restore, not just the copy. Documentation: reduce dependence on people and suppliers. Accountability: define clearly the client, platform, supplier and third parties.',
+    },
   ],
 
   seo: {
@@ -106,5 +112,5 @@ export const infraestruturaDigitalEn: SolutionPage = {
       'Systems integration, access management, monitoring and recovery, documented so that your company’s systems keep working and stay maintainable.',
   },
 
-  updatedAt: '2026-09-29',
+  updatedAt: '2026-10-11',
 };

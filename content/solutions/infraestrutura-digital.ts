@@ -8,16 +8,16 @@ import type { SolutionPage } from '../types';
 export const infraestruturaDigital: SolutionPage = {
   slug: 'infraestrutura-digital',
   label: 'Infraestrutura digital',
-  short: 'Integração, segurança, monitorização e continuidade.',
+  short: 'Ambientes, acessos, monitorização, recuperação e continuidade.',
 
   hero: {
     eyebrow: 'Solução',
-    h1: 'A pergunta não é se alguma coisa vai falhar. É se alguém dá por isso antes do cliente.',
-    lead: 'Arquitetura, integrações, segurança, monitorização e documentação: a camada que decide se os sistemas que já tem continuam a funcionar, continuam a ser manteníveis e continuam a ser seus.',
+    h1: 'A base técnica para a operação continuar disponível e controlada.',
+    lead: 'Software e automação dependem de ambientes, acessos, integrações, monitorização, recuperação e responsabilidade. Implementamos apenas a complexidade justificada — e definimos quem responde quando algo falha.',
   },
 
   result:
-    'Passar de um conjunto de ferramentas que funcionam por hábito para uma infraestrutura documentada, observável e recuperável — onde uma falha é detetada, diagnosticada e corrigida em vez de descoberta por um cliente.',
+    'Saber quando falhou, onde falhou e quem responde — e conseguir repor a operação, não apenas ter a cópia.',
 
   problems: [
     {
@@ -39,12 +39,14 @@ export const infraestruturaDigital: SolutionPage = {
   ],
 
   useCases: [
-    'Saber que uma integração falhou no momento em que falha, e não quando faltam dados',
-    'Reconstituir o que aconteceu num incidente, com registo suficiente para corrigir a causa',
-    'Retirar o acesso de quem sai da empresa num único sítio, com efeito em todos os sistemas',
-    'Testar a restauração de uma cópia de segurança e saber quanto tempo demora de facto',
-    'Passar um sistema para outra equipa sem perder a capacidade de o manter',
-    'Avaliar o custo real de operação antes de escalar, em vez de descobrir na fatura',
+    'Cloud e ambientes',
+    'Conectividade e integrações',
+    'Identidades e acessos',
+    'Monitorização e logs',
+    'Backups e recuperação',
+    'Disponibilidade e continuidade',
+    'Configuração e documentação',
+    'Suporte e resposta operacional',
   ],
 
   components: [
@@ -98,6 +100,10 @@ export const infraestruturaDigital: SolutionPage = {
       q: 'Quanto custa manter isto a funcionar depois de entregue?',
       a: 'Estimamos o custo de operação — alojamento, licenças, serviços — durante o diagnóstico e apresentamo-lo antes da proposta, não depois da fatura. Uma arquitetura barata de construir e cara de operar é uma decisão má que só se descobre ao terceiro mês.',
     },
+    {
+      q: 'Que princípios seguem?',
+      a: 'Necessidade: implementar apenas a complexidade justificada. Segurança por desenho: acesso, dados, dependências e incidentes considerados desde a arquitetura. Observabilidade: saber quando falhou, onde e quem responde. Recuperabilidade: preparar a reposição, não apenas a cópia. Documentação: reduzir a dependência de pessoas e fornecedores. Responsabilidade: definir claramente cliente, plataforma, fornecedor e terceiros.',
+    },
   ],
 
   seo: {
@@ -106,5 +112,5 @@ export const infraestruturaDigital: SolutionPage = {
       'Integração de sistemas, gestão de acessos, monitorização e recuperação, documentadas para que os sistemas da sua empresa continuem a funcionar.',
   },
 
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };

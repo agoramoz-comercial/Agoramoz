@@ -21,6 +21,8 @@ import { softwareEmpresarial } from './solutions/software-empresarial';
 import { automacaoDeProcessos } from './solutions/automacao-de-processos';
 import { agentesIa } from './solutions/agentes-ia';
 import { infraestruturaDigital } from './solutions/infraestrutura-digital';
+import { integracaoDeSistemas } from './solutions/integracao-de-sistemas';
+import { estabilizacaoEEvolucao } from './solutions/estabilizacao-e-evolucao';
 import { SOLUTIONS_EN } from './en/solutions';
 
 /** Rótulos legíveis dos setores. Os slugs são sempre ASCII sem acentos. */
@@ -108,7 +110,9 @@ export const SOLUTIONS: Record<string, SolutionPage> = {
   'software-empresarial': softwareEmpresarial,
   'automacao-de-processos': automacaoDeProcessos,
   'agentes-ia': agentesIa,
+  'integracao-de-sistemas': integracaoDeSistemas,
   'infraestrutura-digital': infraestruturaDigital,
+  'estabilizacao-e-evolucao': estabilizacaoEEvolucao,
 };
 
 /* -------------------------------------------------------------------- lookups */

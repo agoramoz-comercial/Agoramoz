@@ -7,12 +7,12 @@ export const websitesAvancadosEn: SolutionPage = {
 
   hero: {
     eyebrow: 'Solution',
-    h1: 'A beautiful website that generates no enquiries is a cost, not an asset.',
-    lead: 'We build websites that do sales work: they identify who the visitor is, collect the context that matters and hand the opportunity to the right person with what they need to reply.',
+    h1: 'A B2B website should start a process, not just present the company.',
+    lead: 'We build websites that help visitors recognise the problem, choose the right path and give enough context for a useful sales follow-up.',
   },
 
   result:
-    'Raise the share of visitors who become qualified enquiries, with enough context for your sales team to reply without having to find out what it is about in a meeting.',
+    'A clear path from visit to opportunity, with enough context for a useful sales follow-up — measured by qualified demand, not traffic.',
 
   problems: [
     {
@@ -34,12 +34,13 @@ export const websitesAvancadosEn: SolutionPage = {
   ],
 
   useCases: [
-    'Segment visitors by market, sector or problem from the first interaction',
-    'Collect, step by step, the context your sales team needs to reply with substance',
-    'Route each enquiry to the right person by rules, not by who happens to be free',
-    'Publish pages by sector or by problem without needing development for each one',
-    'See which paths generate enquiries and which are browsed without ever converting',
-    'Test two versions of a message and decide with data instead of preference',
+    'Present complex offers clearly',
+    'Segment by problem, sector and market',
+    'Capture context before the contact',
+    'Qualify and route opportunities',
+    'Integrate CRM and operations',
+    'Support proposals, content and authority',
+    'Measure intent and progression',
   ],
 
   components: [
@@ -93,6 +94,14 @@ export const websitesAvancadosEn: SolutionPage = {
       q: 'What about animations? Don’t they slow the site down?',
       a: 'They can, which is why they have a defined budget. Motion that delays reading the headline or clicking the main button is a defect, not an aesthetic choice. Everything respects the system’s reduced-motion preference.',
     },
+    {
+      q: 'What do you not promise?',
+      a: 'Sales without a value proposition, traffic without distribution, immediate organic ranking, conversion without proof, or growth based on design alone.',
+    },
+    {
+      q: 'How is a B2B website measured?',
+      a: 'By qualified demand, completed forms, suitable meetings, diagnostics, proposals, contracts, value and loss reasons. Traffic and impressions are supporting indicators, not the result.',
+    },
   ],
 
   seo: {
@@ -101,5 +110,5 @@ export const websitesAvancadosEn: SolutionPage = {
       'Websites that capture and qualify opportunities: strategy, copy, conditional forms, CRM connection, technical SEO and measurement. Diagnostic first.',
   },
 
-  updatedAt: '2026-09-29',
+  updatedAt: '2026-10-11',
 };

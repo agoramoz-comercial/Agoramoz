@@ -12,12 +12,12 @@ export const agentesIaEn: SolutionPage = {
 
   hero: {
     eyebrow: 'Solution',
-    h1: 'An assistant that answers confidently about what it does not know is worse than no assistant at all.',
-    lead: 'We build agents with a declared scope, grounded in sources your company controls, with explicit permissions and human supervision on the decisions that need it. When they do not know, they say so and hand over to a person.',
+    h1: 'AI agents with an objective, sources, permissions and supervision.',
+    lead: 'An agent should not be given autonomy just because it can generate an answer. It should operate inside a defined process, with authorised information, limits, logs and human accountability. When it does not know, it says so and hands over to a person.',
   },
 
   result:
-    'Cut the time spent answering the same questions and hunting for scattered information — without handing to a model decisions that must stay human.',
+    'Less time spent hunting for information and drafting answers — with authorised sources, limits, logs and human approval on the decisions that need it.',
 
   problems: [
     {
@@ -39,12 +39,13 @@ export const agentesIaEn: SolutionPage = {
   ],
 
   useCases: [
-    'Answer frequent questions while citing the internal document the answer is based on',
-    'Help the team find information in procedures, contracts and history',
-    'Prepare a draft reply or proposal for a person to review and approve',
-    'Extract structured data from incoming documents and flag what needs checking',
-    'Triage requests by subject and urgency, routing them with context',
-    'Gather the history of a customer or case before a meeting',
+    'Searching documentation',
+    'Request triage',
+    'Drafting replies',
+    'Summarising, classifying and extracting',
+    'Supporting teams',
+    'Preparing documents',
+    'Recommendations subject to approval',
   ],
 
   components: [
@@ -98,6 +99,18 @@ export const agentesIaEn: SolutionPage = {
       q: 'Can we let the agent talk to customers directly?',
       a: 'It depends on the scope and the risk. For factual information about documented statuses and procedures, often yes. For prices, contractual deadlines, complaints or any binding commitment, we recommend a draft with human review. If the risk of a wrong answer is high, we say so rather than switch it on and hope.',
     },
+    {
+      q: 'What minimum conditions do you require?',
+      a: 'A specific objective and an owner; identified, authorised sources; minimum information quality; defined users and permissions; quality criteria; error handling and escalation; human approval and monitoring.',
+    },
+    {
+      q: 'When do you advise against AI?',
+      a: 'When the process is not defined, there is no reliable source, the output cannot be reviewed, the risk of error is unacceptable, a simple rule would do, the benefit does not pay for the complexity, or rights and obligations have not been assessed.',
+    },
+    {
+      q: 'How is an agent measured?',
+      a: 'By usage, time saved, completion, quality, human corrections, failures, escalations, cost per task, satisfaction and incidents.',
+    },
   ],
 
   seo: {
@@ -106,5 +119,5 @@ export const agentesIaEn: SolutionPage = {
       'AI agents for businesses, grounded in your own sources: they cite where answers come from, escalate when unsure and keep human approval on critical decisions.',
   },
 
-  updatedAt: '2026-09-29',
+  updatedAt: '2026-10-11',
 };

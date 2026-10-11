@@ -383,7 +383,7 @@ export const IMPROVEMENT_GOALS = [
   { value: 'atendimento', label: 'Atendimento', solution: 'agentes-ia' },
   { value: 'operacoes', label: 'Operações', solution: 'software-empresarial' },
   { value: 'administrativo', label: 'Trabalho administrativo', solution: 'automacao-de-processos' },
-  { value: 'integracao', label: 'Integração de sistemas', solution: 'infraestrutura-digital' },
+  { value: 'integracao', label: 'Integração de sistemas', solution: 'integracao-de-sistemas' },
   { value: 'informacao', label: 'Acesso à informação', solution: 'agentes-ia' },
   { value: 'experiencia', label: 'Experiência digital', solution: 'websites-avancados' },
   { value: 'reporting', label: 'Reporting e decisão', solution: 'software-empresarial' },

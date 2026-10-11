@@ -122,7 +122,9 @@ export type SolutionSlug =
   | 'software-empresarial'
   | 'automacao-de-processos'
   | 'agentes-ia'
-  | 'infraestrutura-digital';
+  | 'integracao-de-sistemas'
+  | 'infraestrutura-digital'
+  | 'estabilizacao-e-evolucao';
 
 /* --------------------------------------------------------------------------
    CTA — os rótulos são tipos literais. O documento exige um CTA primário

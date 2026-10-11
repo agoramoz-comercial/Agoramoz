@@ -12,12 +12,12 @@ export const softwareEmpresarialEn: SolutionPage = {
 
   hero: {
     eyebrow: 'Solution',
-    h1: 'The process that makes your company different is the one no off-the-shelf software knows how to run.',
-    lead: 'It is also, almost always, the one that ended up in a shared spreadsheet and in the memory of two people. We build the missing system: portals, operations and dashboards designed around how the company actually works.',
+    h1: 'Software built around the process that sets your operation apart.',
+    lead: 'Not every process justifies its own software. We recommend building when configuration, integration or existing products cannot meet the need in a defensible way — and the organisation can take part in design and validation.',
   },
 
   result:
-    'Take the critical process out of spreadsheets and out of the memory of whoever has been here longest, and move it into a system with rules, permissions, history and visibility.',
+    'A system fitted to the process that differentiates the operation, built in stages, tested against acceptance criteria and documented so the people who use it can govern it.',
 
   problems: [
     {
@@ -39,12 +39,13 @@ export const softwareEmpresarialEn: SolutionPage = {
   ],
 
   useCases: [
-    'Give customers a portal where they check the status without having to phone and ask',
-    'Record requests with the fields, rules and validations of the real process',
-    'Manage suppliers, documents and expiry dates in a single record with history',
-    'Approve in stages, with who approved and on what information recorded automatically',
-    'Give management a dashboard of the operation’s status, generated from the data rather than assembled by hand',
-    'Onboard newcomers without depending on the memory of those already here',
+    'Requirements and journeys',
+    'Prototypes and architecture',
+    'Applications and portals',
+    'Workflows and dashboards',
+    'Integrations and agreed migration',
+    'Permissions and testing',
+    'Documentation, training and stabilisation',
   ],
 
   components: [
@@ -98,6 +99,14 @@ export const softwareEmpresarialEn: SolutionPage = {
       q: 'Our team is not technical. Will they be able to use it?',
       a: 'That is a requirement, not a hope. That is why the prototype is tested with the people who will use it before development starts, and training and documentation are part of the delivery. A system the team works around has solved nothing.',
     },
+    {
+      q: 'Which decisions do we make with you?',
+      a: 'Buy or build; configure or customise; web or mobile; integrate or replace; cloud or another architecture; single or phased launch; and what happens to the code, licences, support and evolution.',
+    },
+    {
+      q: 'How do you reduce the risk of a software project?',
+      a: 'Discovery before the final budget, a prototype before the build, a prioritised backlog, phased deliveries and demos, acceptance criteria, testing, documentation and change management.',
+    },
   ],
 
   seo: {
@@ -106,5 +115,5 @@ export const softwareEmpresarialEn: SolutionPage = {
       'Custom software development: customer portals, operations management and decision dashboards, designed around your process. A diagnostic comes first.',
   },
 
-  updatedAt: '2026-09-29',
+  updatedAt: '2026-10-11',
 };

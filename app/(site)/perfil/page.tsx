@@ -92,7 +92,7 @@ export default function PerfilPage() {
         <SectionHeading
           id="h-solucoes-perfil"
           eyebrow="O que fazemos"
-          title="Cinco capacidades, um sistema."
+          title="Sete capacidades, um sistema."
           lead="Não são cinco produtos avulsos: são as peças de uma mesma infraestrutura, e um diagnóstico decide quais fazem falta."
           max="wide"
         />

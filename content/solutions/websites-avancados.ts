@@ -11,12 +11,12 @@ export const websitesAvancados: SolutionPage = {
 
   hero: {
     eyebrow: 'Solução',
-    h1: 'Um website bonito que não gera pedidos é uma despesa, não um ativo.',
-    lead: 'Construímos websites que fazem trabalho comercial: identificam quem é o visitante, recolhem o contexto necessário e entregam a oportunidade à pessoa certa com o que ela precisa para responder.',
+    h1: 'Um website B2B deve iniciar um processo, não apenas apresentar a empresa.',
+    lead: 'Construímos websites que ajudam o visitante a reconhecer o problema, escolher o caminho adequado e fornecer contexto para um seguimento comercial útil.',
   },
 
   result:
-    'Aumentar a proporção de visitantes que se tornam pedidos qualificados, com contexto suficiente para a equipa comercial responder sem ter de descobrir o assunto numa reunião.',
+    'Um percurso claro entre a visita e a oportunidade, com contexto suficiente para um seguimento comercial útil — e medido pela procura qualificada, não pelo tráfego.',
 
   problems: [
     {
@@ -38,12 +38,13 @@ export const websitesAvancados: SolutionPage = {
   ],
 
   useCases: [
-    'Segmentar o visitante por mercado, setor ou problema logo na primeira interação',
-    'Recolher, por etapas, o contexto que a equipa comercial precisa para responder com substância',
-    'Encaminhar cada pedido para a pessoa certa com base em regras, não em disponibilidade',
-    'Publicar páginas por setor ou por problema sem depender de desenvolvimento a cada uma',
-    'Ver que caminhos geram pedidos e quais são percorridos sem nunca converter',
-    'Testar duas versões de uma mensagem e decidir com dados em vez de preferência',
+    'Apresentar ofertas complexas com clareza',
+    'Segmentar por problema, setor e mercado',
+    'Captar contexto antes do contacto',
+    'Qualificar e encaminhar oportunidades',
+    'Integrar CRM e operação',
+    'Apoiar propostas, conteúdo e autoridade',
+    'Medir intenção e progressão',
   ],
 
   components: [
@@ -97,6 +98,14 @@ export const websitesAvancados: SolutionPage = {
       q: 'E as animações? Não tornam o site mais lento?',
       a: 'Podem, e é por isso que têm orçamento definido. Movimento que atrase a leitura do título ou o clique no botão principal é um defeito, não uma escolha estética. Tudo respeita a preferência de movimento reduzido do sistema.',
     },
+    {
+      q: 'O que não prometem?',
+      a: 'Vendas sem proposta de valor, tráfego sem distribuição, posicionamento orgânico imediato, conversão sem prova, nem crescimento baseado apenas no design.',
+    },
+    {
+      q: 'Como se mede um website B2B?',
+      a: 'Por procura qualificada, conclusão de formulários, reuniões adequadas, diagnósticos, propostas, contratos, valor e motivo de perda. Tráfego e impressões são indicadores auxiliares, não o resultado.',
+    },
   ],
 
   seo: {
@@ -105,5 +114,5 @@ export const websitesAvancados: SolutionPage = {
       'Criação de websites que captam e qualificam oportunidades: estratégia, copy, formulários condicionais, ligação ao CRM, SEO técnico e medição.',
   },
 
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };

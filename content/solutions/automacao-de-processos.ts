@@ -7,12 +7,12 @@ export const automacaoDeProcessos: SolutionPage = {
 
   hero: {
     eyebrow: 'Solução',
-    h1: 'O trabalho que a sua equipa repete todos os dias não precisa de uma pessoa a fazê-lo.',
-    lead: 'Copiar dados entre sistemas, preparar o mesmo documento, enviar a mesma atualização, conferir o que já foi conferido. Ligamos tarefas, dados e plataformas para que esse trabalho aconteça sozinho — e para que a equipa volte a fazer o que exige competência.',
+    h1: 'Automatize o trabalho repetitivo, não a confusão.',
+    lead: 'A automação cria valor quando o processo tem um objetivo claro, dados utilizáveis, regras compreendidas e responsáveis pelas exceções. Primeiro tornamos o processo visível; depois ligamos tarefas, dados e plataformas para que o trabalho repetitivo deixe de depender de alguém se lembrar.',
   },
 
   result:
-    'Reduzir o tempo gasto em tarefas repetitivas, eliminar a introdução manual de dados entre sistemas e garantir que nada fica por fazer porque alguém se esqueceu.',
+    'Menos passos manuais, erros e esperas — com as exceções visíveis e um responsável por cada uma.',
 
   problems: [
     {
@@ -34,12 +34,13 @@ export const automacaoDeProcessos: SolutionPage = {
   ],
 
   useCases: [
-    'Criar o registo no CRM a partir do formulário do website, já classificado e atribuído',
-    'Gerar e enviar a proposta a partir dos dados do pedido, sem copiar nada',
-    'Avisar o cliente da mudança de estado do processo, sem alguém ter de escrever a mensagem',
-    'Consolidar dados de várias fontes num relatório, na periodicidade definida',
-    'Verificar prazos e validades e alertar antes de expirarem',
-    'Encaminhar pedidos para a pessoa certa com base em regras, não em disponibilidade',
+    'Captação e validação de dados',
+    'Atribuição de tarefas',
+    'Geração de documentos',
+    'Notificações e aprovações',
+    'Atualização entre sistemas',
+    'Qualificação, alertas e reporting',
+    'Encaminhamento de exceções',
   ],
 
   components: [
@@ -93,6 +94,14 @@ export const automacaoDeProcessos: SolutionPage = {
       q: 'Quanto tempo até ver resultado?',
       a: 'Depende do processo. O diagnóstico identifica o primeiro fluxo com melhor relação entre impacto e esforço — habitualmente o que é mais frequente e mais simples, não o mais visível. Não indicamos prazos antes de conhecer o processo.',
     },
+    {
+      q: 'Quando não recomendam automatizar?',
+      a: 'Quando não existe owner, quando a regra muda constantemente, quando os dados não têm qualidade mínima, quando o fluxo não é compreendido, quando a decisão é de alto impacto e não há supervisão, ou quando o custo excede o benefício. Nesses casos dizemos isso — e o passo certo é outro.',
+    },
+    {
+      q: 'Como se mede o resultado?',
+      a: 'Por tempo de ciclo, passos manuais, erros, exceções, volume, capacidade libertada, utilização, custo por transação e incidentes — medidos contra a baseline do diagnóstico, não contra uma estimativa.',
+    },
   ],
 
   seo: {
@@ -101,5 +110,5 @@ export const automacaoDeProcessos: SolutionPage = {
       'Automação de processos para empresas: ligamos tarefas, dados e plataformas para reduzir trabalho repetitivo, atrasos e erros manuais. Diagnóstico primeiro.',
   },
 
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };

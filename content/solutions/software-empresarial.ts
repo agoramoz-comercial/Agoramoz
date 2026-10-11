@@ -11,12 +11,12 @@ export const softwareEmpresarial: SolutionPage = {
 
   hero: {
     eyebrow: 'Solução',
-    h1: 'O processo que torna a sua empresa diferente é o que nenhum software de prateleira sabe fazer.',
-    lead: 'É também, quase sempre, o que acabou numa folha de cálculo partilhada e na memória de duas pessoas. Construímos o sistema em falta: portais, operações e painéis desenhados à volta de como a empresa trabalha de facto.',
+    h1: 'Software construído à volta do processo que diferencia a sua operação.',
+    lead: 'Nem todo o processo justifica software próprio. Recomendamos desenvolvimento quando configuração, integração ou produtos existentes não resolvem a necessidade de forma defensável — e a organização consegue participar no desenho e na validação.',
   },
 
   result:
-    'Tirar o processo crítico das folhas de cálculo e da memória de quem cá está há mais tempo, passando-o para um sistema com regras, permissões, histórico e visibilidade.',
+    'Um sistema à medida do processo que diferencia a operação, construído por fases, testado contra critérios de aceitação e documentado para ser governado por quem o usa.',
 
   problems: [
     {
@@ -38,12 +38,13 @@ export const softwareEmpresarial: SolutionPage = {
   ],
 
   useCases: [
-    'Dar ao cliente um portal onde consulta o estado sem ter de telefonar a perguntar',
-    'Registar pedidos com os campos, as regras e as validações do processo real',
-    'Gerir fornecedores, documentos e validades num único registo com histórico',
-    'Aprovar por etapas, com quem aprova e com que informação registado automaticamente',
-    'Dar à gestão um painel com o estado da operação, gerado dos dados e não montado à mão',
-    'Integrar quem entra de novo sem depender da memória de quem já cá está',
+    'Requisitos e jornadas',
+    'Protótipos e arquitetura',
+    'Aplicações e portais',
+    'Workflows e dashboards',
+    'Integrações e migração acordada',
+    'Permissões e testes',
+    'Documentação, formação e estabilização',
   ],
 
   components: [
@@ -97,6 +98,14 @@ export const softwareEmpresarial: SolutionPage = {
       q: 'A nossa equipa não é técnica. Vai conseguir usar?',
       a: 'É um requisito, não uma esperança. Por isso o protótipo é testado com quem vai usar antes de se desenvolver, e a formação e a documentação fazem parte da entrega. Um sistema que a equipa contorna não resolveu nada.',
     },
+    {
+      q: 'Que decisões tomamos consigo?',
+      a: 'Comprar ou desenvolver; configurar ou customizar; web ou mobile; integrar ou substituir; cloud ou outra arquitetura; lançamento único ou faseado; e o que acontece ao código, às licenças, ao suporte e à evolução.',
+    },
+    {
+      q: 'Como reduzem o risco de um projeto de software?',
+      a: 'Discovery antes do orçamento definitivo, protótipo antes da construção, backlog priorizado, entregas e demonstrações faseadas, critérios de aceitação, testes, documentação e gestão de alterações.',
+    },
   ],
 
   seo: {
@@ -105,5 +114,5 @@ export const softwareEmpresarial: SolutionPage = {
       'Desenvolvimento de software à medida: portais de cliente, gestão de operações e painéis de decisão, desenhados à volta do seu processo. Diagnóstico primeiro.',
   },
 
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };

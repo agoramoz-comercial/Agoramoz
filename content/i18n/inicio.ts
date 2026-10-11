@@ -69,7 +69,7 @@ export const INICIO = {
   },
   solucoes: {
     eyebrow: { pt: 'Soluções', en: 'Solutions' },
-    titulo: { pt: 'Cinco capacidades, um sistema.', en: 'Five capabilities, one system.' },
+    titulo: { pt: 'Sete capacidades, um sistema.', en: 'Seven capabilities, one system.' },
     lead: {
       pt: 'Cada uma resolve um bloqueio diferente. O diagnóstico determina por qual começar — nem todas são igualmente importantes para a sua empresa.',
       en: 'Each one removes a different blocker. The diagnostic decides where to start — they are not all equally important for your company.',

@@ -15,12 +15,12 @@ export const agentesIa: SolutionPage = {
 
   hero: {
     eyebrow: 'Solução',
-    h1: 'Um assistente que responde com confiança sobre o que não sabe é pior do que não ter assistente nenhum.',
-    lead: 'Construímos agentes com âmbito declarado, ancorados em fontes que a sua empresa controla, com permissões explícitas e supervisão humana nas decisões que a exigem. Quando não sabem, dizem que não sabem e passam a uma pessoa.',
+    h1: 'Agentes de IA com objetivo, fontes, permissões e supervisão.',
+    lead: 'Um agente não deve receber autonomia apenas porque consegue gerar uma resposta. Deve operar dentro de um processo definido, com informação autorizada, limites, registos e responsabilidade humana. Quando não sabe, diz que não sabe e passa a uma pessoa.',
   },
 
   result:
-    'Reduzir o tempo gasto a responder às mesmas perguntas e a procurar informação dispersa, sem transferir para um modelo decisões que têm de continuar a ser humanas.',
+    'Menos tempo a procurar informação e a preparar respostas — com fontes autorizadas, limites, registos e aprovação humana nas decisões que a exigem.',
 
   problems: [
     {
@@ -42,12 +42,13 @@ export const agentesIa: SolutionPage = {
   ],
 
   useCases: [
-    'Responder a perguntas frequentes citando o documento interno em que se baseou',
-    'Ajudar a equipa a encontrar informação em procedimentos, contratos e histórico',
-    'Preparar um rascunho de resposta ou de proposta para uma pessoa rever e aprovar',
-    'Extrair dados estruturados de documentos recebidos e assinalar o que precisa de verificação',
-    'Fazer a triagem de pedidos por assunto e urgência, encaminhando com o contexto',
-    'Reunir o histórico de um cliente ou processo antes de uma reunião',
+    'Pesquisa em documentação',
+    'Triagem de pedidos',
+    'Preparação de respostas',
+    'Resumo, classificação e extração',
+    'Apoio a equipas',
+    'Preparação de documentos',
+    'Recomendação sujeita a aprovação',
   ],
 
   components: [
@@ -101,6 +102,18 @@ export const agentesIa: SolutionPage = {
       q: 'Podemos pôr o agente a falar diretamente com clientes?',
       a: 'Depende do âmbito e do risco. Para informação factual sobre estados e procedimentos documentados, frequentemente sim. Para preços, prazos contratuais, reclamações ou qualquer compromisso vinculativo, recomendamos rascunho com revisão humana. Se o risco de uma resposta errada for alto, dizemo-lo em vez de ativar e esperar.',
     },
+    {
+      q: 'Que condições mínimas exigem?',
+      a: 'Objetivo específico e owner; fontes identificadas e autorizadas; qualidade mínima da informação; utilizadores e permissões definidos; critérios de qualidade; tratamento de erros e escalamento; aprovação humana e monitorização.',
+    },
+    {
+      q: 'Quando não recomendam IA?',
+      a: 'Quando o processo não está definido, não existe fonte confiável, o resultado não pode ser revisto, o risco de erro é inaceitável, uma regra simples resolve, o benefício não paga a complexidade, ou direitos e obrigações não foram avaliados.',
+    },
+    {
+      q: 'Como se mede um agente?',
+      a: 'Por utilização, tempo poupado, conclusão, qualidade, correções humanas, falhas, escalamentos, custo por tarefa, satisfação e incidentes.',
+    },
   ],
 
   seo: {
@@ -109,5 +122,5 @@ export const agentesIa: SolutionPage = {
       'Agentes de IA para empresas, ancorados nas fontes da sua organização: citam a origem, escalam quando não sabem e mantêm aprovação humana nas decisões críticas.',
   },
 
-  updatedAt: '2026-09-22',
+  updatedAt: '2026-10-11',
 };

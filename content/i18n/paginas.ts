@@ -66,15 +66,15 @@ export const INDICE_SOLUCOES = {
   // O que se pesquisa primeiro, a marca no fim (pelo template): 50–60 caracteres.
   metaTitulo: { pt: 'Websites, software, automação e agentes de IA', en: 'Websites, software, automation and AI agents' },
   metaDescricao: {
-    pt: 'Websites avançados, software empresarial, automação de processos, agentes de IA e infraestrutura digital. Cinco capacidades, um sistema.',
-    en: 'Advanced websites, business software, process automation, AI agents and digital infrastructure. Five capabilities, one system.',
+    pt: 'Websites, software, automação, agentes de IA, integração, infraestrutura e evolução. Sete capacidades, um sistema.',
+    en: 'Websites, software, automation, AI agents, integration, infrastructure and evolution. Seven capabilities, one system.',
   },
   inicio: { pt: 'Início', en: 'Home' },
   trilho: { pt: 'Soluções', en: 'Solutions' },
   eyebrow: { pt: 'Soluções', en: 'Solutions' },
   titulo: {
-    pt: 'Cinco capacidades. Uma decide-se por diagnóstico, não por catálogo.',
-    en: 'Five capabilities. You choose by diagnostic, not from a catalogue.',
+    pt: 'Sete capacidades. A escolha decide-se por diagnóstico, não por catálogo.',
+    en: 'Seven capabilities. You choose by diagnostic, not from a catalogue.',
   },
   lead: {
     pt: 'Cada capacidade resolve um bloqueio diferente. Apresentá-las como igualmente importantes seria inútil para si — o diagnóstico determina por qual começar.',

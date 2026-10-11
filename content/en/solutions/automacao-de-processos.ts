@@ -7,12 +7,12 @@ export const automacaoDeProcessosEn: SolutionPage = {
 
   hero: {
     eyebrow: 'Solution',
-    h1: 'The work your team repeats every day does not need a person to do it.',
-    lead: 'Copying data between systems, preparing the same document, sending the same update, checking what has already been checked. We connect tasks, data and platforms so that this work happens on its own — and your team goes back to work that needs their skills.',
+    h1: 'Automate the repetitive work, not the confusion.',
+    lead: 'Automation creates value when the process has a clear objective, usable data, understood rules and owners for the exceptions. First we make the process visible; then we connect tasks, data and platforms so repetitive work stops depending on someone remembering it.',
   },
 
   result:
-    'Cut the time spent on repetitive tasks, end the manual re-entry of data between systems, and make sure nothing is left undone because someone forgot.',
+    'Fewer manual steps, errors and waits — with exceptions visible and an owner for each one.',
 
   problems: [
     {
@@ -34,12 +34,13 @@ export const automacaoDeProcessosEn: SolutionPage = {
   ],
 
   useCases: [
-    'Create the CRM record from the website form, already classified and assigned',
-    'Generate and send the proposal from the request data, without copying anything',
-    'Tell the customer when their case changes status, without anyone writing the message',
-    'Consolidate data from several sources into a report, on the agreed schedule',
-    'Check deadlines and expiry dates and send alerts before they lapse',
-    'Route requests to the right person by rules, not by who happens to be free',
+    'Data capture and validation',
+    'Task assignment',
+    'Document generation',
+    'Notifications and approvals',
+    'Updates between systems',
+    'Qualification, alerts and reporting',
+    'Exception routing',
   ],
 
   components: [
@@ -93,6 +94,14 @@ export const automacaoDeProcessosEn: SolutionPage = {
       q: 'How long until we see results?',
       a: 'It depends on the process. The diagnostic identifies the first flow with the best balance of impact and effort — usually the most frequent and simplest, not the most visible. We do not give timelines before we know the process.',
     },
+    {
+      q: 'When do you advise against automating?',
+      a: 'When there is no owner, when the rule keeps changing, when the data lacks minimum quality, when the flow is not understood, when the decision is high-impact with no supervision, or when the cost exceeds the benefit. In those cases we say so — and the right next step is a different one.',
+    },
+    {
+      q: 'How is the result measured?',
+      a: 'By cycle time, manual steps, errors, exceptions, volume, capacity freed, usage, cost per transaction and incidents — measured against the diagnostic baseline, not against an estimate.',
+    },
   ],
 
   seo: {
@@ -101,5 +110,5 @@ export const automacaoDeProcessosEn: SolutionPage = {
       'Business process automation: we connect tasks, data and platforms to cut repetitive work, delays and manual errors. A diagnostic of the process comes first.',
   },
 
-  updatedAt: '2026-09-29',
+  updatedAt: '2026-10-11',
 };

@@ -106,8 +106,22 @@ export const RESUMO_SOLUCAO: Record<SolutionSlug, { label: Texto; short: Texto }
   'infraestrutura-digital': {
     label: { pt: 'Infraestrutura digital', en: 'Digital infrastructure' },
     short: {
-      pt: 'Integração, segurança, monitorização e continuidade.',
-      en: 'Integration, security, monitoring and continuity.',
+      pt: 'Ambientes, acessos, monitorização, recuperação e continuidade.',
+      en: 'Environments, access, monitoring, recovery and continuity.',
+    },
+  },
+  'integracao-de-sistemas': {
+    label: { pt: 'Integração de sistemas', en: 'Systems integration' },
+    short: {
+      pt: 'A informação avança entre aplicações sem ninguém a copiar.',
+      en: 'Information moves between applications without anyone copying it.',
+    },
+  },
+  'estabilizacao-e-evolucao': {
+    label: { pt: 'Estabilização e evolução', en: 'Stabilisation and evolution' },
+    short: {
+      pt: 'Depois da entrada em produção: adoção, suporte e melhoria.',
+      en: 'After go-live: adoption, support and improvement.',
     },
   },
   'software-empresarial': {
