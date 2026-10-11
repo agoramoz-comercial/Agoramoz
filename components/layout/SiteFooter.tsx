@@ -159,7 +159,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
               {t(CHROME.empresa, idioma)}
             </h2>
             <ul className="mt-2">
-              {NAV.primary.map((item) => (
+              {[...NAV.primary, ...NAV.secundaria].map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}

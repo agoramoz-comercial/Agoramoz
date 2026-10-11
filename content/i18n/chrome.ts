@@ -74,8 +74,14 @@ export const CHROME = {
 } as const satisfies Record<string, Texto>;
 
 /** As páginas institucionais, que por agora só existem em português. */
-export const NAV_TEXTO: Record<'/como-trabalhamos' | '/sobre' | '/contactos', Texto> = {
+export const NAV_TEXTO: Record<
+  '/como-trabalhamos' | '/setores' | '/sobre' | '/contactos' | '/seguranca-qualidade' | '/faq',
+  Texto
+> = {
   '/como-trabalhamos': { pt: 'Como trabalhamos', en: 'How we work' },
+  '/setores': { pt: 'Setores', en: 'Sectors' },
+  '/seguranca-qualidade': { pt: 'Segurança e qualidade', en: 'Security and quality' },
+  '/faq': { pt: 'Perguntas frequentes', en: 'FAQ' },
   '/sobre': { pt: 'Sobre', en: 'About' },
   '/contactos': { pt: 'Contactos', en: 'Contact' },
 };

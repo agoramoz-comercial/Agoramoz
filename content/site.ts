@@ -133,6 +133,15 @@ export const NAV = {
     { href: '/sobre', label: 'Sobre' },
     { href: '/contactos', label: 'Contactos' },
   ],
+  /**
+   * Só no rodapé: o cabeçalho já tem o mega-menu «Setores» (por país) e uma
+   * entrada a mais mudava-lhe a forma — o design não muda.
+   */
+  secundaria: [
+    { href: '/setores', label: 'Setores' },
+    { href: '/seguranca-qualidade', label: 'Segurança e qualidade' },
+    { href: '/faq', label: 'Perguntas frequentes' },
+  ],
 } as const;
 
 /* ------------------------------------------------- oferta de entrada (§9/13) */
@@ -390,3 +399,144 @@ export const IMPROVEMENT_GOALS = [
 ] as const;
 
 export type ImprovementGoal = (typeof IMPROVEMENT_GOALS)[number]['value'];
+
+/* -------------------------------- Website Final 2026: confiança (§18–§22) */
+
+/** Setores e processos de entrada (§18). Uma lista de setores não é uma proposta de valor. */
+export const SETORES_2026 = {
+  eyebrow: 'Setores',
+  title: 'Começamos por um processo, não por uma lista de setores.',
+  lead: 'Cada setor tem um processo crítico, quem o compra e uma oferta de entrada. Só publicamos uma página setorial quando há linguagem, processo, prova e capacidade demonstráveis — por isso, hoje, a única completa é energia, mineração e serviços industriais.',
+  itens: [
+    {
+      nome: 'Serviços B2B',
+      processo: 'Pedido → proposta → entrega → faturação',
+      compradores: 'Direção, Comercial, Operações',
+      oferta: 'Diagnóstico do fluxo comercial-operacional',
+      href: '/diagnostico?pais=mz&setor=comercio-servicos',
+    },
+    {
+      nome: 'Logística e transportes',
+      processo: 'Ordem → execução → ocorrência → prova → faturação',
+      compradores: 'Operações, Financeiro, TI',
+      oferta: 'Piloto de ordem e visibilidade',
+      href: '/diagnostico?pais=mz&setor=logistica',
+    },
+    {
+      nome: 'Energia, mineração e serviços industriais',
+      processo: 'Ativo → inspeção → ação → evidência',
+      compradores: 'Operações, HSE, TI, Procurement',
+      oferta: 'Diagnóstico de processo crítico',
+      href: '/mz/energia-mineracao',
+    },
+    {
+      nome: 'Construção e imobiliário',
+      processo: 'Orçamento → alteração → material → medição → cobrança',
+      compradores: 'Direção de obra, Financeiro',
+      oferta: 'Controlo de projeto e documentos',
+      href: '/diagnostico?pais=mz&setor=construcao-imobiliario',
+    },
+    {
+      nome: 'Agricultura e agronegócio',
+      processo: 'Fornecedor → produção → recolha → qualidade → distribuição',
+      compradores: 'Operações, Qualidade',
+      oferta: 'Diagnóstico de rastreabilidade',
+      href: '/diagnostico?pais=mz&setor=agronegocio',
+    },
+    {
+      nome: 'Desenvolvimento internacional',
+      processo: 'Campo → validação → consolidação → reporting',
+      compradores: 'Programa, M&E, TI',
+      oferta: 'Fluxo de dados e reporting',
+      href: '/diagnostico',
+    },
+  ],
+} as const;
+
+/** Sobre (§19): princípios, como medimos e a regra de prova. */
+export const SOBRE_2026 = {
+  title: 'Tecnologia depois do problema. Responsabilidade depois da entrada em produção.',
+  lead: 'A AGORAMOZ trabalha na ligação entre estratégia operacional e implementação tecnológica. Começa pela mudança empresarial necessária e determina a combinação adequada de processo, software, automação, integração, infraestrutura ou inteligência artificial.',
+  principiosTitulo: 'Princípios',
+  principios: [
+    { title: 'A tecnologia não corrige um problema mal definido.', body: 'Por isso o diagnóstico vem antes da proposta.' },
+    { title: 'Nem todo o processo deve ser automatizado.', body: 'Sem owner, com regras instáveis ou dados fracos, automatizar multiplica o problema.' },
+    { title: 'Nem toda a empresa precisa de software próprio.', body: 'Configurar, integrar ou comprar pode ser a resposta certa.' },
+    { title: 'Um protótipo pode evitar uma implementação errada.', body: 'Validamos a experiência num contexto real e limitado antes de construir.' },
+    { title: 'A adoção faz parte do sistema.', body: 'Um sistema que a equipa não usa não resolveu nada.' },
+    { title: 'Segurança e continuidade não se acrescentam no fim.', body: 'Acessos, dados, dependências e incidentes entram na arquitetura.' },
+    { title: 'O cliente deve compreender e governar o que recebe.', body: 'Documentação, formação e responsabilidades definidas.' },
+    { title: 'A entrada em produção é o início da utilização.', body: 'A estabilização e a evolução são contratadas com âmbito e níveis de serviço.' },
+  ],
+  comoMedimos:
+    'Tempo, erros, capacidade, visibilidade, utilização, qualidade, receita, custo, risco, satisfação e continuidade — conforme o projeto e a baseline disponível.',
+  prova:
+    'Não publicamos resultados, clientes, certificações, anos de experiência, presença geográfica ou parcerias sem autorização e evidência verificável.',
+} as const;
+
+/** Segurança, privacidade e qualidade (§21). Explica controlos; não promete conformidade automática. */
+export const SEGURANCA_2026 = {
+  eyebrow: 'Confiança',
+  title: 'Controlo desde o desenho. Evidência antes do claim.',
+  lead: 'Explicamos o modelo operacional e os controlos disponíveis — sem prometer conformidade automática, segurança absoluta ou certificações que não existem.',
+  security: {
+    title: 'Security pack mínimo',
+    lead: 'O que cada projeto documenta sobre proteção e governo, antes da entrada em produção.',
+    points: [
+      'Responsabilidades e contactos.',
+      'Gestão de acessos e credenciais.',
+      'Ambientes e segregação.',
+      'Backups e recuperação.',
+      'Logs e monitorização.',
+      'Gestão de vulnerabilidades.',
+      'Incidentes e escalamento.',
+      'Subcontratantes e dependências.',
+      'Retenção e eliminação.',
+      'Continuidade e saída do serviço.',
+    ],
+  },
+  quality: {
+    title: 'Quality pack mínimo',
+    lead: 'O que torna uma entrega testável e aceitável — escrito, não implícito.',
+    points: [
+      'Definition of ready e definition of done.',
+      'Critérios de aceitação.',
+      'Estratégia de testes.',
+      'Gestão de defeitos.',
+      'Revisão de código e configuração.',
+      'Gestão de alterações.',
+      'Documentação.',
+      'Entrada em produção e rollback.',
+      'Estabilização.',
+    ],
+  },
+  mercados: {
+    title: 'O que dizemos em cada mercado',
+    lead: 'A validação jurídica pertence às partes competentes. Esta é a linguagem que usamos — e a que não usamos.',
+    itens: [
+      { title: 'Moçambique', body: 'Aplicamos os controlos técnicos e operacionais acordados e validamos requisitos regulatórios específicos com as partes competentes.' },
+      { title: 'Portugal', body: 'Implementamos medidas técnicas e organizativas no âmbito contratado; a base legal e a conformidade final requerem validação do cliente e aconselhamento competente.' },
+      { title: 'Brasil', body: 'Apoiamos controles técnicos para tratamento de dados; não substituímos a função jurídica, de privacidade ou de encarregado.' },
+      { title: 'Global', body: 'We do not describe a project as globally compliant without jurisdiction-specific review.' },
+    ],
+  },
+} as const;
+
+/** FAQ comercial (§22): objeções reais antes de avançar. */
+export const FAQ_2026 = {
+  eyebrow: 'Perguntas frequentes',
+  title: 'O que nos perguntam antes de avançar.',
+  lead: 'Respostas diretas às objeções mais comuns — incluindo as que dizem o que não fazemos.',
+  items: [
+    { q: 'A avaliação inicial é gratuita?', a: 'Pode existir uma avaliação limitada para determinar elegibilidade. Trabalho que envolva entrevistas, mapeamento, análise, arquitetura ou recomendação executiva deve ser contratado.' },
+    { q: 'O diagnóstico obriga a contratar a implementação?', a: 'Não. O cliente pode não avançar, executar internamente ou contratar outro fornecedor, conforme os termos acordados.' },
+    { q: 'Trabalham com sistemas existentes?', a: 'Sim, quando a integração é tecnicamente viável, segura e economicamente defensável.' },
+    { q: 'Fazem apenas software à medida?', a: 'Não. A recomendação pode incluir configuração, integração, automação, produto existente, mudança de processo ou desenvolvimento próprio.' },
+    { q: 'Conseguem apresentar preço fechado?', a: 'Quando o escopo e as dependências são suficientemente conhecidos. Caso contrário, recomendamos discovery, piloto ou preço por fase.' },
+    { q: 'Quem é proprietário do código?', a: 'Propriedade, licenças, componentes preexistentes e direitos de utilização são definidos contratualmente.' },
+    { q: 'Prestam suporte após o lançamento?', a: 'Pode ser contratada estabilização, suporte e evolução com âmbito e níveis de serviço definidos.' },
+    { q: 'Conseguem garantir resultados?', a: 'Não garantimos resultados dependentes de adoção, procura, decisões do cliente ou fatores externos. Definimos métricas, responsabilidades e critérios.' },
+    { q: 'Trabalham com dados pessoais?', a: 'Sim, mediante definição de papéis, requisitos e controlos. A validação jurídica continua a pertencer às partes competentes.' },
+    { q: 'Fazem projetos internacionais?', a: 'Sim, sujeitos a avaliação de jurisdição, contratação, moeda, impostos, dados, suporte e capacidade.' },
+  ],
+} as const;

@@ -90,6 +90,8 @@ export const RESERVED_TOP_LEVEL_SLUGS = [
   'en', 'global',
   // AGORAMOZ Moz News (lote N).
   'news',
+  // Website Final 2026: páginas de confiança.
+  'faq', 'seguranca-qualidade',
 ] as const;
 
 /**

@@ -24,12 +24,15 @@ import { jornalLigado, listarPublicados } from '@/lib/news/jornal-servidor';
  * incluindo as que têm datas certas. Datas medidas no histórico do git.
  */
 const REVISTO_EM = {
-  '/': '2026-09-29',
-  '/diagnostico': '2026-09-29',
-  '/solucoes': '2026-09-29',
-  '/como-trabalhamos': '2026-09-29',
-  '/sobre': '2026-09-29',
+  '/': '2026-10-11',
+  '/diagnostico': '2026-10-11',
+  '/solucoes': '2026-10-11',
+  '/como-trabalhamos': '2026-10-11',
+  '/sobre': '2026-10-11',
   '/contactos': '2026-09-29',
+  '/setores': '2026-10-11',
+  '/seguranca-qualidade': '2026-10-11',
+  '/faq': '2026-10-11',
   '/privacidade': '2026-09-24',
   '/global': '2026-09-29',
   '/news': '2026-09-30',
@@ -47,6 +50,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absolute('/como-trabalhamos'), lastModified: em('/como-trabalhamos'), priority: 0.6 },
     { url: absolute('/sobre'), lastModified: em('/sobre'), priority: 0.5 },
     { url: absolute('/contactos'), lastModified: em('/contactos'), priority: 0.5 },
+    { url: absolute('/setores'), lastModified: em('/setores'), priority: 0.6 },
+    { url: absolute('/seguranca-qualidade'), lastModified: em('/seguranca-qualidade'), priority: 0.5 },
+    { url: absolute('/faq'), lastModified: em('/faq'), priority: 0.5 },
     { url: absolute('/privacidade'), lastModified: em('/privacidade'), priority: 0.2 },
     { url: absolute('/news'), lastModified: em('/news'), priority: 0.6 },
   ];

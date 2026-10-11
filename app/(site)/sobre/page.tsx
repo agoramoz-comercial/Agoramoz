@@ -6,13 +6,14 @@ import { SplitHeading } from '@/components/motion/SplitHeading';
 import { Founders } from '@/components/sections/Founders';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
 import { FinalCta } from '@/components/sections/FinalCta';
-import { FOUNDERS, PROCESS, RISK_REDUCTION } from '@/content/site';
+import { FOUNDERS, PROCESS, RISK_REDUCTION, SOBRE_2026 } from '@/content/site';
+import { ProblemGrid } from '@/components/sections/ProblemGrid';
 import { buildMetadata } from '@/lib/seo/site';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Quem somos: fundadores e método de trabalho',
+  title: 'Quem somos: fundadores, princípios e método',
   description:
-    'A AGORAMOZ constrói infraestrutura digital orientada a crescimento, produtividade e controlo operacional para empresas em Moçambique, Portugal e Brasil.',
+    'A AGORAMOZ liga estratégia operacional e implementação: processo, software, automação, integração, infraestrutura e IA, por fases controladas.',
   path: '/sobre',
 });
 
@@ -29,11 +30,10 @@ export default function SobrePage() {
           as="h1"
           className="mt-10 max-w-[19ch] text-[length:var(--text-display)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)]"
         >
-          Existimos para reduzir o custo daquilo que a tecnologia devia ter resolvido.
+          {SOBRE_2026.title}
         </SplitHeading>
         <p className="mt-10 max-w-[56ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
-          A AGORAMOZ desenvolve websites avançados, software empresarial, automações e agentes de IA.
-          Não vendemos ferramentas — construímos o sistema entre o problema económico e o resultado.
+          {SOBRE_2026.lead}
         </p>
         <div className="rule mt-16 grid gap-12 pt-10 md:grid-cols-2 lg:grid-cols-3">
           <div>
@@ -46,8 +46,8 @@ export default function SobrePage() {
           <div>
             <h2 className="font-display text-[length:var(--text-h3)] font-semibold">O que não fazemos</h2>
             <p className="mt-3 text-[color:var(--muted)]">
-              Não prometemos aumentos de vendas. Não apresentamos demonstrações como casos reais. Não
-              recomendamos tecnologia antes de compreender o processo, a segurança e o custo de operação.
+              Não prometemos aumentos de vendas nem recomendamos tecnologia antes de compreender o processo,
+              a segurança e o custo de operação. {SOBRE_2026.prova}
             </p>
           </div>
           <div>
@@ -58,6 +58,11 @@ export default function SobrePage() {
             </p>
           </div>
         </div>
+      </Section>
+
+      <Section surface="tint" aria-labelledby="h-principios">
+        <SectionHeading id="h-principios" eyebrow={SOBRE_2026.principiosTitulo} title="O que orienta cada recomendação." lead={`Como medimos: ${SOBRE_2026.comoMedimos}`} max="wide" />
+        <ProblemGrid items={[...SOBRE_2026.principios]} />
       </Section>
 
       <Section surface="light" aria-labelledby="h-founders">
