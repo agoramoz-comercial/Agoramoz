@@ -60,7 +60,7 @@ export const integracaoDeSistemasEn: SolutionPage = {
   security: [
     'Each connection runs with the minimum permissions it needs',
     'Credentials and keys managed outside the code, with defined rotation',
-    'Failures raise an alert and are logged — they never go unnoticed',
+    'Failures raise an alert and are logged, so they do not go unnoticed',
     'Personal data exchanged only as far as the purpose requires',
     'Controlled reprocessing, without duplicating records',
   ],

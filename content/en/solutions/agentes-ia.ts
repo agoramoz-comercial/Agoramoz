@@ -53,7 +53,7 @@ export const agentesIaEn: SolutionPage = {
     { title: 'Sources your company controls', body: 'Answers are grounded in your documents and data, not in the model’s memory. That is what separates a verifiable answer from a plausible one.' },
     { title: 'Source citation', body: 'Every answer states the document it relied on, so the person receiving it can check rather than trust.' },
     { title: 'Limited permissions and actions', body: 'The agent reaches only what the asker’s profile allows, and only takes actions it has been explicitly given.' },
-    { title: 'Human supervision', body: 'Decisions with financial, contractual, employment or compliance impact always go through the approval of a named person.' },
+    { title: 'Human supervision', body: 'Decisions with financial, contractual, employment or compliance impact go, by design, through the approval of a named person.' },
     { title: 'Monitoring and evaluation', body: 'A log of interactions, detection of out-of-scope answers and a set of test cases that is run again whenever something changes.' },
   ],
 
@@ -76,7 +76,7 @@ export const agentesIaEn: SolutionPage = {
 
   security: [
     'The agent reaches only the sources and data defined in its scope, with permissions by profile',
-    'Critical decisions keep human approval — this cannot be configured down',
+    'Critical decisions keep human approval, as a design rule',
     'Sensitive data identified up front, with explicit rules on what is never sent to an external model',
     'Interaction log for audit, with retention agreed with you',
     'Defined behaviour on failure: the agent stops and escalates instead of improvising',

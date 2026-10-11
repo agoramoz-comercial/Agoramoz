@@ -100,7 +100,7 @@ export const softwareEmpresarial: SolutionPage = {
     },
     {
       q: 'Que decisões tomamos consigo?',
-      a: 'Comprar ou desenvolver; configurar ou customizar; web ou mobile; integrar ou substituir; cloud ou outra arquitetura; lançamento único ou faseado; e o que acontece ao código, às licenças, ao suporte e à evolução.',
+      a: 'Comprar ou desenvolver; configurar ou personalizar; web ou mobile; integrar ou substituir; cloud ou outra arquitetura; lançamento único ou faseado; e o que acontece ao código, às licenças, ao suporte e à evolução.',
     },
     {
       q: 'Como reduzem o risco de um projeto de software?',

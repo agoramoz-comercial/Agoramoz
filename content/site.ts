@@ -177,7 +177,7 @@ export const SYSTEM_FLOW = {
     { key: 'atrair', title: 'Atrair', body: 'Presença digital que chega à empresa certa, com a mensagem do problema que ela reconhece.' },
     { key: 'captar', title: 'Captar', body: 'Cada pedido entra por um caminho definido, com os dados necessários para ser tratado.' },
     { key: 'qualificar', title: 'Qualificar', body: 'O sistema separa o que é urgente, o que é adequado e o que deve esperar.' },
-    { key: 'acompanhar', title: 'Acompanhar', body: 'Nenhuma oportunidade fica parada à espera de alguém se lembrar dela.' },
+    { key: 'acompanhar', title: 'Acompanhar', body: 'Cada oportunidade fica registada com responsável e prazo, em vez de esperar que alguém se lembre dela.' },
     { key: 'entregar', title: 'Entregar', body: 'A operação recebe informação estruturada, não mensagens dispersas por vários canais.' },
     { key: 'medir', title: 'Medir', body: 'Vendas, operações e bloqueios ficam visíveis em dados simples e atualizados.' },
     { key: 'melhorar', title: 'Melhorar', body: 'A medição alimenta a prioridade seguinte. O sistema evolui com a utilização real.' },
@@ -293,7 +293,7 @@ export const PROOF: ProofItem[] = [
   {
     kind: 'conceptual-demo',
     title: 'Portal de operações logísticas',
-    body: 'Pedidos, estados, notificações ao cliente e painel operacional num único fluxo — construído para mostrar a lógica antes de a implementar.',
+    body: 'Pedidos, estados, notificações ao cliente e painel operacional num único fluxo — desenhado para mostrar a lógica antes de a implementar.',
     disclaimer: DEMO_DISCLAIMER,
   },
   {

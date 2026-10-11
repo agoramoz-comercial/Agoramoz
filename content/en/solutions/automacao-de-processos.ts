@@ -72,7 +72,7 @@ export const automacaoDeProcessosEn: SolutionPage = {
   security: [
     'Each automation runs with the minimum permissions it needs',
     'Actions on sensitive data are logged and auditable',
-    'Failures raise an alert — they never go unnoticed',
+    'Failures raise an alert and are logged, so they do not go unnoticed',
     'Steps with financial or contractual impact keep human confirmation',
     'Credentials and keys managed outside the code, with a defined rotation',
   ],

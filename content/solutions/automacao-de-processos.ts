@@ -72,7 +72,7 @@ export const automacaoDeProcessos: SolutionPage = {
   security: [
     'Cada automação corre com as permissões mínimas necessárias',
     'Ações sobre dados sensíveis ficam registadas e são auditáveis',
-    'Falhas geram alerta — nunca passam despercebidas',
+    'Falhas geram alerta e ficam registadas, para não passarem despercebidas',
     'Passos com impacto financeiro ou contratual mantêm confirmação humana',
     'Credenciais e chaves geridas fora do código, com rotação definida',
   ],

@@ -76,7 +76,7 @@ export const integracaoDeSistemas: SolutionPage = {
   security: [
     'Cada ligação corre com as permissões mínimas necessárias',
     'Credenciais e chaves geridas fora do código, com rotação definida',
-    'Falhas geram alerta e ficam registadas — nunca passam despercebidas',
+    'Falhas geram alerta e ficam registadas, para não passarem despercebidas',
     'Dados pessoais trocados só na medida do necessário para a finalidade',
     'Reprocessamento controlado, sem duplicar registos',
   ],

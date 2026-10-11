@@ -62,7 +62,7 @@ export const mzEnergiaMineracao: SectorPage = {
   system: {
     name: 'AGORA Industrial Growth Infrastructure',
     promise:
-      'Um sistema único para fornecedores, documentos, oportunidades e reporting — construído sobre os procedimentos que a sua empresa já tem aprovados.',
+      'Um sistema proposto para fornecedores, documentos, oportunidades e reporting — desenhado sobre os procedimentos que a sua empresa já tem aprovados.',
     steps: [
       {
         title: 'Registo único de fornecedores',
@@ -70,7 +70,7 @@ export const mzEnergiaMineracao: SectorPage = {
       },
       {
         title: 'Documentação com versão e aprovação',
-        body: 'Cada documento tem dono, versão e estado. Quem consulta vê sempre a versão em vigor; o histórico fica disponível para auditoria.',
+        body: 'Cada documento tem dono, versão e estado. Quem consulta vê a versão em vigor; o histórico fica disponível para auditoria.',
       },
       {
         title: 'Pipeline de oportunidades',
@@ -119,7 +119,7 @@ export const mzEnergiaMineracao: SectorPage = {
     'Registo de acessos e alterações em processos sensíveis',
     'Documentos confidenciais segregados por projeto ou por cliente',
     'Cópias de segurança e plano de recuperação definidos no projeto',
-    'Decisões de qualificação e adjudicação mantêm sempre aprovação humana',
+    'Decisões de qualificação e adjudicação mantêm aprovação humana, por desenho',
   ],
 
   proof: [
@@ -136,8 +136,8 @@ export const mzEnergiaMineracao: SectorPage = {
     },
     {
       kind: 'capability',
-      title: 'Competência no setor dentro da própria empresa',
-      body: 'A área de energia é acompanhada internamente pela Co-founder e Chief Energy Officer, responsável por parcerias estratégicas e desenvolvimento de oportunidades no setor.',
+      title: 'Uma responsável pelo setor na direção',
+      body: 'A área de energia tem uma responsável na direção da empresa: a Co-founder e Chief Energy Officer, que acompanha parcerias e oportunidades no setor.',
       evidence: 'Sheinaz Amisse, Co-founder & Chief Energy Officer da AGORAMOZ.',
     },
   ],

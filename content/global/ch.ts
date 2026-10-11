@@ -60,8 +60,8 @@ export const ch: GlobalMarket = {
         en: 'Regulatory dossiers assembled from dozens of documents with different versions and expiry dates.',
       },
       outcome: {
-        pt: 'Uma fonte por documento, versão corrente sempre identificada, prazos avisados antes de expirarem.',
-        en: 'One source per document, the current version always identified, deadlines flagged before they expire.',
+        pt: 'Uma fonte por documento, versão corrente identificada, prazos avisados antes de expirarem.',
+        en: 'One source per document, the current version identified, deadlines flagged before they expire.',
       },
     },
     {

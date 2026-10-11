@@ -16,7 +16,7 @@ export const SYSTEM_FLOW_EN = {
     { key: 'atrair', title: 'Attract', body: 'A digital presence that reaches the right company, with the message of the problem it recognises.' },
     { key: 'captar', title: 'Capture', body: 'Every request comes in through a defined path, with the data needed to handle it.' },
     { key: 'qualificar', title: 'Qualify', body: 'The system separates what is urgent, what is a good fit and what should wait.' },
-    { key: 'acompanhar', title: 'Follow up', body: 'No opportunity sits waiting for someone to remember it.' },
+    { key: 'acompanhar', title: 'Follow up', body: 'Each opportunity is logged with an owner and a deadline, instead of waiting for someone to remember it.' },
     { key: 'entregar', title: 'Deliver', body: 'Operations receive structured information, not messages scattered across several channels.' },
     { key: 'medir', title: 'Measure', body: 'Sales, operations and bottlenecks become visible in simple, up-to-date data.' },
     { key: 'melhorar', title: 'Improve', body: 'Measurement feeds the next priority. The system evolves with real use.' },
@@ -113,7 +113,7 @@ export const PROOF_EN: ProofItem[] = [
   {
     kind: 'conceptual-demo',
     title: 'Logistics operations portal',
-    body: 'Orders, statuses, customer notifications and an operations dashboard in a single flow — built to show the logic before implementing it.',
+    body: 'Orders, statuses, customer notifications and an operations dashboard in a single flow — designed to show the logic before implementing it.',
     disclaimer: DEMO_DISCLAIMER_EN,
   },
   {

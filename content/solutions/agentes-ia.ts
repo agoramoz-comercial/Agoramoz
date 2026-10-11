@@ -56,7 +56,7 @@ export const agentesIa: SolutionPage = {
     { title: 'Fontes controladas pela empresa', body: 'As respostas são ancoradas nos seus documentos e dados, não na memória do modelo. É o que separa uma resposta verificável de uma resposta plausível.' },
     { title: 'Citação da origem', body: 'Cada resposta indica em que documento se baseou, para que quem a recebe possa confirmar em vez de confiar.' },
     { title: 'Permissões e ações limitadas', body: 'O agente acede ao que o perfil de quem pergunta permite, e só executa ações que lhe foram explicitamente atribuídas.' },
-    { title: 'Supervisão humana', body: 'Decisões com impacto financeiro, contratual, laboral ou de conformidade passam sempre por aprovação de uma pessoa identificada.' },
+    { title: 'Supervisão humana', body: 'Decisões com impacto financeiro, contratual, laboral ou de conformidade passam, por desenho, pela aprovação de uma pessoa identificada.' },
     { title: 'Monitorização e avaliação', body: 'Registo das interações, deteção de respostas fora de âmbito e um conjunto de casos de teste que se volta a correr sempre que algo muda.' },
   ],
 
@@ -79,7 +79,7 @@ export const agentesIa: SolutionPage = {
 
   security: [
     'O agente acede apenas às fontes e aos dados definidos no âmbito, com permissões por perfil',
-    'Decisões críticas mantêm aprovação humana — não é configurável para menos',
+    'Decisões críticas mantêm aprovação humana, por regra de desenho',
     'Dados sensíveis identificados à partida, com regras explícitas sobre o que nunca é enviado a um modelo externo',
     'Registo das interações para auditoria, com retenção definida consigo',
     'Comportamento definido em caso de falha: o agente para e escala, em vez de improvisar',
@@ -108,7 +108,7 @@ export const agentesIa: SolutionPage = {
     },
     {
       q: 'Quando não recomendam IA?',
-      a: 'Quando o processo não está definido, não existe fonte confiável, o resultado não pode ser revisto, o risco de erro é inaceitável, uma regra simples resolve, o benefício não paga a complexidade, ou direitos e obrigações não foram avaliados.',
+      a: 'Quando o processo não está definido, não existe fonte fiável, o resultado não pode ser revisto, o risco de erro é inaceitável, uma regra simples resolve, o benefício não paga a complexidade, ou direitos e obrigações não foram avaliados.',
     },
     {
       q: 'Como se mede um agente?',

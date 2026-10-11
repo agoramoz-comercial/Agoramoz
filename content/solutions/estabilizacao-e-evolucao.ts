@@ -53,7 +53,7 @@ export const estabilizacaoEEvolucao: SolutionPage = {
     { title: 'Bloco de estabilização', body: 'Após a entrada em produção, com âmbito e duração definidos.' },
     { title: 'Retainer', body: 'Para backlog recorrente e capacidade reservada.' },
     { title: 'Serviço gerido', body: 'Operação, monitorização e níveis de serviço acordados.' },
-    { title: 'Time and materials com teto', body: 'Para incerteza alta, prioridades mutáveis e controlo de orçamento.' },
+    { title: 'Time and materials com limite máximo', body: 'Para incerteza alta, prioridades mutáveis e controlo de orçamento.' },
     { title: 'Medição e backlog', body: 'Cada melhoria entra com o problema, o valor esperado e a métrica que dirá se resultou.' },
     { title: 'Releases e comunicação', body: 'O que muda, quando muda e quem precisa de saber — antes de mudar.' },
   ],
@@ -87,7 +87,7 @@ export const estabilizacaoEEvolucao: SolutionPage = {
     },
     {
       q: 'Que modelo comercial faz sentido?',
-      a: 'Bloco de estabilização logo após a entrada em produção; retainer quando há backlog recorrente; serviço gerido quando a operação e a monitorização ficam connosco com níveis de serviço; time and materials com teto quando a incerteza é alta e o orçamento tem de ser controlado.',
+      a: 'Bloco de estabilização logo após a entrada em produção; retainer quando há backlog recorrente; serviço gerido quando a operação e a monitorização ficam connosco com níveis de serviço; time and materials com limite máximo quando a incerteza é alta e o orçamento tem de ser controlado.',
     },
   ],
 
