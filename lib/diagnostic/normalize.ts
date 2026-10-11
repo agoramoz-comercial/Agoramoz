@@ -73,7 +73,7 @@ export function canonicalAnswers(input: LeadInput): Record<string, unknown> {
     currentWebsite: input.currentWebsite ? normalizeDomain(input.currentWebsite) : '',
     processToImprove: [...input.processToImprove].map(normalizeText).sort(),
     problemImpact: normalizeText(input.problemImpact),
-    problemConsequences: [...(input.problemConsequences ?? [])].sort(),
+    problemConsequences: [...new Set(input.problemConsequences ?? [])].sort(),
     currentSystems: normalizeText(input.currentSystems ?? ''),
     desiredDecision: normalizeText(input.desiredDecision ?? ''),
     decisionTimeframe: input.decisionTimeframe,

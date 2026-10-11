@@ -183,6 +183,10 @@ describe('leadSchema — campos do Website Final 2026 (consequência, sistemas, 
     expect(r.success).toBe(true);
   });
 
+  it('rejeita consequências repetidas', () => {
+    expect(leadSchema.safeParse({ ...valido, problemConsequences: ['erro', 'erro'] }).success).toBe(false);
+  });
+
   it('rejeita uma consequência fora da lista', () => {
     expect(leadSchema.safeParse({ ...valido, problemConsequences: ['inventada'] }).success).toBe(false);
   });

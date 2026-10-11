@@ -16,6 +16,7 @@ import {
   SEVERIDADE,
 } from '@/lib/admin/labels';
 import { nomeDoMercado, rotuloDoSetor } from '@/lib/diagnostic/mercado';
+import { CONSEQUENCIAS } from '@/content/i18n/formulario';
 import { aprovarDiagnostico, enviarParaRevisao, rejeitarDiagnostico } from '@/lib/admin/actions';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
@@ -64,7 +65,7 @@ const ROTULO_RESPOSTA: Record<string, string> = {
   companySize: 'Dimensão',
   currentWebsite: 'Site actual',
   processToImprove: 'Processos a melhorar',
-  problemImpact: 'Impacto descrito',
+  problemImpact: 'Impacto',
   problemConsequences: 'Consequência',
   currentSystems: 'Sistemas que participam',
   desiredDecision: 'Decisão pretendida',
@@ -78,9 +79,16 @@ const ROTULO_RESPOSTA: Record<string, string> = {
   idioma: 'Idioma do formulário',
 };
 
+/** Os campos de texto livre: mostrados como citação, nunca na lista factual. */
+const TEXTO_LIVRE = ['problemImpact', 'currentSystems', 'desiredDecision'];
+
 function mostrarValor(chave: string, valor: unknown, pais: string | null): string {
   if (valor === null || valor === undefined || valor === '') return '—';
-  if (Array.isArray(valor)) return valor.join(', ');
+  if (Array.isArray(valor)) {
+    if (chave === 'problemConsequences')
+      return valor.map((c) => (String(c) in CONSEQUENCIAS ? CONSEQUENCIAS[String(c) as keyof typeof CONSEQUENCIAS].pt : String(c))).join(', ');
+    return valor.join(', ');
+  }
   if (typeof valor === 'boolean') return valor ? 'Sim' : 'Não';
 
   const texto = String(valor);
@@ -253,22 +261,28 @@ export default async function RevisaoPage({
 
         <DefinitionList
           itens={Object.entries(bruto)
-            .filter(([k]) => k !== 'problemImpact' && k !== 'fax')
+            .filter(([k]) => !TEXTO_LIVRE.includes(k) && k !== 'fax')
             .map(([k, v]) => ({
               termo: ROTULO_RESPOSTA[k] ?? k,
               valor: mostrarValor(k, v, typeof bruto.country === 'string' ? bruto.country : null),
             }))}
         />
 
-        <h3 className="mt-8 mb-2 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
-          Impacto, nas palavras do cliente
-        </h3>
-        {/* Citação, nunca instrução. É o único campo de texto livre e por isso
-            o vetor de injeção conhecido: o motor só leu o seu comprimento. */}
-        <blockquote className="border-l-2 border-[color:var(--border)] py-2 pl-4 text-sm whitespace-pre-wrap italic">
-          {/* Opcional desde o carrossel (D-28): vazio mostra «—», não um bloco em branco. */}
-          {String(bruto.problemImpact || '—')}
-        </blockquote>
+        {/* Citações, nunca instruções. Os campos de texto livre são o vetor de
+            injeção conhecido: o motor só leu o comprimento do impacto, e os
+            sistemas e a decisão (D-38) não entram na pontuação. Por isso ficam
+            fora da lista de respostas factuais e aparecem aqui, como citação.
+            Opcionais: vazio mostra «—», não um bloco em branco. */}
+        {TEXTO_LIVRE.map((k) => (
+          <div key={k}>
+            <h3 className="mt-8 mb-2 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
+              {ROTULO_RESPOSTA[k]}, nas palavras do cliente
+            </h3>
+            <blockquote className="border-l-2 border-[color:var(--border)] py-2 pl-4 text-sm whitespace-pre-wrap italic">
+              {String(bruto[k] || '—')}
+            </blockquote>
+          </div>
+        ))}
       </section>
 
       <section aria-labelledby="evidencia" className="mb-10">

@@ -34,7 +34,7 @@ const REVISTO_EM = {
   '/seguranca-qualidade': '2026-10-11',
   '/faq': '2026-10-11',
   '/privacidade': '2026-09-24',
-  '/global': '2026-09-29',
+  '/global': '2026-10-11',
   '/news': '2026-09-30',
 } as const;
 

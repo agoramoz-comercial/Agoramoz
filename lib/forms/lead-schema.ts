@@ -85,7 +85,11 @@ function construir(idioma: Idioma) {
        * esforço não subir: a consequência, os sistemas que participam e a
        * decisão que a pessoa quer tomar. Informativos — a pontuação não muda.
        */
-      problemConsequences: z.array(z.enum(CONSEQUENCES, { message: m('consequencia') })).max(7).default([]),
+      problemConsequences: z
+        .array(z.enum(CONSEQUENCES, { message: m('consequencia') }))
+        .max(7)
+        .refine((l) => new Set(l).size === l.length, m('consequencia'))
+        .default([]),
       currentSystems: z.string().max(300, m('textoCurtoLongo')).default(''),
       desiredDecision: z.string().max(300, m('textoCurtoLongo')).default(''),
     }),
