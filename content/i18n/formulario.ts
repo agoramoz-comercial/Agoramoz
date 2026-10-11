@@ -27,7 +27,7 @@ export const PERGUNTAS: Record<CartaoId, Texto> = {
   prazo: { pt: 'Quando quer decidir?', en: 'When do you want to decide?' },
   papel: { pt: 'Qual é o seu papel na decisão?', en: 'What is your role in the decision?' },
   faixa: { pt: 'Que investimento tem em mente? ({moeda})', en: 'What investment do you have in mind? ({moeda})' },
-  impacto: { pt: 'Quer contar-nos o impacto de hoje?', en: 'Want to tell us what it costs you today?' },
+  impacto: { pt: 'Conte-nos onde a operação está bloqueada.', en: 'Tell us where the operation is stuck.' },
   contacto: { pt: 'Como o contactamos?', en: 'How do we reach you?' },
 };
 
@@ -64,6 +64,17 @@ export const OBJETIVOS = {
   reporting: { pt: 'Reporting e decisão', en: 'Reporting and decision-making' },
 } as const satisfies Record<string, Texto>;
 
+/** Pelo valor de `CONSEQUENCES`: o valor guardado é o mesmo nos dois idiomas. */
+export const CONSEQUENCIAS = {
+  oportunidades: { pt: 'Oportunidades perdidas', en: 'Lost opportunities' },
+  'trabalho-manual': { pt: 'Trabalho manual', en: 'Manual work' },
+  atraso: { pt: 'Atraso', en: 'Delay' },
+  erro: { pt: 'Erro', en: 'Error' },
+  risco: { pt: 'Risco', en: 'Risk' },
+  custo: { pt: 'Custo', en: 'Cost' },
+  experiencia: { pt: 'Experiência do cliente', en: 'Customer experience' },
+} as const satisfies Record<string, Texto>;
+
 /** Setores dos três mercados de operação. O português continua a viver em `SECTOR_LABELS`. */
 export const ROTULO_SETOR: Record<SectorSlug, Texto> = {
   agronegocio: { pt: 'Agricultura e agronegócio', en: 'Agriculture and agribusiness' },
@@ -89,8 +100,25 @@ export const FORM = {
     en: 'Pick an option and we move on to the next question.',
   },
   impactoOpcionalDica: {
-    pt: 'Opcional. Duas ou três linhas ajudam-nos a chegar preparados: tempo perdido, erros, atrasos.',
-    en: 'Optional. Two or three lines help us arrive prepared: lost time, errors, delays.',
+    pt: 'Opcional. Descreva um caso recente, incluindo atrasos, erros, repetição ou pouca visibilidade.',
+    en: 'Optional. Describe a recent case, including delays, errors, repetition or poor visibility.',
+  },
+  impactoIntro: {
+    pt: 'Não precisa de escolher uma tecnologia. Descreva o processo, a consequência e o que já tentou.',
+    en: 'You do not need to choose a technology. Describe the process, the consequence and what you have already tried.',
+  },
+  consequencia: { pt: 'Consequência', en: 'Consequence' },
+  consequenciaDica: {
+    pt: 'Oportunidades, trabalho manual, atraso, erro, risco, custo ou experiência. Pode escolher mais do que uma.',
+    en: 'Opportunities, manual work, delay, error, risk, cost or experience. You can choose more than one.',
+  },
+  sistemas: { pt: 'Sistemas', en: 'Systems' },
+  sistemasDica: { pt: 'Ferramentas e sistemas que participam no processo.', en: 'Tools and systems involved in the process.' },
+  decisao: { pt: 'Decisão', en: 'Decision' },
+  decisaoDica: { pt: 'Que decisão pretende tomar?', en: 'What decision do you want to make?' },
+  avisoSeguranca: {
+    pt: 'Não envie palavras-passe, dados sensíveis, ficheiros confidenciais ou informação pessoal desnecessária.',
+    en: 'Do not send passwords, sensitive data, confidential files or unnecessary personal information.',
   },
   saltar: { pt: 'Saltar', en: 'Skip' },
   irPara: { pt: 'Ir para a pergunta {n}: {pergunta}', en: 'Go to question {n}: {pergunta}' },
@@ -106,8 +134,11 @@ export const FORM = {
   websiteDica: { pt: 'Se ainda não tiver, deixe em branco.', en: 'If you do not have one yet, leave this blank.' },
   websiteExemplo: { pt: 'exemplo.com', en: 'example.com' },
   melhorar: { pt: 'O que pretende melhorar?', en: 'What do you want to improve?' },
-  melhorarDica: { pt: 'Pode escolher mais do que um.', en: 'You can choose more than one.' },
-  impacto: { pt: 'Qual é o impacto atual deste problema?', en: 'What is this problem costing you today?' },
+  melhorarDica: {
+    pt: 'Por exemplo: pedidos, propostas, aprovações, entregas, reporting ou suporte. Pode escolher mais do que um.',
+    en: 'For example: requests, proposals, approvals, deliveries, reporting or support. You can choose more than one.',
+  },
+  impacto: { pt: 'Problema', en: 'Problem' },
   prazo: { pt: 'Prazo da decisão', en: 'Decision timeframe' },
   faixa: { pt: 'Faixa de investimento ({moeda})', en: 'Investment range ({moeda})' },
   papel: { pt: 'O seu papel na decisão', en: 'Your role in the decision' },
@@ -127,12 +158,12 @@ export const FORM = {
 
   voltar: { pt: 'Voltar', en: 'Back' },
   continuar: { pt: 'Continuar', en: 'Continue' },
-  enviar: { pt: 'Enviar pedido', en: 'Send request' },
+  enviar: { pt: 'Enviar para avaliação', en: 'Send for assessment' },
 
-  recebido: { pt: 'Pedido recebido.', en: 'Request received.' },
+  recebido: { pt: 'Recebemos o seu pedido.', en: 'We received your request.' },
   recebidoCorpo: {
-    pt: 'Vamos analisar o que descreveu e responder com os próximos passos. Se concluirmos que não há adequação, dizemos isso — é mais útil para si do que uma proposta que não faz sentido.',
-    en: 'We will review what you described and reply with the next steps. If we conclude it is not a fit, we will say so — that is more useful to you than a proposal that makes no sense.',
+    pt: 'Analisaremos o processo descrito, a consequência, a urgência e a adequação às capacidades da AGORAMOZ. Se existir enquadramento, a próxima conversa servirá para clarificar o problema e decidir entre avaliação, diagnóstico ou outra abordagem.',
+    en: 'We will review the process you described, the consequence, the urgency and the fit with AGORAMOZ capabilities. If there is a fit, the next conversation will clarify the problem and decide between an assessment, a diagnostic or another approach.',
   },
   oQueRecebemos: { pt: 'O que recebemos', en: 'What we received' },
   mercado: { pt: 'Mercado', en: 'Market' },
@@ -182,6 +213,8 @@ export const VALIDACAO = {
   nome: { pt: 'Indique o seu nome.', en: 'Enter your name.' },
   email: { pt: 'Indique um email válido.', en: 'Enter a work email we can reply to.' },
   telefone: { pt: 'Indique um contacto telefónico.', en: 'Enter a phone number.' },
+  consequencia: { pt: 'Escolha uma consequência da lista.', en: 'Choose a consequence from the list.' },
+  textoCurtoLongo: { pt: 'Use no máximo 300 caracteres.', en: 'Use 300 characters at most.' },
   consentimento: {
     pt: 'É necessário o seu consentimento para prosseguir.',
     en: 'We need your consent to continue.',

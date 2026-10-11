@@ -125,7 +125,18 @@ for (const [nome, largura] of [['mobile', 390], ['tablet', 768], ['web', 1440]])
   }
   (await titulo(p).textContent())?.includes('MZN') ? ok('a faixa mostra a moeda do mercado') : falha('faixa sem moeda');
   await p.getByRole('radio').nth(1).click();
-  await esperarTitulo(p, 'Quer contar-nos');
+  await esperarTitulo(p, 'Conte-nos onde a operação está bloqueada');
+  const consequencias = await p.locator('form input[type=checkbox]').count();
+  consequencias === 7 ? ok('cartão do problema: 7 consequências do documento') : falha(`consequências: ${consequencias}`);
+  (await p.getByText('Não envie palavras-passe').isVisible())
+    ? ok('aviso de segurança visível')
+    : falha('sem aviso de segurança');
+  await axe(p, 'cartão do problema');
+  await p.locator('form input[type=checkbox]').first().check();
+  (await p.getByRole('button', { name: 'Saltar' }).count()) === 0
+    ? ok('com uma consequência marcada, já não é «Saltar»')
+    : falha('«Saltar» com consequência marcada');
+  await p.locator('form input[type=checkbox]').first().uncheck();
 
   const saltar = await p.getByRole('button', { name: 'Saltar' }).count();
   saltar === 1 ? ok('texto livre vazio → botão «Saltar»') : falha('sem «Saltar» no texto livre');
@@ -135,7 +146,7 @@ for (const [nome, largura] of [['mobile', 390], ['tablet', 768], ['web', 1440]])
   prog9?.includes('9 de 9') ? ok('contacto é a pergunta 9 de 9') : falha(`progresso final: ${prog9}`);
 
   // Envio vazio: erros no próprio cartão.
-  await p.getByRole('button', { name: 'Enviar pedido' }).click();
+  await p.getByRole('button', { name: 'Enviar para avaliação' }).click();
   await p.waitForTimeout(300);
   (await p.locator('[aria-invalid=true]').count()) >= 4 ? ok('envio vazio marca os campos') : falha('envio vazio sem erros');
   await axe(p, 'cartão contacto com erros');
@@ -164,7 +175,7 @@ for (const [nome, largura] of [['mobile', 390], ['tablet', 768], ['web', 1440]])
   await p.getByLabel('Telefone ou WhatsApp').fill('+258840000000');
   await p.getByLabel('Nome da empresa').fill('Empresa QA');
   await p.locator('input[type=checkbox][name=consent]').check();
-  await p.getByRole('button', { name: 'Enviar pedido' }).click();
+  await p.getByRole('button', { name: 'Enviar para avaliação' }).click();
   await esperarTitulo(p, 'O que pretende melhorar?');
   await p.waitForTimeout(100);
   const papel = await p.evaluate(() => document.activeElement?.getAttribute('role'));
@@ -180,9 +191,9 @@ for (const [nome, largura] of [['mobile', 390], ['tablet', 768], ['web', 1440]])
   await p.getByLabel('Nome da empresa').fill('Empresa QA');
   await p.locator('input[type=checkbox][name=consent]').check();
   await p.screenshot({ path: `${SAIDA}/diag-${nome}-contacto.png`, fullPage: false });
-  await p.getByRole('button', { name: 'Enviar pedido' }).click();
-  await p.getByText('Pedido recebido.').waitFor({ timeout: 5000 });
-  ok('envio → «Pedido recebido.»');
+  await p.getByRole('button', { name: 'Enviar para avaliação' }).click();
+  await p.getByText('Recebemos o seu pedido.').waitFor({ timeout: 5000 });
+  ok('envio → «Recebemos o seu pedido.»');
 
   const corpo = envio();
   if (!corpo) falha('o envio não chegou à rota');
@@ -236,7 +247,7 @@ console.log('\nmarcação da conversa no ecrã final (Cal.com simulado)');
     await esperarTitulo(p, 'O que pretende melhorar?');
     await p.locator('input[type=checkbox]').first().check();
     await p.getByRole('button', { name: 'Continuar' }).click();
-    for (const proximo of ['Quando quer decidir?', 'Qual é o seu papel', 'Que investimento', 'Quer contar-nos']) {
+    for (const proximo of ['Quando quer decidir?', 'Qual é o seu papel', 'Que investimento', 'Conte-nos onde a operação']) {
       await p.getByRole('radio').first().click();
       await esperarTitulo(p, proximo);
     }
@@ -247,8 +258,8 @@ console.log('\nmarcação da conversa no ecrã final (Cal.com simulado)');
     await p.getByLabel('Telefone ou WhatsApp').fill('+258840000000');
     await p.getByLabel('Nome da empresa').fill('Empresa QA');
     await p.locator('input[type=checkbox][name=consent]').check();
-    await p.getByRole('button', { name: 'Enviar pedido' }).click();
-    await p.getByText('Pedido recebido.').waitFor({ timeout: 5000 });
+    await p.getByRole('button', { name: 'Enviar para avaliação' }).click();
+    await p.getByText('Recebemos o seu pedido.').waitFor({ timeout: 5000 });
 
     const botao = p.getByRole('link', { name: 'Marcar a conversa agora' });
     const n = await botao.count();

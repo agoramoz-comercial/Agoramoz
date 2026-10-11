@@ -49,7 +49,8 @@ export const dynamic = 'force-dynamic';
  * as chaves existentes, e isso tem de ser uma edição visível em código, não um
  * efeito lateral de alguém renomear um questionário no painel.
  */
-const QUESTIONNAIRE_VERSION = 'diagnostico-v1';
+// v2: campos do Website Final 2026 (consequência, sistemas, decisão).
+const QUESTIONNAIRE_VERSION = 'diagnostico-v2';
 
 /** Serve para distinguir navegação interna de uma referência externa. */
 const HOST_PROPRIO = new URL(SITE_URL).host;

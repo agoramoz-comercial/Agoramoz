@@ -28,6 +28,9 @@ function lead(overrides: Partial<LeadInput> = {}): LeadInput {
     // 24 caracteres: acima do mínimo do schema (20), abaixo do primeiro
     // patamar de clareza (60), logo vale 2 pontos.
     problemImpact: 'Perdemos muito tempo.'.padEnd(24, '.'),
+    problemConsequences: [],
+    currentSystems: '',
+    desiredDecision: '',
     decisionTimeframe: 'sem-data',
     investmentBand: 'mz-0',
     decisionRole: 'pesquisa',

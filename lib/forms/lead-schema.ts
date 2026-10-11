@@ -32,6 +32,8 @@ z.config({ jitless: true });
 export const COMPANY_SIZES = ['1-9', '10-49', '50-249', '250+'] as const;
 export const DECISION_ROLES = ['decisor', 'co-decisor', 'influenciador', 'pesquisa'] as const;
 export const TIMEFRAMES = ['imediato', '1-3-meses', '3-6-meses', 'sem-data'] as const;
+/** A consequência do problema (Website Final 2026, §23). Informativa: não entra na pontuação. */
+export const CONSEQUENCES = ['oportunidades', 'trabalho-manual', 'atraso', 'erro', 'risco', 'custo', 'experiencia'] as const;
 
 /**
  * Toda a validação tem de ter mensagem própria, no idioma do formulário.
@@ -76,7 +78,17 @@ function construir(idioma: Idioma) {
      * desiste. Quem a preenche dá contexto que a pontuação e a regra
      * CONTEXTO_INSUFICIENTE continuam a ler; quem a salta não é bloqueado.
      */
-    impacto: z.object({ problemImpact: z.string().max(1500, m('impactoLongo')).default('') }),
+    impacto: z.object({
+      problemImpact: z.string().max(1500, m('impactoLongo')).default(''),
+      /**
+       * Os campos do documento final (§23), no mesmo cartão opcional para o
+       * esforço não subir: a consequência, os sistemas que participam e a
+       * decisão que a pessoa quer tomar. Informativos — a pontuação não muda.
+       */
+      problemConsequences: z.array(z.enum(CONSEQUENCES, { message: m('consequencia') })).max(7).default([]),
+      currentSystems: z.string().max(300, m('textoCurtoLongo')).default(''),
+      desiredDecision: z.string().max(300, m('textoCurtoLongo')).default(''),
+    }),
     contacto: z.object({
       name: z.string().min(2, m('nome')),
       workEmail: z.string().email(m('email')),
@@ -161,6 +173,6 @@ export const STEP_FIELDS = [
   ['decisionTimeframe'],
   ['decisionRole'],
   ['investmentBand'],
-  ['problemImpact'],
+  ['problemImpact', 'problemConsequences', 'currentSystems', 'desiredDecision'],
   ['name', 'workEmail', 'phone', 'company', 'currentWebsite', 'consent'],
 ] as const satisfies readonly (readonly (keyof LeadInput)[])[];

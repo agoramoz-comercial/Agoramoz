@@ -11,6 +11,7 @@ import { Field, inputClass } from './Field';
 import {
   CARTOES,
   COMPANY_SIZES,
+  CONSEQUENCES,
   DECISION_ROLES,
   STEP_FIELDS,
   TIMEFRAMES,
@@ -20,7 +21,7 @@ import {
 import { CARTOES_AUTOMATICOS, cartaoInicial, minutosRestantes, podeIrPara, setorValido } from '@/lib/forms/carrossel';
 import { COUNTRY_CODES, GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
 import { NOME_PAIS } from '@/content/i18n/chrome';
-import { FORM, OBJETIVOS, PAPEIS, PERGUNTAS, PRAZOS, TAMANHOS } from '@/content/i18n/formulario';
+import { CONSEQUENCIAS, FORM, OBJETIVOS, PAPEIS, PERGUNTAS, PRAZOS, TAMANHOS } from '@/content/i18n/formulario';
 import type { Idioma } from '@/content/types';
 import { SoPortugues } from '@/components/ui/SoPortugues';
 import { ligacao } from '@/lib/i18n/rotas';
@@ -136,6 +137,9 @@ export function DiagnosticForm({
       processToImprove: [],
       currentWebsite: '',
       problemImpact: '',
+      problemConsequences: [],
+      currentSystems: '',
+      desiredDecision: '',
       fax: '',
       idioma,
     },
@@ -144,6 +148,10 @@ export function DiagnosticForm({
   const country = form.watch('country');
   const processes = form.watch('processToImprove') ?? [];
   const impacto = form.watch('problemImpact') ?? '';
+  const consequencias = form.watch('problemConsequences') ?? [];
+  const sistemas = form.watch('currentSystems') ?? '';
+  const decisao = form.watch('desiredDecision') ?? '';
+  const impactoVazio = impacto.trim() === '' && consequencias.length === 0 && sistemas.trim() === '' && decisao.trim() === '';
   // Pela porta única: resolve os treze mercados com a mesma forma.
   const activeCountry = country ? mercadoDoDiagnostico(country, idioma) : null;
   const cartao = CARTOES[indice]!;
@@ -774,23 +782,98 @@ export function DiagnosticForm({
           )}
 
           {cartao === 'impacto' && (
-            <Field
-              label={t(FORM.impacto, idioma)}
-              idioma={idioma}
-              hint={t(FORM.impactoOpcionalDica, idioma)}
-              error={errors.problemImpact?.message}
-            >
-              {({ id, describedBy, invalid }) => (
-                <textarea
-                  id={id}
-                  aria-describedby={describedBy}
-                  aria-invalid={invalid}
-                  rows={4}
-                  className={inputClass}
-                  {...form.register('problemImpact')}
-                />
-              )}
-            </Field>
+            <div className="grid gap-6">
+              <p className="text-sm text-[color:var(--muted)]">{t(FORM.impactoIntro, idioma)}</p>
+              <Field
+                label={t(FORM.impacto, idioma)}
+                idioma={idioma}
+                hint={t(FORM.impactoOpcionalDica, idioma)}
+                error={errors.problemImpact?.message}
+              >
+                {({ id, describedBy, invalid }) => (
+                  <textarea
+                    id={id}
+                    aria-describedby={describedBy}
+                    aria-invalid={invalid}
+                    rows={4}
+                    className={inputClass}
+                    {...form.register('problemImpact')}
+                  />
+                )}
+              </Field>
+              <fieldset className="border-0 p-0">
+                <legend className="text-sm font-medium">{t(FORM.consequencia, idioma)}</legend>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">{t(FORM.consequenciaDica, idioma)}</p>
+                <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                  {CONSEQUENCES.map((c) => {
+                    const checked = consequencias.includes(c);
+                    return (
+                      <label
+                        key={c}
+                        className={cn(
+                          'flex min-h-11 cursor-pointer items-center gap-3 rounded-[--radius-sm] border px-4 py-3 text-[0.9375rem]',
+                          checked
+                            ? 'border-[color:var(--accent)] bg-[color:var(--color-signal-600)] text-white'
+                            : 'border-[color:var(--border)]',
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          value={c}
+                          checked={checked}
+                          onChange={(e) => {
+                            const nextVal = e.target.checked
+                              ? [...consequencias, c]
+                              : consequencias.filter((v) => v !== c);
+                            form.setValue('problemConsequences', nextVal, { shouldValidate: true });
+                            markStarted();
+                          }}
+                          className="size-4 shrink-0 accent-[color:var(--color-ink-900)]"
+                        />
+                        {t(CONSEQUENCIAS[c], idioma)}
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <Field
+                  label={t(FORM.sistemas, idioma)}
+                  idioma={idioma}
+                  hint={t(FORM.sistemasDica, idioma)}
+                  error={errors.currentSystems?.message}
+                >
+                  {({ id, describedBy, invalid }) => (
+                    <input
+                      id={id}
+                      aria-describedby={describedBy}
+                      aria-invalid={invalid}
+                      maxLength={300}
+                      className={inputClass}
+                      {...form.register('currentSystems')}
+                    />
+                  )}
+                </Field>
+                <Field
+                  label={t(FORM.decisao, idioma)}
+                  idioma={idioma}
+                  hint={t(FORM.decisaoDica, idioma)}
+                  error={errors.desiredDecision?.message}
+                >
+                  {({ id, describedBy, invalid }) => (
+                    <input
+                      id={id}
+                      aria-describedby={describedBy}
+                      aria-invalid={invalid}
+                      maxLength={300}
+                      className={inputClass}
+                      {...form.register('desiredDecision')}
+                    />
+                  )}
+                </Field>
+              </div>
+              <p className="text-sm text-[color:var(--muted)]">{t(FORM.avisoSeguranca, idioma)}</p>
+            </div>
           )}
 
           {cartao === 'contacto' && activeCountry && (
@@ -954,7 +1037,7 @@ export function DiagnosticForm({
             onClick={() => void avancar()}
             className="gap-1.5"
           >
-            {cartao === 'impacto' && impacto.trim() === '' ? t(FORM.saltar, idioma) : t(FORM.continuar, idioma)}
+            {cartao === 'impacto' && impactoVazio ? t(FORM.saltar, idioma) : t(FORM.continuar, idioma)}
             <ArrowRight aria-hidden className="size-4" />
           </Button>
         )}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   COMPANY_SIZES,
+  CONSEQUENCES,
   DECISION_ROLES,
   STEP_FIELDS,
   STEP_SCHEMAS,
@@ -167,3 +168,31 @@ describe('formulário por passos', () => {
 function nosPassosUnicos(): Set<string> {
   return new Set(STEP_FIELDS.flat() as readonly string[]);
 }
+
+describe('leadSchema — campos do Website Final 2026 (consequência, sistemas, decisão)', () => {
+  it('são opcionais: ausentes, valem lista vazia e texto vazio', () => {
+    const r = leadSchema.safeParse(valido);
+    expect(r.success).toBe(true);
+    expect(r.data?.problemConsequences).toEqual([]);
+    expect(r.data?.currentSystems).toBe('');
+    expect(r.data?.desiredDecision).toBe('');
+  });
+
+  it('aceita qualquer combinação das consequências do documento', () => {
+    const r = leadSchema.safeParse({ ...valido, problemConsequences: [...CONSEQUENCES] });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejeita uma consequência fora da lista', () => {
+    expect(leadSchema.safeParse({ ...valido, problemConsequences: ['inventada'] }).success).toBe(false);
+  });
+
+  it.each([
+    ['currentSystems', 300, true],
+    ['currentSystems', 301, false],
+    ['desiredDecision', 300, true],
+    ['desiredDecision', 301, false],
+  ])('%s com %i caracteres → aceite: %s', (campo, n, esperado) => {
+    expect(leadSchema.safeParse({ ...valido, [campo]: 'x'.repeat(n) }).success).toBe(esperado);
+  });
+});

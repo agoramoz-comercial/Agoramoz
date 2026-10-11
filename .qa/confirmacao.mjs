@@ -19,12 +19,13 @@ let falhas = 0;
 // IDIOMA=en corre a versão inglesa (lote E2): /en/diagnostico, textos
 // ingleses, e o corpo do pedido tem de levar `idioma: "en"` — é isso que faz
 // o servidor guardar o consentimento que a pessoa leu.
+const BASE = process.env.BASE ?? 'http://127.0.0.1:3000';
 const EN = process.env.IDIOMA === 'en';
 const TXT = EN
-  ? { rota: '/en/diagnostico', continuar: 'Continue', enviar: 'Send request', recebido: 'Request received',
-      grupos: ['Countries where we operate', 'Global'] }
-  : { rota: '/diagnostico', continuar: 'Continuar', enviar: 'Enviar pedido', recebido: 'Pedido recebido',
-      grupos: ['País de operação', 'Global'] };
+  ? { rota: '/en/diagnostico', continuar: 'Continue', enviar: 'Send for assessment', recebido: 'We received your request',
+      grupos: ['Countries where we operate', 'Global'], perguntaPais: ['Where does your company operate'] }
+  : { rota: '/diagnostico', continuar: 'Continuar', enviar: 'Enviar para avaliação', recebido: 'Recebemos o seu pedido',
+      grupos: ['País de operação', 'Global'], perguntaPais: ['Onde opera'] };
 const MERCADOS = EN
   ? [['mz','MZN','Mozambique'], ['ch','CHF','Switzerland'], ['us','USD','United States'], ['br','R$','Brazil']]
   : [['mz','MZN','Moçambique'], ['pt','€','Portugal'], ['br','R$','Brasil'],
@@ -35,14 +36,15 @@ for (const [pais, moeda, nome] of MERCADOS) {
   const p = await ctx.newPage();
   let corpo = null;
   await p.route('**/api/diagnostico', (r) => { corpo = JSON.parse(r.request().postData() ?? '{}'); return r.fulfill({ status:200, contentType:'application/json', body:'{"ok":true}' }); });
-  await p.goto(`http://127.0.0.1:3000${TXT.rota}?pais=${pais}`, { waitUntil:'networkidle' });
+  await p.goto(`${BASE}${TXT.rota}?pais=${pais}`, { waitUntil:'networkidle' });
   await p.waitForTimeout(700);
 
-  // O país tem de chegar escolhido, e no grupo certo.
-  const escolhido = await p.locator('[role=radio][aria-checked=true]').first().innerText().catch(() => '');
-  const preSel = escolhido.includes(nome);
-  if (!preSel) falhas++;
-  console.log(`${pais}: pré-selecção «${nome}» ${preSel ? '✓' : '✗ (' + escolhido + ')'}`);
+  // Com o país no URL, o carrossel (P2) salta o cartão do país: o primeiro
+  // cartão não pode ser a pergunta do país. O valor confirma-se no pedido.
+  const primeiro = await p.locator('form h2').first().innerText().catch(() => '');
+  const saltou = !TXT.perguntaPais.some((t) => primeiro.includes(t));
+  if (!saltou) falhas++;
+  console.log(`${pais}: cartão do país saltado («${nome}» vem do URL) ${saltou ? '✓' : '✗ (' + primeiro + ')'}`);
 
   for (let passo = 0; passo < 8; passo++) {
     // Uma escolha por grupo de chips ainda sem selecção.
@@ -89,12 +91,14 @@ for (const [pais, moeda, nome] of MERCADOS) {
   const ok = txt.includes(TXT.recebido);
   const temMoeda = txt.includes(moeda);
   const idiomaOk = (corpo?.idioma ?? 'pt') === (EN ? 'en' : 'pt');
-  if (!ok || !temMoeda || !idiomaOk) falhas++;
+  const paisOk = corpo?.country === pais;
+  if (!ok || !temMoeda || !idiomaOk || !paisOk) falhas++;
+  console.log(`${pais}: país no pedido «${corpo?.country}» ${paisOk ? '✓' : '✗'}`);
   console.log(`${pais}: idioma no pedido «${corpo?.idioma}» ${idiomaOk ? '✓' : '✗'}`);
   console.log(`${pais}: confirmação ${ok ? '✓' : '✗'} | faixa na moeda ${moeda}: ${temMoeda ? '✓' : '✗'}`);
   const linha = txt.split('\n').find((l) => l.includes(moeda));
   if (linha) console.log(`   → ${linha}`);
-  await p.screenshot({ path: `.qa/v6-confirmacao-${EN ? 'en-' : ''}${pais}.png` });
+  await p.screenshot({ path: `${process.env.SAIDA ?? '.qa'}/v6-confirmacao-${EN ? 'en-' : ''}${pais}.png` });
   await ctx.close();
 }
 await b.close();

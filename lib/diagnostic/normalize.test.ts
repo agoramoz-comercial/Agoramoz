@@ -19,6 +19,9 @@ function lead(overrides: Partial<LeadInput> = {}): LeadInput {
     currentWebsite: '',
     processToImprove: ['comercial'],
     problemImpact: 'x'.repeat(40),
+    problemConsequences: [],
+    currentSystems: '',
+    desiredDecision: '',
     decisionTimeframe: '1-3-meses',
     investmentBand: 'mz-2',
     decisionRole: 'decisor',
@@ -112,6 +115,20 @@ describe('impressão digital das respostas', () => {
     const a = await inputFingerprint(lead());
     const b = await inputFingerprint(lead({ problemImpact: 'y'.repeat(40) }));
     expect(a).not.toBe(b);
+  });
+});
+
+describe('respostas canónicas — campos do Website Final 2026', () => {
+  it('a ordem em que se marcam as consequências não muda a impressão digital', async () => {
+    const a = await inputFingerprint(lead({ problemConsequences: ['erro', 'atraso'] }));
+    const b = await inputFingerprint(lead({ problemConsequences: ['atraso', 'erro'] }));
+    expect(a).toBe(b);
+  });
+
+  it('sistemas e decisão diferentes são respostas diferentes', async () => {
+    const base = await inputFingerprint(lead());
+    expect(await inputFingerprint(lead({ currentSystems: 'Primavera e Excel' }))).not.toBe(base);
+    expect(await inputFingerprint(lead({ desiredDecision: 'Aprovar o piloto' }))).not.toBe(base);
   });
 });
 
