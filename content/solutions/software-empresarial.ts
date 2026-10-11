@@ -84,11 +84,11 @@ export const softwareEmpresarial: SolutionPage = {
   faq: [
     {
       q: 'Software à medida não é sempre mais caro do que comprar?',
-      a: 'Em licenças, quase sempre. No custo total, nem sempre: uma ferramenta genérica que obriga dez pessoas a trabalho manual diário tem um custo recorrente que não aparece na fatura. O diagnóstico compara as duas vias com os seus números — e já recomendámos comprar em vez de construir.',
+      a: 'Em licenças, quase sempre. No custo total, nem sempre: uma ferramenta genérica que obriga dez pessoas a trabalho manual diário tem um custo recorrente que não aparece na fatura. O diagnóstico compara as duas vias com os seus números — e a recomendação pode ser comprar em vez de construir.',
     },
     {
       q: 'E se vos contratarmos e depois quisermos mudar de fornecedor?',
-      a: 'O código, os dados e a documentação são seus e ficam escritos no contrato. Usamos tecnologias correntes e documentadas, não uma plataforma proprietária que só nós saibamos manter. Prender um cliente por dependência técnica é um modelo de negócio que não praticamos.',
+      a: 'A propriedade do código, dos dados e da documentação, as licenças e os direitos de utilização ficam definidos por escrito no contrato. Usamos tecnologias correntes e documentadas, não uma plataforma proprietária que só nós saibamos manter, para que mudar de fornecedor seja possível.',
     },
     {
       q: 'Quanto tempo até termos algo a funcionar?',

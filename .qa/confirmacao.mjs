@@ -23,7 +23,7 @@ const BASE = process.env.BASE ?? 'http://127.0.0.1:3000';
 const EN = process.env.IDIOMA === 'en';
 const TXT = EN
   ? { rota: '/en/diagnostico', continuar: 'Continue', enviar: 'Send for assessment', recebido: 'We received your request',
-      grupos: ['Countries where we operate', 'Global'], perguntaPais: ['Where does your company operate'] }
+      grupos: ['Country of operation', 'Global'], perguntaPais: ['Where does your company operate'] }
   : { rota: '/diagnostico', continuar: 'Continuar', enviar: 'Enviar para avaliação', recebido: 'Recebemos o seu pedido',
       grupos: ['País de operação', 'Global'], perguntaPais: ['Onde opera'] };
 const MERCADOS = EN

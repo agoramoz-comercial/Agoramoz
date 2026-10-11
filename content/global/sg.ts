@@ -10,8 +10,8 @@ export const sg: GlobalMarket = {
   currency: 'SGD',
   dialCode: '+65',
   why: {
-    pt: 'Segundo lugar no nosso scorecard. Concentra estruturas de várias jurisdições num só fuso horário — e é aí que a consolidação manual de dados se torna o custo invisível maior.',
-    en: 'Second place in our scorecard. It concentrates structures from several jurisdictions in a single time zone — which is where manual data consolidation becomes the largest invisible cost.',
+    pt: 'Concentra estruturas de várias jurisdições num só fuso horário — e é aí que a consolidação manual de dados se torna o custo invisível maior.',
+    en: 'It concentrates structures from several jurisdictions in a single time zone — which is where manual data consolidation becomes the largest invisible cost.',
   },
   dataRegime: 'PDPA',
   investmentBands: [
@@ -30,14 +30,17 @@ export const sg: GlobalMarket = {
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas em Singapura', en: 'Document automation and AI agents for companies in Singapore' },
-    description: { pt: 'Devolvemos horas qualificadas a empresas em Singapura que perdem tempo em trabalho documental. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give qualified hours back to Singapore companies losing time to document work. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para empresas em Singapura: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for companies in Singapore: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
       slug: 'family-offices',
       name: { pt: 'Family offices e holdings', en: 'Family offices and holdings' },
       pain: { pt: 'Consolidar posições de vários custodiantes e jurisdições num relatório que alguém monta à mão todos os meses.', en: 'Consolidating positions across custodians and jurisdictions into a report someone assembles by hand every month.' },
-      outcome: { pt: 'O relatório sai sozinho, com a origem de cada número rastreável.', en: 'The report builds itself, with every figure traceable to its source.' },
+      outcome: { pt: 'O relatório é gerado a partir das fontes, com a origem de cada número rastreável e revisão humana antes de sair.', en: 'The report is generated from the sources, with every figure traceable and human review before it goes out.' },
     },
     {
       slug: 'comercio-maritimo',

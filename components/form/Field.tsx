@@ -20,7 +20,7 @@ export function Field({
   hint?: string;
   error?: string;
   required?: boolean;
-  children: (props: { id: string; describedBy?: string; invalid: boolean }) => React.ReactNode;
+  children: (props: { id: string; describedBy?: string; invalid: boolean; required: boolean }) => React.ReactNode;
   className?: string;
   /** Só muda a marca «(opcional)». */
   idioma?: Idioma;
@@ -42,14 +42,18 @@ export function Field({
           {hint}
         </p>
       )}
-      <div className="mt-2">{children({ id, describedBy, invalid: Boolean(error) })}</div>
-      {error && (
-        /* `--signal` e não `--color-signal-600`: o token segue a superfície. O
-           600 fixo dava 4,13:1 sobre o fundo escuro do diagnóstico (axe). */
-        <p id={errorId} className="mt-1.5 text-sm text-[color:var(--signal)]">
-          {error}
-        </p>
-      )}
+      <div className="mt-2">{children({ id, describedBy, invalid: Boolean(error), required: Boolean(required) })}</div>
+      {/* Sempre montado, sem margem: o erro nasce no blur, sem foco, e só uma
+          região viva o anuncia nesse momento (WCAG 4.1.3). */}
+      <div aria-live="polite">
+        {error && (
+          /* `--signal` e não `--color-signal-600`: o token segue a superfície. O
+             600 fixo dava 4,13:1 sobre o fundo escuro do diagnóstico (axe). */
+          <p id={errorId} className="mt-1.5 text-sm text-[color:var(--signal)]">
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

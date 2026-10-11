@@ -125,7 +125,7 @@ export const FORM = {
   progresso: { pt: 'Progresso do diagnóstico', en: 'Diagnostic progress' },
   carregando: { pt: 'A carregar o diagnóstico…', en: 'Loading the diagnostic…' },
   corrija: { pt: 'Corrija os seguintes campos:', en: 'Please correct the following fields:' },
-  paisOperacao: { pt: 'País de operação', en: 'Countries where we operate' },
+  paisOperacao: { pt: 'País de operação', en: 'Country of operation' },
   global: { pt: 'Global', en: 'Global' },
   setor: { pt: 'Setor', en: 'Sector' },
   nomeEmpresa: { pt: 'Nome da empresa', en: 'Company name' },

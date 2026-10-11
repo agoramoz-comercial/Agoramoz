@@ -377,7 +377,7 @@ export const HOME_FAQ: FaqItem[] = [
   },
   {
     q: 'Garantem aumento de vendas?',
-    a: 'Não. Não garantimos resultados que dependem da procura, da oferta, do preço, da equipa comercial ou da execução do cliente. Garantimos os compromissos técnicos e operacionais definidos contratualmente.',
+    a: 'Não. Não garantimos resultados que dependem da procura, da oferta, do preço, da equipa comercial ou da execução do cliente. Comprometemo-nos, por contrato, com os entregáveis e os critérios de aceitação acordados.',
   },
   {
     q: 'Quanto custa?',
@@ -517,7 +517,7 @@ export const SEGURANCA_2026 = {
       { title: 'Moçambique', body: 'Aplicamos os controlos técnicos e operacionais acordados e validamos requisitos regulatórios específicos com as partes competentes.' },
       { title: 'Portugal', body: 'Implementamos medidas técnicas e organizativas no âmbito contratado; a base legal e a conformidade final requerem validação do cliente e aconselhamento competente.' },
       { title: 'Brasil', body: 'Apoiamos controles técnicos para tratamento de dados; não substituímos a função jurídica, de privacidade ou de encarregado.' },
-      { title: 'Global', body: 'We do not describe a project as globally compliant without jurisdiction-specific review.' },
+      { title: 'Global', body: 'Não descrevemos um projeto como «globalmente conforme» sem revisão por jurisdição.' },
     ],
   },
 } as const;

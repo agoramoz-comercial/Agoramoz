@@ -26,7 +26,10 @@ export default function FaqPage() {
         <SectionHeading as="h1" eyebrow={FAQ_2026.eyebrow} title={FAQ_2026.title} lead={FAQ_2026.lead} max="wide" />
       </Section>
 
-      <Section surface="light" aria-label={FAQ_2026.eyebrow}>
+      <Section surface="light" aria-labelledby="h-faq">
+        <h2 id="h-faq" className="sr-only">
+          {FAQ_2026.eyebrow}
+        </h2>
         <div className="max-w-[52rem]">
           <Accordion items={items} />
         </div>

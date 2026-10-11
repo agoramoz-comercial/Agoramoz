@@ -80,7 +80,7 @@ export const websitesAvancadosEn: SolutionPage = {
   faq: [
     {
       q: 'We already have a website. Is it worth rebuilding, or is improving enough?',
-      a: 'It depends on where the bottleneck is. If the structure and speed are sound and the problem is the message and qualification, improving is faster and cheaper. The diagnostic answers this before any proposal exists — and we have concluded before that changing the form was enough.',
+      a: 'It depends on where the bottleneck is. If the structure and speed are sound and the problem is the message and qualification, improving is faster and cheaper. The diagnostic answers this before any proposal exists — and if the problem is only the form, that is what we will recommend.',
     },
     {
       q: 'Can you guarantee we will get more enquiries?',

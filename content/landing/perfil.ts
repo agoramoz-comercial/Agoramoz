@@ -75,7 +75,7 @@ export const PERFIL = {
     },
     {
       q: 'Garantem aumento de vendas?',
-      a: 'Não. Não garantimos resultados que dependem da procura, da oferta, do preço, da equipa comercial ou da execução do cliente. Garantimos os compromissos técnicos e operacionais definidos contratualmente.',
+      a: 'Não. Não garantimos resultados que dependem da procura, da oferta, do preço, da equipa comercial ou da execução do cliente. Comprometemo-nos, por contrato, com os entregáveis e os critérios de aceitação acordados.',
     },
     {
       q: 'Conseguem integrar com os sistemas que já usamos?',

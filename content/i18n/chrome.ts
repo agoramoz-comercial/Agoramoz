@@ -23,7 +23,7 @@ export const CHROME = {
 
   topo: {
     pt: 'Websites, software, automação e agentes de IA para empresas em Moçambique, Portugal e Brasil.',
-    en: 'Websites, software, automation and AI agents for companies in Mozambique, Portugal, Brazil and ten global markets.',
+    en: 'Websites, software, automation and AI agents for companies in Mozambique, Portugal and Brazil.',
   },
   mercadosAria: { pt: 'Selecionar mercado', en: 'Choose a market' },
   idiomaAria: { pt: 'Idioma', en: 'Language' },

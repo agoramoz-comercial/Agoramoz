@@ -90,7 +90,7 @@ export const infraestruturaDigitalEn: SolutionPage = {
     },
     {
       q: 'Can you guarantee the system will never fail?',
-      a: 'No, and be wary of anyone who does. No infrastructure has absolute availability. What we guarantee is what is within our control: that the failure is detected, that someone is told, that there is a log to diagnose it and that there is a tested path to recovery.',
+      a: 'No, and be wary of anyone who does. No infrastructure has absolute availability. What we commit to is what is within our control: that the failure is detected, that someone is told, that there is a log to diagnose it and that there is a tested path to recovery.',
     },
     {
       q: 'Will we end up dependent on you?',

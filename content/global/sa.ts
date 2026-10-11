@@ -11,8 +11,8 @@ export const sa: GlobalMarket = {
   currency: 'SAR',
   dialCode: '+966',
   why: {
-    pt: 'Grandes projectos de energia e infraestrutura com exigência documental pesada sobre fornecedores — o mesmo mecanismo que conhecemos em Moçambique, noutra escala. É a nossa competência actual, transferida.',
-    en: 'Large energy and infrastructure projects with heavy documentary demands on suppliers — the same mechanism we know from Mozambique, at another scale. It is our current capability, transferred.',
+    pt: 'Grandes projetos de energia e infraestrutura com exigência documental pesada sobre fornecedores — um problema que o nosso método de diagnóstico aborda.',
+    en: 'Large energy and infrastructure projects with heavy documentary demands on suppliers — a problem our diagnostic method addresses.',
   },
   dataRegime: 'PDPL',
   investmentBands: [
@@ -31,7 +31,10 @@ export const sa: GlobalMarket = {
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas na Arábia Saudita', en: 'Document automation and AI agents for companies in Saudi Arabia' },
-    description: { pt: 'Devolvemos horas qualificadas a fornecedores e empresas sauditas que as perdem em qualificação e concursos. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give qualified hours back to Saudi suppliers and companies losing them to qualification and tenders. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para fornecedores e empresas sauditas: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for Saudi suppliers and companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
@@ -62,7 +65,7 @@ export const sa: GlobalMarket = {
       slug: 'industria',
       name: { pt: 'Indústria e fabricação', en: 'Manufacturing' },
       pain: { pt: 'Cotações que demoram dias porque alguém lê o PDF e transcreve.', en: 'Quotes that take days because someone reads the PDF and retypes it.' },
-      outcome: { pt: 'A cotação sai em horas.', en: 'The quote goes out in hours.' },
+      outcome: { pt: 'A cotação parte de dados já extraídos e revistos por uma pessoa.', en: 'The quote starts from data already extracted and checked by a person.' },
     },
     {
       slug: 'saude',

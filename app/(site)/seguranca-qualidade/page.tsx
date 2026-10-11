@@ -16,13 +16,13 @@ export const metadata: Metadata = buildMetadata({
 
 function Pontos({ itens }: { itens: readonly string[] }) {
   return (
-    <div className="mt-10 grid gap-4 sm:grid-cols-2">
+    <ul role="list" className="mt-10 grid gap-4 sm:grid-cols-2">
       {itens.map((p) => (
-        <p key={p} className="border-l-2 border-[color:var(--accent)] pl-5 text-[color:var(--muted)]">
+        <li key={p} className="border-l-2 border-[color:var(--accent)] pl-5 text-[color:var(--muted)]">
           {p}
-        </p>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 

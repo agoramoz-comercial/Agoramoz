@@ -85,11 +85,11 @@ export const softwareEmpresarialEn: SolutionPage = {
   faq: [
     {
       q: 'Isn’t custom software always more expensive than buying?',
-      a: 'In licences, almost always. In total cost, not always: a generic tool that forces ten people into daily manual work has a recurring cost that does not show on the invoice. The diagnostic compares both routes with your numbers — and we have recommended buying rather than building before.',
+      a: 'In licences, almost always. In total cost, not always: a generic tool that forces ten people into daily manual work has a recurring cost that does not show on the invoice. The diagnostic compares both routes with your numbers — and the recommendation may be to buy rather than build.',
     },
     {
       q: 'What if we hire you and later want to change supplier?',
-      a: 'The code, the data and the documentation are yours, and that is written into the contract. We use mainstream, documented technologies, not a proprietary platform only we know how to maintain. Locking a client in through technical dependency is a business model we do not practise.',
+      a: 'Ownership of the code, data and documentation, licences and usage rights are set out in writing in the contract. We use mainstream, documented technologies, not a proprietary platform only we know how to maintain, so that changing supplier remains possible.',
     },
     {
       q: 'How long until we have something working?',

@@ -30,14 +30,17 @@ export const de: GlobalMarket = {
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para a indústria alemã', en: 'Document automation and AI agents for German industry' },
-    description: { pt: 'Devolvemos horas qualificadas a empresas alemãs que as perdem em cotações, fichas e conformidade. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give qualified hours back to German companies losing them to quotes, datasheets and compliance. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para empresas alemãs: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for German companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
       slug: 'maquinaria',
       name: { pt: 'Maquinaria e bens de equipamento', en: 'Machinery and capital goods' },
       pain: { pt: 'Pedidos de cotação em PDF que demoram dias porque alguém os lê e transcreve.', en: 'PDF quote requests that take days because someone reads and retypes them.' },
-      outcome: { pt: 'A cotação sai em horas, com os dados extraídos e revistos por uma pessoa.', en: 'The quote goes out in hours, with data extracted and checked by a person.' },
+      outcome: { pt: 'A cotação parte de dados já extraídos e revistos por uma pessoa.', en: 'The quote starts from data already extracted and checked by a person.' },
     },
     {
       slug: 'automovel-fornecedores',
@@ -55,7 +58,7 @@ export const de: GlobalMarket = {
       slug: 'dispositivos-medicos',
       name: { pt: 'Dispositivos médicos', en: 'Medical devices' },
       pain: { pt: 'Ficheiros técnicos que crescem a cada auditoria, sem versão vigente apontável.', en: 'Technical files that grow with every audit, with no pointable current version.' },
-      outcome: { pt: 'Auditoria preparada em horas em vez de semanas.', en: 'Audits prepared in hours instead of weeks.' },
+      outcome: { pt: 'Auditoria preparada a partir de um registo único.', en: 'Audits prepared from a single record.' },
     },
     {
       slug: 'electronica',

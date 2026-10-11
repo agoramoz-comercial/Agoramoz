@@ -10,8 +10,8 @@ export const uk: GlobalMarket = {
   currency: 'GBP',
   dialCode: '+44',
   why: {
-    pt: 'Quarto lugar no nosso scorecard, e o mercado onde o ICP de serviços profissionais é mais denso. Quem vende horas é quem mais perde ao gastá-las a formatar documentos.',
-    en: 'Fourth in our scorecard, and the market where the professional-services ICP is densest. Those who sell hours lose most by spending them formatting documents.',
+    pt: 'Os serviços profissionais vendem horas — e são quem mais perde ao gastá-las a formatar documentos.',
+    en: 'Professional services sell hours — and they lose most by spending them formatting documents.',
   },
   dataRegime: 'UK GDPR / Data Protection Act',
   investmentBands: [
@@ -30,7 +30,10 @@ export const uk: GlobalMarket = {
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas no Reino Unido', en: 'Document automation and AI agents for companies in the United Kingdom' },
-    description: { pt: 'Devolvemos horas faturáveis a empresas britânicas que as perdem em trabalho documental. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give billable hours back to UK companies losing them to document work. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para empresas britânicas: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for UK companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
@@ -85,7 +88,7 @@ export const uk: GlobalMarket = {
       slug: 'industria',
       name: { pt: 'Indústria e fabricação', en: 'Manufacturing' },
       pain: { pt: 'Cotações que demoram dias porque alguém lê e transcreve.', en: 'Quotes that take days because someone reads and retypes.' },
-      outcome: { pt: 'A cotação sai em horas.', en: 'The quote goes out in hours.' },
+      outcome: { pt: 'A cotação parte de dados já extraídos e revistos por uma pessoa.', en: 'The quote starts from data already extracted and checked by a person.' },
     },
     {
       slug: 'educacao',

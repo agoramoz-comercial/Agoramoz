@@ -84,7 +84,7 @@ export const websitesAvancados: SolutionPage = {
   faq: [
     {
       q: 'Já temos website. Vale a pena refazer ou basta melhorar?',
-      a: 'Depende de onde está o bloqueio. Se a estrutura e a velocidade forem sãs e o problema for a mensagem e a qualificação, melhorar é mais rápido e mais barato. O diagnóstico responde a isto antes de existir proposta — e já concluímos que bastava mudar o formulário.',
+      a: 'Depende de onde está o bloqueio. Se a estrutura e a velocidade forem sãs e o problema for a mensagem e a qualificação, melhorar é mais rápido e mais barato. O diagnóstico responde a isto antes de existir proposta — e, se o problema estiver só no formulário, é isso que recomendamos.',
     },
     {
       q: 'Conseguem garantir que vamos receber mais pedidos?',

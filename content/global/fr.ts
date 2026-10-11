@@ -10,8 +10,8 @@ export const fr: GlobalMarket = {
   currency: 'EUR',
   dialCode: '+33',
   why: {
-    pt: 'Mercado da UE onde a exigência de governação demonstrável é mais visível: automatizar sem poder explicar a decisão não serve. É exactamente o desenho que praticamos — aprovação humana em cada passo.',
-    en: 'The EU market where demonstrable governance is most visible: automating without being able to explain the decision is not enough. That is exactly how we build — human approval at every step.',
+    pt: 'Mercado da UE onde a exigência de governação demonstrável é mais visível: automatizar sem poder explicar a decisão não serve. É o desenho que propomos — aprovação humana nas decisões críticas.',
+    en: 'The EU market where demonstrable governance is most visible: automating without being able to explain the decision is not enough. That is the design we propose — human approval on critical decisions.',
   },
   dataRegime: 'RGPD / Loi Informatique et Libertés',
   investmentBands: [
@@ -30,7 +30,10 @@ export const fr: GlobalMarket = {
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas em França', en: 'Document automation and AI agents for companies in France' },
-    description: { pt: 'Devolvemos horas qualificadas a empresas francesas, com decisões explicáveis e aprovação humana em cada passo. Preço fixo por fase.', en: 'We give qualified hours back to French companies, with explainable decisions and human approval at every step. Fixed price per phase.' },
+    description: {
+      pt: 'Automação documental para empresas francesas: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for French companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {

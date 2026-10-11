@@ -22,7 +22,7 @@ export default function ComoTrabalhamosPage() {
       <Section surface="deep" contour>
         <Breadcrumbs items={[{ name: 'Início', path: '/' }, { name: 'Como trabalhamos', path: '/como-trabalhamos' }]} className="mb-10" />
         <SectionHeading as="h1" eyebrow={PROCESS.eyebrow} title={PROCESS.title} lead={PROCESS.lead} max="wide" />
-        <ProcessTimeline />
+        <ProcessTimeline nivelTitulo="h2" />
       </Section>
 
       <Section surface="light" bleed aria-label="O sistema de crescimento e operação">

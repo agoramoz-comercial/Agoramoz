@@ -11,8 +11,8 @@ export const za: GlobalMarket = {
   currency: 'ZAR',
   dialCode: '+27',
   why: {
-    pt: 'A âncora africana lógica: vizinha, mesmo fuso horário, inglês de trabalho, e ligada à mesma cadeia de energia que já servimos em Moçambique.',
-    en: 'The logical African anchor: neighbouring, same time zone, working in English, and connected to the same energy chain we already serve in Mozambique.',
+    pt: 'Vizinha de Moçambique, no mesmo fuso horário e com inglês de trabalho, e ligada à mesma cadeia de energia.',
+    en: 'Neighbouring Mozambique, in the same time zone, working in English, and connected to the same energy chain.',
   },
   dataRegime: 'POPIA',
   investmentBands: [
@@ -31,7 +31,10 @@ export const za: GlobalMarket = {
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas na África do Sul', en: 'Document automation and AI agents for companies in South Africa' },
-    description: { pt: 'Devolvemos horas qualificadas a empresas sul-africanas que as perdem em trabalho documental. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give qualified hours back to South African companies losing them to document work. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para empresas sul-africanas: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for South African companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
@@ -80,7 +83,7 @@ export const za: GlobalMarket = {
       slug: 'industria',
       name: { pt: 'Indústria e fabricação', en: 'Manufacturing' },
       pain: { pt: 'Cotações que demoram dias porque alguém lê e transcreve.', en: 'Quotes that take days because someone reads and retypes.' },
-      outcome: { pt: 'A cotação sai em horas.', en: 'The quote goes out in hours.' },
+      outcome: { pt: 'A cotação parte de dados já extraídos e revistos por uma pessoa.', en: 'The quote starts from data already extracted and checked by a person.' },
     },
     {
       slug: 'saude-privada',

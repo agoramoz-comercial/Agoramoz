@@ -13,7 +13,15 @@ import type { Idioma } from '@/content/types';
  * Um único ScrollTrigger, na timeline de topo. Em reduced-motion a régua é
  * estática e os passos entram sem deslocação.
  */
-export function ProcessTimeline({ idioma = 'pt' }: { idioma?: Idioma }) {
+export function ProcessTimeline({
+  idioma = 'pt',
+  nivelTitulo = 'h3',
+}: {
+  idioma?: Idioma;
+  /** `h2` onde a linha do tempo vem logo abaixo do H1 (/como-trabalhamos). */
+  nivelTitulo?: 'h2' | 'h3';
+}) {
+  const Titulo = nivelTitulo;
   const PROCESS = conteudoDoInicio(idioma).processo;
   const scope = useRef<HTMLDivElement>(null);
 
@@ -79,10 +87,10 @@ export function ProcessTimeline({ idioma = 'pt' }: { idioma?: Idioma }) {
               aria-hidden
               className="absolute top-2 -left-8 size-1.5 bg-[color:var(--accent)] md:-left-16"
             />
-            <span className="rule-label text-[color:var(--muted)]">
+            <span aria-hidden className="rule-label text-[color:var(--muted)]">
               {String(i + 1).padStart(2, '0')}
             </span>
-            <h3 className="mt-3 font-display text-[length:var(--text-h3)] font-semibold">{s.title}</h3>
+            <Titulo className="mt-3 font-display text-[length:var(--text-h3)] font-semibold">{s.title}</Titulo>
             <p className="mt-3 max-w-[44ch] text-[color:var(--muted)]">{s.body}</p>
             {'entrega' in s && (
               <dl className="mt-4 grid max-w-[44ch] gap-2 text-sm">

@@ -11,8 +11,8 @@ export const ch: GlobalMarket = {
   currency: 'CHF',
   dialCode: '+41',
   why: {
-    pt: 'Primeiro lugar no nosso scorecard de 27 países. O trabalho documental é caro porque as horas qualificadas são caras — e é exactamente isso que torna a automação rentável no primeiro ano, não no terceiro.',
-    en: 'First place in our 27-country scorecard. Document work is expensive here because qualified hours are expensive — which is precisely what makes automation pay back in year one rather than year three.',
+    pt: 'O trabalho documental é caro porque as horas qualificadas são caras — e é aí que a automação tende a ter mais retorno, a confirmar com os seus números no diagnóstico.',
+    en: 'Document work is expensive here because qualified hours are expensive — which is where automation tends to pay back most, to be confirmed with your numbers in the diagnostic.',
   },
   dataRegime: 'nLPD / revDSG',
   investmentBands: [
@@ -35,8 +35,8 @@ export const ch: GlobalMarket = {
       en: 'Document automation and AI agents for companies in Switzerland',
     },
     description: {
-      pt: 'Devolvemos horas qualificadas a empresas suíças que perdem tempo em trabalho documental. Preço fixo por fase, aprovação humana em cada decisão.',
-      en: 'We give qualified hours back to Swiss companies losing time to document work. Fixed price per phase, human approval on every decision.',
+      pt: 'Automação documental para empresas suíças: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for Swiss companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
     },
   },
   sectors: [
@@ -48,8 +48,8 @@ export const ch: GlobalMarket = {
         en: 'Consolidating positions across several banks and jurisdictions into a monthly report assembled by hand in a spreadsheet.',
       },
       outcome: {
-        pt: 'O relatório consolidado sai sozinho, com a origem de cada número rastreável.',
-        en: 'The consolidated report builds itself, with every figure traceable to its source.',
+        pt: 'O relatório consolidado é gerado a partir das fontes, com a origem de cada número rastreável e revisão humana antes de sair.',
+        en: 'The consolidated report is generated from the sources, with every figure traceable and human review before it goes out.',
       },
     },
     {
@@ -72,8 +72,8 @@ export const ch: GlobalMarket = {
         en: 'Quote requests that arrive as PDFs and take days to answer because someone has to read and retype them.',
       },
       outcome: {
-        pt: 'A cotação sai em horas, com os dados já extraídos e revistos por uma pessoa.',
-        en: 'The quote goes out in hours, with the data already extracted and checked by a person.',
+        pt: 'A cotação parte de dados já extraídos e revistos por uma pessoa.',
+        en: 'The quote starts from data already extracted and checked by a person.',
       },
     },
     {
@@ -120,8 +120,8 @@ export const ch: GlobalMarket = {
         en: 'Technical files that grow with every audit, where nobody can point to the current version without asking.',
       },
       outcome: {
-        pt: 'Versão vigente evidente, histórico intacto, auditoria preparada em horas em vez de semanas.',
-        en: 'The current version is obvious, history intact, audits prepared in hours instead of weeks.',
+        pt: 'Versão vigente evidente, histórico intacto, auditoria preparada a partir de um registo único.',
+        en: 'The current version is obvious, history intact, audits prepared from a single record.',
       },
     },
     {

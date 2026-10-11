@@ -27,7 +27,9 @@ export function Accordion({
               />
             </RA.Trigger>
           </RA.Header>
-          <RA.Content className="grid grid-rows-[0fr] overflow-hidden transition-[grid-template-rows] duration-300 ease-out data-[state=open]:grid-rows-[1fr]">
+          {/* forceMount: a resposta fica no HTML servido (o FAQPage descreve-a);
+              fechada, o Radix põe-lhe `hidden`, por isso nem se vê nem se lê. */}
+          <RA.Content forceMount className="grid grid-rows-[0fr] overflow-hidden transition-[grid-template-rows] duration-300 ease-out data-[state=open]:grid-rows-[1fr]">
             <div className="min-h-0">
               <p className="max-w-[46rem] pb-6 text-[color:var(--muted)]">{item.a}</p>
             </div>

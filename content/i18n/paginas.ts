@@ -16,12 +16,12 @@ export const POSICIONAMENTO: Record<CountryCode, Texto> = {
     en: 'We work with companies that already have demand and need structure: bringing requests, customers, suppliers and operations into one system, without replacing everything that already works.',
   },
   pt: {
-    pt: 'Não propomos substituir o que já funciona. Ligamos os sistemas existentes, automatizamos o trabalho entre eles e devolvemos horas de equipa qualificada a trabalho qualificado.',
-    en: 'We do not propose replacing what already works. We connect your existing systems, automate the work between them and give qualified people their hours back for qualified work.',
+    pt: 'Não propomos substituir o que já funciona. Ligamos os sistemas existentes, automatizamos o trabalho entre eles e ajudamos a libertar horas de equipa qualificada para trabalho qualificado.',
+    en: 'We do not propose replacing what already works. We connect your existing systems, automate the work between them and help free qualified people’s hours for qualified work.',
   },
   br: {
-    pt: 'Trabalhamos com operações de maior volume e times distribuídos, onde cada minuto de trabalho manual é multiplicado por milhares de transações por mês.',
-    en: 'We work with higher-volume operations and distributed teams, where every minute of manual work is multiplied by thousands of transactions a month.',
+    pt: 'Desenhamos para operações de maior volume e times distribuídos, onde um minuto de trabalho manual se multiplica por cada transação.',
+    en: 'We design for higher-volume operations and distributed teams, where a minute of manual work is multiplied by every transaction.',
   },
 };
 
@@ -29,8 +29,8 @@ export const POSICIONAMENTO: Record<CountryCode, Texto> = {
 export const CARTAO_GLOBAL = {
   nome: { pt: 'Global', en: 'Global' },
   posicionamento: {
-    pt: 'Dez mercados de expansão, da Suíça a Singapura, com a mesma disciplina: diagnóstico primeiro, preço fixo por fase e aprovação humana em cada decisão.',
-    en: 'Ten expansion markets, from Switzerland to Singapore, with the same discipline: diagnostic first, a fixed price per phase and human approval at every decision.',
+    pt: 'Dez mercados de expansão, da Suíça a Singapura, com a mesma disciplina: diagnóstico primeiro, preço por fase quando o âmbito é conhecido e aprovação humana nas decisões críticas.',
+    en: 'Ten expansion markets, from Switzerland to Singapore, with the same discipline: diagnostic first, a price per phase once the scope is known, and human approval on critical decisions.',
   },
 } as const;
 
@@ -49,16 +49,16 @@ export const OFERTA = {
 
 export const FINAL = {
   titulo: {
-    pt: 'Antes de comprar mais tecnologia, descubra qual sistema produzirá maior impacto.',
-    en: 'Before you buy more technology, find out which system will have the greatest impact.',
+    pt: 'Antes de comprar mais tecnologia, perceba onde intervir primeiro.',
+    en: 'Before you buy more technology, find out where to intervene first.',
   },
   corpo: {
     pt: 'Partilhe o processo que pretende melhorar. A AGORAMOZ analisará o problema, a viabilidade e o próximo passo recomendado.',
     en: 'Share the process you want to improve. AGORAMOZ will analyse the problem, its feasibility and the recommended next step.',
   },
   micro: {
-    pt: 'Sem pressão comercial · Sem soluções genéricas · Sem promessas impossíveis',
-    en: 'No sales pressure · No generic solutions · No impossible promises',
+    pt: 'Sem pressão comercial · Diagnóstico antes de proposta',
+    en: 'No sales pressure · Diagnostic before proposal',
   },
 } as const;
 

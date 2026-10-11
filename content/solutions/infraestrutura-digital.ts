@@ -90,7 +90,7 @@ export const infraestruturaDigital: SolutionPage = {
     },
     {
       q: 'Podem garantir que o sistema nunca vai falhar?',
-      a: 'Não, e desconfie de quem garanta. Nenhuma infraestrutura tem disponibilidade absoluta. O que garantimos é o que está no nosso controlo: que a falha é detetada, que alguém é avisado, que há registo para diagnosticar e que existe um caminho de recuperação testado.',
+      a: 'Não, e desconfie de quem garanta. Nenhuma infraestrutura tem disponibilidade absoluta. O que assumimos é o que está no nosso controlo: que a falha é detetada, que alguém é avisado, que há registo para diagnosticar e que existe um caminho de recuperação testado.',
     },
     {
       q: 'Vamos ficar dependentes de vocês?',

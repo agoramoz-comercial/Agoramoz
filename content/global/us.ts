@@ -10,8 +10,8 @@ export const us: GlobalMarket = {
   currency: 'USD',
   dialCode: '+1',
   why: {
-    pt: 'O maior poder de compra do scorecard. O que o torna interessante não é o tamanho — é a repetição: processos documentais idênticos corridos milhares de vezes por mês.',
-    en: 'The largest purchasing power in the scorecard. What makes it interesting is not size but repetition: identical document processes run thousands of times a month.',
+    pt: 'O que torna este mercado interessante não é o tamanho — é a repetição: processos documentais idênticos corridos muitas vezes por mês.',
+    en: 'What makes this market interesting is not size but repetition: identical document processes run many times a month.',
   },
   dataRegime: 'Regimes estaduais (CCPA/CPRA e equivalentes)',
   investmentBands: [
@@ -23,14 +23,17 @@ export const us: GlobalMarket = {
   ],
   consent: {
     text: {
-      pt: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico, nos termos do regime de proteção de dados aplicável (Regimes estaduais (CCPA/CPRA e equivalentes)). Posso pedir o acesso, a retificação, a oposição ou a eliminação dos meus dados a qualquer momento.',
-      en: 'I authorise AGORAMOZ to process the data in this form to answer my request and prepare the diagnostic, under the applicable data-protection regime (Regimes estaduais (CCPA/CPRA e equivalentes)). I may request access to, correction of, objection to or erasure of my data at any time.',
+      pt: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico, nos termos do regime de proteção de dados aplicável (regimes estaduais, como a CCPA/CPRA). Posso pedir o acesso, a retificação, a oposição ou a eliminação dos meus dados a qualquer momento.',
+      en: 'I authorise AGORAMOZ to process the data in this form to answer my request and prepare the diagnostic, under the applicable data-protection regime (US state privacy laws, such as CCPA/CPRA). I may request access to, correction of, objection to or erasure of my data at any time.',
     },
     policyHref: '/privacidade',
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas nos Estados Unidos', en: 'Document automation and AI agents for companies in the United States' },
-    description: { pt: 'Devolvemos horas qualificadas a empresas norte-americanas que perdem tempo em trabalho documental. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give qualified hours back to US companies losing time to document work. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para empresas norte-americanas: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for US companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
@@ -67,7 +70,7 @@ export const us: GlobalMarket = {
       slug: 'industria',
       name: { pt: 'Indústria e fabricação', en: 'Manufacturing' },
       pain: { pt: 'Pedidos de cotação em PDF que demoram dias porque alguém os transcreve.', en: 'PDF quote requests that take days because someone retypes them.' },
-      outcome: { pt: 'A cotação sai em horas, com os dados extraídos e revistos.', en: 'The quote goes out in hours, with data extracted and reviewed.' },
+      outcome: { pt: 'A cotação parte de dados já extraídos e revistos.', en: 'The quote starts from data already extracted and reviewed.' },
     },
     {
       slug: 'servicos-financeiros',

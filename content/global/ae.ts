@@ -23,21 +23,24 @@ export const ae: GlobalMarket = {
   ],
   consent: {
     text: {
-      pt: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico, nos termos do regime de proteção de dados aplicável (PDPL federal e regimes de zona franca (DIFC, ADGM)). Posso pedir o acesso, a retificação, a oposição ou a eliminação dos meus dados a qualquer momento.',
-      en: 'I authorise AGORAMOZ to process the data in this form to answer my request and prepare the diagnostic, under the applicable data-protection regime (PDPL federal e regimes de zona franca (DIFC, ADGM)). I may request access to, correction of, objection to or erasure of my data at any time.',
+      pt: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico, nos termos do regime de proteção de dados aplicável (PDPL federal e regimes das zonas francas, como DIFC e ADGM). Posso pedir o acesso, a retificação, a oposição ou a eliminação dos meus dados a qualquer momento.',
+      en: 'I authorise AGORAMOZ to process the data in this form to answer my request and prepare the diagnostic, under the applicable data-protection regime (federal PDPL and free-zone regimes such as DIFC and ADGM). I may request access to, correction of, objection to or erasure of my data at any time.',
     },
     policyHref: '/privacidade',
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas nos Emirados', en: 'Document automation and AI agents for companies in the UAE' },
-    description: { pt: 'Devolvemos horas qualificadas a grupos e empresas nos Emirados que as perdem em trabalho documental. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give qualified hours back to UAE groups and companies losing them to document work. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para grupos e empresas nos Emirados: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for UAE groups and companies: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
       slug: 'family-offices',
       name: { pt: 'Family offices e holdings', en: 'Family offices and holdings' },
       pain: { pt: 'Consolidar participações de várias jurisdições num relatório feito à mão.', en: 'Consolidating holdings across jurisdictions into a report made by hand.' },
-      outcome: { pt: 'O relatório sai sozinho, com cada número rastreável à origem.', en: 'The report builds itself, with every figure traceable to source.' },
+      outcome: { pt: 'O relatório é gerado a partir das fontes, com cada número rastreável à origem e revisão humana antes de sair.', en: 'The report is generated from the sources, with every figure traceable and human review before it goes out.' },
     },
     {
       slug: 'imobiliario',

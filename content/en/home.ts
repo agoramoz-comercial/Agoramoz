@@ -159,7 +159,7 @@ export const HOME_FAQ_EN: FaqItem[] = [
   },
   {
     q: 'Do you guarantee higher sales?',
-    a: 'No. We do not guarantee results that depend on demand, the offer, pricing, the sales team or the client’s execution. We guarantee the technical and operational commitments defined in the contract.',
+    a: 'No. We do not guarantee results that depend on demand, the offer, pricing, the sales team or the client’s execution. We commit, by contract, to the agreed deliverables and acceptance criteria.',
   },
   {
     q: 'How much does it cost?',

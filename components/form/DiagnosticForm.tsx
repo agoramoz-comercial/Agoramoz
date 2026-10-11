@@ -21,6 +21,7 @@ import {
 import { CARTOES_AUTOMATICOS, cartaoInicial, minutosRestantes, podeIrPara, setorValido } from '@/lib/forms/carrossel';
 import { COUNTRY_CODES, GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
 import { NOME_PAIS } from '@/content/i18n/chrome';
+import { DIAGNOSTICO as DIAGNOSTICO_TXT } from '@/content/i18n/diagnostico';
 import { CONSEQUENCIAS, FORM, OBJETIVOS, PAPEIS, PERGUNTAS, PRAZOS, TAMANHOS } from '@/content/i18n/formulario';
 import type { Idioma } from '@/content/types';
 import { SoPortugues } from '@/components/ui/SoPortugues';
@@ -52,6 +53,29 @@ const DRAFT_FIELDS = [
 // campo comercialmente mais sensível do formulário e não vale o risco.
 
 const TOTAL = CARTOES.length;
+
+/**
+ * No resumo de erros, os campos cuja mensagem é partilhada levam o rótulo à
+ * frente: «Use no máximo 300 caracteres.» serve dois campos (WCAG 3.3.1).
+ */
+const ROTULO_ERRO: Partial<Record<keyof LeadInput, { pt: string; en: string }>> = {
+  problemImpact: FORM.impacto,
+  problemConsequences: FORM.consequencia,
+  currentSystems: FORM.sistemas,
+  desiredDecision: FORM.decisao,
+};
+
+/** A mensagem de um erro do react-hook-form, também de um campo lista (erro por índice). */
+function mensagemDe(erro: unknown): string {
+  if (!erro || typeof erro !== 'object') return '';
+  const directa = (erro as { message?: unknown }).message;
+  if (typeof directa === 'string') return directa;
+  if (Array.isArray(erro)) {
+    const primeiro = erro.find((e) => e && typeof e.message === 'string');
+    return primeiro ? primeiro.message : '';
+  }
+  return '';
+}
 
 /**
  * O link de marcação que o servidor devolve com o diagnóstico aceite. Vem da
@@ -126,6 +150,7 @@ export function DiagnosticForm({
   const toque = useRef<{ x: number; y: number } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const okRef = useRef<HTMLDivElement>(null);
   const formId = useId();
 
   const form = useForm<LeadInput>({
@@ -318,7 +343,7 @@ export function DiagnosticForm({
   function onPointerDown(e: React.PointerEvent) {
     if (e.pointerType !== 'touch') return;
     const alvo = e.target as HTMLElement;
-    if (alvo.closest('input, textarea')) return;
+    if (alvo.closest('input, textarea, select, label, button, a')) return;
     toque.current = { x: e.clientX, y: e.clientY };
   }
 
@@ -380,6 +405,12 @@ export function DiagnosticForm({
     }
   }, onInvalido);
 
+  // Depois do envio o botão desaparece: o foco vai para a confirmação, não
+  // para o <body> (WCAG 2.4.3).
+  useEffect(() => {
+    if (status === 'done') okRef.current?.focus();
+  }, [status]);
+
   const solucoes = ligacao('/solucoes', idioma);
   const politica = ligacao('/privacidade', idioma);
 
@@ -406,7 +437,12 @@ export function DiagnosticForm({
     ];
 
     return (
-      <div role="status" className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-8">
+      <div
+        ref={okRef}
+        tabIndex={-1}
+        role="status"
+        className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-8 outline-none"
+      >
         <span className="grid size-12 place-items-center rounded-full bg-[color:var(--ok)]">
           <Check aria-hidden className="size-6 text-[color:var(--surface)]" />
         </span>
@@ -489,6 +525,7 @@ export function DiagnosticForm({
     <form
       onSubmit={onSubmit}
       noValidate
+      aria-label={t(DIAGNOSTICO_TXT.nome, idioma)}
       className="border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-6 md:p-8"
     >
       {/* Visual. Para leitores de ecrã, o progresso vai dentro da pergunta,
@@ -577,7 +614,10 @@ export function DiagnosticForm({
             <p className="text-sm font-medium">{t(FORM.corrija, idioma)}</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--muted)]">
               {stepErrors.map((f) => (
-                <li key={String(f)}>{String(errors[f]?.message)}</li>
+                <li key={String(f)}>
+                  {ROTULO_ERRO[f] ? `${t(ROTULO_ERRO[f], idioma)}: ` : ''}
+                  {mensagemDe(errors[f])}
+                </li>
               ))}
             </ul>
           </div>
@@ -612,7 +652,7 @@ export function DiagnosticForm({
                       value={field.value ?? null}
                       onChange={mudar}
                       onEscolha={escolher}
-                      describedBy={avisoId}
+                      describedBy={automatico ? avisoId : undefined}
                       options={COUNTRY_CODES.map((c) => ({
                         value: c,
                         label: t(NOME_PAIS[c], idioma),
@@ -625,7 +665,7 @@ export function DiagnosticForm({
                       value={field.value ?? null}
                       onChange={mudar}
                       onEscolha={escolher}
-                      describedBy={avisoId}
+                      describedBy={automatico ? avisoId : undefined}
                       options={GLOBAL_CODES.map((c) => ({
                         value: c,
                         label: t(GLOBAL_MARKETS[c].name, idioma),
@@ -648,7 +688,7 @@ export function DiagnosticForm({
                   value={field.value || null}
                   onChange={field.onChange}
                   onEscolha={escolher}
-                  describedBy={avisoId}
+                  describedBy={automatico ? avisoId : undefined}
                   options={activeCountry.sectors.map((s) => ({
                     value: s.slug,
                     label: s.label,
@@ -708,7 +748,7 @@ export function DiagnosticForm({
                   value={field.value ?? null}
                   onChange={field.onChange}
                   onEscolha={escolher}
-                  describedBy={avisoId}
+                  describedBy={automatico ? avisoId : undefined}
                   options={COMPANY_SIZES.map((s) => ({
                     value: s,
                     label: t(TAMANHOS[s], idioma),
@@ -729,7 +769,7 @@ export function DiagnosticForm({
                   value={field.value ?? null}
                   onChange={field.onChange}
                   onEscolha={escolher}
-                  describedBy={avisoId}
+                  describedBy={automatico ? avisoId : undefined}
                   options={TIMEFRAMES.map((p) => ({
                     value: p,
                     label: t(PRAZOS[p], idioma),
@@ -750,7 +790,7 @@ export function DiagnosticForm({
                   value={field.value ?? null}
                   onChange={field.onChange}
                   onEscolha={escolher}
-                  describedBy={avisoId}
+                  describedBy={automatico ? avisoId : undefined}
                   options={DECISION_ROLES.map((r) => ({
                     value: r,
                     label: t(PAPEIS[r], idioma),
@@ -771,7 +811,7 @@ export function DiagnosticForm({
                   value={field.value || null}
                   onChange={field.onChange}
                   onEscolha={escolher}
-                  describedBy={avisoId}
+                  describedBy={automatico ? avisoId : undefined}
                   options={activeCountry.investmentBands.map((b) => ({
                     value: b.id,
                     label: b.label,
@@ -793,7 +833,7 @@ export function DiagnosticForm({
                 {({ id, describedBy, invalid }) => (
                   <textarea
                     id={id}
-                    aria-describedby={describedBy}
+                    aria-describedby={[describedBy, `${formId}-aviso-seg`].filter(Boolean).join(' ')}
                     aria-invalid={invalid}
                     rows={4}
                     className={inputClass}
@@ -801,9 +841,11 @@ export function DiagnosticForm({
                   />
                 )}
               </Field>
-              <fieldset className="border-0 p-0">
+              <fieldset aria-describedby={`${formId}-cons-dica`} className="border-0 p-0">
                 <legend className="text-sm font-medium">{t(FORM.consequencia, idioma)}</legend>
-                <p className="mt-1 text-sm text-[color:var(--muted)]">{t(FORM.consequenciaDica, idioma)}</p>
+                <p id={`${formId}-cons-dica`} className="mt-1 text-sm text-[color:var(--muted)]">
+                  {t(FORM.consequenciaDica, idioma)}
+                </p>
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {CONSEQUENCES.map((c) => {
                     const checked = consequencias.includes(c);
@@ -846,7 +888,7 @@ export function DiagnosticForm({
                   {({ id, describedBy, invalid }) => (
                     <input
                       id={id}
-                      aria-describedby={describedBy}
+                      aria-describedby={[describedBy, `${formId}-aviso-seg`].filter(Boolean).join(' ')}
                       aria-invalid={invalid}
                       maxLength={300}
                       className={inputClass}
@@ -863,7 +905,7 @@ export function DiagnosticForm({
                   {({ id, describedBy, invalid }) => (
                     <input
                       id={id}
-                      aria-describedby={describedBy}
+                      aria-describedby={[describedBy, `${formId}-aviso-seg`].filter(Boolean).join(' ')}
                       aria-invalid={invalid}
                       maxLength={300}
                       className={inputClass}
@@ -872,7 +914,9 @@ export function DiagnosticForm({
                   )}
                 </Field>
               </div>
-              <p className="text-sm text-[color:var(--muted)]">{t(FORM.avisoSeguranca, idioma)}</p>
+              <p id={`${formId}-aviso-seg`} className="text-sm text-[color:var(--muted)]">
+                {t(FORM.avisoSeguranca, idioma)}
+              </p>
             </div>
           )}
 
@@ -880,11 +924,12 @@ export function DiagnosticForm({
             <>
               <div className="grid gap-6 sm:grid-cols-2">
                 <Field label={t(FORM.nome, idioma)} required idioma={idioma} error={errors.name?.message}>
-                  {({ id, describedBy, invalid }) => (
+                  {({ id, describedBy, invalid, required }) => (
                     <input
                       id={id}
                       aria-describedby={describedBy}
                       aria-invalid={invalid}
+                      aria-required={required}
                       autoComplete="name"
                       className={inputClass}
                       {...form.register('name')}
@@ -892,12 +937,13 @@ export function DiagnosticForm({
                   )}
                 </Field>
                 <Field label={t(FORM.email, idioma)} required idioma={idioma} error={errors.workEmail?.message}>
-                  {({ id, describedBy, invalid }) => (
+                  {({ id, describedBy, invalid, required }) => (
                     <input
                       id={id}
                       type="email"
                       aria-describedby={describedBy}
                       aria-invalid={invalid}
+                      aria-required={required}
                       autoComplete="email"
                       className={inputClass}
                       {...form.register('workEmail')}
@@ -911,13 +957,14 @@ export function DiagnosticForm({
                   hint={t(FORM.indicativo, idioma).replace('{indicativo}', activeCountry.dialCode)}
                   error={errors.phone?.message}
                 >
-                  {({ id, describedBy, invalid }) => (
+                  {({ id, describedBy, invalid, required }) => (
                     <input
                       id={id}
                       type="tel"
                       inputMode="tel"
                       aria-describedby={describedBy}
                       aria-invalid={invalid}
+                      aria-required={required}
                       autoComplete="tel"
                       className={inputClass}
                       {...form.register('phone')}
@@ -925,11 +972,12 @@ export function DiagnosticForm({
                   )}
                 </Field>
                 <Field label={t(FORM.nomeEmpresa, idioma)} required idioma={idioma} error={errors.company?.message}>
-                  {({ id, describedBy, invalid }) => (
+                  {({ id, describedBy, invalid, required }) => (
                     <input
                       id={id}
                       aria-describedby={describedBy}
                       aria-invalid={invalid}
+                      aria-required={required}
                       autoComplete="organization"
                       className={inputClass}
                       {...form.register('company')}
@@ -967,6 +1015,7 @@ export function DiagnosticForm({
               <label className="flex items-start gap-3 text-sm">
                 <input
                   type="checkbox"
+                  aria-required="true"
                   aria-invalid={Boolean(errors.consent)}
                   aria-describedby={errors.consent ? `${formId}-consentimento` : undefined}
                   className="mt-1 size-4 shrink-0"

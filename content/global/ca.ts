@@ -11,8 +11,8 @@ export const ca: GlobalMarket = {
   currency: 'CAD',
   dialCode: '+1',
   why: {
-    pt: 'Entra no nível global no lugar que Portugal deixou vago — Portugal é mercado de operação, não de expansão. Consta do scorecard dos 27 países, e é bilingue de raiz, o que torna a nossa camada PT/EN útil em vez de decorativa.',
-    en: 'It takes the place Portugal left open at the global tier — Portugal is a market we operate in, not one we expand into. It is in the 27-country scorecard, and it is natively bilingual, which makes our PT/EN layer useful rather than decorative.',
+    pt: 'É bilingue de raiz, o que torna a nossa camada PT/EN útil em vez de decorativa — e o trabalho documental repete-se nas duas línguas.',
+    en: 'It is natively bilingual, which makes our PT/EN layer useful rather than decorative — and document work repeats in both languages.',
   },
   dataRegime: 'PIPEDA e regimes provinciais (Lei 25, Quebec)',
   investmentBands: [
@@ -24,14 +24,17 @@ export const ca: GlobalMarket = {
   ],
   consent: {
     text: {
-      pt: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico, nos termos do regime de proteção de dados aplicável (PIPEDA e regimes provinciais (Lei 25, Quebec)). Posso pedir o acesso, a retificação, a oposição ou a eliminação dos meus dados a qualquer momento.',
-      en: 'I authorise AGORAMOZ to process the data in this form to answer my request and prepare the diagnostic, under the applicable data-protection regime (PIPEDA e regimes provinciais (Lei 25, Quebec)). I may request access to, correction of, objection to or erasure of my data at any time.',
+      pt: 'Autorizo a AGORAMOZ a tratar os dados deste formulário para responder ao meu pedido e preparar o diagnóstico, nos termos do regime de proteção de dados aplicável (PIPEDA e regimes provinciais, como a Lei 25 do Quebeque). Posso pedir o acesso, a retificação, a oposição ou a eliminação dos meus dados a qualquer momento.',
+      en: 'I authorise AGORAMOZ to process the data in this form to answer my request and prepare the diagnostic, under the applicable data-protection regime (PIPEDA and provincial regimes such as Quebec Law 25). I may request access to, correction of, objection to or erasure of my data at any time.',
     },
     policyHref: '/privacidade',
   },
   seo: {
     title: { pt: 'Automação documental e agentes de IA para empresas no Canadá', en: 'Document automation and AI agents for companies in Canada' },
-    description: { pt: 'Devolvemos horas qualificadas a empresas canadianas que as perdem em trabalho documental, em inglês e em francês. Preço fixo por fase, aprovação humana em cada decisão.', en: 'We give qualified hours back to Canadian companies losing them to document work, in English and in French. Fixed price per phase, human approval on every decision.' },
+    description: {
+      pt: 'Automação documental para empresas canadianas, em inglês e francês: um processo crítico de cada vez, preço por fase e aprovação humana nas decisões críticas.',
+      en: 'Document automation for Canadian firms, in English and French: one critical process at a time, priced per phase, with human approval on critical decisions.',
+    },
   },
   sectors: [
     {
