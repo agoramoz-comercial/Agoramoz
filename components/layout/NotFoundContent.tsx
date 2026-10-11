@@ -1,3 +1,4 @@
+import { CTA_PRIMARY } from '@/content/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -23,7 +24,7 @@ export function NotFoundContent() {
         </p>
         <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild size="lg">
-            <Link href="/diagnostico">Solicitar Diagnóstico Estratégico</Link>
+            <Link href="/diagnostico">{CTA_PRIMARY}</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href="/">Voltar ao início</Link>

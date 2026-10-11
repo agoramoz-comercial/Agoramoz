@@ -30,10 +30,10 @@ import type { CountryCode, Idioma, ProofItem, Texto } from '@/content/types';
  * `content/en/home.ts`; `conteudoDoInicio` escolhe o conjunto do idioma.
  */
 export const INICIO = {
-  metaTitulo: { pt: `AGORAMOZ — ${SITE.tagline}`, en: 'AGORAMOZ — Digital infrastructure for growth and productivity' },
+  metaTitulo: { pt: `AGORAMOZ — ${SITE.tagline}`, en: 'AGORAMOZ — From fragmented process to a system that works' },
   metaDescricao: {
     pt: SITE.description,
-    en: 'AGORAMOZ builds advanced websites, software, automations and AI agents fitted to your company’s processes — in Mozambique, Portugal and Brazil.',
+    en: 'AGORAMOZ organises the processes, data and systems of growing companies: diagnostic, software, automation, integration and AI, in controlled stages.',
   },
 
   /* Rótulos do índice lateral e nomes acessíveis das secções. */
@@ -101,14 +101,14 @@ export const INICIO = {
 } as const;
 
 export const HERO = {
-  eyebrow: { pt: SITE.tagline, en: 'Digital infrastructure for growth and productivity' },
+  eyebrow: { pt: 'Infraestrutura operacional digital', en: 'Operational digital infrastructure' },
   titulo: {
-    pt: 'Transformamos processos lentos e oportunidades perdidas em sistemas digitais.',
-    en: 'We turn slow processes and lost opportunities into digital systems.',
+    pt: 'Organizamos os processos, dados e sistemas que a sua empresa precisa para crescer com mais controlo.',
+    en: 'We organise the processes, data and systems your company needs to grow with more control.',
   },
   lead: {
-    pt: 'A AGORAMOZ desenvolve websites avançados, software, automações e agentes de IA adaptados aos processos da sua empresa — desde o primeiro contacto comercial até à operação e à análise de resultados.',
-    en: 'AGORAMOZ builds advanced websites, software, automations and AI agents fitted to your company’s processes — from the first sales contact to operations and the analysis of results.',
+    pt: 'Começamos por diagnosticar um processo crítico, definimos a arquitetura e implementamos por fases. Websites, software, automação, integrações e agentes de IA entram quando são adequados ao problema — não antes.',
+    en: 'We start by diagnosing one critical process, define the architecture and implement in stages. Websites, software, automation, integrations and AI agents come in when they fit the problem — not before.',
   },
   secundario: { pt: 'Explorar soluções por setor', en: 'Explore solutions by sector' },
   micro: {

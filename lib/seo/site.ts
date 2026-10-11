@@ -51,7 +51,7 @@ export const OG_IMAGE_PADRAO: ImagemSocial = {
 export const OG_IMAGE_PADRAO_EN: ImagemSocial = {
   ...OG_IMAGE_PADRAO,
   url: absolute('/og/hero-en.png'),
-  alt: 'AGORAMOZ — Digital infrastructure for growth and productivity',
+  alt: 'AGORAMOZ — From fragmented process to a system that works',
 };
 
 /**

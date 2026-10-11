@@ -1,4 +1,4 @@
-import { CTA_PRIMARY, type CountryCode, type SolutionSlug, type Texto } from '@/content/types';
+import { CTA_PRIMARY, CTA_PRIMARY_EN, type CountryCode, type SolutionSlug, type Texto } from '@/content/types';
 
 /**
  * O texto do chrome — topo, cabeçalho, rodapé, barra móvel, atalhos — nos dois
@@ -70,7 +70,7 @@ export const CHROME = {
     pt: 'Infraestrutura digital para crescimento e produtividade',
     en: 'Digital infrastructure for growth and productivity',
   },
-  ctaPrimario: { pt: CTA_PRIMARY, en: 'Request a Strategic Diagnostic' },
+  ctaPrimario: { pt: CTA_PRIMARY, en: CTA_PRIMARY_EN },
 } as const satisfies Record<string, Texto>;
 
 /** As páginas institucionais, que por agora só existem em português. */

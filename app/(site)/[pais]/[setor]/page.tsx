@@ -111,7 +111,7 @@ export default async function SetorPage({ params }: Props) {
             </Button>
           </MagneticButton>
           <Button asChild size="lg" variant="outline">
-            <Link href="#prova-set">{CTA.secondary}</Link>
+            <Link href="/como-trabalhamos">{CTA.secondary}</Link>
           </Button>
         </div>
       </Section>

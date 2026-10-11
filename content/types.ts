@@ -129,10 +129,15 @@ export type SolutionSlug =
    consistente em todo o site; alternar entre "fale connosco", "peça orçamento"
    e "saiba mais" dispersa a intenção. Aqui, tentar escrever outra coisa é um
    erro de compilação.
+   Website Completo Final 2026 (§25): o CTA principal pede o que o cliente já
+   tem — um processo — e não uma compra: «Avaliar um processo crítico». O
+   secundário leva ao método, não a uma demonstração.
    Não existem campos de urgência, escassez ou contagem decrescente.
    -------------------------------------------------------------------------- */
-export const CTA_PRIMARY = 'Solicitar Diagnóstico Estratégico' as const;
-export const CTA_SECONDARY = 'Ver Demonstração' as const;
+export const CTA_PRIMARY = 'Avaliar um processo crítico' as const;
+export const CTA_SECONDARY = 'Ver como trabalhamos' as const;
+/** O mesmo CTA principal, na página inglesa (§26: «Assess a process»). */
+export const CTA_PRIMARY_EN = 'Assess a critical process' as const;
 
 export interface CtaBlock {
   primary: { label: typeof CTA_PRIMARY; href: string };

@@ -26,9 +26,10 @@ export const SITE = {
    * fácil de alguém acreditar e a mais cara de desfazer depois de indexada.
    */
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agoramoz.com',
-  tagline: 'Infraestrutura digital para crescimento e produtividade',
+  /** A tagline do documento mestre (§2). A categoria vai no eyebrow do hero. */
+  tagline: 'Do processo fragmentado ao sistema que funciona',
   description:
-    'A AGORAMOZ desenvolve websites avançados, software, automações e agentes de IA adaptados aos processos da sua empresa, em Moçambique, Portugal e Brasil.',
+    'A AGORAMOZ organiza os processos, dados e sistemas de empresas em crescimento: diagnóstico, software, automação, integrações e IA, por fases controladas.',
   email: 'comercial@agoramoz.com',
   /**
    * Um número para os três mercados. O WhatsApp é internacional e não custa

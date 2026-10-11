@@ -1,3 +1,4 @@
+import { CTA_PRIMARY, CTA_PRIMARY_EN } from '@/content/types';
 import Link from 'next/link';
 import { ligacao } from '@/lib/i18n/rotas';
 import { ArrowRight } from 'lucide-react';
@@ -31,7 +32,7 @@ const COPIA = {
   },
   moeda: { pt: 'Moeda de referência', en: 'Reference currency' },
   dados: { pt: 'Regime de dados aplicável', en: 'Applicable data regime' },
-  cta: { pt: 'Solicitar Diagnóstico Estratégico', en: 'Request a Strategic Diagnostic' },
+  cta: { pt: CTA_PRIMARY, en: CTA_PRIMARY_EN },
   ctaLead: {
     pt: 'Uma conversa objetiva sobre onde a sua empresa perde horas qualificadas — e o que custa continuar assim.',
     en: 'A focused conversation about where your company loses qualified hours — and what it costs to carry on.',

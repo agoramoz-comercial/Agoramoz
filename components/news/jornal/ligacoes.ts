@@ -1,3 +1,4 @@
+import { CTA_PRIMARY } from '@/content/types';
 import type { Idioma } from '@/content/types';
 import type { SeccaoJornal } from '@/lib/news/artigo';
 
@@ -60,6 +61,6 @@ export function ctaDoArtigo(
         href: `/diagnostico?${utm}`,
         titulo: 'O que isto muda no seu negócio?',
         texto: 'O diagnóstico estratégico liga os riscos e as oportunidades deste cenário à sua operação.',
-        botao: 'Solicitar Diagnóstico Estratégico',
+        botao: CTA_PRIMARY,
       };
 }
