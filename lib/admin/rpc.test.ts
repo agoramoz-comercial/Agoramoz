@@ -43,7 +43,8 @@ describe('contrato das funções do admin', () => {
       const inicio = ACCOES.indexOf(`create or replace function public.${nome}(`);
       const cabecalho = ACCOES.slice(inicio, ACCOES.indexOf('as $$', inicio));
       expect(cabecalho, nome).toContain('security definer');
-      expect(cabecalho, nome).toContain('set search_path = public, pg_catalog');
+      // 0018 em diante põe pg_catalog primeiro (now(), array_* não se deixam sombrear em public).
+      expect(cabecalho, nome).toMatch(/set search_path = (public, pg_catalog|pg_catalog, public)/);
     }
     for (const fonte of [SQL13, SQL15, SQL17, SQL18]) {
       for (const nome of Object.keys(RPC).filter((n) => fonte.includes(`function public.${n}(`))) {

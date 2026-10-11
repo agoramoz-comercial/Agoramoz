@@ -17,7 +17,7 @@ import { RPC, type NomeRpc } from './rpc';
  * esquema, e num erro de unicidade pode conter o próprio valor que colidiu.
  * Os códigos são os que as funções de 0006 levantam de propósito.
  */
-function mensagemDe(codigo: string | undefined, mensagem: string | undefined): string {
+export function mensagemDe(codigo: string | undefined, mensagem: string | undefined): string {
   switch (codigo) {
     case '42501':
       return 'Não tem permissão para esta acção.';
@@ -30,9 +30,14 @@ function mensagemDe(codigo: string | undefined, mensagem: string | undefined): s
       return 'Já existe um registo com este identificador.';
     case '23514':
     case '23503':
-    case '22023':
+    case '22023': {
       // Texto nosso, escrito nas funções da migração para ser lido por pessoas.
-      return mensagem?.split('\n')[0] ?? 'Pedido inválido.';
+      // Mas uma restrição (CHECK, FK) que dispara sozinha traz o texto do
+      // Postgres, com nomes de tabelas e de restrições: esse nunca sai.
+      const linha = mensagem?.split('\n')[0];
+      if (!linha || /violates|relation "|constraint "|viola a restrição/i.test(linha)) return 'Dados inválidos. Reveja os campos.';
+      return linha;
+    }
     default:
       return 'Não foi possível concluir a acção.';
   }
@@ -68,7 +73,7 @@ export async function executar(
       errorCode: error.code ?? 'desconhecido',
     });
     const mensagem = traduzir?.(error.code) ?? mensagemDe(error.code, error.message);
-    redirect(`${destino}?erro=${encodeURIComponent(mensagem)}`);
+    redirect(`${destino}${destino.includes('?') ? '&' : '?'}erro=${encodeURIComponent(mensagem)}`);
   }
 
   log.info('admin.accao', { outcome: 'accepted', reason: funcao });
@@ -76,5 +81,5 @@ export async function executar(
 }
 
 export function voltarCom(destino: string, erro: string): never {
-  redirect(`${destino}?erro=${encodeURIComponent(erro)}`);
+  redirect(`${destino}${destino.includes('?') ? '&' : '?'}erro=${encodeURIComponent(erro)}`);
 }

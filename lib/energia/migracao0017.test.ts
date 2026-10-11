@@ -83,7 +83,9 @@ describe('0017 — Espaço CEnO', () => {
   });
 
   it('a equipa deixa de ler as linhas ceno.* do audit_log pela API', () => {
-    expect(MIGRACAO).toContain("using (public.is_staff() and entity_type is distinct from 'ceno');");
+    expect(MIGRACAO).toContain(
+      "using (public.is_staff() and entity_type is distinct from 'ceno' and entity_type is distinct from 'gabinete');",
+    );
   });
 
   it('o acesso ao módulo só se concede por SQL do dono da base', () => {

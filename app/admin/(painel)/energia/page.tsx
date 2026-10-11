@@ -1,10 +1,10 @@
 import { PainelEnergia } from '@/components/admin/energia/Painel';
 import { ErroLeitura } from '@/components/admin/energia/partes';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import { COLUNAS_OPORTUNIDADE, oportunidadeDe } from '@/lib/energia/leitura';
 
-export const metadata = { title: 'Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Espaço CEnO');
 
 /**
  * O painel do Espaço CEnO. Só quem tem o módulo `energia` chega aqui (404

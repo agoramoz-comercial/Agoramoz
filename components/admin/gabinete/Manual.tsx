@@ -184,7 +184,7 @@ export function ManualGabinete() {
         </Seccao>
 
         <Seccao id="autoridade" titulo="Matriz de autoridade">
-          <Rolavel rotulo="Matriz de autoridade">
+          <Rolavel rotulo="Tabela da matriz de autoridade">
             <table className={TABELA}>
               <caption className="sr-only">Quem decide, aprova, recomenda e é consultado</caption>
               <thead>
@@ -249,7 +249,7 @@ export function ManualGabinete() {
         </Seccao>
 
         <Seccao id="fontes" titulo="Fonte oficial por tipo de informação">
-          <Rolavel rotulo="Fontes oficiais">
+          <Rolavel rotulo="Tabela das fontes oficiais">
             <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
               <caption className="sr-only">Onde vive cada tipo de informação</caption>
               <thead>
@@ -277,7 +277,7 @@ export function ManualGabinete() {
         </Seccao>
 
         <Seccao id="metricas" titulo="Painel de métricas — só as que mudam decisões">
-          <Rolavel rotulo="Métricas e decisões">
+          <Rolavel rotulo="Tabela de métricas e decisões">
             <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
               <caption className="sr-only">Métrica por área e a decisão que ela muda</caption>
               <thead>
@@ -348,7 +348,7 @@ export function ManualGabinete() {
         </Seccao>
 
         <Seccao id="riscos" titulo="Riscos">
-          <Rolavel rotulo="Riscos do sistema de trabalho">
+          <Rolavel rotulo="Tabela de riscos">
             <table className={TABELA}>
               <caption className="sr-only">Riscos, sinal precoce, mitigação e responsável</caption>
               <thead>

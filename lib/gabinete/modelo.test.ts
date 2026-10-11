@@ -216,7 +216,7 @@ describe('receita, capacidade, decisões', () => {
       projeto({ moeda: 'USD', receita_contratada: 0 }),
     ]);
     expect(r).toEqual([
-      { moeda: 'MZN', contratada: 1500, faturada: 600, recebida: 400, aReceber: 200, margem: 300, comMargem: 1 },
+      { moeda: 'MZN', contratada: 1500, faturada: 600, recebida: 400, aReceber: 200, margem: 300, comMargem: 1, projetos: 2 },
     ]);
   });
 
@@ -362,7 +362,12 @@ describe('formulários', () => {
     expect(formularioMovimento.safeParse(m).success).toBe(true);
     expect(formularioMovimento.safeParse({ ...m, valor: '' }).success).toBe(false);
     expect(formularioMovimento.safeParse({ ...m, valor: '0' }).success).toBe(false);
-    expect(formularioMovimento.safeParse({ ...m, tipo: 'saldo', valor: '0' }).success).toBe(true);
+    // Um saldo é um facto numa data passada (data de hoje ou antes).
+    expect(formularioMovimento.safeParse({ ...m, tipo: 'saldo', valor: '0', dataPrevista: '2026-01-15' }).success).toBe(true);
+    expect(formularioMovimento.safeParse({ ...m, tipo: 'saldo', valor: '5', dataPrevista: '2099-01-01' }).success).toBe(false);
+    // Realizado é passado: data efectiva futura recusada; previsto no futuro, aceite.
+    expect(formularioMovimento.safeParse({ ...m, dataEfectiva: '2099-01-01' }).success).toBe(false);
+    expect(formularioMovimento.safeParse({ ...m, dataPrevista: '2099-01-01' }).success).toBe(true);
     expect(formularioMovimento.safeParse({ ...m, projeto: 'nao-e-uuid' }).success).toBe(false);
   });
 

@@ -135,6 +135,24 @@ begin
     raise exception '7b: pagamento de zero aceite';
   exception when check_violation then null;
   end;
+  -- 7c. Realizado é passado: data efectiva futura recusada (contaria como caixa).
+  begin
+    perform public.guardar_movimento(null, null, 'recebimento', 'Futuro', null, 10, 'MZN', '2099-01-01', '2099-01-01');
+    raise exception '7c: data efectiva futura aceite';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.guardar_movimento(null, null, 'saldo', 'Saldo futuro', null, 10, 'MZN', '2099-01-01', null);
+    raise exception '7d: saldo numa data futura aceite';
+  exception when sqlstate '22023' then null;
+  end;
+  -- 7e. Prioridade editada com revisão antiga: 40001 (não o «já existe»).
+  v_pri := public.guardar_prioridade(null, null, '2027-T1', 'operacional', 'Processo de onboarding', null, null, 'em_curso', null);
+  begin
+    perform public.guardar_prioridade(v_pri, 99, '2027-T1', 'operacional', 'Outra coisa', null, null, 'em_curso', null);
+    raise exception '7e: revisão antiga aceite';
+  exception when sqlstate '40001' then null;
+  end;
 
   -- 8. Capacidade: pessoa, alocação, actualização.
   v_pes := public.guardar_pessoa(null, null, 'Dev QA', 'Programador', 'tecnologia', 40, true);

@@ -387,13 +387,19 @@ export interface ReceitaMoeda {
   readonly margem: number;
   /** Projectos com contratada e custos registados (os que entram na margem). */
   readonly comMargem: number;
+  /** Projectos somados nesta moeda (suspensos fora): a base de `comMargem`. */
+  readonly projetos: number;
 }
 
 export function receitaPorMoeda(projetos: readonly Projeto[]): ReceitaMoeda[] {
-  const acc = new Map<string, { contratada: number; faturada: number; recebida: number; margem: number; comMargem: number }>();
+  const acc = new Map<
+    string,
+    { contratada: number; faturada: number; recebida: number; margem: number; comMargem: number; projetos: number }
+  >();
   for (const p of projetos) {
     if (p.fase === 'suspenso') continue;
-    const a = acc.get(p.moeda) ?? { contratada: 0, faturada: 0, recebida: 0, margem: 0, comMargem: 0 };
+    const a = acc.get(p.moeda) ?? { contratada: 0, faturada: 0, recebida: 0, margem: 0, comMargem: 0, projetos: 0 };
+    a.projetos += 1;
     a.contratada += p.receita_contratada ?? 0;
     a.faturada += p.receita_faturada ?? 0;
     a.recebida += p.receita_recebida ?? 0;
@@ -412,6 +418,11 @@ export function receitaPorMoeda(projetos: readonly Projeto[]): ReceitaMoeda[] {
 // ---------------------------------------------------------------------------
 // Capacidade
 // ---------------------------------------------------------------------------
+
+/** Uma alocação conta para a capacidade se o projecto está activo e ainda está em vigor. */
+export function alocacaoConta(a: Alocacao, projetosActivos: ReadonlySet<string>, hoje: string): boolean {
+  return projetosActivos.has(a.projeto_id) && (!a.ate || a.ate >= hoje);
+}
 
 export interface CapacidadePessoa {
   readonly pessoa: Pessoa;
@@ -440,11 +451,12 @@ export function capacidade(
   area?: string,
 ): Capacidade {
   const activos = new Set(projetos.filter((p) => projetoActivo(p.fase)).map((p) => p.id));
+  const conta = (a: Alocacao) => alocacaoConta(a, activos, hoje);
   const porPessoa = pessoas
     .filter((p) => p.activa && (!area || p.area === area))
     .map((pessoa) => {
       const comprometida = alocacoes
-        .filter((a) => a.pessoa_id === pessoa.id && activos.has(a.projeto_id) && (!a.ate || a.ate >= hoje))
+        .filter((a) => a.pessoa_id === pessoa.id && conta(a))
         .reduce((s, a) => s + a.horas_semana, 0);
       return { pessoa, comprometida, livre: pessoa.horas_semana - comprometida, sobrealocada: comprometida > pessoa.horas_semana };
     });
@@ -575,4 +587,12 @@ export function painelCto(
   };
 }
 
-export { formatarValor, percentagem } from '@/lib/energia/modelo';
+export { percentagem } from '@/lib/energia/modelo';
+
+/**
+ * Dinheiro por moeda, com cêntimos quando os há: na tesouraria, arredondar à
+ * unidade faria as linhas não somarem à caixa mostrada.
+ */
+export function formatarValor(v: number, moeda: string): string {
+  return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: moeda, maximumFractionDigits: 2 }).format(v);
+}

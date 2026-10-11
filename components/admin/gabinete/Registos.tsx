@@ -11,6 +11,7 @@ import {
   removerAlocacao,
 } from '@/lib/admin/gabinete-actions';
 import {
+  alocacaoConta,
   caixaPorMoeda,
   capacidade,
   CHAPEUS,
@@ -128,7 +129,9 @@ export function DecisoesVista({ decisoes, hoje }: { decisoes: readonly Decisao[]
 /** Criar (sem `v`) ou editar uma decisão. */
 export function FormDecisao({ v }: { v?: Decisao }) {
   return (
-    <form action={guardarDecisao} className={CAIXA} aria-labelledby="form-decisao">
+    // A chave muda ao gravar: o React não actualiza o `defaultValue` de um
+    // <select> já montado, e o «Estado» mostraria o valor antigo.
+    <form key={v ? `${v.id}-${v.revisao}` : 'nova'} action={guardarDecisao} className={CAIXA} aria-labelledby="form-decisao">
       <h2 id="form-decisao" className={H2}>
         {v ? 'Registo da decisão' : 'Nova decisão'}
       </h2>
@@ -172,7 +175,7 @@ export function PrioridadesVista({ trimestre, prioridades }: { trimestre: string
       </nav>
       <div className="grid gap-6">
         {tipos.map((t) => (
-          <FormPrioridade key={t} trimestre={trimestre} tipo={t} v={prioridades.find((p) => p.trimestre === trimestre && p.tipo === t)} />
+          <FormPrioridade key={`${trimestre}-${t}`} trimestre={trimestre} tipo={t} v={prioridades.find((p) => p.trimestre === trimestre && p.tipo === t)} />
         ))}
       </div>
     </>
@@ -265,7 +268,7 @@ export function FichaProjeto({
           {gate.motivo}
         </p>
       )}
-      <form action={guardarProjeto} className={CAIXA} aria-labelledby="form-projeto">
+      <form key={v ? `${v.id}-${v.revisao}` : 'novo'} action={guardarProjeto} className={CAIXA} aria-labelledby="form-projeto">
         <h2 id="form-projeto" className={H2}>
           {v ? 'Ficha do projecto' : 'Novo projecto'}
         </h2>
@@ -319,6 +322,7 @@ export function FichaProjeto({
               projetos={[v]}
               voltar={`/admin/gabinete/projetos/${v.id}`}
               projetoFixo={v.id}
+              nivel={3}
             />
           ) : (
             <p className={NOTA}>
@@ -416,7 +420,7 @@ export function TesourariaVista({
                           {formatarValor(m.valor, m.moeda)}
                         </td>
                         <td className={TD}>
-                          <span className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <StateBadge rotulo={TOM_MOVIMENTO[estado]} />
                             {estado !== 'realizado' && (
                               <form action={guardarMovimento}>
@@ -434,7 +438,7 @@ export function TesourariaVista({
                                 </BotaoEnviar>
                               </form>
                             )}
-                          </span>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -464,6 +468,7 @@ export function CapacidadeVista({
 }) {
   const c = capacidade(pessoas, alocacoes, projetos, hoje);
   const activos = projetos.filter((p) => projetoActivo(p.fase));
+  const idsActivos = new Set(activos.map((p) => p.id));
   const nomeProjeto = new Map(projetos.map((p) => [p.id, p.nome]));
   return (
     <>
@@ -523,6 +528,9 @@ export function CapacidadeVista({
                                   <span>
                                     {nomeProjeto.get(a.projeto_id) ?? 'Projecto'} · {horas(a.horas_semana)}
                                     {a.ate ? ` até ${dataCurta(a.ate)}` : ''}
+                                    {!alocacaoConta(a, idsActivos, hoje) && (
+                                      <span className="text-[color:var(--muted)]"> (não conta: terminada ou projecto fechado)</span>
+                                    )}
                                   </span>
                                   <form action={removerAlocacao}>
                                     <input type="hidden" name="pessoa" value={a.pessoa_id} />
@@ -565,7 +573,7 @@ export function CapacidadeVista({
                   {p.nome} · {horas(p.horas_semana)} {p.activa ? '' : '(inactiva)'}
                 </summary>
                 <div className="p-2">
-                  <FormPessoa v={p} />
+                  <FormPessoa v={p} nivel={3} />
                 </div>
               </details>
             ))}

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { FichaOportunidade } from '@/components/admin/energia/Ficha';
 import { ErroLeitura, Mensagens } from '@/components/admin/energia/partes';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import {
   COLUNAS_OPORTUNIDADE,
@@ -12,7 +12,7 @@ import {
   type Registo,
 } from '@/lib/energia/leitura';
 
-export const metadata = { title: 'Oportunidade — Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Oportunidade — Espaço CEnO');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

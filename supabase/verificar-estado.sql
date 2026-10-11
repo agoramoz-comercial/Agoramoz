@@ -273,7 +273,23 @@ select 30, 'gabinete', 'Gabinete do Fundador: módulo direcao, tabelas privadas 
             when to_regprocedure('public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text)') is null
                  or to_regprocedure('public.remover_alocacao(uuid, uuid)') is null
                  then 'EM FALTA - correr aplicar-0018-parte2.sql'
-            when has_function_privilege('anon', 'public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text)', 'execute')
+            when exists (
+                   -- As sete funções de escrita: nenhuma executável por anon, todas com
+                   -- lock_timeout e search_path com pg_catalog primeiro.
+                   select 1 from pg_proc p
+                    where p.pronamespace = 'public'::regnamespace
+                      and p.proname in ('guardar_decisao', 'guardar_prioridade', 'guardar_projeto', 'guardar_movimento',
+                                        'guardar_pessoa', 'guardar_alocacao', 'remover_alocacao')
+                      and (has_function_privilege('anon', p.oid, 'execute')
+                           or not ('lock_timeout=4s' = any(coalesce(p.proconfig, '{}')))
+                           or not ('search_path=pg_catalog, public' = any(coalesce(p.proconfig, '{}'))))
+                 )
+                 or (select count(*) from pg_policy pol
+                      where pol.polrelid in (to_regclass('public.gab_decisoes'), to_regclass('public.gab_prioridades'),
+                                             to_regclass('public.gab_projetos'), to_regclass('public.gab_tesouraria'),
+                                             to_regclass('public.gab_pessoas'), to_regclass('public.gab_alocacoes'))
+                        and pol.polcmd = 'r'
+                        and pg_get_expr(pol.polqual, pol.polrelid) like '%direcao%') <> 6
                  or exists (
                    select 1 from pg_class c
                     where c.relnamespace = 'public'::regnamespace
@@ -288,11 +304,6 @@ select 30, 'gabinete', 'Gabinete do Fundador: módulo direcao, tabelas privadas 
                     where k.conrelid = to_regclass('public.acessos_modulo')
                       and k.conname = 'acessos_modulo_modulo_check'
                       and pg_get_constraintdef(k.oid) like '%direcao%'
-                 )
-                 or not exists (
-                   select 1 from pg_proc p
-                    where p.oid = to_regprocedure('public.guardar_projeto(uuid, integer, text, text, text, text, text, text, text, text, numeric, numeric, numeric, numeric, boolean[], text, text, date, text)')
-                      and 'lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))
                  )
                  or not exists (
                    select 1 from pg_policy pol

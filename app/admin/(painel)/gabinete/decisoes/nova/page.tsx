@@ -2,9 +2,9 @@ import { Mensagens } from '@/components/admin/espaco/partes';
 import { GabineteNav, OK } from '@/components/admin/gabinete/partes';
 import { FormDecisao } from '@/components/admin/gabinete/Registos';
 import { AdminHeading } from '@/components/admin/primitives';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 
-export const metadata = { title: 'Nova decisão — Gabinete' };
+export const generateMetadata = tituloPrivado('direcao', 'Nova decisão — Gabinete');
 
 export default async function NovaDecisaoPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   await requireModulo('direcao');

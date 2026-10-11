@@ -1,4 +1,6 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { createSessionClient } from './client';
 import { requireStaff, type Sessao } from './session';
 
@@ -22,14 +24,14 @@ export type Modulo = (typeof MODULOS)[number];
  * ainda não existir (0017 por aplicar) — lê-se como «sem acesso»: um espaço
  * privado nunca abre por engano.
  */
-export async function modulosDaSessao(): Promise<readonly Modulo[]> {
+export const modulosDaSessao = cache(async function modulosDaSessao(): Promise<readonly Modulo[]> {
   const supabase = await createSessionClient();
   const { data, error } = await supabase.from('acessos_modulo').select('modulo');
   if (error || !Array.isArray(data)) return [];
   return data
     .map((r: { modulo?: unknown }) => r.modulo)
     .filter((m): m is Modulo => typeof m === 'string' && (MODULOS as readonly string[]).includes(m));
-}
+});
 
 /**
  * Para as páginas de um espaço privado. Sem o módulo: 404 — e não um
@@ -40,4 +42,16 @@ export async function requireModulo(modulo: Modulo): Promise<Sessao> {
   const modulos = await modulosDaSessao();
   if (!modulos.includes(modulo)) notFound();
   return sessao;
+}
+
+/**
+ * O título de uma página de espaço privado, dado só a quem tem o módulo. Um
+ * `metadata` estático chegaria ao `<title>` mesmo da resposta 404 — e o nome
+ * do espaço diria a um colega que ele existe.
+ */
+export function tituloPrivado(modulo: Modulo, title: string): () => Promise<Metadata> {
+  return async () => {
+    await requireModulo(modulo);
+    return { title };
+  };
 }

@@ -1,6 +1,7 @@
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { GuardaRascunho } from '@/components/admin/espaco/GuardaRascunho';
-import { AJUDA, AREA, CAIXA, Campo, H2, NavEspaco, Opcoes, ROTULO } from '@/components/admin/espaco/partes';
+import { AJUDA, AREA, CAIXA, Campo, ErroLeitura, H2, NavEspaco, Opcoes, ROTULO } from '@/components/admin/espaco/partes';
+import { AdminHeading } from '@/components/admin/primitives';
 import { inputClass } from '@/components/form/Field';
 import {
   guardarAlocacao,
@@ -50,6 +51,17 @@ export function GabineteNav({ activo }: { activo: SeccaoGabinete }) {
   return <NavEspaco seccoes={SECCOES} activo={activo} rotulo="Secções do Gabinete" />;
 }
 
+/** Uma leitura falhou: título e navegação na mesma, para não ficar num beco sem saída. */
+export function ErroGabinete({ activo, titulo }: { activo: SeccaoGabinete; titulo: string }) {
+  return (
+    <>
+      <AdminHeading titulo={titulo} />
+      <GabineteNav activo={activo} />
+      <ErroLeitura texto="Não foi possível ler o gabinete agora. Recarregue dentro de instantes." />
+    </>
+  );
+}
+
 /** As mensagens de sucesso de todas as acções do gabinete. */
 export const OK = {
   criada: 'Registada.',
@@ -63,12 +75,12 @@ export const OK = {
   'alocacao-removida': 'Alocação removida.',
 } as const;
 
-/** Data `AAAA-MM-DD` → «6 out. 2026», sem depender do fuso do servidor. */
+/** Data `AAAA-MM-DD` → «06/10/2026» (pt-PT), sem depender do fuso do servidor. */
 export function dataCurta(dia: string | null): string {
   if (!dia) return '—';
   const [a, m, d] = dia.slice(0, 10).split('-').map(Number);
   if (!a || !m || !d) return '—';
-  return new Intl.DateTimeFormat('pt-PT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
+  return new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(
     new Date(Date.UTC(a, m - 1, d)),
   );
 }
@@ -238,7 +250,10 @@ export function CamposProjeto({ v }: { v?: Projeto }) {
 export function FormPrioridade({ trimestre, tipo, v }: { trimestre: string; tipo: TipoPrioridade; v?: Prioridade }) {
   const id = `pri-${tipo}`;
   return (
-    <form action={guardarPrioridade} className={CAIXA} aria-labelledby={`${id}-titulo`}>
+    // A chave muda ao gravar e ao mudar de trimestre: o React não actualiza o
+    // `defaultValue` de um <select> já montado, e um campo de outro trimestre
+    // não pode ficar por cima do id/revisão deste.
+    <form key={`${trimestre}-${tipo}-${v?.revisao ?? 0}`} action={guardarPrioridade} className={CAIXA} aria-labelledby={`${id}-titulo`}>
       <h2 id={`${id}-titulo`} className={H2}>
         {TIPOS_PRIORIDADE[tipo]}
       </h2>
@@ -337,13 +352,14 @@ export function FormMovimento({ projetos, hoje }: { projetos: readonly Pick<Proj
 
 // ── Pessoa e alocação ─────────────────────────────────────────────────────────
 
-export function FormPessoa({ v }: { v?: Pessoa }) {
-  const id = v ? `pe-${v.id.slice(0, 8)}` : 'pe-nova';
+export function FormPessoa({ v, nivel = 2 }: { v?: Pessoa; nivel?: 2 | 3 }) {
+  const id = v ? `pe-${v.id}` : 'pe-nova';
+  const Titulo = nivel === 3 ? 'h3' : 'h2';
   return (
-    <form action={guardarPessoa} className={CAIXA} aria-labelledby={`${id}-titulo`}>
-      <h2 id={`${id}-titulo`} className={H2}>
+    <form key={v ? `${v.id}-${v.revisao}` : 'nova'} action={guardarPessoa} className={CAIXA} aria-labelledby={`${id}-titulo`}>
+      <Titulo id={`${id}-titulo`} className={H2}>
         {v ? `Editar ${v.nome}` : 'Acrescentar pessoa'}
-      </h2>
+      </Titulo>
       <GuardaRascunho espaco="gabinete" chave={v ? `pessoa-${v.id}` : 'pessoa-nova'} />
       {v && <input type="hidden" name="id" value={v.id} />}
       {v && <input type="hidden" name="revisao" value={v.revisao} />}
@@ -382,17 +398,20 @@ export function FormAlocacao({
   projetos,
   voltar,
   projetoFixo,
+  nivel = 2,
 }: {
   pessoas: readonly Pick<Pessoa, 'id' | 'nome'>[];
   projetos: readonly Pick<Projeto, 'id' | 'nome'>[];
   voltar: string;
   projetoFixo?: string;
+  nivel?: 2 | 3;
 }) {
+  const Titulo = nivel === 3 ? 'h3' : 'h2';
   return (
     <form action={guardarAlocacao} className={CAIXA} aria-labelledby="al-titulo">
-      <h2 id="al-titulo" className={H2}>
+      <Titulo id="al-titulo" className={H2}>
         Alocar capacidade
-      </h2>
+      </Titulo>
       <GuardaRascunho espaco="gabinete" chave={`alocacao-${projetoFixo ?? 'geral'}`} />
       <input type="hidden" name="voltar" value={voltar} />
       {projetoFixo && <input type="hidden" name="projeto" value={projetoFixo} />}

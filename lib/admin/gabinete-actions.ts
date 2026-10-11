@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { modulosDaSessao } from '@/lib/auth/modulos';
 import { requireRole } from '@/lib/auth/session';
 import {
@@ -30,7 +30,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function exigirGabinete(): Promise<void> {
   await requireRole(['admin', 'comercial']);
   const modulos = await modulosDaSessao();
-  if (!modulos.includes('direcao')) redirect('/admin');
+  // 404, como as páginas: uma acção do gabinete não confirma que ele existe.
+  if (!modulos.includes('direcao')) notFound();
 }
 
 /** O browser conta uma mudança de linha como 1 no `maxLength` mas envia CRLF: normalizar. */
@@ -130,7 +131,9 @@ export async function guardarDecisao(formData: FormData): Promise<void> {
 
 export async function guardarPrioridade(formData: FormData): Promise<void> {
   await exigirGabinete();
-  const destino = `${BASE}/prioridades`;
+  // Voltar ao trimestre que se estava a editar (o rascunho é por trimestre).
+  const pedido = texto(formData, 'trimestre').trim();
+  const destino = /^20\d{2}-T[1-4]$/.test(pedido) ? `${BASE}/prioridades?trimestre=${pedido}` : `${BASE}/prioridades`;
   const id = idOpcional(formData, destino);
   const revisao = revisaoDe(formData, id, destino);
   const f = formularioPrioridade.safeParse({
@@ -160,8 +163,8 @@ export async function guardarPrioridade(formData: FormData): Promise<void> {
     destino,
     (codigo) => (codigo === '23505' ? 'Já existe uma prioridade deste tipo neste trimestre.' : undefined),
   );
-  mudou(destino);
-  redirect(`${destino}?trimestre=${encodeURIComponent(p.trimestre)}&ok=${id ? 'guardada' : 'criada'}`);
+  mudou(`${BASE}/prioridades`);
+  redirect(`${BASE}/prioridades?trimestre=${encodeURIComponent(p.trimestre)}&ok=${id ? 'guardada' : 'criada'}`);
 }
 
 // ── Projectos ─────────────────────────────────────────────────────────────────

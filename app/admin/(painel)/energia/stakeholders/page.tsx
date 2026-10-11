@@ -3,12 +3,12 @@ import { EnergiaNav } from '@/components/admin/energia/partes';
 import { AdminHeading, DataTable, EmptyState } from '@/components/admin/primitives';
 import { inputClass } from '@/components/form/Field';
 import { buttonVariants } from '@/components/ui/Button';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import { COLUNAS_STAKEHOLDER, dataCurta, stakeholderDe, type Stakeholder } from '@/lib/energia/leitura';
 import { RELACOES, TIPOS_STAKEHOLDER } from '@/lib/energia/modelo';
 
-export const metadata = { title: 'Stakeholders — Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Stakeholders — Espaço CEnO');
 
 /** Caracteres com significado nos filtros do PostgREST: retirados da pesquisa. */
 const RESERVADOS = /[%_,().*\\"]/g;

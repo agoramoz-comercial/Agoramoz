@@ -1,17 +1,17 @@
-import { ErroLeitura, Mensagens } from '@/components/admin/espaco/partes';
-import { OK } from '@/components/admin/gabinete/partes';
+import { Mensagens } from '@/components/admin/espaco/partes';
+import { ErroGabinete, OK } from '@/components/admin/gabinete/partes';
 import { TesourariaVista } from '@/components/admin/gabinete/Registos';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { lerGabinete } from '@/lib/gabinete/dados';
 import { hojeEmMaputo } from '@/lib/gabinete/modelo';
 
-export const metadata = { title: 'Tesouraria — Gabinete' };
+export const generateMetadata = tituloPrivado('direcao', 'Tesouraria — Gabinete');
 
 export default async function TesourariaPage({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
   await requireModulo('direcao');
   const { erro, ok } = await searchParams;
   const g = await lerGabinete(['movimentos', 'projetos']);
-  if (!g) return <ErroLeitura texto="Não foi possível ler a tesouraria agora. Recarregue dentro de instantes." />;
+  if (!g) return <ErroGabinete activo="tesouraria" titulo="Tesouraria" />;
   const movimentos = [...g.movimentos].sort((a, b) =>
     (b.data_efectiva ?? b.data_prevista).localeCompare(a.data_efectiva ?? a.data_prevista),
   );

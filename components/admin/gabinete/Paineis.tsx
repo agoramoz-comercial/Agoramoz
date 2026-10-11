@@ -243,7 +243,9 @@ export function PainelCeoVista({
                         <td className={TDN}>{formatarValor(r.aReceber, r.moeda)}</td>
                         <td className={TDN}>
                           {r.comMargem > 0 ? formatarValor(r.margem, r.moeda) : '—'}
-                          <span className="block text-xs text-[color:var(--muted)]">{r.comMargem} com custos</span>
+                          <span className="block text-xs text-[color:var(--muted)]">
+                            {r.comMargem} de {r.projetos} com custos
+                          </span>
                         </td>
                       </tr>
                     ))}

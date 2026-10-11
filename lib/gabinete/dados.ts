@@ -58,12 +58,16 @@ export async function lerGabinete(tabelas: readonly Tabela[]): Promise<Gabinete 
   const resultados = await Promise.all(
     tabelas.map(async (t) => {
       const c = CONSULTA[t];
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from(c.tabela)
-        .select(c.colunas)
+        .select(c.colunas, { count: 'exact' })
         .order(c.ordem, { ascending: t === 'pessoas' })
         .limit(TECTO);
       if (error || !Array.isArray(data)) return null;
+      // O PostgREST corta em `max_rows` (1000 por omissão) sem avisar: somar
+      // só uma parte da tesouraria daria uma caixa falsa. Mais linhas do que
+      // as lidas = falha honesta, não números errados.
+      if (count !== null && count > data.length) return null;
       return [t, (data as unknown as Linha[]).map((r) => (c.de as (r: Linha) => unknown)(r))] as const;
     }),
   );

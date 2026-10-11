@@ -3,7 +3,7 @@ import { EnergiaNav } from '@/components/admin/energia/partes';
 import { AdminHeading, DataTable, EmptyState, StateBadge } from '@/components/admin/primitives';
 import { inputClass } from '@/components/form/Field';
 import { buttonVariants } from '@/components/ui/Button';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import { COLUNAS_OPORTUNIDADE, dataCurta, oportunidadeDe, type Oportunidade } from '@/lib/energia/leitura';
 import {
@@ -17,7 +17,7 @@ import {
   type Prioridade,
 } from '@/lib/energia/modelo';
 
-export const metadata = { title: 'Oportunidades — Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Oportunidades — Espaço CEnO');
 
 const PRIORIDADES: readonly Prioridade[] = ['A', 'B', 'incubacao', 'abandonar'];
 

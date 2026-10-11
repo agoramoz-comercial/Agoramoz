@@ -176,7 +176,7 @@ create table if not exists public.gab_tesouraria (
   dono uuid not null default auth.uid() references auth.users(id) on delete restrict,
   tipo text not null check (tipo in ('saldo', 'recebimento', 'pagamento')),
   descricao text not null check (length(trim(descricao)) between 1 and 200),
-  projeto_id uuid references public.gab_projetos(id) on delete set null,
+  projeto_id uuid references public.gab_projetos(id) on delete restrict,
   valor numeric(16, 2) not null check (valor >= 0),
   moeda text not null default 'MZN' check (moeda in ('MZN', 'USD', 'EUR')),
   data_prevista date not null,
@@ -190,6 +190,7 @@ create table if not exists public.gab_tesouraria (
 );
 
 create index if not exists gab_tesouraria_dono_idx on public.gab_tesouraria (dono, tipo, data_prevista);
+create index if not exists gab_tesouraria_projeto_idx on public.gab_tesouraria (projeto_id) where projeto_id is not null;
 
 drop trigger if exists gab_tesouraria_set_updated_at on public.gab_tesouraria;
 create trigger gab_tesouraria_set_updated_at
@@ -265,6 +266,6 @@ $$;
 drop policy if exists audit_log_select on public.audit_log;
 create policy audit_log_select on public.audit_log
   for select to authenticated
-  using (public.is_staff() and entity_type not in ('ceno', 'gabinete'));
+  using (public.is_staff() and entity_type is distinct from 'ceno' and entity_type is distinct from 'gabinete');
 
 

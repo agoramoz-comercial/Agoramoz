@@ -3,9 +3,9 @@ import { GuardaRascunho } from '@/components/admin/energia/GuardaRascunho';
 import { CAIXA, CamposStakeholder, EnergiaNav, H2, Mensagens } from '@/components/admin/energia/partes';
 import { AdminHeading } from '@/components/admin/primitives';
 import { criarStakeholder } from '@/lib/admin/energia-actions';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 
-export const metadata = { title: 'Novo stakeholder — Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Novo stakeholder — Espaço CEnO');
 
 export default async function NovoStakeholderPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   await requireModulo('energia');

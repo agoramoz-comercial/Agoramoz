@@ -3,9 +3,9 @@ import { GuardaRascunho } from '@/components/admin/energia/GuardaRascunho';
 import { CAIXA, CamposOportunidade, EnergiaNav, H2, Mensagens } from '@/components/admin/energia/partes';
 import { AdminHeading } from '@/components/admin/primitives';
 import { criarOportunidade } from '@/lib/admin/energia-actions';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 
-export const metadata = { title: 'Nova oportunidade — Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Nova oportunidade — Espaço CEnO');
 
 export default async function NovaOportunidadePage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   await requireModulo('energia');

@@ -1,7 +1,7 @@
 import { ManualGabinete } from '@/components/admin/gabinete/Manual';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 
-export const metadata = { title: 'Manual — Gabinete' };
+export const generateMetadata = tituloPrivado('direcao', 'Manual — Gabinete');
 
 export default async function ManualGabinetePage() {
   await requireModulo('direcao');

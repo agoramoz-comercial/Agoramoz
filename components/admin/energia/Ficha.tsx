@@ -207,7 +207,7 @@ export function FichaOportunidade({
           </form>
 
           {/* ── Score ──────────────────────────────────────────────── */}
-          <form action={avaliarOportunidade} className={CAIXA} id="score" aria-labelledby="score-titulo">
+          <form key={`score-${op.revisao}`} action={avaliarOportunidade} className={CAIXA} id="score" aria-labelledby="score-titulo">
             <h2 id="score-titulo" className={H2}>
               Score de qualificação
             </h2>
@@ -407,7 +407,7 @@ export function FichaOportunidade({
           </section>
 
           {/* ── Opportunity Memo ───────────────────────────────────── */}
-          <form action={guardarMemo} className={CAIXA} id="memo" aria-labelledby="memo-titulo">
+          <form key={`memo-${op.revisao}`} action={guardarMemo} className={CAIXA} id="memo" aria-labelledby="memo-titulo">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 id="memo-titulo" className={H2}>
                 Opportunity Memo
@@ -467,7 +467,7 @@ export function FichaOportunidade({
                           <span className="sr-only"> (abre noutro separador)</span>
                         </a>
                       )}
-                      <form action={guardarDocumento} className="grid gap-3 sm:grid-cols-[9rem_1fr_auto] sm:items-end">
+                      <form key={`doc-${i + 1}-${d?.estado ?? ''}-${d?.ligacao ?? ''}`} action={guardarDocumento} className="grid gap-3 sm:grid-cols-[9rem_1fr_auto] sm:items-end">
                         <input type="hidden" name="id" value={op.id} />
                         <input type="hidden" name="pasta" value={i + 1} />
                         <input type="hidden" name="nota" value={d?.nota ?? ''} />
@@ -497,7 +497,7 @@ export function FichaOportunidade({
           </section>
 
           {/* ── Dados ──────────────────────────────────────────────── */}
-          <form action={guardarOportunidade} className={CAIXA} id="dados" aria-labelledby="dados-titulo">
+          <form key={`dados-${op.revisao}`} action={guardarOportunidade} className={CAIXA} id="dados" aria-labelledby="dados-titulo">
             <h2 id="dados-titulo" className={H2}>
               Dados da oportunidade
             </h2>

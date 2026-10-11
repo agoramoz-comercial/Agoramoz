@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ErroLeitura } from '@/components/admin/energia/partes';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import { COLUNAS_OPORTUNIDADE, dataCurta, oportunidadeDe } from '@/lib/energia/leitura';
 import { hojeEmMaputo, MEMO, PRIORIDADE, SECTORES, textoFase } from '@/lib/energia/modelo';
 
-export const metadata = { title: 'Opportunity Memo — Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Opportunity Memo — Espaço CEnO');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

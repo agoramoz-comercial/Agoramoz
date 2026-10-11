@@ -23,10 +23,25 @@ export type EspacoRascunho = 'ceno' | 'gabinete';
 
 type Valores = Record<string, string | boolean>;
 
+/**
+ * Um rascunho vale 30 minutos: depois disso é lixo, e num computador
+ * partilhado não deve ficar à espera (o terminar sessão também os apaga).
+ */
+export const VALIDADE_RASCUNHO_MS = 30 * 60 * 1000;
+
+/** Os prefixos dos espaços privados, para os apagar todos ao terminar a sessão. */
+export const PREFIXOS_RASCUNHO = ['ceno:', 'gabinete:'] as const;
+
 function ler(prefixo: string, chave: string): Valores | null {
   try {
     const t = sessionStorage.getItem(prefixo + chave);
-    return t ? (JSON.parse(t) as Valores) : null;
+    if (!t) return null;
+    const guardado = JSON.parse(t) as { em?: unknown; valores?: unknown };
+    if (typeof guardado.em !== 'number' || Date.now() - guardado.em > VALIDADE_RASCUNHO_MS || !guardado.valores) {
+      sessionStorage.removeItem(prefixo + chave);
+      return null;
+    }
+    return guardado.valores as Valores;
   } catch {
     return null;
   }
@@ -101,7 +116,7 @@ export function GuardaRascunho({ chave, espaco = 'ceno' }: { chave: string; espa
 
     const guardar = () => {
       try {
-        sessionStorage.setItem(PREFIXO + chave, JSON.stringify(valoresDe(form)));
+        sessionStorage.setItem(PREFIXO + chave, JSON.stringify({ em: Date.now(), valores: valoresDe(form) }));
       } catch {
         /* cheio ou bloqueado: não guardar não pode impedir de escrever */
       }

@@ -1,11 +1,11 @@
-import { ErroLeitura, Mensagens } from '@/components/admin/espaco/partes';
-import { OK } from '@/components/admin/gabinete/partes';
+import { Mensagens } from '@/components/admin/espaco/partes';
+import { ErroGabinete, OK } from '@/components/admin/gabinete/partes';
 import { PainelCeoVista } from '@/components/admin/gabinete/Paineis';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { lerGabinete, lerPipeline } from '@/lib/gabinete/dados';
 import { hojeEmMaputo, painelCeo } from '@/lib/gabinete/modelo';
 
-export const metadata = { title: 'Gabinete do Fundador' };
+export const generateMetadata = tituloPrivado('direcao', 'Gabinete do Fundador');
 
 /**
  * O Painel CEO do Gabinete do Fundador. Só quem tem o módulo `direcao` chega
@@ -19,7 +19,7 @@ export default async function GabinetePage({ searchParams }: { searchParams: Pro
     lerGabinete(['decisoes', 'prioridades', 'projetos', 'movimentos', 'pessoas', 'alocacoes']),
     lerPipeline(),
   ]);
-  if (!g) return <ErroLeitura texto="Não foi possível ler o gabinete agora. Recarregue dentro de instantes." />;
+  if (!g) return <ErroGabinete activo="ceo" titulo="Gabinete do Fundador" />;
   const hoje = hojeEmMaputo(new Date());
   return (
     <>

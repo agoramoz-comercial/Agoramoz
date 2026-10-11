@@ -29,7 +29,7 @@ create or replace function public.guardar_decisao(
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog, public
 as $$
 declare
   d public.gab_decisoes;
@@ -105,7 +105,7 @@ create or replace function public.guardar_prioridade(
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog, public
 as $$
 declare
   p public.gab_prioridades;
@@ -113,14 +113,12 @@ declare
 begin
   perform public.exigir_modulo('direcao');
 
-  if exists (select 1 from public.gab_prioridades
-              where dono = auth.uid() and trimestre = p_trimestre and tipo = p_tipo
-                and id is distinct from p_id) then
-    raise exception 'Já existe uma prioridade deste tipo neste trimestre: edite essa em vez de criar outra.'
-      using errcode = '22023';
-  end if;
-
   if p_id is null then
+    if exists (select 1 from public.gab_prioridades
+                where dono = auth.uid() and trimestre = p_trimestre and tipo = p_tipo) then
+      raise exception 'Já existe uma prioridade deste tipo neste trimestre: edite essa em vez de criar outra.'
+        using errcode = '22023';
+    end if;
     insert into public.gab_prioridades (dono, trimestre, tipo, resultado, indicador, meta, estado, nota)
     values (auth.uid(), p_trimestre, p_tipo, trim(p_resultado), nullif(trim(p_indicador), ''),
             nullif(trim(p_meta), ''), coalesce(p_estado, 'em_curso'), nullif(trim(p_nota), ''))
@@ -132,6 +130,11 @@ begin
     end if;
     if p.revisao is distinct from p_revisao then
       raise exception 'O registo mudou entretanto.' using errcode = '40001';
+    end if;
+    if exists (select 1 from public.gab_prioridades
+                where dono = auth.uid() and trimestre = p_trimestre and tipo = p_tipo and id <> p_id) then
+      raise exception 'Já existe uma prioridade deste tipo neste trimestre: edite essa em vez de criar outra.'
+        using errcode = '22023';
     end if;
     update public.gab_prioridades
        set trimestre = p_trimestre,
@@ -179,7 +182,7 @@ create or replace function public.guardar_projeto(
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog, public
 as $$
 declare
   o public.gab_projetos;
@@ -288,7 +291,7 @@ create or replace function public.guardar_movimento(
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog, public
 as $$
 declare
   m public.gab_tesouraria;
@@ -296,6 +299,11 @@ declare
   v_efectiva date := case when p_tipo = 'saldo' then p_data_prevista else p_data_efectiva end;
 begin
   perform public.exigir_modulo('direcao');
+
+  -- Realizado é passado: uma data efectiva futura contaria como caixa o que ainda não entrou.
+  if v_efectiva > (now() at time zone 'Africa/Maputo')::date then
+    raise exception 'A data efectiva (ou do saldo) não pode ser futura.' using errcode = '22023';
+  end if;
 
   if p_projeto is not null then
     perform 1 from public.gab_projetos where id = p_projeto and dono = auth.uid() for key share;
@@ -349,7 +357,7 @@ create or replace function public.guardar_pessoa(
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog, public
 as $$
 declare
   s public.gab_pessoas;
@@ -397,7 +405,7 @@ create or replace function public.guardar_alocacao(
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog, public
 as $$
 begin
   perform public.exigir_modulo('direcao');
@@ -426,7 +434,7 @@ create or replace function public.remover_alocacao(p_pessoa uuid, p_projeto uuid
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_catalog
+set search_path = pg_catalog, public
 as $$
 begin
   perform public.exigir_modulo('direcao');

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { AdminNav, type Entrada } from '@/components/admin/AdminNav';
+import { LimparRascunhos } from '@/components/admin/espaco/LimparRascunhos';
 import { StateBadge } from '@/components/admin/primitives';
 import { Logo } from '@/components/brand/Logo';
 import { PAPEL } from '@/lib/admin/labels';
@@ -93,6 +94,7 @@ export function CascaAdmin({
             {/* Sair é uma acção, logo é um POST. Nunca uma ligação: um `GET` que
               altera estado é accionável por um `<img>` numa página qualquer. */}
             <form action={sair} className="lg:mt-4">
+              <LimparRascunhos />
               <button
                 type="submit"
                 className="min-h-11 text-sm text-[color:var(--muted)] underline hover:text-[color:var(--on-surface)]"

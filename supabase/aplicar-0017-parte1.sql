@@ -308,6 +308,7 @@ $$;
 drop policy if exists audit_log_select on public.audit_log;
 create policy audit_log_select on public.audit_log
   for select to authenticated
-  using (public.is_staff() and entity_type is distinct from 'ceno');
+  -- Também o Gabinete (0018): voltar a correr a 0017 depois da 0018 não o pode reexpor.
+  using (public.is_staff() and entity_type is distinct from 'ceno' and entity_type is distinct from 'gabinete');
 
 

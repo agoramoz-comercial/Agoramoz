@@ -5,12 +5,12 @@ import { GuardaRascunho } from '@/components/admin/energia/GuardaRascunho';
 import { CAIXA, CamposStakeholder, EnergiaNav, ErroLeitura, H2, Mensagens } from '@/components/admin/energia/partes';
 import { AdminHeading } from '@/components/admin/primitives';
 import { guardarStakeholder } from '@/lib/admin/energia-actions';
-import { requireModulo } from '@/lib/auth/modulos';
+import { requireModulo, tituloPrivado } from '@/lib/auth/modulos';
 import { createSessionClient } from '@/lib/auth/client';
 import { COLUNAS_STAKEHOLDER, stakeholderDe } from '@/lib/energia/leitura';
 import { PAPEIS_LIGACAO, textoFase } from '@/lib/energia/modelo';
 
-export const metadata = { title: 'Stakeholder — Espaço CEnO' };
+export const generateMetadata = tituloPrivado('energia', 'Stakeholder — Espaço CEnO');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -79,7 +79,8 @@ export default async function StakeholderCenoPage({
         )}
       </section>
 
-      <form action={guardarStakeholder} className={CAIXA}>
+      {/* A chave muda ao gravar: o React não actualiza o `defaultValue` de um <select> já montado. */}
+      <form key={`${s.id}-${s.revisao}`} action={guardarStakeholder} className={CAIXA}>
         <h2 className={H2}>Dados do stakeholder</h2>
         <input type="hidden" name="id" value={s.id} />
         <input type="hidden" name="revisao" value={s.revisao} />

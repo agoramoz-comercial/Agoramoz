@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { modulosDaSessao } from '@/lib/auth/modulos';
 import { requireRole } from '@/lib/auth/session';
 import {
@@ -32,7 +32,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function exigirEnergia(): Promise<void> {
   await requireRole(['admin', 'comercial']);
   const modulos = await modulosDaSessao();
-  if (!modulos.includes('energia')) redirect('/admin');
+  // 404, como as páginas: uma acção do espaço não confirma que ele existe.
+  if (!modulos.includes('energia')) notFound();
 }
 
 /** O browser conta uma mudança de linha como 1 no `maxLength` mas envia CRLF: normalizar. */

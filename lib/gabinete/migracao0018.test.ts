@@ -83,7 +83,10 @@ describe('0018 — Gabinete do Fundador', () => {
   });
 
   it('a equipa deixa de ler a actividade do CEnO e do gabinete no audit_log', () => {
-    expect(MIGRACAO).toContain("using (public.is_staff() and entity_type not in ('ceno', 'gabinete'));");
+    // `is distinct from`: um entity_type nulo não esconde a linha por acidente.
+    expect(MIGRACAO).toContain(
+      "using (public.is_staff() and entity_type is distinct from 'ceno' and entity_type is distinct from 'gabinete');",
+    );
   });
 
   it('toda a função de escrita exige o módulo, verifica o dono e desiste de locks em 4 s', () => {
@@ -126,5 +129,14 @@ describe('0018 — Gabinete do Fundador', () => {
     // Casts para reg* são resolvidos ao planear: um objecto em falta rebentava
     // a consulta inteira em vez de dar «EM FALTA».
     expect(VERIFICAR).not.toMatch(/'public\.[a-z_]+\([^']*\)'::regprocedure/);
+  });
+  it('apagar um projecto não desliga em silêncio os seus movimentos de caixa', () => {
+    expect(MIGRACAO).toContain('projeto_id uuid references public.gab_projetos(id) on delete restrict,');
+    expect(MIGRACAO).toContain('gab_tesouraria_projeto_idx');
+  });
+
+  it('as funções põem pg_catalog antes de public no search_path', () => {
+    expect(MIGRACAO).not.toContain('set search_path = public, pg_catalog');
+    expect(MIGRACAO.match(/set search_path = pg_catalog, public/g)?.length).toBe(7);
   });
 });

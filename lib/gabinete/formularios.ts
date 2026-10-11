@@ -7,6 +7,7 @@ import {
   ESTADOS_PRIORIDADE,
   FASES_EXECUCAO,
   FASES_PROJETO,
+  hojeEmMaputo,
   MOEDAS,
   PRONTIDAO,
   projetoActivo,
@@ -132,6 +133,11 @@ export const formularioMovimento = z
   .refine((f) => f.tipo === 'saldo' || (f.valor ?? 0) > 0, {
     message: 'Um recebimento ou pagamento tem de ter valor maior do que zero.',
     path: ['valor'],
+  })
+  // Realizado é passado (a base também o impõe): no fuso de Maputo.
+  .refine((f) => (f.tipo === 'saldo' ? f.dataPrevista : (f.dataEfectiva ?? '')) <= hojeEmMaputo(new Date()), {
+    message: 'A data efectiva (ou do saldo) não pode ser futura.',
+    path: ['dataEfectiva'],
   });
 
 const horas = (min: number) =>
