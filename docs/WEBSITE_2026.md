@@ -92,3 +92,18 @@ Os limiares são **critérios internos de teste, não benchmarks de mercado**
   os termos bloqueados com contexto.
 - `BASE=… node .qa/diagnostico.mjs` (390/768/1440, axe no cartão novo) e
   `BASE=… node .qa/confirmacao.mjs` (PT e `IDIOMA=en`).
+
+## Revisões ECC (Lote Y) e excepções conhecidas
+
+Correram quatro revisões: código, acessibilidade, claims e SEO. As correcções
+estão nos commits Y7b a Y7f. Ficou fora, de propósito:
+
+| Achado | Porquê fica | Quem decide |
+|---|---|---|
+| Contorno dos campos de formulário com contraste 1,3:1 (WCAG 1.4.11) | Corrigir muda o token visual `--border`, e o pedido foi não mudar o design | Fundador (design) |
+| Dica do chip marcado a 80% de opacidade (≈3,4:1) e rótulos de 11 px | Mesma razão | Fundador (design) |
+| Animações de entrada com `visibility:hidden` até ao scroll | Mexe no sistema de movimento de todo o site; pede um lote próprio, testado com leitor de ecrã | Próximo lote de acessibilidade |
+| Camada partilhada em PT-PT vista pelo mercado BR (equipa/equipe, ficheiro/arquivo) | Exige uma variante `pt-BR` das soluções, do formulário e do FAQ; só `/br` está localizado | Fundador (prioridade do mercado BR) |
+| Telefone, email, redes e cargos não constam do documento mestre | Já estavam publicados; confirmar autorização | Fundador |
+| Privacidade: responsável pelo tratamento (firma e NUIT) e menção ao Moz News | Texto legal; não se inventa | Revisão jurídica |
+| `questionnaire_versions` continua na versão 1 na base | Só auditoria; corrigir pede uma migração nova aplicada pelo fundador | Fundador |
