@@ -38,6 +38,28 @@ Quando houver Search Console com dados, os volumes reais substituem esta tabela.
 | transformação digital energia oil and gas Moçambique | ITU, Energy Year, Club of Mozambique, Kabum Digital, DXC | Notícias; sem páginas de serviço |
 | AGORAMOZ | agora.io, Wikipedia, Britannica, Merriam-Webster… | **Marca ausente** do top 10 |
 
+## Medição de 2026-10-11 (dia 7 depois do sitemap)
+
+Mesmo método (Firecrawl, motor web, localização Moçambique), só leitura.
+
+| Sinal | 2026-09-30 | 2026-10-11 |
+|---|---|---|
+| `site:agoramoz.com` | 1 resultado (a home), «No information is available for this page» | **20 ou mais páginas indexadas**, cada uma com o título e a descrição reais: home, `/perfil`, `/mz`, `/br`, `/sobre`, `/contactos`, `/como-trabalhamos`, `/news`, `/en/news`, `/en/global` e mercados, `/en/solucoes`, `/mz/energia-mineracao`, `/solucoes/agentes-ia`, `/diagnostico` |
+| Descrição da home | Ausente | «A AGORAMOZ desenvolve websites avançados, software, automações e agentes de IA…» |
+| «AGORAMOZ» (marca) | Ausente do top 10 | **Ainda ausente** (IMDb, agora.io, Wikipedia, Britannica…) |
+| automação de processos empresariais Moçambique | Fraca, sem a AGORAMOZ | Fraca, sem a AGORAMOZ (ResearchGate, Proxmeru, Epiroc, Rylatech, UEM) |
+| agentes de IA para empresas Moçambique | Fraca, sem a AGORAMOZ | Fraca, sem a AGORAMOZ (Unlocking Tech, Cegid Primavera, Salesforce, Luso AI) |
+| empresa de desenvolvimento de software Moçambique | Saturada | Igual (ITCORE, Cserve, ITGest, TechSolutions, VOID, Touch IT, F3M, Megatrónica) |
+| criação de sites Maputo empresa | Saturada | Igual (MozOut, ITCORE, Cserve, Diversité, MOZ Websites, Agência360, Easyhost) |
+| software development company Mozambique (EN) | Directórios | Igual (Sapphire, Cserve, ZoomInfo, Viprasol, Interdata) |
+| AI agents automation company Mozambique (EN) | Global | Igual (LeewayHertz, PwC, Aricoma, Deloitte, Intuz) |
+| transformação digital energia oil and gas Moçambique | Notícias | Igual (ITU, MIREME, Cegid, MCTD, Energy Capital & Power) |
+
+**Leitura:**
+- O bloqueio do `robots.txt` acabou: o Google rastreou e indexou o site com as metas reais.
+- **A indexação não chega para a classificação.** A marca e as pesquisas de prioridade 1 ainda não mostram a AGORAMOZ. A falta agora é de sinais externos: o Perfil de Empresa no Google, as ligações de autoridade e o conteúdo contínuo (lista abaixo).
+- Esta medição **não exige** mexer no `robots.txt` nem nas metas.
+
 ## Mapa palavra-chave → página
 
 | Prioridade | Palavra-chave (intenção comercial) | Página | Título aplicado |
@@ -88,10 +110,10 @@ fixa comprimentos (≤ 60 com a marca; descrição 120–160) e o país no títu
 
 ## O que falta e só o fundador pode fazer (por ordem de impacto)
 
-1. **Google Search Console:** verificar o domínio (`GOOGLE_SITE_VERIFICATION`,
-   ver `docs/SEO_ACTIVACAO.md` §3), submeter
-   `https://agoramoz.com/sitemap.xml` e pedir indexação da home e das cinco
-   soluções. Sem isto, a marca continua ausente.
+1. **Google Search Console:** feito (sitemap submetido; indexação confirmada a
+   2026-10-11). Falta pedir indexação das soluções que ainda não aparecem no
+   `site:` (`/solucoes/automacao-de-processos`, `/software-empresarial`,
+   `/infraestrutura-digital`, `/websites-avancados`, `/pt`).
 2. **Perfil de Empresa no Google** (guião em `/perfil` e
    `docs/SEO_ACTIVACAO.md`): é o que põe a AGORAMOZ no mapa e no painel de
    marca quando alguém pesquisa o nome.
