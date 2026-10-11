@@ -14,6 +14,7 @@ import { sair } from '@/lib/auth/actions';
 
 const ENTRADAS: readonly Entrada[] = [
   { href: '/admin', texto: 'Painel', icone: 'painel' },
+  { href: '/admin/gabinete', texto: 'Gabinete', icone: 'gabinete' },
   { href: '/admin/energia', texto: 'Espaço CEnO', icone: 'energia' },
   { href: '/admin/diagnosticos', texto: 'Diagnósticos', icone: 'diagnosticos' },
   { href: '/admin/oportunidades', texto: 'Oportunidades', icone: 'oportunidades' },
@@ -37,6 +38,7 @@ export function CascaAdmin({
   inqueritos = false,
   news = false,
   energia = false,
+  direcao = false,
   children,
 }: {
   sessao: SessaoVisivel;
@@ -49,13 +51,16 @@ export function CascaAdmin({
    * administradores incluídos — o Espaço CEnO não aparece nem existe (404).
    */
   energia?: boolean;
+  /** Quem tem o módulo `direcao`: o Gabinete do Fundador. Para os outros, 404. */
+  direcao?: boolean;
   children: React.ReactNode;
 }) {
   const entradas = ENTRADAS.filter(
     (e) =>
       (inqueritos || e.icone !== 'inqueritos') &&
       (news || e.icone !== 'news') &&
-      (energia || e.icone !== 'energia'),
+      (energia || e.icone !== 'energia') &&
+      (direcao || e.icone !== 'gabinete'),
   );
   return (
     <div className="flex w-full flex-col lg:flex-row">

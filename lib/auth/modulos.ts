@@ -4,7 +4,8 @@ import { requireStaff, type Sessao } from './session';
 
 /**
  * Acesso por módulo — espaços de trabalho que não são de um papel, são de uma
- * pessoa. Hoje há um: `energia`, o Espaço CEnO da Chief Energy Officer.
+ * pessoa. Hoje há dois: `energia`, o Espaço CEnO da Chief Energy Officer, e
+ * `direcao`, o Gabinete do Fundador (0018).
  *
  * O papel diz o que alguém pode fazer no admin partilhado; o módulo diz se um
  * espaço privado existe para essa pessoa. Quem decide é a base: a linha em
@@ -13,7 +14,7 @@ import { requireStaff, type Sessao } from './session';
  * outra vez. Este ficheiro é só a camada de ecrã.
  */
 
-export const MODULOS = ['energia'] as const;
+export const MODULOS = ['energia', 'direcao'] as const;
 export type Modulo = (typeof MODULOS)[number];
 
 /**

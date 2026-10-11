@@ -26,6 +26,7 @@ export default async function PainelLayout({ children }: { children: React.React
       inqueritos={serverEnv().SURVEYS === 'on'}
       news={serverEnv().NEWS_BLOG === 'on'}
       energia={modulos.includes('energia')}
+      direcao={modulos.includes('direcao')}
     >
       {children}
     </CascaAdmin>

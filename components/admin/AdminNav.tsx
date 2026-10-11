@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Inbox,
   KeyRound,
+  Landmark,
   LayoutDashboard,
   ListChecks,
   Newspaper,
@@ -41,6 +42,7 @@ const ICONES = {
   fila: Inbox,
   equipa: UserCog,
   energia: Zap,
+  gabinete: Landmark,
   conta: KeyRound,
 } satisfies Record<string, LucideIcon>;
 

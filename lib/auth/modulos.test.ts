@@ -44,6 +44,13 @@ describe('módulos', () => {
     expect(await modulosDaSessao()).toEqual([]);
   });
 
+  it('o Gabinete (direcao) é um módulo conhecido, independente do Espaço CEnO', async () => {
+    resultado.mockResolvedValue({ data: [{ modulo: 'direcao' }], error: null });
+    expect(await modulosDaSessao()).toEqual(['direcao']);
+    await expect(requireModulo('direcao')).resolves.toMatchObject({ nome: 'Pessoa' });
+    await expect(requireModulo('energia')).rejects.toBeInstanceOf(NaoEncontrado);
+  });
+
   it('com o módulo, entra; sem ele, 404 — também para administradores', async () => {
     resultado.mockResolvedValue({ data: [{ modulo: 'energia' }], error: null });
     await expect(requireModulo('energia')).resolves.toMatchObject({ nome: 'Pessoa' });
