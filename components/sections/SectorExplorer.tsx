@@ -131,7 +131,7 @@ export function SectorExplorer({
                 </h3>
                 {!s.published && (
                   <p className="mt-2 text-sm text-[color:var(--muted)]">
-                    {t(EXPLORADOR.emPreparacao, idioma)}
+                    {t(EXPLORADOR.viaDiagnostico, idioma)}
                   </p>
                 )}
               </div>

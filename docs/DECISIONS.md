@@ -424,3 +424,41 @@ registos + painéis».
   executiva semanal se for actualizado antes dela.
 - Activar é: aplicar a 0018, confirmar a linha 30 e correr o bloco de
   `docs/GABINETE.md` (cria o perfil `admin` só se faltar; nunca rebaixa).
+
+## D-38 — Website Final 2026: conteúdo novo, design igual, só páginas com substância
+
+O fundador pediu que o documento mestre «Website Completo Final 2026» fosse
+implementado «sem mudar o design». O mapa e o checklist estão em
+`docs/WEBSITE_2026.md`.
+- **Design congelado.** Mudou o conteúdo. As páginas novas (`/setores`,
+  `/seguranca-qualidade`, `/faq` e as duas soluções novas) reutilizam
+  templates existentes. `/setores` fica só no rodapé, porque o mega-menu já
+  tem «Setores».
+- **URLs mantidos.** O documento sugere `/automacao`, `/infraestrutura`, etc.
+  Os nossos `/solucoes/<slug>` já estão indexados (medição SEO do dia 7, `4153e0b`); renomear
+  perdia esse sinal.
+- **Páginas que o documento lista e que não se publicam agora**, pela regra
+  dele «nenhuma página vazia ou em preparação» e pela «prova antes do claim»:
+  - `/casos` e `/demonstracoes`: não há casos autorizados;
+  - `/insights`, `/guias` e `/calculadoras`: não há conteúdo;
+  - `/equipa`: os perfis vivem em `/sobre`;
+  - `/cookies` e `/termos`: precisam de revisão jurídica por mercado, e não
+    se inventa texto legal;
+  - páginas por sector além de energia-mineração: o documento dá uma linha
+    por sector e diz para não publicar especialização sem processo, prova e
+    capacidade.
+
+  Os setores sem página dizem que são avaliados pelo diagnóstico, nunca «em
+  preparação».
+- **Formulário: «juntar os dois»** (decisão do fundador). Os 9 cartões e a
+  pontuação ficam, e entram os campos do documento como opcionais e
+  informativos (`diagnostico-v2`).
+- **Conformidade:** a privacidade e a segurança usam a copy segura do
+  documento, sem declarar conformidade (RGPD, LGPD ou a lei moçambicana)
+  enquanto não houver revisão qualificada.
+
+**Consequência:**
+- «Casos» e «Insights» entram na navegação quando houver conteúdo autorizado;
+  `/cookies` e `/termos` entram depois da revisão jurídica.
+- Os KPIs do documento são critérios internos de teste e ainda não foram
+  medidos.

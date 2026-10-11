@@ -56,6 +56,11 @@ describe('mercados globais', () => {
     expect(maus).toEqual([]);
   });
 
+  it('os textos da home (explorador de setores incluído) também não', async () => {
+    const inicio = await import('@/content/i18n/inicio');
+    expect(JSON.stringify(inicio)).not.toMatch(/em prepara|in preparation|coming soon|brevemente/i);
+  });
+
   it('o próprio detector funciona', () => {
     // Guarda contra o teste acima passar por não detectar nada.
     const emProsa = /em prepara|coming soon|brevemente|placeholder|lorem ipsum/i;

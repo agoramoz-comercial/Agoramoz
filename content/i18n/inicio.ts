@@ -141,9 +141,10 @@ export const SELETOR = {
 
 export const EXPLORADOR = {
   filtrar: { pt: 'Filtrar setores por país', en: 'Filter sectors by country' },
-  emPreparacao: {
-    pt: 'Página em preparação. O diagnóstico cobre este setor na mesma.',
-    en: 'Page in preparation. The diagnostic still covers this sector.',
+  /** Setor sem página própria: avalia-se pelo diagnóstico, a partir do processo. */
+  viaDiagnostico: {
+    pt: 'Avaliamos este setor pelo diagnóstico, a partir do processo que mais custa.',
+    en: 'We assess this sector through the diagnostic, starting from the process that costs most.',
   },
   verSolucao: { pt: 'Ver solução', en: 'See solution' },
   solicitar: { pt: 'Solicitar diagnóstico', en: 'Request a diagnostic' },
