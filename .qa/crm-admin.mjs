@@ -213,6 +213,30 @@ const ECRAS = [
     },
   },
   {
+    q: '?ecra=responsaveis',
+    nome: 'por responsável',
+    verifica: async (p) => {
+      const linhas = p.locator('section[aria-labelledby="painel-responsaveis"] tbody tr');
+      confere((await linhas.count()) === 3, '3 linhas: Gerson, Ana, Sem dono', `(${await linhas.count()})`);
+      const gerson = (await linhas.nth(0).innerText()).replace(/\s+/g, ' ');
+      confere(gerson.startsWith('Exemplo Gerson 4 1 1 1'), 'Gerson: 4 abertas, 1 atrasada, 1 parada, 1 ganha no período', `(${gerson})`);
+      confere((await linhas.nth(2).innerText()).startsWith('Sem dono'), '«Sem dono» no fim');
+      const href = await linhas.nth(0).getByRole('link', { name: '4' }).getAttribute('href');
+      confere(href === '/admin/oportunidades?dono=00000000-0000-4000-8000-0000000000a1', 'abertas levam ao pipeline filtrado pelo dono', `(${href})`);
+      const atr = await linhas.nth(0).getByRole('link').nth(1).getAttribute('href');
+      confere(atr?.startsWith('/admin/oportunidades?vista=atrasadas&dono='), 'atrasadas levam à vista atrasadas desse dono');
+    },
+  },
+  {
+    q: '?dono=00000000-0000-4000-8000-0000000000a1',
+    nome: 'pipeline por dono',
+    verifica: async (p) => {
+      confere(await tem(p, 'Responsável: Exemplo Gerson'), 'rótulo do responsável filtrado');
+      confere((await p.locator('table tbody tr').count()) === 4, 'só as 4 abertas do Gerson', `(${await p.locator('table tbody tr').count()})`);
+      confere((await p.getByRole('link', { name: 'Limpar', exact: true }).getAttribute('href')) === '/admin/oportunidades', '«Limpar» tira o filtro de dono');
+    },
+  },
+  {
     q: '?ecra=auditoria',
     nome: 'auditoria',
     verifica: async (p) => {

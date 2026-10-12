@@ -185,6 +185,8 @@ export interface LinhaBarra {
   readonly valor: number;
   /** Texto à direita do valor (p. ex. «25 % da etapa anterior»). */
   readonly nota?: string;
+  /** Drill-down: a lista exacta que explica esta barra. */
+  readonly href?: string;
 }
 
 /**
@@ -210,9 +212,15 @@ export function BarrasHorizontais({
           key={l.chave}
           className="grid grid-cols-[minmax(0,9rem)_1fr] items-center gap-3 sm:grid-cols-[minmax(0,11rem)_1fr]"
         >
-          <span className="truncate text-sm" title={l.rotulo}>
-            {l.rotulo}
-          </span>
+          {l.href ? (
+            <Link href={l.href} className="truncate text-sm underline underline-offset-4" title={`${l.rotulo}: abrir a lista`}>
+              {l.rotulo}
+            </Link>
+          ) : (
+            <span className="truncate text-sm" title={l.rotulo}>
+              {l.rotulo}
+            </span>
+          )}
           <span className="flex min-w-0 items-center gap-2">
             <span
               className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-[color:var(--surface)]"

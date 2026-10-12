@@ -5,6 +5,10 @@ import { carregarPainel, type Ligacoes } from '@/lib/admin/painel-dados';
 import { createSessionClient } from '@/lib/auth/client';
 import { serverEnv } from '@/lib/config/env';
 import { estadoErp } from '@/lib/erp/porta';
+import { PorResponsavel } from '@/components/admin/crm/PorResponsavel';
+import { crmOperacional } from '@/lib/crm/activacao';
+import { lerEquipa, lerOportunidades } from '@/lib/crm/leitura';
+import { porResponsavel } from '@/lib/crm/responsaveis';
 
 /**
  * Painel de comando. Responde a «o que precisa de mim agora?» e «como está a
@@ -43,11 +47,14 @@ export default async function PainelPage({
   };
 
   const supabase = await createSessionClient();
-  const dados = await carregarPainel(
-    supabase,
-    janela(lerPeriodo(periodo), await agora()),
-    ligacoes,
-  );
+  const instante = await agora();
+  const j = janela(lerPeriodo(periodo), instante);
+  const activo = (await crmOperacional(supabase)) === true;
+  const [dados, lido, equipa] = await Promise.all([
+    carregarPainel(supabase, j, ligacoes),
+    lerOportunidades(supabase, {}, activo),
+    lerEquipa(supabase),
+  ]);
 
   // Acções que falham antes de saber o destino (pedido inválido) voltam aqui
   // com `?erro=`; antes ninguém o mostrava.
@@ -55,6 +62,17 @@ export default async function PainelPage({
     <>
       <Feedback erro={erro} textos={{}} />
       <PainelComando dados={dados} />
+      {/* Se a leitura falhar, o bloco não aparece: melhor ausente do que com zeros falsos. */}
+      {lido && equipa ? (
+        <div className="mt-6">
+          <PorResponsavel linhas={porResponsavel(lido.itens, equipa, instante, j.inicio, activo)} dias={j.dias} />
+          {lido.truncado ? (
+            <p role="note" className="mt-2 text-xs text-[color:var(--muted)]">
+              Contas sobre as 500 oportunidades mais recentes.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </>
   );
 }

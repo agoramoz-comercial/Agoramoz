@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   agruparPorFase,
   aplicarVista,
+  filtrarDono,
   lerFiltros,
   ordenar,
   paginar,
@@ -95,6 +96,22 @@ describe('ordenação', () => {
     const copia = [...itens];
     ordenar(itens, 'valor', 'desc');
     expect(itens).toEqual(copia);
+  });
+});
+
+describe('filtro de responsável', () => {
+  const U = '00000000-0000-4000-8000-0000000000a1';
+  it('lê só UUID ou «sem», e entra no URL', () => {
+    expect(lerFiltros({ dono: U }).dono).toBe(U);
+    expect(lerFiltros({ dono: 'sem' }).dono).toBe('sem');
+    expect(lerFiltros({ dono: 'x' }).dono).toBeUndefined();
+    expect(urlCom(lerFiltros({}), { dono: U })).toBe(`/admin/oportunidades?dono=${U}`);
+  });
+  it('filtra pelo dono ou pelas sem dono', () => {
+    const itens = [op({ id: 'a', owner_id: U }), op({ id: 'b', owner_id: null }), op({ id: 'c', owner_id: 'outro' })];
+    expect(filtrarDono(itens, U).map((o) => o.id)).toEqual(['a']);
+    expect(filtrarDono(itens, 'sem').map((o) => o.id)).toEqual(['b']);
+    expect(filtrarDono(itens, undefined)).toHaveLength(3);
   });
 });
 

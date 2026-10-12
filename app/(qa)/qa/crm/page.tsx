@@ -4,6 +4,8 @@ import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { AdminHeading, StateBadge } from '@/components/admin/primitives';
 import { FichaOportunidade, type DadosFicha } from '@/components/admin/crm/FichaOportunidade';
 import { HojeVista } from '@/components/admin/crm/HojeVista';
+import { PorResponsavel } from '@/components/admin/crm/PorResponsavel';
+import { porResponsavel } from '@/lib/crm/responsaveis';
 import { Consentimento, LinhaTemporal, OportunidadesLigadas, Resumo360 } from '@/components/admin/crm/Ficha360';
 import { AuditoriaVista } from '@/components/admin/AuditoriaVista';
 import type { LinhaAuditoria } from '@/lib/admin/auditoria';
@@ -14,7 +16,7 @@ import { FASE_OPORTUNIDADE } from '@/lib/admin/labels';
 import { resumoHoje, triagem } from '@/lib/crm/hoje';
 import type { PorRever, ReuniaoProxima } from '@/lib/crm/leitura';
 import { filaDeHoje } from '@/lib/crm/modelo';
-import { aplicarVista, lerFiltros, ordenar, VISTAS, type OportunidadePipeline, type Vista } from '@/lib/crm/pipeline';
+import { aplicarVista, filtrarDono, lerFiltros, ordenar, VISTAS, type OportunidadePipeline, type Vista } from '@/lib/crm/pipeline';
 
 /**
  * Pré-visualização do CRM operacional (pipeline e ficha) para o QA visual
@@ -249,7 +251,9 @@ export default async function PreVisualizacaoCrm({
   const ecra = p.ecra ?? 'pipeline';
 
   let corpo: React.ReactNode;
-  if (ecra === 'contacto' || ecra === 'organizacao') {
+  if (ecra === 'responsaveis') {
+    corpo = <PorResponsavel linhas={porResponsavel(ITENS, EQUIPA, AGORA, new Date(AGORA.getTime() - 29 * 86_400_000), true)} dias={30} />;
+  } else if (ecra === 'contacto' || ecra === 'organizacao') {
     corpo = ficha360(ecra);
   } else if (ecra === 'auditoria') {
     corpo = (
@@ -282,7 +286,7 @@ export default async function PreVisualizacaoCrm({
     const activo = ecra !== 'por-activar';
     const todas = activo ? ITENS : ITENS.map(semNovas);
     const filtros = lerFiltros(p);
-    const base = filtros.fase ? todas.filter((o) => o.stage === filtros.fase) : todas;
+    const base = filtrarDono(filtros.fase ? todas.filter((o) => o.stage === filtros.fase) : todas, filtros.dono);
     const contagens = Object.fromEntries(VISTAS.map((v) => [v, aplicarVista(base, v, EU, AGORA).length])) as Record<Vista, number>;
     corpo = (
       <>

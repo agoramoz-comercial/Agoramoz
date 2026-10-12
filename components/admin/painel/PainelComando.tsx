@@ -548,6 +548,7 @@ export function PainelComando({ dados }: { dados: DadosPainel }) {
                   chave: f.chave,
                   rotulo: FASE_OPORTUNIDADE[f.chave].texto,
                   valor: f.valor,
+                  href: `/admin/oportunidades?vista=todas&fase=${f.chave}`,
                 }))}
               />
             )}

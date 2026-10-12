@@ -104,6 +104,17 @@ export function PipelineVista(d: DadosPipeline) {
         </p>
       ) : null}
 
+      {f.dono ? (
+        <p className="mb-3 flex flex-wrap items-center gap-3 text-sm">
+          <span className="rounded-[--radius-xs] border border-[color:var(--on-surface)] px-2 py-1">
+            Responsável: {f.dono === 'sem' ? 'Sem dono' : (d.nomes.get(f.dono) ?? '(perfil removido)')}
+          </span>
+          <Link href={urlCom(f, { dono: undefined, pagina: 1 })} className="underline">
+            Limpar
+          </Link>
+        </p>
+      ) : null}
+
       <p className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm" aria-live="polite">
         <span>
           <strong className="tabular-nums">{n}</strong> {n === 1 ? 'oportunidade' : 'oportunidades'}
@@ -160,6 +171,7 @@ function Filtro({ f }: { f: Filtros }) {
       {f.modo !== 'lista' ? <input type="hidden" name="modo" value={f.modo} /> : null}
       {f.ordem !== 'proxima' ? <input type="hidden" name="ordem" value={f.ordem} /> : null}
       {f.sentido !== 'asc' ? <input type="hidden" name="sentido" value={f.sentido} /> : null}
+      {f.dono ? <input type="hidden" name="dono" value={f.dono} /> : null}
       <label className="flex flex-col gap-1">
         <span className={ROTULO}>Fase</span>
         <select name="fase" defaultValue={f.fase ?? ''} className={cn(CAMPO, 'w-auto')}>

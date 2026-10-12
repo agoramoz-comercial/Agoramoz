@@ -4,7 +4,7 @@ import { crmOperacional } from '@/lib/crm/activacao';
 import { csvOportunidades } from '@/lib/crm/csv';
 import { entregarComAuditoria, recusarPedido, texto } from '@/lib/crm/exportar';
 import { lerEquipa, lerOportunidades } from '@/lib/crm/leitura';
-import { aplicarVista, lerFiltros, ordenar } from '@/lib/crm/pipeline';
+import { aplicarVista, filtrarDono, lerFiltros, ordenar } from '@/lib/crm/pipeline';
 
 /**
  * O pipeline em CSV, com exactamente a vista, os filtros e a ordem do ecrã de
@@ -35,11 +35,12 @@ export async function GET(pedido: Request) {
   if (!lido) return texto(503, 'Não foi possível ler as oportunidades.');
   if (lido.truncado) return texto(413, 'Demasiadas oportunidades com estes filtros. Restrinja por fase, canal ou campanha.');
 
-  const itens = ordenar(aplicarVista(lido.itens, f.vista, sessao.userId, new Date()), f.ordem, f.sentido);
+  const itens = ordenar(aplicarVista(filtrarDono(lido.itens, f.dono), f.vista, sessao.userId, new Date()), f.ordem, f.sentido);
   const csv = csvOportunidades(itens, new Map((equipa ?? []).map((e) => [e.id, e.nome])));
   const filtros: Record<string, string> = { vista: f.vista };
   if (f.fase) filtros.fase = f.fase;
   if (f.canal) filtros.canal = f.canal;
   if (f.campanha) filtros.campanha = f.campanha;
+  if (f.dono) filtros.dono = f.dono;
   return entregarComAuditoria(sb, 'oportunidades', itens.length, filtros, csv);
 }

@@ -7,7 +7,7 @@ import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 import { crmOperacional } from '@/lib/crm/activacao';
 import { lerEquipa, lerOportunidades } from '@/lib/crm/leitura';
-import { aplicarVista, lerFiltros, ordenar, VISTAS, type Vista } from '@/lib/crm/pipeline';
+import { aplicarVista, filtrarDono, lerFiltros, ordenar, VISTAS, type Vista } from '@/lib/crm/pipeline';
 
 export const metadata = { title: 'Pipeline' };
 
@@ -30,7 +30,8 @@ export default async function OportunidadesPage({
   ]);
 
   const agora = new Date();
-  const todas = lido?.itens ?? [];
+  // O responsável (drill-down do painel) filtra antes das vistas: as contagens dos separadores batem com a lista.
+  const todas = filtrarDono(lido?.itens ?? [], filtros.dono);
   const contagens = Object.fromEntries(
     VISTAS.map((v) => [v, aplicarVista(todas, v, sessao.userId, agora).length]),
   ) as Record<Vista, number>;

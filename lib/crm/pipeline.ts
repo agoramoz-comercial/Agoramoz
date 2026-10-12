@@ -50,8 +50,12 @@ export interface Filtros {
   readonly fase?: string;
   readonly canal?: string;
   readonly campanha?: string;
+  /** Um UUID da equipa, ou `sem` para as sem dono (drill-down do painel). */
+  readonly dono?: string;
   readonly pagina: number;
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const um = <T extends string>(v: unknown, lista: readonly T[]): T | undefined =>
   typeof v === 'string' && (lista as readonly string[]).includes(v) ? (v as T) : undefined;
@@ -67,6 +71,7 @@ export function lerFiltros(p: Record<string, string | undefined>): Filtros {
     canal: um(p.canal, CANAIS),
     // O mesmo sanitizador da escrita: `_` e `%` nunca chegam a um padrão LIKE.
     campanha: sanitizarUtm(p.campanha) ?? undefined,
+    dono: p.dono === 'sem' || (p.dono && UUID.test(p.dono)) ? p.dono : undefined,
     pagina: Number.isFinite(n) && n > 0 ? n : 1,
   };
 }
@@ -82,12 +87,19 @@ export function urlCom(f: Filtros, mudar: Partial<Filtros>): string {
   if (g.fase) q.set('fase', g.fase);
   if (g.canal) q.set('canal', g.canal);
   if (g.campanha) q.set('campanha', g.campanha);
+  if (g.dono) q.set('dono', g.dono);
   if (g.pagina > 1) q.set('pagina', String(g.pagina));
   const s = q.toString();
   return s ? `/admin/oportunidades?${s}` : '/admin/oportunidades';
 }
 
 const aberta = (o: OportunidadePipeline) => !(FASES_FECHADAS as readonly string[]).includes(o.stage);
+
+/** O filtro de responsável, aplicado depois da vista. */
+export function filtrarDono<T extends OportunidadePipeline>(itens: readonly T[], dono: string | undefined): T[] {
+  if (!dono) return [...itens];
+  return itens.filter((o) => (dono === 'sem' ? o.owner_id === null : o.owner_id === dono));
+}
 
 export function aplicarVista<T extends OportunidadePipeline>(itens: readonly T[], vista: Vista, eu: string, agora: Date): T[] {
   switch (vista) {
