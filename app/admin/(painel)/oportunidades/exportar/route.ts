@@ -29,7 +29,8 @@ export async function GET(pedido: Request) {
   if (!activo) return texto(409, 'Exportação por activar: falta aplicar a migração 0019. Nada foi exportado.');
 
   const [lido, equipa] = await Promise.all([
-    lerOportunidades(sb, { fase: f.fase, canal: f.canal, campanha: f.campanha }, true),
+    // Só «Todas» inclui fechadas: nas outras vistas, as fechadas não gastam o tecto de leitura.
+    lerOportunidades(sb, { fase: f.fase, canal: f.canal, campanha: f.campanha, soAbertas: f.vista !== 'todas' }, true),
     lerEquipa(sb),
   ]);
   if (!lido) return texto(503, 'Não foi possível ler as oportunidades.');

@@ -176,5 +176,5 @@ export function paginar<T>(itens: readonly T[], pagina: number, tamanho = 50): {
  */
 export function destinoSeguroCrm(bruto: string | null | undefined, padrao: string): string {
   const v = String(bruto ?? '');
-  return /^\/admin(\/hoje|\/oportunidades(\/[0-9a-f-]{36})?)?(\?[\w\-=&%.+]*)?$/.test(v) ? v : padrao;
+  return /^\/admin(\/oportunidades(\/[0-9a-f-]{36})?)?(\?[\w\-=&%.+]*)?$/.test(v) ? v : padrao;
 }

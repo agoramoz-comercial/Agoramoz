@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowDown, ArrowUp, Columns3, Download, List } from 'lucide-react';
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { EmptyState, StateBadge } from '@/components/admin/primitives';
+import { mudarFase as mudarFaseLegado } from '@/lib/admin/actions';
 import { atribuirAMim, moverFase } from '@/lib/admin/crm-actions';
 import { CANAL, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE, type FaseOportunidade } from '@/lib/admin/labels';
 import { CANAIS, type Canal } from '@/lib/attribution/types';
@@ -424,8 +425,9 @@ function Cartao({ o, d, aqui }: { o: OportunidadePipeline; d: DadosPipeline; aqu
         <dt className="text-[color:var(--muted)]">Responsável</dt>
         <dd className="truncate text-right">{o.owner_id ? (d.nomes.get(o.owner_id) ?? '(perfil removido)') : 'Sem dono'}</dd>
       </dl>
+      {/* Sem a 0019, a acção antiga (aceita «perdido» sem motivo); com ela, «perdido» vai ao formulário do motivo. */}
       {d.escreve ? (
-        <form action={moverFase} className="flex items-end gap-2 border-t border-[color:var(--hairline)] pt-2">
+        <form action={d.activo ? moverFase : mudarFaseLegado} className="flex items-end gap-2 border-t border-[color:var(--hairline)] pt-2">
           <input type="hidden" name="id" value={o.id} />
           <input type="hidden" name="voltar" value={aqui} />
           <label htmlFor={idSel} className="sr-only">

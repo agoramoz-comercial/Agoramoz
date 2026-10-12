@@ -108,6 +108,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
 
   const [q, setQ] = useState('');
   const [resultado, setResultado] = useState<ResultadoPesquisa>(VAZIO);
+  const [termoResultado, setTermoResultado] = useState<string | null>(null);
   const [aProcurar, setAProcurar] = useState(false);
   const [falhou, setFalhou] = useState(false);
   const [activo, setActivo] = useState(0);
@@ -141,8 +142,19 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
     anuncioEm.current = setTimeout(() => setAnuncio(texto), ANUNCIO_MS);
   }
 
-  const itens = itensDe(comandos, q, resultado);
   const termo = limparTermo(q);
+  // Só se mostram resultados do termo que está escrito: durante a espera, Enter
+  // nunca abre um registo da pesquisa anterior (num CRM, seria outra pessoa).
+  const itens = itensDe(comandos, q, termoResultado === termo ? resultado : VAZIO);
+
+  // Ao fechar a página, nada fica pendurado: nem a pesquisa à espera, nem o anúncio.
+  useEffect(
+    () => () => {
+      if (temporizador.current) clearTimeout(temporizador.current);
+      if (anuncioEm.current) clearTimeout(anuncioEm.current);
+    },
+    [],
+  );
 
   function abrir() {
     if (ajuda.current?.open) ajuda.current.close();
@@ -160,6 +172,8 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
     setActivo(0);
     if (lista.current) lista.current.scrollTop = 0;
     if (temporizador.current) clearTimeout(temporizador.current);
+    // Um anúncio ainda por dizer refere-se ao termo anterior: cancela-se.
+    if (anuncioEm.current) clearTimeout(anuncioEm.current);
     const t = limparTermo(valor);
     const n = ++pedido.current;
     if (!t) {
@@ -175,6 +189,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
         .then((r) => {
           if (n !== pedido.current) return; // chegou uma resposta mais antiga do que a última pergunta
           setResultado(r.resultado);
+          setTermoResultado(t);
           setFalhou(r.falhou);
           const total = totalDe(r.resultado);
           anunciar(r.falhou ? 'A pesquisa falhou. Tente de novo.' : total === 0 ? `Sem resultados para «${t}».` : `${total} ${total === 1 ? 'resultado' : 'resultados'}.`);
@@ -353,7 +368,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
                     id={`${idLista}-${i}`}
                     role="option"
                     aria-selected={i === activo}
-                    onMouseEnter={() => setActivo(i)}
+                    onMouseMove={() => setActivo(i)}
                     onClick={() => ir(item.href)}
                     className={cn(
                       'mx-2 flex cursor-pointer items-center gap-3 rounded-[--radius-xs] px-3 py-3 text-sm sm:py-2',
@@ -388,9 +403,13 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
             {aProcurar ? 'A procurar… ' : ''}Setas para escolher, Enter para abrir, Esc para fechar.
           </span>
           {termo ? (
-            <a href={`/admin/pesquisa?q=${encodeURIComponent(termo)}`} className="underline">
+            <button
+              type="button"
+              onClick={() => ir(`/admin/pesquisa?q=${encodeURIComponent(termo)}`)}
+              className="underline"
+            >
               Ver na página de pesquisa
-            </a>
+            </button>
           ) : null}
         </div>
       </dialog>

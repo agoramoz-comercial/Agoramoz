@@ -8,7 +8,7 @@ import type { OportunidadePipeline } from './pipeline';
  * inquéritos: separador `;` (Excel em português), BOM UTF-8 e protecção contra
  * fórmulas (`=`, `+`, `-`, `@` no início passam a texto).
  *
- * Datas em ISO 8601 no fuso de Maputo e valores com ponto decimal: o ficheiro
+ * Datas «AAAA-MM-DD HH:MM» no fuso de Maputo (sem offset) e valores com ponto decimal: o ficheiro
  * é para ser trabalhado numa folha de cálculo, não lido como relatório.
  */
 

@@ -18,6 +18,7 @@ import { partilha, taxasDoFunil, variacao } from '@/lib/admin/painel';
 import type { CartaoId } from '@/lib/forms/lead-schema';
 import { ROTULO_PRIORIDADE } from '@/content/i18n/news';
 import { cn } from '@/lib/utils/cn';
+import { umDe } from '@/lib/utils/um';
 import { BarrasHorizontais, Bloco, ComFonte, Indicador, numero, SeletorPeriodo } from './Blocos';
 import { GraficoLeads } from './GraficoLeads';
 
@@ -384,7 +385,7 @@ function Recentes({ dados }: { dados: DadosPainel }) {
                 chave: 'estado',
                 cabecalho: 'Estado',
                 render: (l) => {
-                  const d = l.diagnostics?.[0];
+                  const d = umDe(l.diagnostics);
                   return d ? (
                     <StateBadge
                       rotulo={ESTADO_DIAGNOSTICO[d.state as keyof typeof ESTADO_DIAGNOSTICO]}
@@ -398,7 +399,7 @@ function Recentes({ dados }: { dados: DadosPainel }) {
                 chave: 'classificacao',
                 cabecalho: 'Classificação',
                 render: (l) => {
-                  const d = l.diagnostics?.[0];
+                  const d = umDe(l.diagnostics);
                   return d ? (
                     <span title={CLASSIFICACAO[d.tier]}>
                       {d.tier} · {d.score}
@@ -412,7 +413,7 @@ function Recentes({ dados }: { dados: DadosPainel }) {
                 chave: 'accao',
                 cabecalho: '',
                 render: (l) => {
-                  const d = l.diagnostics?.[0];
+                  const d = umDe(l.diagnostics);
                   return d ? (
                     <Link href={`/admin/diagnosticos/${d.id}`} className="text-sm underline">
                       Abrir

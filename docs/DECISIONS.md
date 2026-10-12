@@ -462,3 +462,30 @@ implementado «sem mudar o design». O mapa e o checklist estão em
   `/cookies` e `/termos` entram depois da revisão jurídica.
 - Os KPIs do documento são critérios internos de teste e ainda não foram
   medidos.
+
+## D-40 — Admin como consola de trabalho: «Hoje» primeiro, CRM operacional (0019)
+
+O fundador pediu um admin «digno de uma empresa que quer prosperar», ao nível
+das consolas da Palantir e da Bloomberg. O mapa está em `docs/CRM.md`.
+- **`/admin` abre o «Hoje»** (o trabalho de cada pessoa). O painel analítico
+  passa para `/admin/painel`, e cada número leva à lista que o explica.
+- **Escolhas do fundador** (AskUserQuestion, 11/10/2026):
+  - valor, moeda, data prevista de fecho e próxima acção;
+  - motivo de perda obrigatório, de uma lista fechada;
+  - **sem probabilidade nem previsão ponderada**;
+  - dono manual com «Atribuir a mim»;
+  - diagnóstico aprovado ou rejeitado move a oportunidade só se ela estiver em `novo`.
+- **Uma só migração (0019) para o fundador aplicar.** A função de registo das
+  exportações CSV entrou na 0019 (parte 3) antes de esta ser aplicada, em vez
+  de abrir uma 0020.
+- **Sem câmbio:** os valores somam e ordenam por moeda.
+- **Ecrãs que degradam:** sem a 0019, o que dela depende diz «por activar»
+  com o passo que falta. Nunca zeros inventados.
+- **Teclado:** os atalhos de uma tecla desligam-se na ajuda (WCAG 2.1.4).
+
+**Consequência:**
+- Até o fundador aplicar a 0019 (três partes, linha 31 em «ok»), a próxima
+  acção, o valor, o motivo, as paradas, a pesquisa trigram e a exportação
+  ficam «por activar».
+- A auditoria das exportações é de detecção; restringir leituras do papel
+  `leitura` seria uma decisão de RLS.

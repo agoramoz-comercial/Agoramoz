@@ -138,7 +138,9 @@ describe('destino seguro das acções do CRM', () => {
   it('aceita a lista com filtros, uma ficha e o Hoje', () => {
     expect(destinoSeguroCrm('/admin/oportunidades?vista=minhas&modo=quadro', 'x')).toBe('/admin/oportunidades?vista=minhas&modo=quadro');
     expect(destinoSeguroCrm('/admin/oportunidades/00000000-0000-0000-0000-0000000000d1', 'x')).toBe('/admin/oportunidades/00000000-0000-0000-0000-0000000000d1');
-    expect(destinoSeguroCrm('/admin/hoje', 'x')).toBe('/admin/hoje');
+    // O Hoje vive em /admin; /admin/hoje não existe e daria 404.
+    expect(destinoSeguroCrm('/admin', 'x')).toBe('/admin');
+    expect(destinoSeguroCrm('/admin/hoje', 'x')).toBe('x');
   });
   it('recusa tudo o resto', () => {
     for (const mau of ['https://mal.example', '//mal.example', '/admin/equipa', '/admin/oportunidades/../equipa', '/admin/oportunidades?x="><', null]) {

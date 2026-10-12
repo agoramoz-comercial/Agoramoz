@@ -29,14 +29,15 @@ export interface LinhaRecente {
   readonly id: string;
   readonly submitted_at: string;
   readonly contacts: { readonly name: string; readonly email: string } | null;
-  readonly diagnostics:
-    | readonly {
-        readonly id: string;
-        readonly state: string;
-        readonly score: number;
-        readonly tier: string;
-      }[]
-    | null;
+  /** Um-para-um (`unique (response_id)`): o PostgREST devolve objecto; ler com `umDe`. */
+  readonly diagnostics: DiagnosticoRecente | readonly DiagnosticoRecente[] | null;
+}
+
+interface DiagnosticoRecente {
+  readonly id: string;
+  readonly state: string;
+  readonly score: number;
+  readonly tier: string;
 }
 
 export interface ProximaReuniao {

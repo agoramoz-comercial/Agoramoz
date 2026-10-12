@@ -153,7 +153,7 @@ const ECRAS = [
       const valor = async (texto) => (await resumo.getByRole('link', { name: new RegExp(texto) }).innerText()).replace(/\D+/g, '');
       const esperados = { Atrasadas: '1', 'Para hoje': '0', 'Esta semana': '1', Paradas: '1', 'Sem dono': '2', 'Por rever': '2' };
       for (const [t, n] of Object.entries(esperados)) confere((await valor(t)) === n, `indicador «${t}» = ${n}`, `(lido ${await valor(t)})`);
-      confere((await resumo.getByRole('link', { name: /Atrasadas/ }).getAttribute('href')) === '/admin/oportunidades?vista=atrasadas', 'Atrasadas leva à vista do pipeline');
+      confere((await resumo.getByRole('link', { name: /Atrasadas/ }).getAttribute('href')) === '/admin/oportunidades?vista=atrasadas&dono=00000000-0000-4000-8000-0000000000a1', 'Atrasadas leva às minhas atrasadas no pipeline');
       confere((await resumo.getByRole('link', { name: /Por rever/ }).getAttribute('href')) === '/admin/diagnosticos?estado=por-rever', 'Por rever leva aos diagnósticos por rever');
       const triagem = await p.locator('#sem-dono li a').allInnerTexts();
       confere(triagem[0] === 'Exemplo João Muianga', 'triagem: a classificação A primeiro, mesmo sendo mais antiga', `(${triagem.join('|')})`);

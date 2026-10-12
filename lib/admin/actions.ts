@@ -117,15 +117,6 @@ export async function atribuirOportunidade(formData: FormData): Promise<void> {
   );
 }
 
-export async function registarNota(formData: FormData): Promise<void> {
-  const id = idDe(formData, 'id');
-  await chamar(
-    'registar_actividade',
-    { p_deal_id: id, p_tipo: 'nota', p_corpo: String(formData.get('corpo') ?? '') },
-    `/admin/oportunidades/${id}`,
-    'nota',
-  );
-}
 
 // ── Equipa ────────────────────────────────────────────────────────────────
 

@@ -53,8 +53,8 @@ export const FASES_FECHADAS = ['ganho', 'perdido'] as const;
 
 /**
  * Sem actividade há mais de 14 dias, uma oportunidade aberta está parada.
- * É o mesmo critério do Espaço CEnO — um critério interno, não uma regra
- * de mercado; muda-se aqui e vale para todos os ecrãs.
+ * Um critério interno, não uma regra de mercado (o Espaço CEnO usa 7 dias,
+ * de propósito: outro ciclo de venda); muda-se aqui e vale para todo o CRM.
  */
 export const PARADA_DIAS = 14;
 

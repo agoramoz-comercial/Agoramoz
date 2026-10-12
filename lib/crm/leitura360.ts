@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { serverEnv } from '@/lib/config/env';
+import { umDe } from '@/lib/utils/um';
 import type { Fontes, OportunidadeLigada } from './ficha360';
 
 /**
@@ -62,7 +63,8 @@ export async function lerFontes(
   const contexto = new Map(oportunidades.map((o) => [o.id, o.contacto]));
   const nomeContacto = new Map(contactos.map((c) => [c.id, c.nome]));
   const env = serverEnv();
-  const semInqueritos = env.SURVEYS === 'on' || Boolean(env.SURVEY_LINK_SECRET);
+  // Com inquéritos ligados, as respostas a inquéritos (com link) ficam de fora: só diagnósticos.
+  const excluirInqueritos = env.SURVEYS === 'on' || Boolean(env.SURVEY_LINK_SECRET);
 
   const [act, resp] = await Promise.all([
     ids.length
@@ -76,7 +78,7 @@ export async function lerFontes(
     cids.length
       ? (() => {
           const q = sb.from('responses').select('id, submitted_at, contact_id, diagnostics(id, tier, score)').in('contact_id', cids);
-          return (semInqueritos ? q.is('survey_link_id', null) : q).order('submitted_at', { ascending: false }).limit(100);
+          return (excluirInqueritos ? q.is('survey_link_id', null) : q).order('submitted_at', { ascending: false }).limit(100);
         })()
       : Promise.resolve({ data: [], error: null }),
   ]);
@@ -89,11 +91,11 @@ export async function lerFontes(
         ),
     respostas: resp.error
       ? []
-      : ((resp.data ?? []) as unknown as { id: string; submitted_at: string; contact_id: string; diagnostics: { id: string; tier: string; score: number }[] | null }[]).map(
+      : ((resp.data ?? []) as unknown as { id: string; submitted_at: string; contact_id: string; diagnostics: { id: string; tier: string; score: number } | { id: string; tier: string; score: number }[] | null }[]).map(
           (r) => ({
             id: r.id,
             submitted_at: r.submitted_at,
-            diagnostico: r.diagnostics?.[0] ?? null,
+            diagnostico: umDe(r.diagnostics),
             contexto: contactos.length > 1 ? nomeContacto.get(r.contact_id) : undefined,
           }),
         ),

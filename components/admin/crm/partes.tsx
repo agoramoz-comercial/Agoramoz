@@ -5,7 +5,7 @@ import { PASSO_0019 } from '@/lib/crm/activacao';
 
 /**
  * Peças pequenas do CRM, partilhadas pela lista, pelo quadro, pela ficha e
- * (no AA4) pelo Hoje. Nenhuma depende só da cor: o estado da próxima acção é
+ * pelo Hoje. Nenhuma depende só da cor: o estado da próxima acção é
  * sempre dito por extenso, com ícone, para leitores de ecrã e para quem não
  * distingue vermelho.
  */

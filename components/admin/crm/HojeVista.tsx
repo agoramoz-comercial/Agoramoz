@@ -63,10 +63,10 @@ export function HojeVista(d: DadosHoje) {
 
       <nav aria-label="Resumo do dia" className="mb-8">
         <ul role="list" className="grid grid-cols-2 gap-px border border-[color:var(--border)] bg-[color:var(--border)] sm:grid-cols-4 lg:grid-cols-7">
-          <Indicador valor={r.atrasadas} texto="Atrasadas" href="/admin/oportunidades?vista=atrasadas" alerta={r.atrasadas > 0} />
+          <Indicador valor={r.atrasadas} texto="Atrasadas" href={`/admin/oportunidades?vista=atrasadas&dono=${d.eu}`} alerta={r.atrasadas > 0} />
           <Indicador valor={r.hoje} texto="Para hoje" href="#para-hoje" />
           <Indicador valor={r.semana} texto="Esta semana" href="#esta-semana" />
-          <Indicador valor={d.activo ? r.paradas : null} texto="Paradas" href="/admin/oportunidades?vista=paradas" />
+          <Indicador valor={d.activo ? r.paradas : null} texto="Paradas" href={`/admin/oportunidades?vista=paradas&dono=${d.eu}`} />
           <Indicador valor={r.semDono} texto="Sem dono" href="/admin/oportunidades?vista=sem-dono" />
           <Indicador valor={d.porRever ? r.porRever : null} texto="Por rever" href="/admin/diagnosticos?estado=por-rever" />
           <Indicador valor={r.reunioes} texto="Reuniões, 7 dias" href="#reunioes" />
