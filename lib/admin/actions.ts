@@ -24,15 +24,21 @@ import type { NomeRpc } from './rpc';
  * ecrã decide o que mostrar, a base decide o que acontece.
  */
 
+/**
+ * O código `ok` diz ao ecrã de destino QUE acção correu, para a confirmação
+ * ser específica («Fase actualizada.») e não um «Registado.» genérico. É uma
+ * chave, nunca texto: o ecrã só mostra códigos que conhece.
+ */
 async function chamar(
   funcao: NomeRpc,
   argumentos: Record<string, unknown>,
   destino: string,
+  ok = '1',
 ): Promise<never> {
   await executar(funcao, argumentos, destino);
   revalidatePath(destino);
   revalidatePath('/admin');
-  redirect(`${destino}?ok=1`);
+  redirect(`${destino}?ok=${encodeURIComponent(ok)}`);
 }
 
 function idDe(formData: FormData, campo: string): string {
@@ -55,6 +61,7 @@ export async function enviarParaRevisao(formData: FormData): Promise<void> {
     'enviar_para_revisao',
     { p_id: id, p_revision: revisaoDe(formData) },
     `/admin/diagnosticos/${id}`,
+    'em-revisao',
   );
 }
 
@@ -64,6 +71,7 @@ export async function aprovarDiagnostico(formData: FormData): Promise<void> {
     'aprovar_diagnostico',
     { p_id: id, p_revision: revisaoDe(formData) },
     `/admin/diagnosticos/${id}`,
+    'aprovado',
   );
 }
 
@@ -77,6 +85,7 @@ export async function rejeitarDiagnostico(formData: FormData): Promise<void> {
       p_motivo: String(formData.get('motivo') ?? ''),
     },
     `/admin/diagnosticos/${id}`,
+    'rejeitado',
   );
 }
 
@@ -92,6 +101,7 @@ export async function mudarFase(formData: FormData): Promise<void> {
       p_nota: String(formData.get('nota') ?? '') || null,
     },
     `/admin/oportunidades/${id}`,
+    'fase',
   );
 }
 
@@ -102,6 +112,7 @@ export async function atribuirOportunidade(formData: FormData): Promise<void> {
     'atribuir_oportunidade',
     { p_deal_id: id, p_owner: dono === '' ? null : dono },
     `/admin/oportunidades/${id}`,
+    'atribuida',
   );
 }
 
@@ -111,6 +122,7 @@ export async function registarNota(formData: FormData): Promise<void> {
     'registar_actividade',
     { p_deal_id: id, p_tipo: 'nota', p_corpo: String(formData.get('corpo') ?? '') },
     `/admin/oportunidades/${id}`,
+    'nota',
   );
 }
 
@@ -121,6 +133,7 @@ export async function definirPapel(formData: FormData): Promise<void> {
     'definir_papel',
     { p_user: idDe(formData, 'id'), p_papel: String(formData.get('papel') ?? '') },
     '/admin/equipa',
+    'papel',
   );
 }
 
@@ -129,6 +142,7 @@ export async function definirActivo(formData: FormData): Promise<void> {
     'definir_perfil_activo',
     { p_user: idDe(formData, 'id'), p_activo: formData.get('activo') === 'sim' },
     '/admin/equipa',
+    'estado',
   );
 }
 

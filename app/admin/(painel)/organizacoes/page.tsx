@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MemoriaLista } from '@/components/admin/MemoriaLista';
 import {
   AdminHeading,
   DataHora,
@@ -40,6 +41,7 @@ export default async function OrganizacoesPage({
 
   return (
     <>
+      <MemoriaLista chave="organizacoes" />
       <AdminHeading
         titulo="Organizações"
         descricao="Criadas a partir do domínio do correio de trabalho. Domínios de correio pessoal não criam organização — senão «gmail.com» tornava-se uma empresa com dezenas de contactos sem relação nenhuma."

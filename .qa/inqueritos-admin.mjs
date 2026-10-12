@@ -54,7 +54,7 @@ for (const largura of [390, 768, 1440]) {
   confere(r?.status() === 200, 'responde 200', `(${r?.status()})`);
   const larguraDoc = await p.evaluate(() => document.documentElement.scrollWidth);
   confere(larguraDoc <= largura, 'sem scroll horizontal', `${larguraDoc} > ${largura}`);
-  confere((await p.getByRole('link', { name: 'Inquéritos' }).count()) === 1, 'entrada «Inquéritos» na navegação');
+  confere((await p.locator('nav[aria-label="Secções da administração"] a', { hasText: /^Inquéritos$/ }).count()) === 1, 'entrada «Inquéritos» na navegação');
   confere((await p.getByText('Sem alterações').count()) === 1, 'começa sem alterações');
   const guardar = p.getByRole('button', { name: 'Guardar rascunho' });
   const publicar = p.getByRole('button', { name: 'Publicar' });

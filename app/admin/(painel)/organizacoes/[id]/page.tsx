@@ -8,6 +8,8 @@ import {
   StateBadge,
 } from '@/components/admin/primitives';
 import { rotuloDoSetor } from '@/lib/diagnostic/mercado';
+import { VoltarLista } from '@/components/admin/MemoriaLista';
+import { Trilho } from '@/components/admin/Trilho';
 import { FASE_OPORTUNIDADE } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
 
@@ -49,6 +51,10 @@ export default async function OrganizacaoPage({ params }: { params: Promise<{ id
 
   return (
     <>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <Trilho itens={[{ texto: 'Organizações', href: '/admin/organizacoes' }, { texto: o.name }]} />
+        <VoltarLista chave="organizacoes" lista="/admin/organizacoes" texto="Voltar à lista" />
+      </div>
       <AdminHeading titulo={o.name} descricao={o.domain ?? undefined} />
 
       <section className="mb-10">

@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { AdminNav, type Entrada } from '@/components/admin/AdminNav';
+import { AdminNav } from '@/components/admin/AdminNav';
+import { gruposVisiveis } from '@/lib/admin/navegacao';
 import { LimparRascunhos } from '@/components/admin/espaco/LimparRascunhos';
 import { StateBadge } from '@/components/admin/primitives';
 import { Logo } from '@/components/brand/Logo';
@@ -12,21 +13,6 @@ import { sair } from '@/lib/auth/actions';
  * Separada do layout para que a guarda de sessão (`requireStaff`) fique no
  * layout e a pré-visualização de QA use exactamente o mesmo markup.
  */
-
-const ENTRADAS: readonly Entrada[] = [
-  { href: '/admin', texto: 'Painel', icone: 'painel' },
-  { href: '/admin/gabinete', texto: 'Gabinete', icone: 'gabinete' },
-  { href: '/admin/energia', texto: 'Espaço CEnO', icone: 'energia' },
-  { href: '/admin/diagnosticos', texto: 'Diagnósticos', icone: 'diagnosticos' },
-  { href: '/admin/oportunidades', texto: 'Oportunidades', icone: 'oportunidades' },
-  { href: '/admin/contactos', texto: 'Contactos', icone: 'contactos' },
-  { href: '/admin/organizacoes', texto: 'Organizações', icone: 'organizacoes' },
-  { href: '/admin/inqueritos', texto: 'Inquéritos', icone: 'inqueritos' },
-  { href: '/admin/news', texto: 'News', icone: 'news' },
-  { href: '/admin/aquisicao', texto: 'Aquisição', icone: 'aquisicao' },
-  { href: '/admin/fila', texto: 'Fila', icone: 'fila' },
-  { href: '/admin/equipa', texto: 'Equipa', icone: 'equipa' },
-];
 
 export interface SessaoVisivel {
   readonly nome: string;
@@ -56,13 +42,13 @@ export function CascaAdmin({
   direcao?: boolean;
   children: React.ReactNode;
 }) {
-  const entradas = ENTRADAS.filter(
-    (e) =>
-      (inqueritos || e.icone !== 'inqueritos') &&
-      (news || e.icone !== 'news') &&
-      (energia || e.icone !== 'energia') &&
-      (direcao || e.icone !== 'gabinete'),
-  );
+  const grupos = gruposVisiveis({
+    inqueritos,
+    news,
+    energia,
+    direcao,
+    admin: sessao.papel === 'admin',
+  });
   return (
     <div className="flex w-full flex-col lg:flex-row">
       <aside className="border-b border-[color:var(--border)] print:hidden lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
@@ -74,7 +60,7 @@ export function CascaAdmin({
           </Link>
 
           <div className="mt-5 lg:mt-8">
-            <AdminNav entradas={entradas} />
+            <AdminNav grupos={grupos} />
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[color:var(--border)] pt-4 lg:mt-auto lg:block lg:pt-5">

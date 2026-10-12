@@ -99,7 +99,7 @@ for (const largura of [390, 768, 1440]) {
     const larguraDoc = await p.evaluate(() => document.documentElement.scrollWidth);
     confere(larguraDoc <= largura, 'sem scroll horizontal', `${larguraDoc} > ${largura}`);
     confere(
-      (await p.getByRole('link', { name: 'Espaço CEnO' }).count()) >= 1,
+      (await p.locator('nav[aria-label="Secções da administração"] a', { hasText: /^Espaço CEnO$/ }).count()) >= 1,
       'entrada «Espaço CEnO» na navegação (com o módulo)',
     );
     await verifica(p);

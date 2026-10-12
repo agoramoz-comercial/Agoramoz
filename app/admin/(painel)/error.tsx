@@ -30,9 +30,6 @@ export default function ErroDoPainel({
           Tentar de novo
         </Button>
         <Button asChild size="sm" variant="outline">
-          <Link href="/admin/inqueritos">Ir para os inquéritos</Link>
-        </Button>
-        <Button asChild size="sm" variant="outline">
           <Link href="/admin">Ir para o painel</Link>
         </Button>
       </div>

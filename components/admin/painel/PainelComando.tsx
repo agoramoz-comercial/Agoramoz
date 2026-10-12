@@ -65,7 +65,7 @@ function Operacao({ dados }: { dados: DadosPainel }) {
           {
             rotulo: 'Por rever',
             valor: o.porRever,
-            href: '/admin/diagnosticos?estado=pending_review',
+            href: '/admin/diagnosticos?estado=por-rever',
             icone: Inbox,
             alerta: false,
           },
@@ -506,7 +506,7 @@ export function PainelComando({ dados }: { dados: DadosPainel }) {
         <div>
           <h1 className="text-[length:var(--text-h3)] tracking-[-0.02em]">Painel</h1>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
-            Últimos {dados.periodo} dias (hoje incluído, hora de Maputo), comparados com os
+            Últimos {dados.periodo} dias (hoje incluído, hora de Maputo), comparados com os{' '}
             {dados.periodo} anteriores.
           </p>
         </div>

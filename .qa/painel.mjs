@@ -103,6 +103,24 @@ for (const largura of [390, 768, 1440]) {
   linhas === 30 ? ok('tabela do gráfico com 30 dias') : falha(`tabela com ${linhas} linhas`);
 
   await axe(p, 'painel com dados');
+  // Navegação agrupada: no telemóvel é uma gaveta; no ecrã largo está sempre aberta.
+  const nav = p.locator('nav[aria-label="Secções da administração"]');
+  const grupos = await nav.locator('p').allTextContents();
+  grupos.join('|').includes('Comercial') ? ok(`navegação agrupada: ${grupos.join(' · ')}`) : falha(`grupos: ${grupos.join(' · ')}`);
+  if (largura < 1024) {
+    const botao = nav.getByRole('button');
+    (await nav.getByRole('link', { name: 'Pipeline' }).isVisible()) ? falha('gaveta aberta sem pedir') : ok('gaveta fechada ao entrar');
+    await botao.click();
+    (await botao.getAttribute('aria-expanded')) === 'true' && (await nav.getByRole('link', { name: 'Pipeline' }).isVisible())
+      ? ok('gaveta abre e mostra as secções')
+      : falha('gaveta não abriu');
+    await axe(p, 'gaveta aberta');
+    await p.keyboard.press('Escape');
+    (await botao.getAttribute('aria-expanded')) === 'false' ? ok('Escape fecha a gaveta') : falha('Escape não fechou');
+  } else {
+    (await nav.getByRole('link', { name: 'Pipeline' }).isVisible()) ? ok('secções visíveis no ecrã largo') : falha('secções escondidas no ecrã largo');
+  }
+
   await p.screenshot({ path: `${SAIDA}/painel-${largura}.png`, fullPage: true });
 
   if (largura === 1440) {

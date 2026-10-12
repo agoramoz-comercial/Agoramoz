@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Briefcase,
   Building2,
+  ChevronDown,
   ClipboardCheck,
+  History,
   Inbox,
   KeyRound,
   Landmark,
@@ -14,6 +16,7 @@ import {
   ListChecks,
   Newspaper,
   Radar,
+  Sun,
   UserCog,
   Users,
   Zap,
@@ -22,15 +25,16 @@ import {
 import { cn } from '@/lib/utils/cn';
 
 /**
- * A navegação é o único componente de cliente do admin, e existe por uma razão
- * concreta: `aria-current="page"` precisa de saber onde estamos, e um layout
- * de servidor não sabe o caminho. O resto do admin renderiza sem JavaScript.
+ * A navegação é um componente de cliente por duas razões concretas:
+ * `aria-current="page"` precisa de saber onde estamos (um layout de servidor
+ * não sabe o caminho) e, no telemóvel, a lista abre e fecha como gaveta.
  *
  * O ícone viaja como chave e não como componente: uma função não atravessa a
  * fronteira servidor → cliente.
  */
 
 const ICONES = {
+  hoje: Sun,
   painel: LayoutDashboard,
   diagnosticos: ClipboardCheck,
   oportunidades: Briefcase,
@@ -41,6 +45,7 @@ const ICONES = {
   news: Newspaper,
   fila: Inbox,
   equipa: UserCog,
+  auditoria: History,
   energia: Zap,
   gabinete: Landmark,
   conta: KeyRound,
@@ -52,44 +57,91 @@ export interface Entrada {
   readonly icone: keyof typeof ICONES;
 }
 
-export function AdminNav({ entradas }: { entradas: readonly Entrada[] }) {
-  const caminho = usePathname();
-  const nav = useRef<HTMLElement>(null);
+export interface GrupoNav {
+  readonly titulo: string;
+  readonly entradas: readonly Entrada[];
+}
 
-  // No telemóvel a navegação é uma linha com scroll: traz a secção activa
-  // para dentro do ecrã. `nearest` nos dois eixos não mexe na página.
+/** `/admin` só é a página activa quando é exactamente ela; as outras contam os filhos. */
+export function estaActiva(href: string, caminho: string): boolean {
+  if (href === '/admin') return caminho === '/admin';
+  return caminho === href || caminho.startsWith(`${href}/`);
+}
+
+export function AdminNav({ grupos }: { grupos: readonly GrupoNav[] }) {
+  const caminho = usePathname();
+  const [aberta, setAberta] = useState(false);
+  const [vistoEm, setVistoEm] = useState(caminho);
+  const idLista = useId();
+
+  // Ao mudar de página, a gaveta fecha-se: ficar aberta tapava o ecrã novo.
+  // Ajuste durante a renderização (padrão do React) em vez de um efeito.
+  if (vistoEm !== caminho) {
+    setVistoEm(caminho);
+    setAberta(false);
+  }
+
   useEffect(() => {
-    nav.current
-      ?.querySelector('[aria-current="page"]')
-      ?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
-  }, [caminho]);
+    if (!aberta) return;
+    function fechar(e: KeyboardEvent) {
+      if (e.key === 'Escape') setAberta(false);
+    }
+    document.addEventListener('keydown', fechar);
+    return () => document.removeEventListener('keydown', fechar);
+  }, [aberta]);
+
+  const actual = grupos.flatMap((g) => g.entradas).find((e) => estaActiva(e.href, caminho));
 
   return (
-    <nav
-      ref={nav}
-      aria-label="Secções da administração"
-      className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0"
-    >
-      {entradas.map((e) => {
-        const activo = e.href === '/admin' ? caminho === '/admin' : caminho.startsWith(e.href);
-        const Icone = ICONES[e.icone];
-        return (
-          <Link
-            key={e.href}
-            href={e.href}
-            aria-current={activo ? 'page' : undefined}
-            className={cn(
-              'flex min-h-11 shrink-0 items-center gap-3 rounded-[--radius-xs] px-3 text-sm whitespace-nowrap',
-              activo
-                ? 'bg-[color:var(--on-surface)] font-medium text-[color:var(--surface)]'
-                : 'text-[color:var(--muted)] hover:bg-[color:var(--surface-raised)] hover:text-[color:var(--on-surface)]',
-            )}
-          >
-            <Icone aria-hidden className="size-4 shrink-0" />
-            {e.texto}
-          </Link>
-        );
-      })}
+    <nav aria-label="Secções da administração">
+      {/* Só no telemóvel: a lista inteira não cabe ao alto, e uma linha com
+          scroll horizontal escondia metade das secções. */}
+      <button
+        type="button"
+        aria-expanded={aberta}
+        aria-controls={idLista}
+        onClick={() => setAberta((v) => !v)}
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-[--radius-xs] border border-[color:var(--border)] px-3 text-sm lg:hidden"
+      >
+        <span>
+          <span className="sr-only">Secções. Actual: </span>
+          {actual?.texto ?? 'Secções'}
+        </span>
+        <ChevronDown aria-hidden className={cn('size-4 transition-transform', aberta && 'rotate-180')} />
+      </button>
+
+      <div id={idLista} className={cn('mt-3 flex-col gap-5 lg:mt-0 lg:flex', aberta ? 'flex' : 'hidden')}>
+        {grupos.map((g) => (
+          <div key={g.titulo}>
+            <p className="mb-1.5 px-3 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
+              {g.titulo}
+            </p>
+            <ul role="list" className="flex flex-col gap-0.5">
+              {g.entradas.map((e) => {
+                const activo = estaActiva(e.href, caminho);
+                const Icone = ICONES[e.icone];
+                return (
+                  <li key={e.href}>
+                    <Link
+                      href={e.href}
+                      aria-current={activo ? 'page' : undefined}
+                      className={cn(
+                        'flex min-h-10 items-center gap-3 rounded-[--radius-xs] px-3 text-sm whitespace-nowrap',
+                        activo
+                          ? 'bg-[color:var(--on-surface)] font-medium text-[color:var(--surface)]'
+                          : 'text-[color:var(--muted)] hover:bg-[color:var(--surface-raised)] hover:text-[color:var(--on-surface)]',
+                      )}
+                    >
+                      <Icone aria-hidden className="size-4 shrink-0" />
+                      {e.texto}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
     </nav>
   );
 }

@@ -150,7 +150,7 @@ for (const largura of [390, 768, 1440]) {
     confere(r?.status() === 200, 'responde 200', `(${r?.status()})`);
     const larguraDoc = await p.evaluate(() => document.documentElement.scrollWidth);
     confere(larguraDoc <= largura, 'sem scroll horizontal', `${larguraDoc} > ${largura}`);
-    confere((await p.getByRole('link', { name: 'Gabinete', exact: true }).count()) >= 1, 'entrada «Gabinete» na navegação (com o módulo)');
+    confere((await p.locator('nav[aria-label="Secções da administração"] a', { hasText: /^Gabinete$/ }).count()) >= 1, 'entrada «Gabinete» na navegação (com o módulo)');
     confere((await p.getByRole('link', { name: 'Espaço CEnO' }).count()) === 0, 'sem o módulo energia, sem «Espaço CEnO»');
     confere((await p.getByRole('heading', { level: 1 }).count()) === 1, 'um só h1');
     await verifica(p);

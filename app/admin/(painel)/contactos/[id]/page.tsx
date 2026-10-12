@@ -7,6 +7,8 @@ import {
   EmptyState,
   StateBadge,
 } from '@/components/admin/primitives';
+import { VoltarLista } from '@/components/admin/MemoriaLista';
+import { Trilho } from '@/components/admin/Trilho';
 import { ESTADO_DIAGNOSTICO, FASE_OPORTUNIDADE } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
 import { serverEnv } from '@/lib/config/env';
@@ -61,6 +63,10 @@ export default async function ContactoPage({ params }: { params: Promise<{ id: s
 
   return (
     <>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <Trilho itens={[{ texto: 'Contactos', href: '/admin/contactos' }, { texto: c.name }]} />
+        <VoltarLista chave="contactos" lista="/admin/contactos" texto="Voltar à lista" />
+      </div>
       <AdminHeading titulo={c.name} descricao={c.email} />
 
       <section className="mb-10">

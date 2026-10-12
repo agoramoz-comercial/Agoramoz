@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MemoriaLista } from '@/components/admin/MemoriaLista';
 import {
   AdminHeading,
   DataHora,
@@ -50,6 +51,7 @@ export default async function ContactosPage({
 
   return (
     <>
+      <MemoriaLista chave="contactos" />
       <AdminHeading titulo="Contactos" descricao="Quem respondeu ao diagnóstico." />
 
       <form method="get" className="mb-6 flex flex-wrap items-end gap-3">

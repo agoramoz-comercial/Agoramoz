@@ -183,3 +183,11 @@ export const ESTADO_ARTIGO: Record<'rascunho' | 'publicado' | 'arquivado', Rotul
   publicado: { texto: 'Publicado', tom: 'bom', nota: 'No jornal, aberto a gostos e partilhas.' },
   arquivado: { texto: 'Arquivado', tom: 'aviso', nota: 'Saiu do jornal; o endereço deixa de abrir.' },
 };
+
+/**
+ * A fila de decisão humana: diagnósticos calculados (ainda por enviar) e os
+ * já em revisão. O painel conta isto em «Por rever» e a lista filtra
+ * exactamente o mesmo — uma só definição para os dois.
+ */
+export const ESTADOS_POR_REVER = ['computed', 'pending_review'] as const;
+export const POR_REVER = 'por-rever';

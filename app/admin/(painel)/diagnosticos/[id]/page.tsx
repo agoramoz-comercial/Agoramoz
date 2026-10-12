@@ -7,7 +7,11 @@ import {
   EmptyState,
   StateBadge,
 } from '@/components/admin/primitives';
-import { Button } from '@/components/ui/Button';
+import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
+import { ConfirmarEnvio } from '@/components/admin/ConfirmarEnvio';
+import { Feedback } from '@/components/admin/Feedback';
+import { VoltarLista } from '@/components/admin/MemoriaLista';
+import { Trilho } from '@/components/admin/Trilho';
 import {
   ACHADO,
   CLASSIFICACAO,
@@ -143,25 +147,26 @@ export default async function RevisaoPage({
 
   return (
     <>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <Trilho itens={[{ texto: 'Diagnósticos', href: '/admin/diagnosticos' }, { texto: contacto?.name ?? 'Diagnóstico' }]} />
+        <VoltarLista chave="diagnosticos" lista="/admin/diagnosticos" texto="Voltar à lista" />
+      </div>
       <AdminHeading
         titulo="Rever diagnóstico"
         descricao="Aprovar significa: este diagnóstico está correcto e pode seguir. Não existe ainda texto redigido nem documento — o que se aprova são os achados e a classificação."
         accao={<StateBadge rotulo={ESTADO_DIAGNOSTICO[estado]} />}
       />
 
-      {erro ? (
-        <p
-          role="alert"
-          className="mb-6 border border-[color:var(--color-signal-600)] px-4 py-3 text-sm text-[color:var(--color-signal-600)]"
-        >
-          {erro}
-        </p>
-      ) : null}
-      {ok ? (
-        <p role="status" className="mb-6 border border-[color:var(--border)] px-4 py-3 text-sm">
-          Acção registada.
-        </p>
-      ) : null}
+      <Feedback
+        erro={erro}
+        ok={ok}
+        textos={{
+          'em-revisao': 'Enviado para revisão. Já pode aprovar ou rejeitar.',
+          aprovado: 'Diagnóstico aprovado.',
+          rejeitado: 'Diagnóstico rejeitado. O motivo ficou registado.',
+          '1': 'Acção registada.',
+        }}
+      />
 
       <section aria-labelledby="resumo" className="mb-10">
         <h2 id="resumo" className="sr-only">
@@ -341,9 +346,9 @@ export default async function RevisaoPage({
           <form action={enviarParaRevisao} className="flex flex-wrap items-center gap-3">
             <input type="hidden" name="id" value={diagnostico.id as string} />
             <input type="hidden" name="revision" value={String(diagnostico.revision)} />
-            <Button type="submit" variant="solid">
+            <BotaoEnviar variant="solid" aEnviar="A enviar…">
               Enviar para revisão
-            </Button>
+            </BotaoEnviar>
             <span className="text-sm text-[color:var(--muted)]">
               Passa a constar da fila de decisão.
             </span>
@@ -353,9 +358,9 @@ export default async function RevisaoPage({
             <form action={aprovarDiagnostico} className="lg:w-64">
               <input type="hidden" name="id" value={diagnostico.id as string} />
               <input type="hidden" name="revision" value={String(diagnostico.revision)} />
-              <Button type="submit" variant="solid" className="w-full">
+              <BotaoEnviar variant="solid" className="w-full" aEnviar="A aprovar…">
                 Aprovar
-              </Button>
+              </BotaoEnviar>
               <p className="mt-2 text-xs text-[color:var(--muted)]">
                 Fica registado quem aprovou e quando. De aprovado só se sai por revogação.
               </p>
@@ -378,9 +383,11 @@ export default async function RevisaoPage({
               <p className="mt-1 text-xs text-[color:var(--muted)]">
                 Obrigatório. Uma rejeição sem motivo é inútil para quem a ler depois.
               </p>
-              <Button type="submit" variant="outline" className="mt-3">
-                Rejeitar
-              </Button>
+              <div className="mt-3">
+                <ConfirmarEnvio pergunta="Rejeitar este diagnóstico?" confirmar="Sim, rejeitar" aEnviar="A rejeitar…">
+                  Rejeitar
+                </ConfirmarEnvio>
+              </div>
             </form>
           </div>
         ) : (

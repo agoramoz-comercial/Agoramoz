@@ -7,7 +7,10 @@ import {
   EmptyState,
   StateBadge,
 } from '@/components/admin/primitives';
-import { Button } from '@/components/ui/Button';
+import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
+import { Feedback } from '@/components/admin/Feedback';
+import { VoltarLista } from '@/components/admin/MemoriaLista';
+import { Trilho } from '@/components/admin/Trilho';
 import { atribuirOportunidade, mudarFase, registarNota } from '@/lib/admin/actions';
 import { CANAL, CLASSIFICACAO, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE } from '@/lib/admin/labels';
 import type { Canal } from '@/lib/attribution/types';
@@ -95,25 +98,26 @@ export default async function OportunidadePage({
 
   return (
     <>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <Trilho itens={[{ texto: 'Pipeline', href: '/admin/oportunidades' }, { texto: d.contacts?.name ?? 'Oportunidade' }]} />
+        <VoltarLista chave="oportunidades" lista="/admin/oportunidades" texto="Voltar ao pipeline" />
+      </div>
       <AdminHeading
         titulo={d.contacts?.name ?? 'Oportunidade'}
         descricao={d.organisations?.name}
         accao={<StateBadge rotulo={FASE_OPORTUNIDADE[d.stage as keyof typeof FASE_OPORTUNIDADE]} />}
       />
 
-      {erro ? (
-        <p
-          role="alert"
-          className="mb-6 border border-[color:var(--color-signal-600)] px-4 py-3 text-sm text-[color:var(--color-signal-600)]"
-        >
-          {erro}
-        </p>
-      ) : null}
-      {ok ? (
-        <p role="status" className="mb-6 border border-[color:var(--border)] px-4 py-3 text-sm">
-          Registado.
-        </p>
-      ) : null}
+      <Feedback
+        erro={erro}
+        ok={ok}
+        textos={{
+          fase: 'Fase actualizada.',
+          atribuida: 'Responsável actualizado.',
+          nota: 'Nota registada na cronologia.',
+          '1': 'Registado.',
+        }}
+      />
 
       <section className="mb-10">
         <DefinitionList
@@ -203,9 +207,9 @@ export default async function OportunidadePage({
               name="nota"
               className="mt-1 min-h-11 w-full rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm" className="mt-4">
+            <BotaoEnviar variant="outline" size="sm" className="mt-4" aEnviar="A guardar…">
               Guardar fase
-            </Button>
+            </BotaoEnviar>
           </form>
 
           <form action={atribuirOportunidade} className="border border-[color:var(--border)] p-5">
@@ -231,9 +235,9 @@ export default async function OportunidadePage({
               Só perfis activos. Atribuir a quem não tem acesso é deixar a oportunidade sem dono
               efectivo.
             </p>
-            <Button type="submit" variant="outline" size="sm" className="mt-4">
+            <BotaoEnviar variant="outline" size="sm" className="mt-4" aEnviar="A atribuir…">
               Atribuir
-            </Button>
+            </BotaoEnviar>
           </form>
 
           <form
@@ -251,9 +255,9 @@ export default async function OportunidadePage({
               required
               className="mt-2 w-full rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-sm"
             />
-            <Button type="submit" variant="outline" size="sm" className="mt-3">
+            <BotaoEnviar variant="outline" size="sm" className="mt-3" aEnviar="A registar…">
               Registar nota
-            </Button>
+            </BotaoEnviar>
           </form>
         </section>
       ) : (

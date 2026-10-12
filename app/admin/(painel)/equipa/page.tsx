@@ -1,5 +1,7 @@
 import { AdminHeading, DataHora, EmptyState, StateBadge } from '@/components/admin/primitives';
-import { Button } from '@/components/ui/Button';
+import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
+import { ConfirmarEnvio } from '@/components/admin/ConfirmarEnvio';
+import { Feedback } from '@/components/admin/Feedback';
 import { definirActivo, definirPapel } from '@/lib/admin/actions';
 import { PAPEL } from '@/lib/admin/labels';
 import { createSessionClient } from '@/lib/auth/client';
@@ -45,19 +47,11 @@ export default async function EquipaPage({
         descricao="As contas criam-se no painel do Supabase; aqui decide-se o que cada uma pode fazer."
       />
 
-      {erro ? (
-        <p
-          role="alert"
-          className="mb-6 border border-[color:var(--color-signal-600)] px-4 py-3 text-sm text-[color:var(--color-signal-600)]"
-        >
-          {erro}
-        </p>
-      ) : null}
-      {ok ? (
-        <p role="status" className="mb-6 border border-[color:var(--border)] px-4 py-3 text-sm">
-          Registado.
-        </p>
-      ) : null}
+      <Feedback
+        erro={erro}
+        ok={ok}
+        textos={{ papel: 'Papel actualizado.', estado: 'Acesso actualizado.', '1': 'Registado.' }}
+      />
 
       {!admin ? (
         <p className="mb-8 text-sm text-[color:var(--muted)]">
@@ -114,18 +108,29 @@ export default async function EquipaPage({
                           </option>
                         ))}
                       </select>
-                      <Button type="submit" variant="outline" size="sm">
+                      <BotaoEnviar variant="outline" size="sm" aEnviar="A guardar…">
                         Guardar
-                      </Button>
+                      </BotaoEnviar>
                     </form>
 
                     {p.id !== sessao.userId ? (
                       <form action={definirActivo}>
                         <input type="hidden" name="id" value={p.id} />
                         <input type="hidden" name="activo" value={p.active ? 'nao' : 'sim'} />
-                        <Button type="submit" variant="ghost" size="sm">
-                          {p.active ? 'Desactivar' : 'Reactivar'}
-                        </Button>
+                        {p.active ? (
+                          <ConfirmarEnvio
+                            variant="ghost"
+                            pergunta={`Desactivar ${p.display_name}? Perde o acesso ao admin.`}
+                            confirmar="Sim, desactivar"
+                            aEnviar="A desactivar…"
+                          >
+                            Desactivar
+                          </ConfirmarEnvio>
+                        ) : (
+                          <BotaoEnviar variant="ghost" size="sm" aEnviar="A reactivar…">
+                            Reactivar
+                          </BotaoEnviar>
+                        )}
                       </form>
                     ) : null}
                   </>

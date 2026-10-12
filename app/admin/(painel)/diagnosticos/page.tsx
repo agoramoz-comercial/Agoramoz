@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MemoriaLista } from '@/components/admin/MemoriaLista';
 import {
   AdminHeading,
   DataHora,
@@ -8,7 +9,7 @@ import {
   StateBadge,
 } from '@/components/admin/primitives';
 import { DIAGNOSTIC_STATES } from '@/lib/diagnostic/types';
-import { CLASSIFICACAO, ESTADO_DIAGNOSTICO } from '@/lib/admin/labels';
+import { CLASSIFICACAO, ESTADO_DIAGNOSTICO, ESTADOS_POR_REVER, POR_REVER } from '@/lib/admin/labels';
 import { fatiar, intervalo } from '@/lib/admin/paginacao';
 import { createSessionClient } from '@/lib/auth/client';
 
@@ -33,7 +34,11 @@ export default async function DiagnosticosPage({
 
   // Só um valor do enum passa. Um parâmetro de URL é entrada não confiável, e
   // isto evita mandar texto arbitrário para o filtro.
-  const filtro = DIAGNOSTIC_STATES.includes(estado as never) ? estado : undefined;
+  // «por-rever» é a fila de decisão: calculados e já enviados para revisão.
+  // É o mesmo critério que o painel conta em «Por rever», para o número e a
+  // lista nunca divergirem.
+  const porRever = estado === POR_REVER;
+  const filtro = porRever ? POR_REVER : DIAGNOSTIC_STATES.includes(estado as never) ? estado : undefined;
 
   const supabase = await createSessionClient();
   let consulta = supabase
@@ -42,13 +47,15 @@ export default async function DiagnosticosPage({
     .order('created_at', { ascending: false })
     .range(de, ate);
 
-  if (filtro) consulta = consulta.eq('state', filtro);
+  if (porRever) consulta = consulta.in('state', [...ESTADOS_POR_REVER]);
+  else if (filtro) consulta = consulta.eq('state', filtro);
 
   const { data } = await consulta;
   const { linhas, haMais } = fatiar(data as unknown as Linha[] | null);
 
   return (
     <>
+      <MemoriaLista chave="diagnosticos" />
       <AdminHeading
         titulo="Diagnósticos"
         descricao="Cada submissão produz um diagnóstico. Nenhum segue sem decisão humana."
@@ -67,6 +74,7 @@ export default async function DiagnosticosPage({
             className="min-h-11 rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3"
           >
             <option value="">Todos</option>
+            <option value={POR_REVER}>Por rever (fila de decisão)</option>
             {DIAGNOSTIC_STATES.map((e) => (
               <option key={e} value={e}>
                 {ESTADO_DIAGNOSTICO[e].texto}

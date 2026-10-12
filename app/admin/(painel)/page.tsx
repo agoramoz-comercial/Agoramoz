@@ -1,3 +1,4 @@
+import { Feedback } from '@/components/admin/Feedback';
 import { PainelComando } from '@/components/admin/painel/PainelComando';
 import { janela, lerPeriodo } from '@/lib/admin/painel';
 import { carregarPainel, type Ligacoes } from '@/lib/admin/painel-dados';
@@ -26,9 +27,9 @@ async function agora(): Promise<Date> {
 export default async function PainelPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string }>;
+  searchParams: Promise<{ periodo?: string; erro?: string }>;
 }) {
-  const { periodo } = await searchParams;
+  const { periodo, erro } = await searchParams;
   const env = serverEnv();
   const ligacoes: Ligacoes = {
     pixel: env.ANALYTICS_PERSISTENCE === 'on',
@@ -46,5 +47,12 @@ export default async function PainelPage({
     ligacoes,
   );
 
-  return <PainelComando dados={dados} />;
+  // Acções que falham antes de saber o destino (pedido inválido) voltam aqui
+  // com `?erro=`; antes ninguém o mostrava.
+  return (
+    <>
+      <Feedback erro={erro} textos={{}} />
+      <PainelComando dados={dados} />
+    </>
+  );
 }

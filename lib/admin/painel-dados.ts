@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ESTADOS_POR_REVER } from '@/lib/admin/labels';
 import { CANAIS, type Canal } from '@/lib/attribution/types';
 import { FASES_OPORTUNIDADE, type FaseOportunidade } from '@/lib/admin/labels';
 import { CARTOES, type CartaoId } from '@/lib/forms/lead-schema';
@@ -372,7 +373,7 @@ export async function carregarPainel(
     bloco(async () => {
       const [porRever, fila, semSaida] = await Promise.all([
         contagem(
-          sb.from('diagnostics').select('*', cabeca).in('state', ['computed', 'pending_review']),
+          sb.from('diagnostics').select('*', cabeca).in('state', [...ESTADOS_POR_REVER]),
         ),
         contagem(sb.from('outbox_events').select('*', cabeca).in('status', ['pending', 'failed'])),
         contagem(sb.from('outbox_events').select('*', cabeca).eq('status', 'dead')),

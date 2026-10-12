@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MemoriaLista } from '@/components/admin/MemoriaLista';
 import {
   AdminHeading,
   DataHora,
@@ -65,6 +66,7 @@ export default async function OportunidadesPage({
 
   return (
     <>
+      <MemoriaLista chave="oportunidades" />
       <AdminHeading
         titulo="Oportunidades"
         descricao="Uma por submissão que a política do questionário determina. Uma repetição da mesma resposta não cria uma segunda."
