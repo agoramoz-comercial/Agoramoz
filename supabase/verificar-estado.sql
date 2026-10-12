@@ -11,7 +11,8 @@
 -- Copie a tabela inteira e envie. As linhas 18, 19 e 20 são as decisivas
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
 -- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News), a 29 para
--- 0017 (Espaço CEnO), a 30 para 0018 (Gabinete do Fundador).
+-- 0017 (Espaço CEnO), a 30 para 0018 (Gabinete do Fundador), a 31 para 0019
+-- (CRM operacional).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -312,5 +313,35 @@ select 30, 'gabinete', 'Gabinete do Fundador: módulo direcao, tabelas privadas 
                       and pg_get_expr(pol.polqual, pol.polrelid) like '%gabinete%'
                  )
                  then 'ATENCAO - protecção incompleta; correr aplicar-0018-parte1.sql e parte2.sql de novo'
+            else 'ok' end
+-- 0019: CRM operacional — próxima acção, valor, motivo de perda, pesquisa.
+union all
+select 31, 'crm', 'CRM operacional: próxima acção, valor, motivo de perda e pesquisa (0019)',
+       case when not exists (
+                   select 1 from pg_attribute a
+                    where a.attrelid = 'public.deals'::regclass and a.attname = 'proxima_accao' and not a.attisdropped)
+                 or not exists (
+                   select 1 from pg_attribute a
+                    where a.attrelid = 'public.deals'::regclass and a.attname = 'motivo_perda' and not a.attisdropped)
+                 then 'EM FALTA - correr aplicar-0019-parte1.sql'
+            when to_regprocedure('public.marcar_perdida(uuid, text, text)') is null
+                 or to_regprocedure('public.pesquisar_global(text)') is null
+                 or not exists (
+                   select 1 from pg_proc p
+                    where p.oid = to_regprocedure('public.mudar_fase_oportunidade(uuid, text, text)')
+                      and p.prosrc like '%Para marcar como perdida%')
+                 then 'EM FALTA - correr aplicar-0019-parte2.sql'
+            when exists (
+                   select 1 from pg_proc p
+                    where p.pronamespace = 'public'::regnamespace
+                      and p.proname in ('definir_proxima_accao', 'guardar_oportunidade_crm', 'marcar_perdida',
+                                        'mudar_fase_oportunidade', 'registar_actividade', 'pesquisar_global')
+                      and has_function_privilege('anon', p.oid, 'execute'))
+                 or exists (
+                   select 1 from pg_proc p
+                    where p.pronamespace = 'public'::regnamespace
+                      and p.proname in ('definir_proxima_accao', 'guardar_oportunidade_crm', 'marcar_perdida')
+                      and not ('lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))))
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0019-parte1.sql e parte2.sql de novo'
             else 'ok' end
 order by ordem;
