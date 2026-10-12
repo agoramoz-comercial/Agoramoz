@@ -2,7 +2,7 @@ import { createSessionClient } from '@/lib/auth/client';
 import { currentSession, podeEscrever } from '@/lib/auth/session';
 import { crmOperacional } from '@/lib/crm/activacao';
 import { csvOportunidades } from '@/lib/crm/csv';
-import { entregarComAuditoria, texto } from '@/lib/crm/exportar';
+import { entregarComAuditoria, recusarPedido, texto } from '@/lib/crm/exportar';
 import { lerEquipa, lerOportunidades } from '@/lib/crm/leitura';
 import { aplicarVista, lerFiltros, ordenar } from '@/lib/crm/pipeline';
 
@@ -20,6 +20,8 @@ export async function GET(pedido: Request) {
   const sessao = await currentSession();
   if (!sessao) return texto(404, 'Não encontrado.');
   if (!podeEscrever(sessao.papel)) return texto(403, 'O seu papel não permite exportar.');
+  const recusa = recusarPedido(pedido, sessao.userId);
+  if (recusa) return recusa;
 
   const f = lerFiltros(Object.fromEntries(new URL(pedido.url).searchParams));
   const sb = await createSessionClient();

@@ -24,7 +24,7 @@ const SPEC = specInquerito.parse({
 
 describe('células', () => {
   it('fórmulas ficam texto: =, +, -, @, tabulação e retorno', () => {
-    for (const perigoso of ['=SUM(A1)', '+1', '-1+1', '@cmd', '\tx', '\rx']) {
+    for (const perigoso of ['=SUM(A1)', '+1', '-1+1', '@cmd', '\tx', '\rx', '\nx']) {
       expect(celula(perigoso).replace(/^"/, '').startsWith("'")).toBe(true);
     }
     expect(celula('normal')).toBe('normal');

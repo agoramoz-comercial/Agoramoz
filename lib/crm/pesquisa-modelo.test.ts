@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { limparTermo, normalizarResultado, padraoLike, totalDe, VAZIO } from './pesquisa-modelo';
+import { limparTermo, normalizarResultado, padraoLike, termoContactos, totalDe, VAZIO } from './pesquisa-modelo';
 
 const ID = '00000000-0000-4000-8000-000000000001';
 
@@ -10,6 +10,12 @@ describe('termo da pesquisa', () => {
     expect(limparTermo(' ')).toBeNull();
     expect(limparTermo(42)).toBeNull();
     expect(limparTermo('x'.repeat(200))).toHaveLength(80);
+  });
+
+  it('procura de contactos: sem separadores do PostgREST nem curingas, até 80', () => {
+    expect(termoContactos('a,b) or(c_d*e%f\\')).toBe('a b or c d e f');
+    expect(termoContactos(null)).toBe('');
+    expect(termoContactos('x'.repeat(100))).toHaveLength(80);
   });
 
   it('escapa os metacaracteres do LIKE', () => {

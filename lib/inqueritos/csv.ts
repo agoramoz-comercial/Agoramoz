@@ -8,14 +8,14 @@ import { temResposta, type Pergunta, type SpecInquerito } from './spec';
  * UTF-8, para os acentos sobreviverem ao Excel.
  *
  * Injecção de fórmulas: uma resposta é texto escrito por quem quer que tenha
- * o link. Uma célula que comece por `=`, `+`, `-`, `@`, tabulação ou retorno
+ * o link. Uma célula que comece por `=`, `+`, `-`, `@`, tabulação, retorno ou mudança de linha
  * é prefixada com `'`, para a folha de cálculo a mostrar como texto em vez de
  * a executar.
  */
 
 export const SEPARADOR = ';';
 export const BOM = '﻿';
-const PERIGOSOS = /^[=+\-@\t\r]/;
+const PERIGOSOS = /^[=+\-@\t\r\n]/;
 
 export function celula(valor: string): string {
   const seguro = PERIGOSOS.test(valor) ? `'${valor}` : valor;

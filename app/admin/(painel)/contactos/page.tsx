@@ -10,6 +10,7 @@ import {
 import { fatiar, intervalo } from '@/lib/admin/paginacao';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
+import { termoContactos } from '@/lib/crm/pesquisa-modelo';
 
 export const metadata = { title: 'Contactos' };
 
@@ -28,7 +29,7 @@ export default async function ContactosPage({
 }) {
   const { pagina: paginaBruta, q } = await searchParams;
   const { pagina, de, ate } = intervalo(paginaBruta);
-  const procura = (q ?? '').trim();
+  const procura = termoContactos(q);
 
   const sessao = await requireStaff();
   const supabase = await createSessionClient();
@@ -39,13 +40,8 @@ export default async function ContactosPage({
     .range(de, ate);
 
   if (procura) {
-    /**
-     * `%` e `,` são escapados: no PostgREST, uma vírgula separa condições
-     * dentro de `or(...)`, pelo que um termo de procura com vírgula alteraria
-     * a consulta em vez de ser procurado.
-     */
-    const termo = procura.replace(/[%,()]/g, ' ');
-    consulta = consulta.or(`name.ilike.%${termo}%,email.ilike.%${termo}%`);
+    // `termoContactos` já retirou o que mudaria a consulta do PostgREST (`,`, parênteses) e os curingas.
+    consulta = consulta.or(`name.ilike.%${procura}%,email.ilike.%${procura}%`);
   }
 
   const { data } = await consulta;

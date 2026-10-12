@@ -16,6 +16,15 @@ export function limparTermo(q: unknown): string | null {
   return t.length >= MIN_TERMO ? t : null;
 }
 
+/**
+ * O termo da procura de contactos (lista e exportação), igual nos dois sítios.
+ * Vai dentro de `or(...)` do PostgREST: `,` e parênteses mudariam a consulta,
+ * e `%`, `_`, `*` e `\` são curingas ou escapes — saem todos.
+ */
+export function termoContactos(q: unknown): string {
+  return typeof q === 'string' ? q.replace(/[%,()_*\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, MAX_TERMO) : '';
+}
+
 /** Escapa os metacaracteres do LIKE (`\`, `%`, `_`): o termo procura-se tal como foi escrito. */
 export function padraoLike(termo: string): string {
   return `%${termo.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;

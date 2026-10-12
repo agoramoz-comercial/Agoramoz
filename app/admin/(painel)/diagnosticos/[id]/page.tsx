@@ -456,6 +456,7 @@ export default async function RevisaoPage({
         <Historico
           entradas={(historico.data ?? []) as LinhaAuditoria[]}
           nomes={new Map((equipa ?? []).map((e) => [e.id, e.nome]))}
+          detalhe={escreve}
           auditoria={sessao.papel === 'admin' ? `/admin/auditoria?entidade=diagnostic&id=${id}` : undefined}
         />
       </div>

@@ -1,7 +1,8 @@
 import { createSessionClient } from '@/lib/auth/client';
 import { currentSession, podeEscrever } from '@/lib/auth/session';
 import { csvContactos, type ContactoExportado } from '@/lib/crm/csv';
-import { entregarComAuditoria, texto } from '@/lib/crm/exportar';
+import { entregarComAuditoria, recusarPedido, texto } from '@/lib/crm/exportar';
+import { termoContactos } from '@/lib/crm/pesquisa-modelo';
 
 /**
  * Os contactos em CSV, com a mesma procura da lista (`?q=`). Dados pessoais:
@@ -29,9 +30,11 @@ export async function GET(pedido: Request) {
   const sessao = await currentSession();
   if (!sessao) return texto(404, 'Não encontrado.');
   if (!podeEscrever(sessao.papel)) return texto(403, 'O seu papel não permite exportar dados de contacto.');
+  const recusa = recusarPedido(pedido, sessao.userId);
+  if (recusa) return recusa;
 
-  // A mesma limpeza da lista: `%`, `,` e parênteses mudariam a consulta do PostgREST.
-  const procura = (new URL(pedido.url).searchParams.get('q') ?? '').trim().slice(0, 80).replace(/[%,()]/g, ' ');
+  // A mesma limpeza da lista, para «esta procura» exportar o que o ecrã mostra.
+  const procura = termoContactos(new URL(pedido.url).searchParams.get('q'));
   const sb = await createSessionClient();
 
   const todas: Linha[] = [];
@@ -40,6 +43,8 @@ export async function GET(pedido: Request) {
       .from('contacts')
       .select('id, name, email, phone, role, created_at, organisations(name)')
       .order('created_at', { ascending: false })
+      // Desempate estável: com datas iguais (importações), as páginas não saltam nem repetem linhas.
+      .order('id', { ascending: true })
       .range(de, de + PAGINA - 1);
     if (procura) q = q.or(`name.ilike.%${procura}%,email.ilike.%${procura}%`);
     const { data, error } = await q;

@@ -33,6 +33,7 @@ describe('auditoria legível', () => {
       ate: '2026-10-12',
       id: ID,
     });
+    expect(lerFiltrosAuditoria({ desde: '2026-13-45', ate: '2026-02-30' })).toMatchObject({ desde: undefined, ate: undefined });
     expect(lerFiltrosAuditoria({ entidade: 'ceno', pessoa: 'x', desde: '1/10/2026', id: 'a b' })).toEqual({
       entidade: undefined,
       pessoa: undefined,

@@ -11,11 +11,14 @@ export function Historico({
   entradas,
   nomes,
   auditoria,
+  detalhe = true,
 }: {
   entradas: readonly LinhaAuditoria[];
   nomes: ReadonlyMap<string, string>;
   /** Ligação para `/admin/auditoria` filtrada por este objecto; só para admin. */
   auditoria?: string;
+  /** Valores antigos (antes → depois) só a quem pode escrever; o papel leitura vê quem e quando. */
+  detalhe?: boolean;
 }) {
   return (
     <details className="border border-[color:var(--border)]">
@@ -28,7 +31,7 @@ export function Historico({
       ) : (
         <ol role="list" className="divide-y divide-[color:var(--hairline)] border-t border-[color:var(--border)]">
           {entradas.map((e) => {
-            const m = mudancas(e.before, e.after);
+            const m = detalhe ? mudancas(e.before, e.after) : [];
             return (
               <li key={e.id} className="px-4 py-3 text-sm">
                 <p className="font-medium">{rotuloAccao(e.action)}</p>

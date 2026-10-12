@@ -96,15 +96,20 @@ export interface FiltrosAuditoria {
   readonly id?: string;
 }
 
-const DATA = /^\d{4}-\d{2}-\d{2}$/;
+/** AAAA-MM-DD que existe no calendário: «2026-13-45» não passa. */
+function dataReal(s: string | undefined): string | undefined {
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return undefined;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s ? s : undefined;
+}
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function lerFiltrosAuditoria(p: Record<string, string | undefined>): FiltrosAuditoria {
   return {
     entidade: p.entidade && ENTIDADES.includes(p.entidade) ? p.entidade : undefined,
     pessoa: p.pessoa && UUID.test(p.pessoa) ? p.pessoa : undefined,
-    desde: p.desde && DATA.test(p.desde) ? p.desde : undefined,
-    ate: p.ate && DATA.test(p.ate) ? p.ate : undefined,
+    desde: dataReal(p.desde),
+    ate: dataReal(p.ate),
     id: p.id && /^[\w-]{1,120}$/.test(p.id) ? p.id : undefined,
   };
 }

@@ -130,7 +130,7 @@ export function FichaOportunidade({ d, activo, escreve, eu, equipa, agora, perde
           )}
           <Cronologia actividades={d.actividades} nomes={nomes} />
           <Origem d={d} />
-          <Historico entradas={historico} nomes={nomes} auditoria={admin ? `/admin/auditoria?entidade=deal&id=${d.id}` : undefined} />
+          <Historico entradas={historico} nomes={nomes} detalhe={escreve} auditoria={admin ? `/admin/auditoria?entidade=deal&id=${d.id}` : undefined} />
         </div>
 
       </div>
