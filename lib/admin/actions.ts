@@ -38,6 +38,7 @@ async function chamar(
   await executar(funcao, argumentos, destino);
   revalidatePath(destino);
   revalidatePath('/admin');
+  revalidatePath('/admin/painel');
   redirect(`${destino}?ok=${encodeURIComponent(ok)}`);
 }
 

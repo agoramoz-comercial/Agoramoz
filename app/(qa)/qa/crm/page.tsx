@@ -3,8 +3,12 @@ import { notFound } from 'next/navigation';
 import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { AdminHeading, StateBadge } from '@/components/admin/primitives';
 import { FichaOportunidade, type DadosFicha } from '@/components/admin/crm/FichaOportunidade';
+import { HojeVista } from '@/components/admin/crm/HojeVista';
 import { PipelineVista } from '@/components/admin/crm/PipelineVista';
 import { FASE_OPORTUNIDADE } from '@/lib/admin/labels';
+import { resumoHoje, triagem } from '@/lib/crm/hoje';
+import type { PorRever, ReuniaoProxima } from '@/lib/crm/leitura';
+import { filaDeHoje } from '@/lib/crm/modelo';
 import { aplicarVista, lerFiltros, ordenar, VISTAS, type OportunidadePipeline, type Vista } from '@/lib/crm/pipeline';
 
 /**
@@ -13,7 +17,7 @@ import { aplicarVista, lerFiltros, ordenar, VISTAS, type OportunidadePipeline, t
  * e fora da Vercel: em produção é 404.
  *
  * TUDO AQUI É DE EXEMPLO — pessoas, empresas e valores inventados, e a página
- * di-lo no topo. `?ecra=pipeline|ficha|perdida|por-activar` mais os
+ * di-lo no topo. `?ecra=pipeline|ficha|perdida|por-activar|hoje|hoje-vazio|hoje-por-activar` mais os
  * parâmetros do pipeline (`vista`, `modo`, `ordem`, `sentido`, `fase`).
  */
 
@@ -68,7 +72,7 @@ function op(
 
 const ITENS: OportunidadePipeline[] = [
   op(1, 'novo', 'Exemplo Marta Sitoe', 'Exemplo Logística Lda', { owner_id: null, canal: 'campanha', campanha: 'gbp' }),
-  op(2, 'novo', 'Exemplo João Muianga', 'Exemplo Seguros SA', { owner_id: null }),
+  op(2, 'novo', 'Exemplo João Muianga', 'Exemplo Seguros SA', { owner_id: null, tier: 'A', score: 820 }),
   op(3, 'qualificacao', 'Exemplo Carla Nhantumbo', 'Exemplo Banco Comercial', {
     next_action_at: dias(-2, '15:00'),
     proxima_accao: 'Enviar resumo do diagnóstico',
@@ -152,6 +156,38 @@ const PERDIDA: DadosFicha = {
   organizacao: { id: id(209), nome: 'Exemplo Agro Vale' },
 };
 
+const POR_REVER: PorRever[] = [
+  { id: id(301), tier: 'A', score: 820, estado: 'computed', criado: dias(-1, '09:15'), contacto: 'Exemplo João Muianga' },
+  { id: id(302), tier: 'C', score: 410, estado: 'pending_review', criado: dias(-3, '16:40'), contacto: 'Exemplo Marta Sitoe' },
+];
+const REUNIOES: ReuniaoProxima[] = [
+  { id: id(401), inicio: dias(2, '11:00'), tipo: 'Conversa de diagnóstico (30 min)', oportunidade: { id: id(3), nome: 'Exemplo Carla Nhantumbo' } },
+];
+
+function hoje(variante: string) {
+  const activo = variante !== 'hoje-por-activar';
+  const vazio = variante === 'hoje-vazio';
+  const abertas = vazio ? [] : (activo ? ITENS : ITENS.map(semNovas)).filter((o) => o.stage !== 'ganho' && o.stage !== 'perdido');
+  const fila = filaDeHoje(abertas, EU, AGORA);
+  const porRever = vazio ? { itens: [], total: 0 } : { itens: POR_REVER, total: POR_REVER.length };
+  const reunioes = vazio ? [] : REUNIOES;
+  return (
+    <HojeVista
+      nome="Exemplo Gerson"
+      agora={AGORA}
+      eu={EU}
+      escreve
+      activo={activo}
+      fila={fila}
+      triagem={triagem(fila.semDono)}
+      porRever={porRever}
+      reunioes={reunioes}
+      resumo={resumoHoje(fila, porRever.total, reunioes.length)}
+      falhou={false}
+    />
+  );
+}
+
 export default async function PreVisualizacaoCrm({
   searchParams,
 }: {
@@ -162,7 +198,9 @@ export default async function PreVisualizacaoCrm({
   const ecra = p.ecra ?? 'pipeline';
 
   let corpo: React.ReactNode;
-  if (ecra === 'ficha' || ecra === 'perdida' || ecra === 'ficha-por-activar') {
+  if (ecra.startsWith('hoje')) {
+    corpo = hoje(ecra);
+  } else if (ecra === 'ficha' || ecra === 'perdida' || ecra === 'ficha-por-activar') {
     const d = ecra === 'perdida' ? PERDIDA : FICHA;
     corpo = (
       <>

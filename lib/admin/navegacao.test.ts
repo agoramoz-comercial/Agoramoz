@@ -33,6 +33,13 @@ describe('navegação agrupada do admin', () => {
     expect(so({ energia: true })).toContain('/admin/energia');
   });
 
+  it('o trabalho abre pelo Hoje; o painel analítico vem a seguir', () => {
+    expect(gruposVisiveis(nada)[0]!.entradas.map((e) => [e.texto, e.href])).toEqual([
+      ['Hoje', '/admin'],
+      ['Painel', '/admin/painel'],
+    ]);
+  });
+
   it('não deixa passar a regra interna para o cliente', () => {
     for (const g of gruposVisiveis(tudo)) for (const e of g.entradas) expect(Object.keys(e).sort()).toEqual(['href', 'icone', 'texto']);
   });

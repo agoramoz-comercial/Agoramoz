@@ -242,7 +242,7 @@ export function BarrasHorizontais({
 /** 7 · 30 · 90 dias, no URL: a vista é uma ligação que se partilha. */
 export function SeletorPeriodo({
   actual,
-  caminho = '/admin',
+  caminho = '/admin/painel',
 }: {
   actual: Periodo;
   caminho?: string;

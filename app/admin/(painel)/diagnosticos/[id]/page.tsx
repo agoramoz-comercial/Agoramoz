@@ -16,6 +16,7 @@ import {
   ACHADO,
   CLASSIFICACAO,
   ESTADO_DIAGNOSTICO,
+  FASE_OPORTUNIDADE,
   ORIGEM_EVIDENCIA,
   SEVERIDADE,
 } from '@/lib/admin/labels';
@@ -24,6 +25,7 @@ import { CONSEQUENCIAS } from '@/content/i18n/formulario';
 import { aprovarDiagnostico, enviarParaRevisao, rejeitarDiagnostico } from '@/lib/admin/actions';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
+import { crmOperacional } from '@/lib/crm/activacao';
 
 export const metadata = { title: 'Rever diagnóstico' };
 
@@ -142,6 +144,22 @@ export default async function RevisaoPage({
   const pacote = (diagnostico.evidence_bundle ?? {}) as { evidence?: Evidencia[] };
   const evidencia = pacote.evidence ?? [];
 
+  /**
+   * A oportunidade criada pela mesma submissão (`deals.source_response_id`,
+   * com índice). Com a 0019, aprovar ou rejeitar aqui também lhe muda a
+   * fase — por isso a ligação fica à vista antes da decisão.
+   */
+  const [negocio, activo] = await Promise.all([
+    resposta
+      ? supabase.from('deals').select('id, stage, owner_id').eq('source_response_id', resposta.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    crmOperacional(supabase),
+  ]);
+  const deal = negocio.data as { id: string; stage: string; owner_id: string | null } | null;
+  const dono = deal?.owner_id
+    ? ((await supabase.from('profiles').select('display_name').eq('id', deal.owner_id).maybeSingle()).data as { display_name: string } | null)
+    : null;
+
   const estado = diagnostico.state as keyof typeof ESTADO_DIAGNOSTICO;
   const escreve = podeEscrever(sessao.papel);
 
@@ -162,8 +180,14 @@ export default async function RevisaoPage({
         ok={ok}
         textos={{
           'em-revisao': 'Enviado para revisão. Já pode aprovar ou rejeitar.',
-          aprovado: 'Diagnóstico aprovado.',
-          rejeitado: 'Diagnóstico rejeitado. O motivo ficou registado.',
+          aprovado:
+            activo === true
+              ? 'Diagnóstico aprovado. Se a oportunidade estava em «Novo», passou a «Qualificação».'
+              : 'Diagnóstico aprovado.',
+          rejeitado:
+            activo === true
+              ? 'Diagnóstico rejeitado. Se a oportunidade estava em «Novo», foi marcada como perdida (não qualificado).'
+              : 'Diagnóstico rejeitado. O motivo ficou registado.',
           '1': 'Acção registada.',
         }}
       />
@@ -198,6 +222,22 @@ export default async function RevisaoPage({
               ),
             },
             { termo: 'Telefone', valor: contacto?.phone ?? '—' },
+            {
+              termo: 'Oportunidade',
+              valor: deal ? (
+                <span className="flex flex-wrap items-center gap-2">
+                  <Link href={`/admin/oportunidades/${deal.id}`} className="underline">
+                    Abrir a oportunidade
+                  </Link>
+                  <StateBadge rotulo={FASE_OPORTUNIDADE[deal.stage as keyof typeof FASE_OPORTUNIDADE]} />
+                  <span className="text-xs text-[color:var(--muted)]">
+                    {deal.owner_id ? `Responsável: ${dono?.display_name ?? '(perfil removido)'}` : 'Sem dono'}
+                  </span>
+                </span>
+              ) : (
+                'Nenhuma criada por esta submissão'
+              ),
+            },
             { termo: 'Submetido', valor: <DataHora valor={resposta?.submitted_at} /> },
             {
               termo: 'Classificação',

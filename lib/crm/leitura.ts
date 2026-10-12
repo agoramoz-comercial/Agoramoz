@@ -1,5 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ESTADOS_POR_REVER } from '@/lib/admin/labels';
 import type { OportunidadePipeline } from './pipeline';
 
 /**
@@ -106,5 +107,78 @@ export async function lerEquipa(sb: SupabaseClient): Promise<{ id: string; nome:
     id: p.id,
     nome: p.display_name,
     activo: p.active,
+  }));
+}
+
+export interface PorRever {
+  readonly id: string;
+  readonly tier: string;
+  readonly score: number;
+  readonly estado: string;
+  readonly criado: string;
+  readonly contacto: string | null;
+}
+
+const LIMITE_POR_REVER = 20;
+
+/** Os diagnósticos à espera de decisão humana, os mais antigos primeiro (esperam há mais tempo). */
+export async function lerPorRever(sb: SupabaseClient): Promise<{ itens: PorRever[]; total: number } | null> {
+  const { data, error, count } = await sb
+    .from('diagnostics')
+    .select('id, tier, score, state, created_at, responses(contacts(name))', { count: 'exact' })
+    .in('state', [...ESTADOS_POR_REVER])
+    .order('created_at', { ascending: true })
+    .limit(LIMITE_POR_REVER);
+  if (error || !Array.isArray(data)) return null;
+  const itens = (data as unknown as {
+    id: string;
+    tier: string;
+    score: number;
+    state: string;
+    created_at: string;
+    responses: { contacts: { name: string } | null } | null;
+  }[]).map((d) => ({
+    id: d.id,
+    tier: d.tier,
+    score: d.score,
+    estado: d.state,
+    criado: d.created_at,
+    contacto: d.responses?.contacts?.name ?? null,
+  }));
+  return { itens, total: count ?? itens.length };
+}
+
+export interface ReuniaoProxima {
+  readonly id: string;
+  readonly inicio: string;
+  readonly tipo: string | null;
+  readonly oportunidade: { id: string; nome: string } | null;
+}
+
+/**
+ * As reuniões marcadas para os próximos 7 dias. Sem a 0012 a tabela não
+ * existe: lê-se como «nenhuma», porque o Cal ainda não está ligado.
+ */
+export async function lerProximasReunioes(sb: SupabaseClient, agora: Date): Promise<ReuniaoProxima[]> {
+  const ate = new Date(agora.getTime() + 7 * 86_400_000);
+  const { data, error } = await sb
+    .from('reunioes')
+    .select('id, inicio, tipo, deals(id, contacts(name))')
+    .eq('estado', 'marcada')
+    .gte('inicio', agora.toISOString())
+    .lt('inicio', ate.toISOString())
+    .order('inicio', { ascending: true })
+    .limit(20);
+  if (error || !Array.isArray(data)) return [];
+  return (data as unknown as {
+    id: string;
+    inicio: string;
+    tipo: string | null;
+    deals: { id: string; contacts: { name: string } | null } | null;
+  }[]).map((r) => ({
+    id: r.id,
+    inicio: r.inicio,
+    tipo: r.tipo,
+    oportunidade: r.deals ? { id: r.deals.id, nome: r.deals.contacts?.name ?? 'Sem nome' } : null,
   }));
 }

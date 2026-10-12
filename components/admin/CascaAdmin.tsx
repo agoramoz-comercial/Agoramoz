@@ -55,7 +55,7 @@ export function CascaAdmin({
         {/* A borda vive no <aside>, que estica com a página; o conteúdo fica
             fixo no ecrã ao fazer scroll. */}
         <div className="px-5 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto">
-          <Link href="/admin" className="inline-flex" aria-label="Painel da administração">
+          <Link href="/admin" className="inline-flex" aria-label="Início da administração">
             <Logo variant="mark" className="h-7 w-auto" href={null} />
           </Link>
 

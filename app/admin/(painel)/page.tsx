@@ -1,58 +1,59 @@
 import { Feedback } from '@/components/admin/Feedback';
-import { PainelComando } from '@/components/admin/painel/PainelComando';
-import { janela, lerPeriodo } from '@/lib/admin/painel';
-import { carregarPainel, type Ligacoes } from '@/lib/admin/painel-dados';
+import { HojeVista } from '@/components/admin/crm/HojeVista';
+import { TEXTOS_OK_CRM } from '@/components/admin/crm/partes';
 import { createSessionClient } from '@/lib/auth/client';
-import { serverEnv } from '@/lib/config/env';
-import { estadoErp } from '@/lib/erp/porta';
+import { podeEscrever, requireStaff } from '@/lib/auth/session';
+import { crmOperacional } from '@/lib/crm/activacao';
+import { resumoHoje, triagem } from '@/lib/crm/hoje';
+import { lerOportunidades, lerPorRever, lerProximasReunioes } from '@/lib/crm/leitura';
+import { filaDeHoje } from '@/lib/crm/modelo';
 
-/**
- * Painel de comando. Responde a «o que precisa de mim agora?» e «como está a
- * correr?», com o período no URL (`?periodo=7|30|90`).
- *
- * Tudo é lido pela sessão de quem entrou, sujeito à RLS. Uma fonte ainda não
- * ligada (Cal, News, ERP) aparece «por activar», com o passo que falta —
- * nunca como zero.
- */
+export const metadata = { title: 'Hoje' };
 
-/**
- * O relógio fica fora do corpo do componente de propósito: o compilador do
- * React recusa ler a hora durante a renderização, e contorná-lo com um
- * comentário de supressão seria desligar o aviso em vez de arrumar o código.
- */
+/** Fora do componente: o compilador do React recusa ler a hora durante a renderização. */
 async function agora(): Promise<Date> {
   return new Date(Date.now());
 }
 
-export default async function PainelPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ periodo?: string; erro?: string }>;
-}) {
-  const { periodo, erro } = await searchParams;
-  const env = serverEnv();
-  const ligacoes: Ligacoes = {
-    pixel: env.ANALYTICS_PERSISTENCE === 'on',
-    agendamento: env.SCHEDULING === 'cal',
-    news: env.NEWS_ENGINE !== 'off',
-    inqueritos: env.SURVEYS === 'on',
-    filtrarInqueritos: env.SURVEYS === 'on' || Boolean(env.SURVEY_LINK_SECRET),
-    erp: estadoErp(env),
-  };
-
+/**
+ * O ecrã de entrada do admin: o trabalho de quem entrou, por urgência, e o
+ * que é de toda a equipa. O painel analítico está em `/admin/painel`.
+ *
+ * Acções que falham antes de saber o destino (pedido inválido) voltam aqui
+ * com `?erro=`.
+ */
+export default async function HojePage({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
+  const { erro, ok } = await searchParams;
+  const sessao = await requireStaff();
   const supabase = await createSessionClient();
-  const dados = await carregarPainel(
-    supabase,
-    janela(lerPeriodo(periodo), await agora()),
-    ligacoes,
-  );
+  const instante = await agora();
+  const activo = (await crmOperacional(supabase)) === true;
 
-  // Acções que falham antes de saber o destino (pedido inválido) voltam aqui
-  // com `?erro=`; antes ninguém o mostrava.
+  const [lido, porRever, reunioes] = await Promise.all([
+    lerOportunidades(supabase, { soAbertas: true }, activo),
+    lerPorRever(supabase),
+    lerProximasReunioes(supabase, instante),
+  ]);
+
+  const abertas = lido?.itens ?? [];
+  const fila = filaDeHoje(abertas, sessao.userId, instante);
+
   return (
     <>
-      <Feedback erro={erro} textos={{}} />
-      <PainelComando dados={dados} />
+      <Feedback erro={erro} ok={ok} textos={TEXTOS_OK_CRM} />
+      <HojeVista
+        nome={sessao.nome}
+        agora={instante}
+        eu={sessao.userId}
+        escreve={podeEscrever(sessao.papel)}
+        activo={activo}
+        fila={fila}
+        triagem={triagem(fila.semDono)}
+        porRever={porRever}
+        reunioes={reunioes}
+        resumo={resumoHoje(fila, porRever?.total ?? 0, reunioes.length)}
+        falhou={lido === null}
+      />
     </>
   );
 }

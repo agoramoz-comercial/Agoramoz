@@ -13,7 +13,10 @@ interface EntradaComRegra extends Entrada {
 const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[] = [
   {
     titulo: 'Trabalho',
-    entradas: [{ href: '/admin', texto: 'Painel', icone: 'painel' }],
+    entradas: [
+      { href: '/admin', texto: 'Hoje', icone: 'hoje' },
+      { href: '/admin/painel', texto: 'Painel', icone: 'painel' },
+    ],
   },
   {
     titulo: 'Comercial',

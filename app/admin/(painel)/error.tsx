@@ -30,7 +30,7 @@ export default function ErroDoPainel({
           Tentar de novo
         </Button>
         <Button asChild size="sm" variant="outline">
-          <Link href="/admin">Ir para o painel</Link>
+          <Link href="/admin">Ir para Hoje</Link>
         </Button>
       </div>
       {error.digest && (

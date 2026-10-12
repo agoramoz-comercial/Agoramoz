@@ -42,6 +42,7 @@ function voltar(f: FormData, id: string): string {
 function concluir(destino: string, ok: string): never {
   revalidatePath('/admin/oportunidades', 'layout');
   revalidatePath('/admin');
+  revalidatePath('/admin/painel');
   const [caminho, query] = destino.split('?');
   const q = new URLSearchParams(query ?? '');
   q.delete('erro');

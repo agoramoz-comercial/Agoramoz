@@ -143,6 +143,47 @@ const ECRAS = [
       confere(await tem(p, 'Perdida — Outro: Optaram por desenvolver internamente'), 'faixa com o motivo e a nota');
     },
   },
+  {
+    q: '?ecra=hoje',
+    nome: 'hoje',
+    verifica: async (p) => {
+      confere((await p.getByRole('heading', { level: 1, name: 'Hoje' }).count()) === 1, 'h1 «Hoje»');
+      confere(await tem(p, 'Segunda-feira, 12 de outubro de 2026', { exact: false }) || await tem(p, 'segunda-feira, 12 de outubro de 2026', { exact: false }), 'data de Maputo por extenso');
+      const resumo = p.getByRole('navigation', { name: 'Resumo do dia' });
+      const valor = async (texto) => (await resumo.getByRole('link', { name: new RegExp(texto) }).innerText()).replace(/\D+/g, '');
+      const esperados = { Atrasadas: '1', 'Para hoje': '0', 'Esta semana': '1', Paradas: '1', 'Sem dono': '2', 'Por rever': '2' };
+      for (const [t, n] of Object.entries(esperados)) confere((await valor(t)) === n, `indicador «${t}» = ${n}`, `(lido ${await valor(t)})`);
+      confere((await resumo.getByRole('link', { name: /Atrasadas/ }).getAttribute('href')) === '/admin/oportunidades?vista=atrasadas', 'Atrasadas leva à vista do pipeline');
+      confere((await resumo.getByRole('link', { name: /Por rever/ }).getAttribute('href')) === '/admin/diagnosticos?estado=por-rever', 'Por rever leva aos diagnósticos por rever');
+      const triagem = await p.locator('#sem-dono li a').allInnerTexts();
+      confere(triagem[0] === 'Exemplo João Muianga', 'triagem: a classificação A primeiro, mesmo sendo mais antiga', `(${triagem.join('|')})`);
+      confere((await p.locator('#sem-dono').getByRole('button', { name: /^Atribuir a mim/ }).count()) === 2, '«Atribuir a mim» em cada lead sem dono');
+      confere((await p.locator('#atrasadas li').count()) === 1 && (await p.locator('#atrasadas').innerText()).includes('Exemplo Carla Nhantumbo'), 'atrasada: a da Carla');
+      confere(!(await p.locator('#atrasadas').innerText()).includes('Exemplo Pedro Langa'), 'a acção de hoje da Ana não entra na minha fila');
+      confere((await p.locator('#paradas').innerText()).includes('Exemplo Rui Tembe'), 'parada há mais de 14 dias: Rui Tembe');
+      confere((await p.locator('#reunioes li').count()) === 1, 'uma reunião nos próximos 7 dias');
+      confere((await p.locator('#atrasadas').getByRole('link', { name: /^Actualizar a próxima acção/ }).getAttribute('href')).endsWith('#proxima'), '«Actualizar» abre a ficha na próxima acção');
+    },
+  },
+  {
+    q: '?ecra=hoje-vazio',
+    nome: 'hoje vazio',
+    verifica: async (p) => {
+      confere(await tem(p, 'Nada atrasado nem para hoje.'), 'fila vazia diz-o');
+      confere(await tem(p, 'Todos os leads têm dono.'), 'sem dono vazio diz-o');
+      confere(await tem(p, 'Nenhuma reunião marcada.'), 'sem reuniões diz-o');
+    },
+  },
+  {
+    q: '?ecra=hoje-por-activar',
+    nome: 'hoje por activar',
+    verifica: async (p) => {
+      confere(await tem(p, /por activar/), 'aviso «por activar»');
+      const paradas = await p.getByRole('navigation', { name: 'Resumo do dia' }).getByRole('link', { name: /Paradas/ }).innerText();
+      confere(paradas.includes('—'), 'paradas «—» sem a 0019 (não um zero inventado)');
+      confere((await p.locator('#sem-dono li').count()) === 2, 'sem dono funciona antes da 0019');
+    },
+  },
 ];
 
 for (const largura of [390, 768, 1440]) {
@@ -158,7 +199,7 @@ for (const largura of [390, 768, 1440]) {
     await e.verifica(p);
     await semScrollHorizontal(p, e.nome);
     if (largura !== 768) await axe(p, `${e.nome} @${largura}`);
-    if (['lista', 'quadro', 'ficha'].includes(e.nome)) await p.screenshot({ path: `${SAIDA}/crm-${e.nome}-${largura}.png`, fullPage: true });
+    if (['lista', 'quadro', 'ficha', 'hoje'].includes(e.nome)) await p.screenshot({ path: `${SAIDA}/crm-${e.nome}-${largura}.png`, fullPage: true });
   }
   await ctx.close();
 }
