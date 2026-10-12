@@ -245,5 +245,83 @@ begin
   if d.proxima_accao is not null or d.next_action_at is not null then raise exception '11: ganho manteve acção'; end if;
 end $$;
 
+-- 12. A vista do pipeline traz a última actividade e respeita a RLS ----------
+do $$
+declare u timestamptz;
+begin
+  select ultima_actividade into u from public.crm_oportunidades where id = '00000000-0000-0000-0000-0000000000d4';
+  if u is null then raise exception '12a: vista sem última actividade'; end if;
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000ff', true);
+do $$
+begin
+  if (select count(*) from public.crm_oportunidades) <> 0 then raise exception '12b: quem não é equipa leu a vista'; end if;
+end $$;
+
+-- 13. Revisão nula não contorna o controlo optimista --------------------------
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a1', true);
+do $$
+begin
+  begin
+    perform public.definir_proxima_accao('00000000-0000-0000-0000-0000000000d1', null, 'X', now());
+    raise exception '13: revisão nula aceite';
+  exception when sqlstate '40001' then null; end;
+end $$;
+
+-- 14. Perdida antes da 0019, sem motivo: recebe motivo sem reabrir ------------
+reset role;
+insert into public.deals (id, contact_id, stage, acquisition_channel)
+values ('00000000-0000-0000-0000-0000000000d5', '00000000-0000-0000-0000-0000000000c2', 'perdido', 'directo');
+update public.deals set fase_desde = now() - interval '30 days' where id = '00000000-0000-0000-0000-0000000000d5';
+set local role authenticated;
+do $$
+declare d public.deals; r jsonb;
+begin
+  r := public.marcar_perdida('00000000-0000-0000-0000-0000000000d5', 'timing', null);
+  select * into d from public.deals where id = '00000000-0000-0000-0000-0000000000d5';
+  if d.motivo_perda <> 'timing' or d.fase_desde > now() - interval '29 days' or not (r->>'changed')::boolean then
+    raise exception '14: perda antiga não completada sem reabrir %', row_to_json(d);
+  end if;
+  r := public.marcar_perdida('00000000-0000-0000-0000-0000000000d5', 'preco', null);
+  if (r->>'changed')::boolean then raise exception '14b: motivo existente reescrito'; end if;
+end $$;
+
+-- 15. O Cal não apaga a data de uma acção escrita pela equipa ----------------
+do $$
+begin
+  perform public.definir_proxima_accao('00000000-0000-0000-0000-0000000000d1',
+    (select revisao from public.deals where id = '00000000-0000-0000-0000-0000000000d1'),
+    'Enviar proposta', now() - interval '1 day');
+end $$;
+reset role;
+insert into public.reunioes_intencoes (ref_hash, deal_id)
+values (repeat('9', 64), '00000000-0000-0000-0000-0000000000d1');
+set local role service_role;
+do $$
+declare r jsonb; d public.deals;
+begin
+  r := public.registar_reuniao('BOOKING_CREATED', 'qa-cal-1', repeat('9', 64), now() + interval '2 days', null, null, null);
+  r := public.registar_reuniao('BOOKING_CANCELLED', 'qa-cal-1', repeat('9', 64), now() + interval '2 days', null, null, null);
+  select * into d from public.deals where id = '00000000-0000-0000-0000-0000000000d1';
+  if d.proxima_accao <> 'Enviar proposta' or d.next_action_at is null then
+    raise exception '15: o Cal mexeu na acção da equipa %', row_to_json(d);
+  end if;
+end $$;
+reset role;
+-- Sem acção da equipa, o Cal continua a pôr a data da reunião.
+update public.deals set proxima_accao = null, next_action_at = null where id = '00000000-0000-0000-0000-0000000000d4';
+insert into public.reunioes_intencoes (ref_hash, deal_id)
+values (repeat('8', 64), '00000000-0000-0000-0000-0000000000d4');
+set local role service_role;
+do $$
+declare r jsonb;
+begin
+  r := public.registar_reuniao('BOOKING_CREATED', 'qa-cal-2', repeat('8', 64), now() + interval '3 days', null, null, null);
+  if (select next_action_at from public.deals where id = '00000000-0000-0000-0000-0000000000d4') is null then
+    raise exception '15b: o Cal deixou de marcar a reunião como próxima acção';
+  end if;
+end $$;
+reset role;
+
 select 'CRM 0019: todos os cenários passaram' as resultado;
 rollback;

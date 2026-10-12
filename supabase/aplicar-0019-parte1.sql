@@ -1,9 +1,9 @@
 
 -- APLICAR NO SQL EDITOR DO SUPABASE — projecto nixltrbdplqjadfytryd
--- 0019 em DUAS PARTES — PARTE 1 de 2: colunas novas das oportunidades, próxima acção e valor
+-- 0019 em TRÊS PARTES — PARTE 1 de 3: colunas novas das oportunidades, vista, próxima acção e valor
 -- Pressupõe a 0018 aplicada (linha 30 do verificar-estado em «ok»).
--- As duas partes juntas são a migração 0019 palavra por palavra (um teste
--- garante-o). Ambas são repetíveis: pode correr cada uma as vezes que quiser.
+-- As três partes juntas são a migração 0019 palavra por palavra (um teste
+-- garante-o). Todas são repetíveis: pode correr cada uma as vezes que quiser.
 -- 1. No GitHub, botão «Copy raw file» (ou Raw, Ctrl+A, Ctrl+C).
 -- 2. SQL Editor: consulta NOVA e vazia, colar, Run. Esperado: «Success».
 -- 3. Depois, a PARTE 2 (aplicar-0019-parte2.sql), da mesma forma.
@@ -29,6 +29,10 @@
 -- Idempotente: pode correr mais do que uma vez.
 -- ============================================================================
 
+-- Se uma transacção longa segurar `deals`, desistir em vez de ficar na fila e
+-- bloquear todo o tráfego atrás da migração. Repetir mais tarde.
+set lock_timeout = '5s';
+
 
 -- ---------------------------------------------------------------------------
 -- Colunas novas em `deals`
@@ -50,12 +54,16 @@ alter table public.deals
 -- Há quanto tempo está nesta fase: para as que já existiam, a última mudança
 -- de fase registada na cronologia, ou a criação. Só preenche o que está vazio,
 -- por isso repetir a migração não muda nada.
+-- Sem o gatilho de `updated_at`: preencher uma coluna nova não é «mexer» na
+-- oportunidade, e a data da última alteração de cada uma tem de se manter.
+alter table public.deals disable trigger deals_set_updated_at;
 update public.deals d
    set fase_desde = coalesce(
          (select max(a.occurred_at) from public.activities a
            where a.deal_id = d.id and a.activity_type = 'fase'),
          d.created_at)
  where d.fase_desde is null;
+alter table public.deals enable trigger deals_set_updated_at;
 alter table public.deals alter column fase_desde set default now();
 alter table public.deals alter column fase_desde set not null;
 
@@ -63,6 +71,11 @@ alter table public.deals alter column fase_desde set not null;
 alter table public.deals drop constraint if exists deals_valor_com_moeda;
 alter table public.deals
   add constraint deals_valor_com_moeda check ((valor is null) = (moeda is null));
+
+-- `numeric` aceita NaN, e um NaN estraga qualquer soma do pipeline.
+alter table public.deals drop constraint if exists deals_valor_finito;
+alter table public.deals
+  add constraint deals_valor_finito check (valor is null or valor <> 'NaN'::numeric);
 
 -- Uma próxima acção tem data; uma data sem acção não diz o que fazer.
 alter table public.deals drop constraint if exists deals_proxima_accao_com_data;
@@ -104,6 +117,27 @@ create trigger deals_marca_fase
 
 
 -- ---------------------------------------------------------------------------
+-- Vista de leitura do pipeline
+-- ---------------------------------------------------------------------------
+-- A data da última actividade de cada oportunidade, calculada na base: pedi-la
+-- ao PostgREST com centenas de ids no URL passaria o limite do pedido.
+-- `security_invoker`: quem lê a vista vê o que veria em `deals` (RLS).
+
+-- Apagar antes de criar: `d.*` expande-se na criação, e uma coluna nova em
+-- `deals` faria o `create or replace` falhar numa repetição.
+drop view if exists public.crm_oportunidades;
+create view public.crm_oportunidades
+with (security_invoker = true)
+as
+select d.*,
+       (select max(a.occurred_at) from public.activities a where a.deal_id = d.id) as ultima_actividade
+  from public.deals d;
+
+revoke all on public.crm_oportunidades from public, anon;
+grant select on public.crm_oportunidades to authenticated;
+
+
+-- ---------------------------------------------------------------------------
 -- Próxima acção
 -- ---------------------------------------------------------------------------
 
@@ -134,7 +168,7 @@ begin
   if not found then
     raise exception 'Oportunidade inexistente.' using errcode = 'P0002';
   end if;
-  if d.revisao <> p_revisao then
+  if d.revisao is distinct from p_revisao then
     raise exception 'A oportunidade mudou entretanto. Recarregue e volte a tentar.' using errcode = '40001';
   end if;
   if d.stage in ('ganho', 'perdido') and v_accao is not null then
@@ -151,8 +185,8 @@ begin
 
   insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id, before, after)
   values (auth.uid(), 'user', 'oportunidade.proxima_accao', 'deal', p_deal_id::text,
-          jsonb_build_object('next_action_at', d.next_action_at),
-          jsonb_build_object('next_action_at', p_quando));
+          jsonb_build_object('proxima_accao', d.proxima_accao, 'next_action_at', d.next_action_at),
+          jsonb_build_object('proxima_accao', left(v_accao, 200), 'next_action_at', p_quando));
 
   return jsonb_build_object('id', p_deal_id, 'revisao', d.revisao + 1);
 end;
@@ -181,6 +215,9 @@ declare
 begin
   perform public.exigir_papel(array['admin', 'comercial']::public.user_role[]);
 
+  if p_valor = 'NaN'::numeric or p_valor < 0 then
+    raise exception 'Valor inválido.' using errcode = '22023';
+  end if;
   if (p_valor is null) <> (nullif(trim(coalesce(p_moeda, '')), '') is null) then
     raise exception 'O valor precisa de moeda (e a moeda de valor).' using errcode = '22023';
   end if;
@@ -189,7 +226,7 @@ begin
   if not found then
     raise exception 'Oportunidade inexistente.' using errcode = 'P0002';
   end if;
-  if d.revisao <> p_revisao then
+  if d.revisao is distinct from p_revisao then
     raise exception 'A oportunidade mudou entretanto. Recarregue e volte a tentar.' using errcode = '40001';
   end if;
 
@@ -212,5 +249,8 @@ begin
   return jsonb_build_object('id', p_deal_id, 'revisao', d.revisao + 1);
 end;
 $$;
+
+
+reset lock_timeout;
 
 

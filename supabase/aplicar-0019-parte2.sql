@@ -1,14 +1,16 @@
 
 -- APLICAR NO SQL EDITOR DO SUPABASE — projecto nixltrbdplqjadfytryd
--- 0019 em DUAS PARTES — PARTE 2 de 2: perda com motivo, fases, actividades, diagnóstico e pesquisa
+-- 0019 em TRÊS PARTES — PARTE 2 de 3: perda com motivo, fases, actividades e diagnóstico
 -- Só DEPOIS da parte 1. Repetível.
 -- 1. No GitHub, botão «Copy raw file» (ou Raw, Ctrl+A, Ctrl+C).
 -- 2. SQL Editor: consulta NOVA e vazia, colar, Run. Esperado: «Success».
--- 3. Depois, verificar-estado.sql: a linha 31 tem de dizer «ok».
+-- 3. Depois, a PARTE 3 (aplicar-0019-parte3.sql), da mesma forma.
 -- ===== fim do cabeçalho: daqui para baixo é a migração 0019, sem alterações =====
 -- ---------------------------------------------------------------------------
 -- Perder com motivo
 -- ---------------------------------------------------------------------------
+
+set lock_timeout = '5s';
 
 create or replace function public.marcar_perdida(
   p_deal_id uuid,
@@ -41,7 +43,18 @@ begin
     raise exception 'Oportunidade inexistente.' using errcode = 'P0002';
   end if;
   if d.stage = 'perdido' then
-    return jsonb_build_object('id', p_deal_id, 'stage', d.stage, 'changed', false);
+    if d.motivo_perda is not null then
+      return jsonb_build_object('id', p_deal_id, 'stage', d.stage, 'changed', false);
+    end if;
+    -- Perdida antes da 0019, sem motivo: completa-se sem reabrir, para não
+    -- apagar a história nem reiniciar o tempo na fase.
+    update public.deals
+       set motivo_perda = p_motivo, motivo_perda_nota = left(v_nota, 500), revisao = d.revisao + 1
+     where id = p_deal_id;
+    insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id, before, after)
+    values (auth.uid(), 'user', 'oportunidade.motivo_perda', 'deal', p_deal_id::text,
+            jsonb_build_object('motivo_perda', null), jsonb_build_object('motivo_perda', p_motivo));
+    return jsonb_build_object('id', p_deal_id, 'stage', 'perdido', 'changed', true);
   end if;
 
   update public.deals
@@ -193,7 +206,7 @@ begin
   if not found then
     raise exception 'Diagnóstico inexistente.' using errcode = 'P0002';
   end if;
-  if d.revision <> p_revision then
+  if d.revision is distinct from p_revision then
     raise exception 'O diagnóstico mudou entretanto (revisão %, esperada %).', d.revision, p_revision
       using errcode = '40001';
   end if;
@@ -255,7 +268,7 @@ begin
   if not found then
     raise exception 'Diagnóstico inexistente.' using errcode = 'P0002';
   end if;
-  if d.revision <> p_revision then
+  if d.revision is distinct from p_revision then
     raise exception 'O diagnóstico mudou entretanto (revisão %, esperada %).', d.revision, p_revision
       using errcode = '40001';
   end if;
@@ -295,75 +308,6 @@ end;
 $$;
 
 
--- ---------------------------------------------------------------------------
--- Pesquisa global (leitura; sujeita à RLS de quem pesquisa)
--- ---------------------------------------------------------------------------
--- `security invoker`: a função não vê mais do que a pessoa veria nas listas.
--- Os curingas do LIKE (% e _) que vierem no texto são tratados como letras.
-
-create or replace function public.pesquisar_global(p_q text)
-returns jsonb
-language plpgsql
-stable
-security invoker
-set search_path = pg_catalog, public
-as $$
-declare
-  v_q text := left(trim(coalesce(p_q, '')), 80);
-  v_padrao text;
-begin
-  if length(v_q) < 2 then
-    return jsonb_build_object('contactos', '[]'::jsonb, 'organizacoes', '[]'::jsonb, 'oportunidades', '[]'::jsonb);
-  end if;
-  v_padrao := '%' || replace(replace(replace(v_q, '\', '\\'), '%', '\%'), '_', '\_') || '%';
-
-  return jsonb_build_object(
-    'contactos', coalesce((
-      select jsonb_agg(jsonb_build_object('id', c.id, 'nome', c.name, 'email', c.email))
-        from (select id, name, email from public.contacts
-               where name ilike v_padrao or email ilike v_padrao or coalesce(phone, '') ilike v_padrao
-               order by name limit 8) c), '[]'::jsonb),
-    'organizacoes', coalesce((
-      select jsonb_agg(jsonb_build_object('id', o.id, 'nome', o.name, 'dominio', o.normalized_domain))
-        from (select id, name, normalized_domain from public.organisations
-               where name ilike v_padrao or coalesce(normalized_domain, '') ilike v_padrao
-               order by name limit 8) o), '[]'::jsonb),
-    'oportunidades', coalesce((
-      select jsonb_agg(jsonb_build_object('id', x.id, 'fase', x.stage, 'contacto', x.nome, 'organizacao', x.org))
-        from (select d.id, d.stage, c.name as nome, o.name as org
-                from public.deals d
-                join public.contacts c on c.id = d.contact_id
-                left join public.organisations o on o.id = d.organisation_id
-               where c.name ilike v_padrao or c.email ilike v_padrao or coalesce(o.name, '') ilike v_padrao
-               order by d.updated_at desc limit 8) x), '[]'::jsonb)
-  );
-end;
-$$;
+reset lock_timeout;
 
 
--- ---------------------------------------------------------------------------
--- Direitos
--- ---------------------------------------------------------------------------
-
-do $$
-declare
-  f text;
-begin
-  foreach f in array array[
-    'public.definir_proxima_accao(uuid, integer, text, timestamptz)',
-    'public.guardar_oportunidade_crm(uuid, integer, numeric, text, date)',
-    'public.marcar_perdida(uuid, text, text)',
-    'public.mudar_fase_oportunidade(uuid, text, text)',
-    'public.registar_actividade(uuid, text, text)',
-    'public.aprovar_diagnostico(uuid, integer)',
-    'public.rejeitar_diagnostico(uuid, integer, text)',
-    'public.pesquisar_global(text)'
-  ] loop
-    execute format('revoke all on function %s from public, anon', f);
-    execute format('grant execute on function %s to authenticated', f);
-  end loop;
-  -- O gatilho não é chamável de fora.
-  execute 'revoke all on function public.deals_marca_fase() from public, anon, authenticated';
-end $$;
-
-notify pgrst, 'reload schema';

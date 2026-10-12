@@ -323,14 +323,24 @@ select 31, 'crm', 'CRM operacional: próxima acção, valor, motivo de perda e p
                  or not exists (
                    select 1 from pg_attribute a
                     where a.attrelid = 'public.deals'::regclass and a.attname = 'motivo_perda' and not a.attisdropped)
+                 or to_regclass('public.crm_oportunidades') is null
                  then 'EM FALTA - correr aplicar-0019-parte1.sql'
             when to_regprocedure('public.marcar_perdida(uuid, text, text)') is null
-                 or to_regprocedure('public.pesquisar_global(text)') is null
                  or not exists (
                    select 1 from pg_proc p
                     where p.oid = to_regprocedure('public.mudar_fase_oportunidade(uuid, text, text)')
                       and p.prosrc like '%Para marcar como perdida%')
                  then 'EM FALTA - correr aplicar-0019-parte2.sql'
+            when not exists (
+                   select 1 from pg_proc p
+                    where p.oid = to_regprocedure('public.registar_reuniao(text, text, text, timestamptz, timestamptz, text, text)')
+                      and p.prosrc like '%proxima_accao is null%')
+                 or not exists (
+                   select 1 from pg_proc p
+                    where p.oid = to_regprocedure('public.atribuir_oportunidade(uuid, uuid)')
+                      and p.prosrc like '%revisao = d.revisao + 1%')
+                 or to_regprocedure('public.pesquisar_global(text)') is null
+                 then 'EM FALTA - correr aplicar-0019-parte3.sql'
             when exists (
                    select 1 from pg_proc p
                     where p.pronamespace = 'public'::regnamespace
@@ -342,6 +352,9 @@ select 31, 'crm', 'CRM operacional: próxima acção, valor, motivo de perda e p
                     where p.pronamespace = 'public'::regnamespace
                       and p.proname in ('definir_proxima_accao', 'guardar_oportunidade_crm', 'marcar_perdida')
                       and not ('lock_timeout=4s' = any(coalesce(p.proconfig, '{}'))))
-                 then 'ATENCAO - protecção incompleta; correr aplicar-0019-parte1.sql e parte2.sql de novo'
+                 or has_table_privilege('anon', 'public.crm_oportunidades', 'select')
+                 or not coalesce((select 'security_invoker=true' = any(c.reloptions) from pg_class c
+                                   where c.oid = to_regclass('public.crm_oportunidades')), false)
+                 then 'ATENCAO - protecção incompleta; correr as três partes de aplicar-0019 de novo'
             else 'ok' end
 order by ordem;

@@ -28,6 +28,7 @@ function corpoDe(nome: string): string {
 }
 
 const ESCRITA = [
+  'atribuir_oportunidade',
   'definir_proxima_accao',
   'guardar_oportunidade_crm',
   'marcar_perdida',
@@ -38,16 +39,35 @@ const ESCRITA = [
 ] as const;
 
 describe('0019 — CRM operacional', () => {
-  it('as duas partes de aplicar somam a migração, palavra por palavra', () => {
+  it('as três partes de aplicar somam a migração, palavra por palavra', () => {
     const p1 = corpo('supabase/aplicar-0019-parte1.sql');
     const p2 = corpo('supabase/aplicar-0019-parte2.sql');
-    expect(p1 + p2).toBe(MIGRACAO);
+    const p3 = corpo('supabase/aplicar-0019-parte3.sql');
+    expect(p1 + p2 + p3).toBe(MIGRACAO);
     expect(p1).toContain('add column if not exists proxima_accao');
     expect(p2).toContain('create or replace function public.marcar_perdida(');
-    expect(p2.trimEnd().endsWith("notify pgrst, 'reload schema';")).toBe(true);
-    for (const f of ['supabase/aplicar-0019-parte1.sql', 'supabase/aplicar-0019-parte2.sql']) {
+    expect(p3).toContain('create or replace function public.registar_reuniao(');
+    expect(p3.trimEnd().endsWith("notify pgrst, 'reload schema';")).toBe(true);
+    // Cada parte desiste de um lock preso em vez de bloquear o tráfego, e repõe-no.
+    for (const p of [p1, p2, p3]) {
+      expect(p).toContain("set lock_timeout = '5s';");
+      expect(p).toContain('reset lock_timeout;');
+    }
+    for (const f of [1, 2, 3].map((n) => `supabase/aplicar-0019-parte${n}.sql`)) {
       expect(readFileSync(f).length, f).toBeLessThan(21_000);
     }
+  });
+
+  it('o Cal nunca apaga a data de uma acção escrita pela equipa', () => {
+    const c = corpoDe('registar_reuniao');
+    expect(c).toContain('and d.proxima_accao is null');
+    expect(c).toContain('revisao = d.revisao + 1');
+    expect(MIGRACAO).toMatch(/grant execute on function public\.registar_reuniao\([^)]*\)\s+to service_role;/);
+  });
+
+  it('revisão nula não contorna o controlo optimista', () => {
+    expect(MIGRACAO).not.toMatch(/revisao <> p_revisao|revision <> p_revision/);
+    expect(MIGRACAO).toContain('is distinct from p_revisao');
   });
 
   it('é repetível: só formas idempotentes', () => {
@@ -58,6 +78,8 @@ describe('0019 — CRM operacional', () => {
       expect(MIGRACAO).toContain(`drop constraint if exists ${c}`);
     }
     expect(MIGRACAO).toContain('drop trigger if exists deals_marca_fase');
+    expect(MIGRACAO).toContain('drop view if exists public.crm_oportunidades;');
+    expect(MIGRACAO).not.toMatch(/create or replace view/);
   });
 
   it.each(ESCRITA)('%s: guarda de papel, security definer, search_path e lock_timeout', (nome) => {
@@ -97,6 +119,11 @@ describe('0019 — CRM operacional', () => {
     }
     expect(MIGRACAO).toContain("revoke all on function %s from public, anon");
     expect(MIGRACAO).toContain('revoke all on function public.deals_marca_fase() from public, anon, authenticated');
+  });
+
+  it('a vista do pipeline é security_invoker e não é legível por anon', () => {
+    expect(MIGRACAO).toContain('create view public.crm_oportunidades\nwith (security_invoker = true)');
+    expect(MIGRACAO).toContain('revoke all on public.crm_oportunidades from public, anon;');
   });
 
   it('o contrato RPC cobre as funções novas', () => {
