@@ -4,6 +4,7 @@ import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { AdminHeading, StateBadge } from '@/components/admin/primitives';
 import { FichaOportunidade, type DadosFicha } from '@/components/admin/crm/FichaOportunidade';
 import { HojeVista } from '@/components/admin/crm/HojeVista';
+import { pesquisaExemplo } from './pesquisa-exemplo';
 import { PipelineVista } from '@/components/admin/crm/PipelineVista';
 import { FASE_OPORTUNIDADE } from '@/lib/admin/labels';
 import { resumoHoje, triagem } from '@/lib/crm/hoje';
@@ -237,7 +238,7 @@ export default async function PreVisualizacaoCrm({
       <p role="note" className="bg-[color:var(--on-surface)] px-4 py-2 text-center text-xs text-[color:var(--surface)]">
         Pré-visualização de QA — pessoas, empresas e valores são de exemplo.
       </p>
-      <CascaAdmin sessao={{ nome: 'Pré-visualização', email: 'qa@exemplo.test', papel: 'comercial' }}>{corpo}</CascaAdmin>
+      <CascaAdmin sessao={{ nome: 'Pré-visualização', email: 'qa@exemplo.test', papel: 'comercial' }} pesquisa={pesquisaExemplo}>{corpo}</CascaAdmin>
     </div>
   );
 }

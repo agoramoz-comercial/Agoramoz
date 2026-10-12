@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { Paleta } from '@/components/admin/Paleta';
+import { comandosDe } from '@/lib/admin/comandos';
+import { pesquisarGlobal } from '@/lib/admin/pesquisa-actions';
 import { gruposVisiveis } from '@/lib/admin/navegacao';
 import { LimparRascunhos } from '@/components/admin/espaco/LimparRascunhos';
 import { StateBadge } from '@/components/admin/primitives';
@@ -26,6 +29,7 @@ export function CascaAdmin({
   news = false,
   energia = false,
   direcao = false,
+  pesquisa = pesquisarGlobal,
   children,
 }: {
   sessao: SessaoVisivel;
@@ -40,6 +44,8 @@ export function CascaAdmin({
   energia?: boolean;
   /** Quem tem o módulo `direcao`: o Gabinete do Fundador. Para os outros, 404. */
   direcao?: boolean;
+  /** A pesquisa da paleta (⌘K). A pré-visualização de QA passa uma de exemplo. */
+  pesquisa?: (q: string) => ReturnType<typeof pesquisarGlobal>;
   children: React.ReactNode;
 }) {
   const grupos = gruposVisiveis({
@@ -58,6 +64,10 @@ export function CascaAdmin({
           <Link href="/admin" className="inline-flex" aria-label="Início da administração">
             <Logo variant="mark" className="h-7 w-auto" href={null} />
           </Link>
+
+          <div className="mt-5">
+            <Paleta comandos={comandosDe(grupos)} pesquisa={pesquisa} />
+          </div>
 
           <div className="mt-5 lg:mt-8">
             <AdminNav grupos={grupos} />

@@ -243,7 +243,7 @@ function Lista({ d, aqui }: { d: DadosPipeline; aqui: string }) {
             {pagina.map((o) => (
               <tr key={o.id} className="border-b border-[color:var(--hairline)] last:border-b-0 hover:bg-[color:var(--surface-raised)]">
                 <td className="px-3 py-2.5 align-top">
-                  <Link href={`/admin/oportunidades/${o.id}`} className="font-medium underline-offset-4 hover:underline">
+                  <Link href={`/admin/oportunidades/${o.id}`} data-atalho-linha className="font-medium underline-offset-4 hover:underline">
                     {o.contacto?.nome ?? 'Sem nome'}
                   </Link>
                   {o.organizacao ? <span className="block text-xs text-[color:var(--muted)]">{o.organizacao.nome}</span> : null}
@@ -383,7 +383,7 @@ function Cartao({ o, d, aqui }: { o: OportunidadePipeline; d: DadosPipeline; aqu
   return (
     <li className="flex flex-col gap-2 border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-sm">
       <div>
-        <Link href={`/admin/oportunidades/${o.id}`} className="font-medium underline-offset-4 hover:underline">
+        <Link href={`/admin/oportunidades/${o.id}`} data-atalho-linha className="font-medium underline-offset-4 hover:underline">
           {nome}
         </Link>
         {o.organizacao ? <span className="block text-xs text-[color:var(--muted)]">{o.organizacao.nome}</span> : null}

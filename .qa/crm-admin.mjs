@@ -201,7 +201,74 @@ for (const largura of [390, 768, 1440]) {
     if (largura !== 768) await axe(p, `${e.nome} @${largura}`);
     if (['lista', 'quadro', 'ficha', 'hoje'].includes(e.nome)) await p.screenshot({ path: `${SAIDA}/crm-${e.nome}-${largura}.png`, fullPage: true });
   }
+  await paletaETeclado(ctx, largura);
   await ctx.close();
+}
+
+/** A paleta (⌘K) e os atalhos, sobre o ecrã Hoje de exemplo. */
+async function paletaETeclado(ctx, largura) {
+  const p = await ctx.newPage();
+  const abrirHoje = () => p.goto(`${BASE}/qa/crm?ecra=hoje`, { waitUntil: 'load' });
+  await abrirHoje();
+  const dialogo = p.getByRole('dialog', { name: 'Pesquisa e comandos' });
+  const campo = p.getByRole('combobox');
+
+  await p.keyboard.press('Control+k');
+  confere(await dialogo.isVisible(), `paleta @${largura}: Ctrl+K abre`);
+  confere(await campo.evaluate((el) => el === document.activeElement), 'o foco fica no campo');
+  confere((await p.getByRole('option').count()) >= 10, 'sem termo: lista de comandos');
+  await axe(p, `paleta aberta @${largura}`);
+
+  await campo.fill('rever');
+  const rever = p.getByRole('option', { name: /Diagnósticos por rever/ });
+  confere((await rever.count()) >= 1, 'comando «Diagnósticos por rever» encontrado');
+  confere((await rever.first().innerText()).includes('g r'), 'o comando mostra o atalho g r');
+
+  await campo.fill('banco');
+  await p.getByRole('option', { name: /Exemplo Banco Comercial/ }).first().waitFor({ timeout: 5000 });
+  confere((await p.getByRole('option', { name: /Exemplo Carla Nhantumbo/ }).count()) >= 1, 'pesquisa: a oportunidade da Carla (organização Banco)');
+  const activoAntes = await campo.getAttribute('aria-activedescendant');
+  await p.keyboard.press('ArrowDown');
+  const activoDepois = await campo.getAttribute('aria-activedescendant');
+  confere(activoAntes !== activoDepois && (await p.locator(`[id="${activoDepois}"]`).getAttribute('aria-selected')) === 'true', '↓ muda a opção activa (aria-activedescendant)');
+
+  await campo.fill('zzzz');
+  await p.waitForFunction(() => document.querySelector('[role="status"]')?.textContent?.includes('Sem resultados'), null, { timeout: 5000 }).catch(() => {});
+  confere(((await p.getByRole('dialog').getByRole('status').textContent()) ?? '').includes('Sem resultados para «zzzz»'), 'sem resultados anunciado (role=status)');
+
+  await p.keyboard.press('Escape');
+  confere(!(await dialogo.isVisible()), 'Esc fecha');
+
+  await p.getByRole('button', { name: 'Pesquisar' }).click();
+  confere(await dialogo.isVisible(), 'o botão «Pesquisar» abre a paleta (rato e toque)');
+  await p.keyboard.press('Escape');
+  confere(await p.getByRole('button', { name: 'Pesquisar' }).evaluate((el) => el === document.activeElement), 'ao fechar, o foco volta ao botão');
+
+  await p.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {});
+  await p.keyboard.press('?');
+  confere(await p.getByRole('dialog', { name: 'Atalhos de teclado' }).isVisible(), '? abre a ajuda dos atalhos');
+  await axe(p, `ajuda dos atalhos @${largura}`);
+  await p.keyboard.press('Escape');
+
+  await p.keyboard.press('j');
+  confere(await p.evaluate(() => document.activeElement?.hasAttribute('data-atalho-linha')), 'j põe o foco na primeira linha da lista');
+
+  await p.getByRole('button', { name: 'Pesquisar' }).focus();
+  await p.keyboard.press('g');
+  await p.keyboard.press('p');
+  await p.waitForURL(/\/admin\/oportunidades$/, { timeout: 5000 }).catch(() => {});
+  confere(p.url().endsWith('/admin/oportunidades'), 'g p vai para o pipeline');
+
+  await abrirHoje();
+  await p.getByRole('button', { name: 'Pesquisar' }).click();
+  await campo.fill('sofia');
+  await p.keyboard.press('ArrowDown');
+  await p.waitForTimeout(400);
+  await p.getByRole('option', { name: /Exemplo Sofia Macuácua/ }).first().waitFor({ timeout: 5000 });
+  await campo.press('Enter');
+  await p.waitForURL(/\/admin\//, { timeout: 5000 }).catch(() => {});
+  confere(/\/admin\/(oportunidades|contactos)\//.test(p.url()), 'Enter abre o resultado escolhido', `(${p.url()})`);
+  await p.close();
 }
 
 await b.close();

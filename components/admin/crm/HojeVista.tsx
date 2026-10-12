@@ -134,7 +134,7 @@ export function HojeVista(d: DadosHoje) {
             {(d.porRever?.itens ?? []).map((p) => (
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                 <span>
-                  <Link href={`/admin/diagnosticos/${p.id}`} className="font-medium underline-offset-4 hover:underline">
+                  <Link href={`/admin/diagnosticos/${p.id}`} data-atalho-linha className="font-medium underline-offset-4 hover:underline">
                     {p.contacto ?? 'Sem nome'}
                   </Link>
                   <span className="block text-xs text-[color:var(--muted)]">
@@ -236,7 +236,7 @@ function LinhaAccao({ o, agora, parada }: { o: OportunidadePipeline; agora: Date
   return (
     <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-4 py-3">
       <div className="min-w-0 flex-1">
-        <Link href={`/admin/oportunidades/${o.id}`} className="font-medium underline-offset-4 hover:underline">
+        <Link href={`/admin/oportunidades/${o.id}`} data-atalho-linha className="font-medium underline-offset-4 hover:underline">
           {o.contacto?.nome ?? 'Sem nome'}
         </Link>
         <p className="text-xs text-[color:var(--muted)]">
@@ -267,7 +267,7 @@ function LinhaTriagem({ o, agora, escreve }: { o: OportunidadePipeline; agora: D
   return (
     <li className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-4 py-3">
       <div className="min-w-0 flex-1">
-        <Link href={`/admin/oportunidades/${o.id}`} className="font-medium underline-offset-4 hover:underline">
+        <Link href={`/admin/oportunidades/${o.id}`} data-atalho-linha className="font-medium underline-offset-4 hover:underline">
           {nome}
         </Link>
         <p className="text-xs text-[color:var(--muted)]">
