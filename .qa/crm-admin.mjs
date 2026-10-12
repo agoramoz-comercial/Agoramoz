@@ -268,6 +268,24 @@ async function paletaETeclado(ctx, largura) {
   await campo.press('Enter');
   await p.waitForURL(/\/admin\//, { timeout: 5000 }).catch(() => {});
   confere(/\/admin\/(oportunidades|contactos)\//.test(p.url()), 'Enter abre o resultado escolhido', `(${p.url()})`);
+
+  // WCAG 2.1.4: os atalhos de uma tecla desligam-se, e a ajuda abre sem teclado.
+  await abrirHoje();
+  await p.getByRole('button', { name: 'Atalhos de teclado' }).click();
+  const ajudaDlg = p.getByRole('dialog', { name: 'Atalhos de teclado' });
+  confere(await ajudaDlg.isVisible(), 'botão «Atalhos de teclado» abre a ajuda (sem teclado)');
+  await ajudaDlg.getByRole('checkbox', { name: /Atalhos de uma tecla/ }).uncheck();
+  await p.keyboard.press('Escape');
+  await p.reload({ waitUntil: 'load' });
+  await p.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {});
+  await p.keyboard.press('g');
+  await p.keyboard.press('p');
+  await p.waitForTimeout(600);
+  confere(p.url().includes('/qa/crm'), 'com os atalhos desligados (guardado), g p não navega');
+  await p.keyboard.press('Control+k');
+  confere(await p.getByRole('dialog', { name: 'Pesquisa e comandos' }).isVisible(), 'Ctrl+K funciona sempre');
+  await p.keyboard.press('Escape');
+  await p.evaluate(() => localStorage.removeItem('admin.atalhos'));
   await p.close();
 }
 

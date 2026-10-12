@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Briefcase, CornerDownLeft, Search, User, X, Zap } from 'lucide-react';
+import { Building2, Briefcase, CornerDownLeft, Keyboard, Search, User, X, Zap } from 'lucide-react';
 import { emCampo, filtrarComandos, interpretar, ATALHOS, type Comando } from '@/lib/admin/comandos';
 import { FASE_OPORTUNIDADE, type FaseOportunidade } from '@/lib/admin/labels';
 import { limparTermo, totalDe, VAZIO, type ResultadoPesquisa } from '@/lib/crm/pesquisa-modelo';
@@ -16,6 +16,9 @@ import { cn } from '@/lib/utils/cn';
  * Padrão combobox (WAI-ARIA 1.2): o foco fica no campo; ↑/↓ mudam a opção
  * activa por `aria-activedescendant`; Enter abre. O `<dialog>` nativo dá o
  * fecho por Esc, o fundo inerte e a devolução do foco ao fechar.
+ *
+ * Os atalhos de uma tecla desligam-se na ajuda (WCAG 2.1.4): a escolha fica
+ * neste browser. ⌘K/Ctrl+K usa modificador e fica sempre activo.
  */
 
 type Pesquisa = (q: string) => Promise<{ resultado: ResultadoPesquisa; falhou: boolean }>;
@@ -31,6 +34,22 @@ interface Item {
 }
 
 const ESPERA_MS = 200;
+const ANUNCIO_MS = 500;
+const CHAVE_ATALHOS = 'admin.atalhos';
+
+function lerAtalhos(): boolean {
+  try {
+    return localStorage.getItem(CHAVE_ATALHOS) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+/** A tecla da paleta como o sistema a escreve; no servidor, a do Mac. */
+const naoMuda = () => () => {};
+function teclaPaleta(): string {
+  return /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘K' : 'Ctrl K';
+}
 const G_MS = 1500;
 const ROTULO =
   'font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase';
@@ -66,6 +85,16 @@ function itensDe(comandos: readonly Comando[], q: string, r: ResultadoPesquisa):
   ];
 }
 
+function grupos(itens: readonly Item[]): { nome: string; inicio: number; itens: Item[] }[] {
+  const r: { nome: string; inicio: number; itens: Item[] }[] = [];
+  itens.forEach((item, i) => {
+    const ultimo = r[r.length - 1];
+    if (ultimo && ultimo.nome === item.grupo) ultimo.itens.push(item);
+    else r.push({ nome: item.grupo, inicio: i, itens: [item] });
+  });
+  return r;
+}
+
 export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; pesquisa: Pesquisa }) {
   const router = useRouter();
   const paleta = useRef<HTMLDialogElement>(null);
@@ -82,6 +111,35 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
   const [aProcurar, setAProcurar] = useState(false);
   const [falhou, setFalhou] = useState(false);
   const [activo, setActivo] = useState(0);
+  const [anuncio, setAnuncio] = useState('');
+  const [atalhos, setAtalhos] = useState(true);
+  const atalhosActivos = useRef(true);
+  const lista = useRef<HTMLDivElement>(null);
+  const anuncioEm = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tecla = useSyncExternalStore(naoMuda, teclaPaleta, () => '⌘K');
+
+  // A escolha guardada só se lê no browser, depois da hidratação.
+  useEffect(() => {
+    const v = lerAtalhos();
+    atalhosActivos.current = v;
+    if (!v) queueMicrotask(() => setAtalhos(false));
+  }, []);
+
+  function mudarAtalhos(v: boolean) {
+    atalhosActivos.current = v;
+    setAtalhos(v);
+    try {
+      localStorage.setItem(CHAVE_ATALHOS, v ? 'on' : 'off');
+    } catch {
+      // sem armazenamento (janela privada): vale até fechar a página
+    }
+  }
+
+  /** Só o número final, meio segundo depois de parar de escrever — sem «a procurar» a cada tecla. */
+  function anunciar(texto: string) {
+    if (anuncioEm.current) clearTimeout(anuncioEm.current);
+    anuncioEm.current = setTimeout(() => setAnuncio(texto), ANUNCIO_MS);
+  }
 
   const itens = itensDe(comandos, q, resultado);
   const termo = limparTermo(q);
@@ -100,6 +158,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
   function mudar(valor: string) {
     setQ(valor);
     setActivo(0);
+    if (lista.current) lista.current.scrollTop = 0;
     if (temporizador.current) clearTimeout(temporizador.current);
     const t = limparTermo(valor);
     const n = ++pedido.current;
@@ -107,6 +166,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
       setResultado(VAZIO);
       setAProcurar(false);
       setFalhou(false);
+      anunciar(`${filtrarComandos(comandos, valor).length} comandos.`);
       return;
     }
     setAProcurar(true);
@@ -116,11 +176,14 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
           if (n !== pedido.current) return; // chegou uma resposta mais antiga do que a última pergunta
           setResultado(r.resultado);
           setFalhou(r.falhou);
+          const total = totalDe(r.resultado);
+          anunciar(r.falhou ? 'A pesquisa falhou. Tente de novo.' : total === 0 ? `Sem resultados para «${t}».` : `${total} ${total === 1 ? 'resultado' : 'resultados'}.`);
         })
         .catch(() => {
           if (n === pedido.current) {
             setResultado(VAZIO);
             setFalhou(true);
+            anunciar('A pesquisa falhou. Tente de novo.');
           }
         })
         .finally(() => {
@@ -156,6 +219,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
         return;
       }
       if (paleta.current?.open || ajuda.current?.open) return;
+      if (!atalhosActivos.current) return;
       if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
       if (emCampo(e.target as HTMLElement | null)) return;
 
@@ -198,35 +262,36 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const estado = aProcurar
-    ? 'A procurar…'
-    : falhou
-      ? 'A pesquisa falhou. Tente de novo.'
-      : termo
-        ? totalDe(resultado) === 0
-          ? `Sem resultados para «${termo}». ${itens.length} comandos.`
-          : `${totalDe(resultado)} resultados, ${itens.length - totalDe(resultado)} comandos.`
-        : `${itens.length} comandos. Escreva pelo menos 2 letras para pesquisar.`;
-
   return (
     <>
-      <button
-        type="button"
-        onClick={abrir}
-        aria-keyshortcuts="Control+K Meta+K"
-        className="flex min-h-11 w-full items-center gap-2 rounded-[--radius-xs] border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm text-[color:var(--muted)] hover:text-[color:var(--on-surface)]"
-      >
-        <Search aria-hidden className="size-4" />
-        <span className="flex-1 text-left">Pesquisar</span>
-        <kbd aria-hidden className="rounded-[--radius-xs] border border-[color:var(--border)] px-1.5 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)]">
-          ⌘K
-        </kbd>
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={abrir}
+          aria-keyshortcuts="Control+K Meta+K"
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-[--radius-xs] border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm text-[color:var(--muted)] hover:text-[color:var(--on-surface)]"
+        >
+          <Search aria-hidden className="size-4" />
+          <span className="flex-1 text-left">Pesquisar</span>
+          <kbd aria-hidden className="hidden rounded-[--radius-xs] border border-[color:var(--border)] px-1.5 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] whitespace-nowrap sm:inline">
+            {tecla}
+          </kbd>
+        </button>
+        <button
+          type="button"
+          onClick={() => ajuda.current?.showModal()}
+          aria-label="Atalhos de teclado"
+          title="Atalhos de teclado"
+          className="flex size-11 shrink-0 items-center justify-center rounded-[--radius-xs] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--muted)] hover:text-[color:var(--on-surface)]"
+        >
+          <Keyboard aria-hidden className="size-4" />
+        </button>
+      </div>
 
       <dialog
         ref={paleta}
         aria-labelledby={idTitulo}
-        className="mx-auto mt-[10vh] w-[min(40rem,calc(100vw-2rem))] border border-[color:var(--border)] bg-[color:var(--surface)] p-0 text-[color:var(--on-surface)] shadow-2xl backdrop:bg-black/50"
+        className="mx-auto mt-[4dvh] w-[min(40rem,calc(100vw-2rem))] sm:mt-[10vh] border border-[color:var(--border)] bg-[color:var(--surface)] p-0 text-[color:var(--on-surface)] shadow-2xl backdrop:bg-black/50"
       >
         <h2 id={idTitulo} className="sr-only">
           Pesquisa e comandos
@@ -238,8 +303,9 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
             type="text"
             role="combobox"
             aria-label="Pesquisar contactos, organizações, oportunidades ou comandos"
-            aria-expanded="true"
+            aria-expanded={itens.length > 0}
             aria-controls={idLista}
+            aria-describedby={`${idLista}-dica`}
             aria-autocomplete="list"
             aria-activedescendant={itens[activo] ? `${idLista}-${activo}` : undefined}
             autoComplete="off"
@@ -248,7 +314,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
             onChange={(e) => mudar(e.target.value)}
             onKeyDown={noCampo}
             placeholder="Nome, email, empresa ou comando…"
-            className="min-h-14 flex-1 bg-transparent text-base outline-none"
+            className="min-h-14 flex-1 bg-transparent text-base outline-none placeholder:text-[color:var(--muted)]"
           />
           <button
             type="button"
@@ -261,51 +327,71 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
         </div>
 
         <p role="status" className="sr-only">
-          {estado}
+          {anuncio}
         </p>
 
-        <ul id={idLista} role="listbox" aria-label="Resultados" className="max-h-[55vh] overflow-y-auto py-2">
-          {itens.map((item, i) => {
-            const cabecalho = i === 0 || itens[i - 1]!.grupo !== item.grupo ? item.grupo : null;
-            const Icone = item.Icone;
-            return (
-              <li key={item.id} role="presentation">
-                {cabecalho ? (
-                  <p role="presentation" className={cn(ROTULO, 'px-4 pt-3 pb-1')}>
-                    {cabecalho}
-                  </p>
-                ) : null}
-                <div
-                  id={`${idLista}-${i}`}
-                  role="option"
-                  aria-selected={i === activo}
-                  onMouseMove={() => setActivo(i)}
-                  onClick={() => ir(item.href)}
-                  className={cn(
-                    'mx-2 flex cursor-pointer items-center gap-3 rounded-[--radius-xs] px-3 py-2 text-sm',
-                    i === activo && 'bg-[color:var(--on-surface)] text-[color:var(--surface)]',
-                  )}
-                >
-                  <Icone aria-hidden className="size-4 shrink-0 opacity-70" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate">{item.texto}</span>
-                    {item.detalhe ? <span className="block truncate text-xs opacity-70">{item.detalhe}</span> : null}
-                  </span>
-                  {item.atalho ? (
-                    <kbd aria-hidden className="font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] opacity-70">
-                      {item.atalho}
-                    </kbd>
-                  ) : null}
-                  {i === activo ? <CornerDownLeft aria-hidden className="size-3.5 shrink-0" /> : null}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <div
+          ref={lista}
+          id={idLista}
+          role="listbox"
+          aria-label="Resultados"
+          // Tocar numa opção não tira o foco do campo: o teclado do telemóvel não fecha a meio do toque.
+          onMouseDown={(e) => e.preventDefault()}
+          className="max-h-[calc(100dvh-12rem)] overflow-y-auto py-2 sm:max-h-[55vh]"
+        >
+          {grupos(itens).map((g) => (
+            <div key={g.nome} role="group" aria-labelledby={`${idLista}-g-${g.inicio}`}>
+              <div id={`${idLista}-g-${g.inicio}`} role="presentation" className={cn(ROTULO, 'px-4 pt-3 pb-1')}>
+                {g.nome}
+              </div>
+              {g.itens.map((item, j) => {
+                const i = g.inicio + j;
+                const Icone = item.Icone;
+                return (
+                  <div
+                    key={item.id}
+                    id={`${idLista}-${i}`}
+                    role="option"
+                    aria-selected={i === activo}
+                    onMouseEnter={() => setActivo(i)}
+                    onClick={() => ir(item.href)}
+                    className={cn(
+                      'mx-2 flex cursor-pointer items-center gap-3 rounded-[--radius-xs] px-3 py-3 text-sm sm:py-2',
+                      i === activo && 'bg-[color:var(--on-surface)] text-[color:var(--surface)]',
+                    )}
+                  >
+                    <Icone aria-hidden className="size-4 shrink-0 opacity-70" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{item.texto}</span>
+                      {item.detalhe ? <span className="block truncate text-xs opacity-70">{item.detalhe}</span> : null}
+                    </span>
+                    {item.atalho ? (
+                      <kbd aria-hidden className="font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] opacity-70">
+                        {item.atalho}
+                      </kbd>
+                    ) : null}
+                    {i === activo ? <CornerDownLeft aria-hidden className="size-3.5 shrink-0" /> : null}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        {itens.length === 0 ? (
+          <p className="px-4 py-6 text-center text-sm text-[color:var(--muted)]">
+            {aProcurar ? 'A procurar…' : falhou ? 'A pesquisa falhou. Tente de novo.' : `Sem resultados para «${termo ?? q}».`}
+          </p>
+        ) : null}
 
-        <div aria-hidden className="flex flex-wrap items-center justify-between gap-2 border-t border-[color:var(--border)] px-4 py-2 text-xs text-[color:var(--muted)]">
-          <span>{aProcurar ? 'A procurar…' : falhou ? 'A pesquisa falhou.' : termo && totalDe(resultado) === 0 ? `Sem resultados para «${termo}»` : '↑ ↓ escolher · Enter abrir · Esc fechar'}</span>
-          <span>? atalhos</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[color:var(--border)] px-4 py-2 text-xs text-[color:var(--muted)]">
+          <span id={`${idLista}-dica`}>
+            {aProcurar ? 'A procurar… ' : ''}Setas para escolher, Enter para abrir, Esc para fechar.
+          </span>
+          {termo ? (
+            <a href={`/admin/pesquisa?q=${encodeURIComponent(termo)}`} className="underline">
+              Ver na página de pesquisa
+            </a>
+          ) : null}
         </div>
       </dialog>
 
@@ -332,7 +418,13 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
             </div>
           ))}
         </dl>
-        <p className="mt-4 text-xs text-[color:var(--muted)]">Os atalhos de uma tecla não funcionam dentro de campos de texto.</p>
+        <label className="mt-5 flex min-h-11 cursor-pointer items-center gap-3 border-t border-[color:var(--border)] pt-4 text-sm">
+          <input type="checkbox" checked={atalhos} onChange={(e) => mudarAtalhos(e.target.checked)} className="size-5" />
+          Atalhos de uma tecla (/, ?, g, j, k)
+        </label>
+        <p className="mt-2 text-xs text-[color:var(--muted)]">
+          Desligue se usar comandos de voz ou se as teclas dispararem sem querer. Nunca funcionam dentro de campos de texto; {tecla} funciona sempre.
+        </p>
       </dialog>
     </>
   );

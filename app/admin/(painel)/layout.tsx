@@ -17,6 +17,9 @@ import { serverEnv } from '@/lib/config/env';
  * não sabe o que mostrar.
  */
 
+/** No telemóvel, o teclado encolhe a área visível em vez de tapar a paleta. */
+export const viewport = { interactiveWidget: 'resizes-content' as const };
+
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
   const sessao = await requireStaff();
   const modulos = await modulosDaSessao();
