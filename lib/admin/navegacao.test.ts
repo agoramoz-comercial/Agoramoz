@@ -23,6 +23,7 @@ describe('navegação agrupada do admin', () => {
     expect(hrefs).not.toContain('/admin/news');
     expect(hrefs).not.toContain('/admin/fila');
     expect(hrefs).not.toContain('/admin/equipa');
+    expect(hrefs).not.toContain('/admin/auditoria');
   });
 
   it('o Gabinete e o CEnO só aparecem a quem tem o módulo', () => {

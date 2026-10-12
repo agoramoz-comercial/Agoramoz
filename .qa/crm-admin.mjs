@@ -184,6 +184,65 @@ const ECRAS = [
       confere((await p.locator('#sem-dono li').count()) === 2, 'sem dono funciona antes da 0019');
     },
   },
+  {
+    q: '?ecra=contacto',
+    nome: 'contacto 360',
+    verifica: async (p) => {
+      confere((await p.getByRole('heading', { level: 1, name: 'Exemplo Carla Nhantumbo' }).count()) === 1, 'h1 com o nome do contacto');
+      const resumo = await p.locator('main dl').first().innerText();
+      confere(/Oportunidades abertas\s*1/i.test(resumo) && /Ganhas\s*1/i.test(resumo), 'resumo: 1 aberta e 1 ganha', `(${resumo.replace(/\s+/g, ' ')})`);
+      confere(/350\s000,00\s*MZN/.test(resumo), 'valor em aberto só das abertas (350 000 MZN, não 470 000)');
+      const cons = p.locator('section[aria-labelledby="consentimento"]');
+      confere((await cons.innerText()).includes('Contacto comercial (diagnóstico)') && (await cons.getByText('Concedido', { exact: true }).count()) === 1, 'consentimento comercial (por extenso): Concedido');
+      confere((await cons.getByText('Retirado', { exact: true }).count()) === 1, 'inquérito: Retirado (vale a retirada, não o registo original)');
+      const linha = await p.locator('section[aria-labelledby="linha-temporal"]').innerText();
+      for (const t of ['Submeteu o diagnóstico', 'Consentimento retirado: Inquérito', 'Fase: Novo → Qualificação', 'Reunião marcada', 'Oportunidade criada']) {
+        confere(linha.includes(t), `linha temporal: «${t}»`);
+      }
+      confere(!(await tem(p, /0{8}-0{4}-4000/)), 'nenhum UUID visível');
+      confere(linha.split('Reunião marcada').length === 2, 'a reunião aparece uma só vez');
+    },
+  },
+  {
+    q: '?ecra=organizacao',
+    nome: 'organização 360',
+    verifica: async (p) => {
+      const ligadas = p.locator('section[aria-labelledby="ligadas"]');
+      confere((await ligadas.getByRole('link', { name: 'Exemplo Carla Nhantumbo' }).count()) === 1 && (await ligadas.getByRole('link', { name: 'Exemplo Paulo Chissano' }).count()) === 1, 'oportunidades com o nome de cada pessoa');
+      confere((await p.locator('section[aria-labelledby="linha-temporal"]').innerText()).includes('Exemplo Carla Nhantumbo'), 'linha temporal diz de quem é cada entrada');
+    },
+  },
+  {
+    q: '?ecra=auditoria',
+    nome: 'auditoria',
+    verifica: async (p) => {
+      confere((await p.locator('table tbody tr').count()) === 4, '4 registos');
+      confere(await tem(p, 'Mudou a fase'), 'acção em português');
+      confere(await tem(p, /stage:\s*novo → qualificacao/), 'o que mudou: antes → depois');
+      confere(await tem(p, 'Lista do CRM · oportunidades'), 'exportação CSV registada com a lista');
+      confere((await p.locator('table tbody tr').nth(3).innerText()).includes('Sistema'), 'acção do sistema identificada como «Sistema»');
+      confere((await p.locator('table a[href^="/admin/oportunidades/"]').count()) === 2, 'objectos com ecrã têm ligação');
+    },
+  },
+  {
+    q: '?ecra=ficha',
+    nome: 'ficha histórico',
+    verifica: async (p) => {
+      const h = p.locator('details', { hasText: 'Histórico de alterações' });
+      confere((await h.locator('summary').innerText()).includes('2'), 'histórico: 2 alterações desta oportunidade');
+      await h.locator('summary').click();
+      confere((await h.innerText()).includes('valor: — → 350000'), 'histórico mostra antes → depois');
+      confere((await h.getByRole('link', { name: 'Ver na auditoria' }).getAttribute('href'))?.includes('/admin/auditoria?entidade=deal&id='), 'admin: ligação à auditoria filtrada');
+    },
+  },
+  {
+    q: '',
+    nome: 'exportar',
+    verifica: async (p) => {
+      const href = await p.getByRole('link', { name: 'Exportar CSV' }).getAttribute('href');
+      confere(href === '/admin/oportunidades/exportar', 'botão «Exportar CSV» leva a mesma vista', `(${href})`);
+    },
+  },
 ];
 
 for (const largura of [390, 768, 1440]) {
@@ -199,7 +258,7 @@ for (const largura of [390, 768, 1440]) {
     await e.verifica(p);
     await semScrollHorizontal(p, e.nome);
     if (largura !== 768) await axe(p, `${e.nome} @${largura}`);
-    if (['lista', 'quadro', 'ficha', 'hoje'].includes(e.nome)) await p.screenshot({ path: `${SAIDA}/crm-${e.nome}-${largura}.png`, fullPage: true });
+    if (['lista', 'quadro', 'ficha', 'hoje', 'contacto 360', 'auditoria'].includes(e.nome)) await p.screenshot({ path: `${SAIDA}/crm-${e.nome}-${largura}.png`, fullPage: true });
   }
   await paletaETeclado(ctx, largura);
   await ctx.close();

@@ -1,52 +1,50 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  AdminHeading,
-  DataHora,
-  DefinitionList,
-  EmptyState,
-  StateBadge,
-} from '@/components/admin/primitives';
+import { AdminHeading, DataHora, DefinitionList } from '@/components/admin/primitives';
 import { VoltarLista } from '@/components/admin/MemoriaLista';
 import { Trilho } from '@/components/admin/Trilho';
-import { ESTADO_DIAGNOSTICO, FASE_OPORTUNIDADE } from '@/lib/admin/labels';
+import { Consentimento, LinhaTemporal, OportunidadesLigadas, Resumo360 } from '@/components/admin/crm/Ficha360';
 import { createSessionClient } from '@/lib/auth/client';
-import { serverEnv } from '@/lib/config/env';
+import { requireStaff } from '@/lib/auth/session';
+import { crmOperacional } from '@/lib/crm/activacao';
+import { estadoConsentimento, linhaTemporal, type RegistoConsentimento } from '@/lib/crm/ficha360';
+import { lerEquipa } from '@/lib/crm/leitura';
+import { lerFontes, lerOportunidadesDe } from '@/lib/crm/leitura360';
 
 export const metadata = { title: 'Contacto' };
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function agora(): Promise<Date> {
+  return new Date(Date.now());
+}
+
+/**
+ * O contacto a 360°: quem é, a que empresa pertence, o estado do seu
+ * consentimento, as oportunidades (com dono e próximo passo) e uma só linha
+ * temporal com tudo — respostas, actividades, reuniões, consentimentos.
+ */
 export default async function ContactoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createSessionClient();
+  if (!UUID.test(id)) notFound();
+  await requireStaff();
+  const sb = await createSessionClient();
+  const instante = await agora();
+  const activo = (await crmOperacional(sb)) === true;
 
-  const [contacto, consentimentos, respostas, oportunidades] = await Promise.all([
-    supabase
+  const [contacto, consentimentos, oportunidades, equipa] = await Promise.all([
+    sb
       .from('contacts')
       .select('id, name, email, phone, role, source, created_at, organisations(id, name, domain)')
       .eq('id', id)
       .maybeSingle(),
-    supabase
+    sb
       .from('consent_records')
-      .select('id, purpose, granted, consent_text, consent_version, captured_at')
+      .select('id, purpose, granted, consent_text, consent_version, captured_at, withdrawn_at')
       .eq('contact_id', id)
       .order('captured_at', { ascending: false }),
-    (() => {
-      // Com a 0013 aplicada, as respostas a inquéritos (que têm link) não são
-      // diagnósticos e não entram nesta lista.
-      const env = serverEnv();
-      const q = supabase
-        .from('responses')
-        .select('id, submitted_at, diagnostics(id, state, tier, score)')
-        .eq('contact_id', id);
-      const filtrada =
-        env.SURVEYS === 'on' || env.SURVEY_LINK_SECRET ? q.is('survey_link_id', null) : q;
-      return filtrada.order('submitted_at', { ascending: false });
-    })(),
-    supabase
-      .from('deals')
-      .select('id, stage, tier, score, created_at')
-      .eq('contact_id', id)
-      .order('created_at', { ascending: false }),
+    lerOportunidadesDe(sb, 'contact_id', id, activo),
+    lerEquipa(sb),
   ]);
 
   if (!contacto.data) notFound();
@@ -60,6 +58,11 @@ export default async function ContactoPage({ params }: { params: Promise<{ id: s
     created_at: string;
     organisations: { id: string; name: string; domain: string | null } | null;
   };
+  const registos = (consentimentos.data ?? []) as RegistoConsentimento[];
+  const nomes = new Map((equipa ?? []).map((e) => [e.id, e.nome]));
+  const fontes = await lerFontes(sb, oportunidades, [{ id: c.id, nome: c.name }]);
+  const eventos = linhaTemporal({ ...fontes, consentimentos: registos }, nomes);
+  const ultima = fontes.actividades[0]?.occurred_at ?? null;
 
   return (
     <>
@@ -67,117 +70,44 @@ export default async function ContactoPage({ params }: { params: Promise<{ id: s
         <Trilho itens={[{ texto: 'Contactos', href: '/admin/contactos' }, { texto: c.name }]} />
         <VoltarLista chave="contactos" lista="/admin/contactos" texto="Voltar à lista" />
       </div>
-      <AdminHeading titulo={c.name} descricao={c.email} />
+      <AdminHeading titulo={c.name} descricao={[c.role, c.organisations?.name].filter(Boolean).join(' · ') || c.email} />
 
-      <section className="mb-10">
-        <DefinitionList
-          itens={[
-            { termo: 'Telefone', valor: c.phone ?? '—' },
-            { termo: 'Papel declarado', valor: c.role ?? '—' },
-            { termo: 'Origem', valor: c.source ?? '—' },
-            {
-              termo: 'Organização',
-              valor: c.organisations ? (
-                <Link href={`/admin/organizacoes/${c.organisations.id}`} className="underline">
-                  {c.organisations.name}
-                </Link>
-              ) : (
-                'Sem organização associada'
-              ),
-            },
-            { termo: 'Criado', valor: <DataHora valor={c.created_at} /> },
-          ]}
-        />
-      </section>
+      <Resumo360 oportunidades={oportunidades} ultima={ultima} activo={activo} />
 
-      <section aria-labelledby="consentimento" className="mb-10">
-        <h2 id="consentimento" className="mb-2 text-[length:var(--text-h3)] tracking-[-0.02em]">
-          Consentimento
-        </h2>
-        <p className="mb-4 max-w-[70ch] text-sm text-[color:var(--muted)]">
-          O texto guardado é o que esta pessoa leu, não um resumo. É isto que prova o que foi
-          consentido, quando, e em que versão.
-        </p>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <aside aria-label="Propriedades" className="flex flex-col gap-4 lg:col-start-2 lg:row-start-1">
+          <section aria-labelledby="dados" className="border border-[color:var(--border)] p-4">
+            <h2 id="dados" className="mb-3 text-sm font-medium">
+              Dados
+            </h2>
+            <DefinitionList
+              itens={[
+                { termo: 'Email', valor: c.email },
+                { termo: 'Telefone', valor: c.phone ?? '—' },
+                { termo: 'Papel declarado', valor: c.role ?? '—' },
+                {
+                  termo: 'Organização',
+                  valor: c.organisations ? (
+                    <Link href={`/admin/organizacoes/${c.organisations.id}`} className="underline">
+                      {c.organisations.name}
+                    </Link>
+                  ) : (
+                    'Sem organização'
+                  ),
+                },
+                { termo: 'Origem', valor: c.source ?? '—' },
+                { termo: 'Criado', valor: <DataHora valor={c.created_at} /> },
+              ]}
+            />
+          </section>
+          <Consentimento actuais={estadoConsentimento(registos)} registos={registos} />
+        </aside>
 
-        {(consentimentos.data ?? []).length === 0 ? (
-          <EmptyState titulo="Sem registos de consentimento." />
-        ) : (
-          <ul className="flex flex-col gap-4">
-            {(consentimentos.data ?? []).map((r) => (
-              <li key={r.id as string} className="border border-[color:var(--border)] p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-sm font-medium">{r.purpose as string}</span>
-                  <span className="font-[family-name:var(--font-chakra)] text-xs text-[color:var(--muted)]">
-                    {r.consent_version as string} · <DataHora valor={r.captured_at as string} />
-                  </span>
-                </div>
-                <blockquote className="mt-3 border-l-2 border-[color:var(--border)] pl-4 text-sm">
-                  {r.consent_text as string}
-                </blockquote>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section aria-labelledby="respostas" className="mb-10">
-        <h2 id="respostas" className="mb-4 text-[length:var(--text-h3)] tracking-[-0.02em]">
-          Respostas
-        </h2>
-        {(respostas.data ?? []).length === 0 ? (
-          <EmptyState titulo="Sem respostas." />
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {(respostas.data ?? []).map((r) => {
-              const d = (r.diagnostics as unknown as { id: string; state: string }[] | null)?.[0];
-              return (
-                <li
-                  key={r.id as string}
-                  className="flex flex-wrap items-center gap-3 border border-[color:var(--border)] px-4 py-3 text-sm"
-                >
-                  <DataHora valor={r.submitted_at as string} />
-                  {d ? (
-                    <>
-                      <StateBadge
-                        rotulo={ESTADO_DIAGNOSTICO[d.state as keyof typeof ESTADO_DIAGNOSTICO]}
-                      />
-                      <Link href={`/admin/diagnosticos/${d.id}`} className="underline">
-                        Abrir diagnóstico
-                      </Link>
-                    </>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section aria-labelledby="oportunidades">
-        <h2 id="oportunidades" className="mb-4 text-[length:var(--text-h3)] tracking-[-0.02em]">
-          Oportunidades
-        </h2>
-        {(oportunidades.data ?? []).length === 0 ? (
-          <EmptyState titulo="Sem oportunidades." />
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {(oportunidades.data ?? []).map((o) => (
-              <li
-                key={o.id as string}
-                className="flex flex-wrap items-center gap-3 border border-[color:var(--border)] px-4 py-3 text-sm"
-              >
-                <StateBadge rotulo={FASE_OPORTUNIDADE[o.stage as keyof typeof FASE_OPORTUNIDADE]} />
-                <span>
-                  {o.tier as string} · {o.score as number} pontos
-                </span>
-                <Link href={`/admin/oportunidades/${o.id}`} className="underline">
-                  Abrir
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <div className="flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-1">
+          <OportunidadesLigadas itens={oportunidades} nomes={nomes} agora={instante} activo={activo} />
+          <LinhaTemporal eventos={eventos} />
+        </div>
+      </div>
     </>
   );
 }

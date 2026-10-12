@@ -10,6 +10,7 @@ import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 import { crmOperacional } from '@/lib/crm/activacao';
 import { lerEquipa } from '@/lib/crm/leitura';
+import type { LinhaAuditoria } from '@/lib/admin/auditoria';
 
 export const metadata = { title: 'Oportunidade' };
 
@@ -39,7 +40,7 @@ export default async function OportunidadePage({
   const supabase = await createSessionClient();
   const activo = (await crmOperacional(supabase)) === true;
 
-  const [negocio, actividades, reunioes, equipa] = await Promise.all([
+  const [negocio, actividades, reunioes, equipa, historico] = await Promise.all([
     supabase
       .from('deals')
       .select(activo ? `${BASE}, ${NOVAS}` : BASE)
@@ -54,6 +55,13 @@ export default async function OportunidadePage({
     // Sem a 0012 a tabela não existe: lê-se como «nenhuma reunião».
     supabase.from('reunioes').select('id, estado, tipo, inicio').eq('deal_id', id).order('inicio', { ascending: false }).limit(10),
     lerEquipa(supabase),
+    supabase
+      .from('audit_log')
+      .select('id, actor_id, actor_type, action, entity_type, entity_id, before, after, occurred_at')
+      .eq('entity_type', 'deal')
+      .eq('entity_id', id)
+      .order('occurred_at', { ascending: false })
+      .limit(50),
   ]);
 
   if (!negocio.data) notFound();
@@ -133,6 +141,8 @@ export default async function OportunidadePage({
         equipa={equipa ?? []}
         agora={new Date()}
         perder={perder === '1'}
+        historico={(historico.data ?? []) as LinhaAuditoria[]}
+        admin={sessao.papel === 'admin'}
       />
     </>
   );

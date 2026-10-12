@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowDown, ArrowUp, Columns3, List } from 'lucide-react';
+import { ArrowDown, ArrowUp, Columns3, Download, List } from 'lucide-react';
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { EmptyState, StateBadge } from '@/components/admin/primitives';
 import { atribuirAMim, moverFase } from '@/lib/admin/crm-actions';
@@ -79,9 +79,20 @@ export function PipelineVista(d: DadosPipeline) {
 
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <Filtro f={f} />
+        <div className="flex flex-wrap items-center gap-3">
+        {d.escreve && d.activo ? (
+          <a
+            href={urlCom(f, { pagina: 1 }).replace('/admin/oportunidades', '/admin/oportunidades/exportar')}
+            className="inline-flex min-h-11 items-center gap-2 border border-[color:var(--border)] px-3 text-sm hover:bg-[color:var(--surface-raised)]"
+          >
+            <Download aria-hidden className="size-4" />
+            Exportar CSV
+          </a>
+        ) : null}
         <div role="group" aria-label="Modo de visualização" className="flex">
           <Modo href={urlCom(f, { modo: 'lista', pagina: 1 })} actual={f.modo === 'lista'} Icone={List} texto="Lista" />
           <Modo href={urlCom(f, { modo: 'quadro', pagina: 1 })} actual={f.modo === 'quadro'} Icone={Columns3} texto="Quadro" />
+        </div>
         </div>
       </div>
 

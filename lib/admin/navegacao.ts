@@ -47,6 +47,7 @@ const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[
     entradas: [
       { href: '/admin/fila', texto: 'Fila de envio', icone: 'fila', so: 'admin' },
       { href: '/admin/equipa', texto: 'Equipa', icone: 'equipa', so: 'admin' },
+      { href: '/admin/auditoria', texto: 'Auditoria', icone: 'auditoria', so: 'admin' },
     ],
   },
 ];

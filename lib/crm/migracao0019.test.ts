@@ -36,6 +36,7 @@ const ESCRITA = [
   'registar_actividade',
   'aprovar_diagnostico',
   'rejeitar_diagnostico',
+  'registar_exportacao_crm',
 ] as const;
 
 describe('0019 — CRM operacional', () => {
@@ -129,6 +130,14 @@ describe('0019 — CRM operacional', () => {
   it('o contrato RPC cobre as funções novas', () => {
     expect(RPC.definir_proxima_accao).toEqual(['p_deal_id', 'p_revisao', 'p_accao', 'p_quando']);
     expect(RPC.marcar_perdida).toEqual(['p_deal_id', 'p_motivo', 'p_nota']);
+    expect(RPC.registar_exportacao_crm).toEqual(['p_lista', 'p_linhas', 'p_filtros']);
+  });
+
+  it('a exportação CSV fica na auditoria: só duas listas, nunca os dados exportados', () => {
+    const c = corpoDe('registar_exportacao_crm');
+    expect(c).toContain("p_lista not in ('contactos', 'oportunidades')");
+    expect(c).toContain("'crm.exportar'");
+    expect(c).toContain("octet_length(p_filtros::text) > 1000");
   });
 
   it('verificar-estado: linha 31 distingue parte 1, parte 2 e protecção', () => {

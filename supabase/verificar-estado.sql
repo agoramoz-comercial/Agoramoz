@@ -340,12 +340,14 @@ select 31, 'crm', 'CRM operacional: próxima acção, valor, motivo de perda e p
                     where p.oid = to_regprocedure('public.atribuir_oportunidade(uuid, uuid)')
                       and p.prosrc like '%revisao = d.revisao + 1%')
                  or to_regprocedure('public.pesquisar_global(text)') is null
+                 or to_regprocedure('public.registar_exportacao_crm(text, integer, jsonb)') is null
                  then 'EM FALTA - correr aplicar-0019-parte3.sql'
             when exists (
                    select 1 from pg_proc p
                     where p.pronamespace = 'public'::regnamespace
                       and p.proname in ('definir_proxima_accao', 'guardar_oportunidade_crm', 'marcar_perdida',
-                                        'mudar_fase_oportunidade', 'registar_actividade', 'pesquisar_global')
+                                        'mudar_fase_oportunidade', 'registar_actividade', 'pesquisar_global',
+                                        'registar_exportacao_crm')
                       and has_function_privilege('anon', p.oid, 'execute'))
                  or exists (
                    select 1 from pg_proc p

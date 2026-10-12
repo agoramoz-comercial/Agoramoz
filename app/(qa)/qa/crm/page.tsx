@@ -4,6 +4,10 @@ import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { AdminHeading, StateBadge } from '@/components/admin/primitives';
 import { FichaOportunidade, type DadosFicha } from '@/components/admin/crm/FichaOportunidade';
 import { HojeVista } from '@/components/admin/crm/HojeVista';
+import { Consentimento, LinhaTemporal, OportunidadesLigadas, Resumo360 } from '@/components/admin/crm/Ficha360';
+import { AuditoriaVista } from '@/components/admin/AuditoriaVista';
+import type { LinhaAuditoria } from '@/lib/admin/auditoria';
+import { estadoConsentimento, linhaTemporal, type OportunidadeLigada, type RegistoConsentimento } from '@/lib/crm/ficha360';
 import { pesquisaExemplo } from './pesquisa-exemplo';
 import { PipelineVista } from '@/components/admin/crm/PipelineVista';
 import { FASE_OPORTUNIDADE } from '@/lib/admin/labels';
@@ -18,7 +22,7 @@ import { aplicarVista, lerFiltros, ordenar, VISTAS, type OportunidadePipeline, t
  * e fora da Vercel: em produção é 404.
  *
  * TUDO AQUI É DE EXEMPLO — pessoas, empresas e valores inventados, e a página
- * di-lo no topo. `?ecra=pipeline|ficha|perdida|por-activar|hoje|hoje-vazio|hoje-por-activar` mais os
+ * di-lo no topo. `?ecra=pipeline|ficha|perdida|por-activar|hoje|hoje-vazio|hoje-por-activar|contacto|organizacao|auditoria` mais os
  * parâmetros do pipeline (`vista`, `modo`, `ordem`, `sentido`, `fase`).
  */
 
@@ -189,6 +193,52 @@ function hoje(variante: string) {
   );
 }
 
+const AUDITORIA: LinhaAuditoria[] = [
+  { id: 4, actor_id: EU, actor_type: 'user', action: 'crm.exportar', entity_type: 'crm_lista', entity_id: 'oportunidades', before: null, after: { linhas: 7, filtros: { vista: 'abertas' } }, occurred_at: dias(0, '09:30') },
+  { id: 3, actor_id: EU, actor_type: 'user', action: 'oportunidade.dados', entity_type: 'deal', entity_id: id(3), before: { valor: null, moeda: null }, after: { valor: 350000, moeda: 'MZN' }, occurred_at: dias(-4, '17:20') },
+  { id: 2, actor_id: EU, actor_type: 'user', action: 'oportunidade.mudar_fase', entity_type: 'deal', entity_id: id(3), before: { stage: 'novo' }, after: { stage: 'qualificacao' }, occurred_at: dias(-5, '10:00') },
+  { id: 1, actor_id: null, actor_type: 'system', action: 'diagnostico.aprovar', entity_type: 'diagnostic', entity_id: id(303), before: { state: 'pending_review' }, after: { state: 'approved' }, occurred_at: dias(-5, '09:59') },
+];
+
+const LIGADAS: (OportunidadeLigada & { created_at: string })[] = [
+  { id: id(3), stage: 'qualificacao', owner_id: EU, next_action_at: dias(-2, '15:00'), proxima_accao: 'Enviar resumo do diagnóstico', valor: 350000, moeda: 'MZN', created_at: dias(-23), contacto: 'Exemplo Carla Nhantumbo' },
+  { id: id(10), stage: 'ganho', owner_id: ANA, next_action_at: null, proxima_accao: null, valor: 120000, moeda: 'MZN', created_at: dias(-200), contacto: 'Exemplo Paulo Chissano' },
+];
+
+const CONSENTIMENTOS: RegistoConsentimento[] = [
+  { id: id(501), purpose: 'diagnostico-comercial', granted: true, consent_text: 'Aceito ser contactado pela AGORAMOZ sobre este pedido (exemplo).', consent_version: 'v2', captured_at: dias(-23), withdrawn_at: null },
+  { id: id(502), purpose: 'inquerito', granted: true, consent_text: 'Aceito ser contactado sobre as minhas respostas (exemplo).', consent_version: 'v1', captured_at: dias(-23), withdrawn_at: dias(-3, '12:00') },
+];
+
+function ficha360(tipo: 'contacto' | 'organizacao') {
+  const nomes = new Map(EQUIPA.map((e) => [e.id, e.nome]));
+  const ligadas = tipo === 'contacto' ? LIGADAS.slice(0, 1).concat({ ...LIGADAS[1]!, contacto: 'Exemplo Carla Nhantumbo' }) : LIGADAS;
+  const eventos = linhaTemporal(
+    {
+      actividades: FICHA.actividades.map((a) => ({ ...a, deal_id: id(3), contexto: tipo === 'organizacao' ? 'Exemplo Carla Nhantumbo' : undefined })),
+      respostas: [{ id: id(601), submitted_at: dias(-23), diagnostico: { id: id(303), tier: 'B', score: 640 } }],
+      consentimentos: tipo === 'contacto' ? CONSENTIMENTOS : [],
+      oportunidades: ligadas.map((o) => ({ id: o.id, created_at: o.created_at })),
+    },
+    nomes,
+  );
+  return (
+    <>
+      <AdminHeading titulo={tipo === 'contacto' ? 'Exemplo Carla Nhantumbo' : 'Exemplo Banco Comercial'} descricao={tipo === 'contacto' ? 'Directora de operações · Exemplo Banco Comercial' : 'banco.exemplo.test'} />
+      <Resumo360 oportunidades={ligadas} ultima={FICHA.actividades[0]!.occurred_at} activo />
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <aside aria-label="Propriedades" className="flex flex-col gap-4 lg:col-start-2 lg:row-start-1">
+          {tipo === 'contacto' ? <Consentimento actuais={estadoConsentimento(CONSENTIMENTOS)} registos={CONSENTIMENTOS} /> : null}
+        </aside>
+        <div className="flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-1">
+          <OportunidadesLigadas itens={ligadas} nomes={nomes} agora={AGORA} activo mostrarContacto={tipo === 'organizacao'} />
+          <LinhaTemporal eventos={eventos} />
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default async function PreVisualizacaoCrm({
   searchParams,
 }: {
@@ -199,14 +249,33 @@ export default async function PreVisualizacaoCrm({
   const ecra = p.ecra ?? 'pipeline';
 
   let corpo: React.ReactNode;
-  if (ecra.startsWith('hoje')) {
+  if (ecra === 'contacto' || ecra === 'organizacao') {
+    corpo = ficha360(ecra);
+  } else if (ecra === 'auditoria') {
+    corpo = (
+      <>
+        <AdminHeading titulo="Auditoria" descricao="Pré-visualização com registos de exemplo." />
+        <AuditoriaVista linhas={AUDITORIA} nomes={new Map(EQUIPA.map((e) => [e.id, e.nome]))} equipa={EQUIPA} filtros={{}} pagina={1} haMais={false} />
+      </>
+    );
+  } else if (ecra.startsWith('hoje')) {
     corpo = hoje(ecra);
   } else if (ecra === 'ficha' || ecra === 'perdida' || ecra === 'ficha-por-activar') {
     const d = ecra === 'perdida' ? PERDIDA : FICHA;
     corpo = (
       <>
         <AdminHeading titulo={d.contacto?.nome ?? ''} descricao={d.organizacao?.nome} accao={<StateBadge rotulo={FASE_OPORTUNIDADE[d.stage as keyof typeof FASE_OPORTUNIDADE]} />} />
-        <FichaOportunidade d={d} activo={ecra !== 'ficha-por-activar'} escreve eu={EU} equipa={EQUIPA} agora={AGORA} perder={p.perder === '1'} />
+        <FichaOportunidade
+          d={d}
+          activo={ecra !== 'ficha-por-activar'}
+          escreve
+          eu={EU}
+          equipa={EQUIPA}
+          agora={AGORA}
+          perder={p.perder === '1'}
+          historico={AUDITORIA.filter((a) => a.entity_type === 'deal' && a.entity_id === d.id)}
+          admin
+        />
       </>
     );
   } else {

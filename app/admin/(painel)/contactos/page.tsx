@@ -9,6 +9,7 @@ import {
 } from '@/components/admin/primitives';
 import { fatiar, intervalo } from '@/lib/admin/paginacao';
 import { createSessionClient } from '@/lib/auth/client';
+import { podeEscrever, requireStaff } from '@/lib/auth/session';
 
 export const metadata = { title: 'Contactos' };
 
@@ -29,6 +30,7 @@ export default async function ContactosPage({
   const { pagina, de, ate } = intervalo(paginaBruta);
   const procura = (q ?? '').trim();
 
+  const sessao = await requireStaff();
   const supabase = await createSessionClient();
   let consulta = supabase
     .from('contacts')
@@ -70,6 +72,15 @@ export default async function ContactosPage({
         <button type="submit" className="min-h-11 border border-[color:var(--border)] px-4 text-sm">
           Procurar
         </button>
+        {podeEscrever(sessao.papel) ? (
+          // Dados pessoais: só admin e comercial, e cada exportação fica na auditoria.
+          <a
+            href={procura ? `/admin/contactos/exportar?q=${encodeURIComponent(procura)}` : '/admin/contactos/exportar'}
+            className="ml-auto inline-flex min-h-11 items-center border border-[color:var(--border)] px-4 text-sm"
+          >
+            Exportar CSV{procura ? ' (esta procura)' : ''}
+          </a>
+        ) : null}
       </form>
 
       <DataTable

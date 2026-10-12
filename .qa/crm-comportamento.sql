@@ -323,5 +323,42 @@ begin
 end $$;
 reset role;
 
+-- 16. Exportação CSV registada na auditoria; leitura não exporta ---------------
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a1', true);
+do $$
+begin
+  perform public.registar_exportacao_crm('oportunidades', 7, '{"fase": "proposta"}'::jsonb);
+  begin
+    perform public.registar_exportacao_crm('responses', 1, '{}'::jsonb);
+    raise exception '16: aceitou uma lista desconhecida';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.registar_exportacao_crm('contactos', 1, '[1,2]'::jsonb);
+    raise exception '16: aceitou filtros que não são objecto';
+  exception when sqlstate '22023' then null;
+  end;
+end $$;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a2', true);
+do $$
+begin
+  perform public.registar_exportacao_crm('contactos', 3, '{}'::jsonb);
+  raise exception '16: o papel leitura exportou';
+exception when sqlstate '42501' then null;
+end $$;
+reset role;
+do $$
+begin
+  if (select count(*) from public.audit_log where action = 'crm.exportar' and entity_id = 'oportunidades'
+        and after->>'linhas' = '7' and after->'filtros'->>'fase' = 'proposta'
+        and actor_id = '00000000-0000-0000-0000-0000000000a1') <> 1 then
+    raise exception '16: a exportação não ficou na auditoria';
+  end if;
+  if has_function_privilege('anon', 'public.registar_exportacao_crm(text, integer, jsonb)', 'execute') then
+    raise exception '16: anon pode executar registar_exportacao_crm';
+  end if;
+end $$;
+
 select 'CRM 0019: todos os cenários passaram' as resultado;
 rollback;

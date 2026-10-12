@@ -34,6 +34,8 @@ import {
   type MotivoPerda,
 } from '@/lib/crm/modelo';
 import { cn } from '@/lib/utils/cn';
+import type { LinhaAuditoria } from '@/lib/admin/auditoria';
+import { Historico } from './Historico';
 import { CAMPO, Dias, PorActivar, ProximaAccao, ROTULO, Valor } from './partes';
 
 /**
@@ -89,6 +91,9 @@ export interface PropsFicha {
   readonly agora: Date;
   /** Veio do quadro ou da lista com «Perdido»: abre o formulário do motivo. */
   readonly perder: boolean;
+  /** O `audit_log` desta oportunidade; com `admin`, liga à auditoria completa. */
+  readonly historico?: readonly LinhaAuditoria[];
+  readonly admin?: boolean;
 }
 
 const ICONE_TIPO: Readonly<Record<string, typeof StickyNote>> = {
@@ -101,7 +106,7 @@ const ICONE_TIPO: Readonly<Record<string, typeof StickyNote>> = {
 const CAIXA = 'border border-[color:var(--border)] p-4';
 const H2 = 'mb-3 text-sm font-medium';
 
-export function FichaOportunidade({ d, activo, escreve, eu, equipa, agora, perder }: PropsFicha) {
+export function FichaOportunidade({ d, activo, escreve, eu, equipa, agora, perder, historico = [], admin = false }: PropsFicha) {
   const nomes = new Map(equipa.map((p) => [p.id, p.nome]));
   const fechada = (FASES_FECHADAS as readonly string[]).includes(d.stage);
 
@@ -125,6 +130,7 @@ export function FichaOportunidade({ d, activo, escreve, eu, equipa, agora, perde
           )}
           <Cronologia actividades={d.actividades} nomes={nomes} />
           <Origem d={d} />
+          <Historico entradas={historico} nomes={nomes} auditoria={admin ? `/admin/auditoria?entidade=deal&id=${d.id}` : undefined} />
         </div>
 
       </div>

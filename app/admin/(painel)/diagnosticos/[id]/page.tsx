@@ -26,6 +26,9 @@ import { aprovarDiagnostico, enviarParaRevisao, rejeitarDiagnostico } from '@/li
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 import { crmOperacional } from '@/lib/crm/activacao';
+import { lerEquipa } from '@/lib/crm/leitura';
+import type { LinhaAuditoria } from '@/lib/admin/auditoria';
+import { Historico } from '@/components/admin/crm/Historico';
 
 export const metadata = { title: 'Rever diagnóstico' };
 
@@ -149,11 +152,19 @@ export default async function RevisaoPage({
    * com índice). Com a 0019, aprovar ou rejeitar aqui também lhe muda a
    * fase — por isso a ligação fica à vista antes da decisão.
    */
-  const [negocio, activo] = await Promise.all([
+  const [negocio, activo, historico, equipa] = await Promise.all([
     resposta
       ? supabase.from('deals').select('id, stage, owner_id').eq('source_response_id', resposta.id).maybeSingle()
       : Promise.resolve({ data: null }),
     crmOperacional(supabase),
+    supabase
+      .from('audit_log')
+      .select('id, actor_id, actor_type, action, entity_type, entity_id, before, after, occurred_at')
+      .eq('entity_type', 'diagnostic')
+      .eq('entity_id', id)
+      .order('occurred_at', { ascending: false })
+      .limit(50),
+    lerEquipa(supabase),
   ]);
   const deal = negocio.data as { id: string; stage: string; owner_id: string | null } | null;
   const dono = deal?.owner_id
@@ -440,6 +451,14 @@ export default async function RevisaoPage({
           />
         )}
       </section>
+
+      <div className="mt-10">
+        <Historico
+          entradas={(historico.data ?? []) as LinhaAuditoria[]}
+          nomes={new Map((equipa ?? []).map((e) => [e.id, e.nome]))}
+          auditoria={sessao.papel === 'admin' ? `/admin/auditoria?entidade=diagnostic&id=${id}` : undefined}
+        />
+      </div>
     </>
   );
 }

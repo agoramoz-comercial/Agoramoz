@@ -14,6 +14,7 @@ export const RPC = {
   mudar_fase_oportunidade: ['p_deal_id', 'p_fase', 'p_nota'],
   atribuir_oportunidade: ['p_deal_id', 'p_owner'],
   registar_actividade: ['p_deal_id', 'p_tipo', 'p_corpo'],
+  registar_exportacao_crm: ['p_lista', 'p_linhas', 'p_filtros'],
   // 0019 — CRM operacional.
   definir_proxima_accao: ['p_deal_id', 'p_revisao', 'p_accao', 'p_quando'],
   guardar_oportunidade_crm: ['p_deal_id', 'p_revisao', 'p_valor', 'p_moeda', 'p_data_prevista_fecho'],

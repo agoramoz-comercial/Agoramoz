@@ -146,7 +146,7 @@ export function agruparPorFase<T extends OportunidadePipeline>(itens: readonly T
   return FASES_OPORTUNIDADE.map((fase) => ({ fase, itens: itens.filter((o) => o.stage === fase) }));
 }
 
-export function totaisPorMoeda(itens: readonly OportunidadePipeline[]): { moeda: string; total: number }[] {
+export function totaisPorMoeda(itens: readonly { readonly valor: number | null; readonly moeda: string | null }[]): { moeda: string; total: number }[] {
   const m = new Map<string, number>();
   for (const o of itens) if (o.valor !== null && o.moeda) m.set(o.moeda, (m.get(o.moeda) ?? 0) + o.valor);
   return [...m.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([moeda, total]) => ({ moeda, total }));

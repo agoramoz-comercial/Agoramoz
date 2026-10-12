@@ -802,6 +802,41 @@ $$;
 
 
 -- ---------------------------------------------------------------------------
+-- Exportação CSV das listas do CRM: sem registo na auditoria, não há ficheiro
+-- ---------------------------------------------------------------------------
+-- O ficheiro sai pela aplicação, pela sessão de quem exporta; aqui fica quem,
+-- que lista, quantas linhas e com que filtros (nunca os dados exportados).
+
+create or replace function public.registar_exportacao_crm(
+  p_lista text,
+  p_linhas integer,
+  p_filtros jsonb default '{}'::jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+set lock_timeout = '4s'
+as $$
+begin
+  perform public.exigir_papel(array['admin', 'comercial']::public.user_role[]);
+  if p_lista is null or p_lista not in ('contactos', 'oportunidades') then
+    raise exception 'Lista desconhecida.' using errcode = '22023';
+  end if;
+  if p_linhas is null or p_linhas < 0 or p_linhas > 100000 then
+    raise exception 'Número de linhas inválido.' using errcode = '22023';
+  end if;
+  if p_filtros is not null and (jsonb_typeof(p_filtros) <> 'object' or octet_length(p_filtros::text) > 1000) then
+    raise exception 'Filtros inválidos.' using errcode = '22023';
+  end if;
+  insert into public.audit_log (actor_id, actor_type, action, entity_type, entity_id, after)
+  values (auth.uid(), 'user', 'crm.exportar', 'crm_lista', p_lista,
+          jsonb_build_object('linhas', p_linhas, 'filtros', coalesce(p_filtros, '{}'::jsonb)));
+end;
+$$;
+
+
+-- ---------------------------------------------------------------------------
 -- Direitos
 -- ---------------------------------------------------------------------------
 
@@ -818,7 +853,8 @@ begin
     'public.registar_actividade(uuid, text, text)',
     'public.aprovar_diagnostico(uuid, integer)',
     'public.rejeitar_diagnostico(uuid, integer, text)',
-    'public.pesquisar_global(text)'
+    'public.pesquisar_global(text)',
+    'public.registar_exportacao_crm(text, integer, jsonb)'
   ] loop
     execute format('revoke all on function %s from public, anon', f);
     execute format('grant execute on function %s to authenticated', f);
