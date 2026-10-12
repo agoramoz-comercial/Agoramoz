@@ -1,200 +1,64 @@
-import Link from 'next/link';
 import { MemoriaLista } from '@/components/admin/MemoriaLista';
-import {
-  AdminHeading,
-  DataHora,
-  DataTable,
-  EmptyState,
-  Pagination,
-  StateBadge,
-} from '@/components/admin/primitives';
-import { CANAL, CLASSIFICACAO, FASES_OPORTUNIDADE, FASE_OPORTUNIDADE } from '@/lib/admin/labels';
-import { CANAIS, type Canal } from '@/lib/attribution/types';
-import { sanitizarUtm } from '@/lib/attribution/sanitize';
-import { fatiar, intervalo } from '@/lib/admin/paginacao';
+import { Feedback } from '@/components/admin/Feedback';
+import { AdminHeading } from '@/components/admin/primitives';
+import { PipelineVista } from '@/components/admin/crm/PipelineVista';
+import { TEXTOS_OK_CRM } from '@/components/admin/crm/partes';
 import { createSessionClient } from '@/lib/auth/client';
+import { podeEscrever, requireStaff } from '@/lib/auth/session';
+import { crmOperacional } from '@/lib/crm/activacao';
+import { lerEquipa, lerOportunidades } from '@/lib/crm/leitura';
+import { aplicarVista, lerFiltros, ordenar, VISTAS, type Vista } from '@/lib/crm/pipeline';
 
-export const metadata = { title: 'Oportunidades' };
-
-interface Linha {
-  id: string;
-  stage: string;
-  tier: string | null;
-  score: number | null;
-  created_at: string;
-  acquisition_channel: string;
-  acquisition_campaign: string | null;
-  contacts: { id: string; name: string } | null;
-  organisations: { id: string; name: string } | null;
-}
+export const metadata = { title: 'Pipeline' };
 
 export default async function OportunidadesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ fase?: string; canal?: string; campanha?: string; pagina?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const { fase, canal: canalBruto, campanha: campanhaBruta, pagina: paginaBruta } = await searchParams;
-  const { pagina, de, ate } = intervalo(paginaBruta);
-  const filtro = FASES_OPORTUNIDADE.includes(fase as never) ? fase : undefined;
-  const canal = (CANAIS as readonly string[]).includes(canalBruto ?? '') ? (canalBruto as Canal) : undefined;
-  /**
-   * O MESMO sanitizador que valida na escrita, agora na leitura.
-   *
-   * Não é zelo: `_` é permitido nos UTM porque campanhas reais se chamam
-   * `lancamento_q1`, e `_` é um metacaractere de `LIKE` no Postgres. Passar
-   * este valor por `.ilike()` deixaria um visitante do admin construir padrões
-   * de correspondência. Com `.eq()` e um valor que só pode ser algo que teria
-   * sido possível gravar, a questão não se põe.
-   */
-  const campanha = sanitizarUtm(campanhaBruta) ?? undefined;
-
+  const p = await searchParams;
+  const filtros = lerFiltros(p);
+  const sessao = await requireStaff();
   const supabase = await createSessionClient();
-  let consulta = supabase
-    .from('deals')
-    .select(
-      'id, stage, tier, score, created_at, acquisition_channel, acquisition_campaign, contacts(id, name), organisations(id, name)',
-    )
-    .order('created_at', { ascending: false })
-    .range(de, ate);
 
-  if (filtro) consulta = consulta.eq('stage', filtro);
-  if (canal) consulta = consulta.eq('acquisition_channel', canal);
-  if (campanha) consulta = consulta.eq('acquisition_campaign', campanha);
+  // `null` (leitura falhou por outra razão) trata-se como não activo: mostra
+  // o essencial em vez de partir, e o aviso diz o que falta.
+  const activo = (await crmOperacional(supabase)) === true;
+  const [lido, equipa] = await Promise.all([
+    lerOportunidades(supabase, { fase: filtros.fase, canal: filtros.canal, campanha: filtros.campanha }, activo),
+    lerEquipa(supabase),
+  ]);
 
-  const { data } = await consulta;
-  const { linhas, haMais } = fatiar(data as unknown as Linha[] | null);
+  const agora = new Date();
+  const todas = lido?.itens ?? [];
+  const contagens = Object.fromEntries(
+    VISTAS.map((v) => [v, aplicarVista(todas, v, sessao.userId, agora).length]),
+  ) as Record<Vista, number>;
+  const itens = ordenar(aplicarVista(todas, filtros.vista, sessao.userId, agora), filtros.ordem, filtros.sentido);
 
   return (
     <>
       <MemoriaLista chave="oportunidades" />
       <AdminHeading
-        titulo="Oportunidades"
-        descricao="Uma por submissão que a política do questionário determina. Uma repetição da mesma resposta não cria uma segunda."
+        titulo="Pipeline"
+        descricao="Cada oportunidade com a sua fase, o seu dono e o próximo passo. As vistas e a ordem ficam no endereço: pode partilhá-lo."
       />
-
-      <form method="get" className="mb-6 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
-            Fase
-          </span>
-          <select
-            name="fase"
-            defaultValue={filtro ?? ''}
-            className="min-h-11 rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3"
-          >
-            <option value="">Todas</option>
-            {FASES_OPORTUNIDADE.map((f) => (
-              <option key={f} value={f}>
-                {FASE_OPORTUNIDADE[f].texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
-            Canal
-          </span>
-          <select
-            name="canal"
-            defaultValue={canal ?? ''}
-            className="min-h-11 rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3"
-          >
-            <option value="">Todos</option>
-            {CANAIS.map((c) => (
-              <option key={c} value={c}>
-                {CANAL[c].texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
-            Campanha
-          </span>
-          <input
-            type="search"
-            name="campanha"
-            defaultValue={campanha ?? ''}
-            placeholder="gbp"
-            className="min-h-11 rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3"
-          />
-        </label>
-        <button type="submit" className="min-h-11 border border-[color:var(--border)] px-4 text-sm">
-          Filtrar
-        </button>
-        {filtro || canal || campanha ? (
-          <Link href="/admin/oportunidades" className="min-h-11 py-3 text-sm underline">
-            Limpar
-          </Link>
-        ) : null}
-      </form>
-
-      <DataTable
-        legenda="Oportunidades, da mais recente para a mais antiga"
-        linhas={linhas}
-        chaveDe={(l) => l.id}
-        vazio={<EmptyState titulo="Ainda não há oportunidades." />}
-        colunas={[
-          {
-            chave: 'contacto',
-            cabecalho: 'Contacto',
-            render: (l) => (
-              <Link href={`/admin/oportunidades/${l.id}`} className="underline">
-                {l.contacts?.name ?? 'Sem nome'}
-              </Link>
-            ),
-          },
-          {
-            chave: 'org',
-            cabecalho: 'Organização',
-            render: (l) =>
-              l.organisations?.name ?? <span className="text-[color:var(--muted)]">—</span>,
-          },
-          {
-            chave: 'fase',
-            cabecalho: 'Fase',
-            render: (l) => (
-              <StateBadge rotulo={FASE_OPORTUNIDADE[l.stage as keyof typeof FASE_OPORTUNIDADE]} />
-            ),
-          },
-          {
-            chave: 'classificacao',
-            cabecalho: 'Classificação',
-            render: (l) => (l.tier ? <span title={CLASSIFICACAO[l.tier]}>{l.tier}</span> : '—'),
-          },
-          {
-            chave: 'pontuacao',
-            cabecalho: 'Pontuação',
-            numerico: true,
-            render: (l) => l.score ?? '—',
-          },
-          {
-            chave: 'origem',
-            cabecalho: 'Origem',
-            render: (l) => (
-              <>
-                <StateBadge rotulo={CANAL[l.acquisition_channel as Canal]} />
-                {l.acquisition_campaign ? (
-                  <span className="mt-1 block text-[length:var(--text-micro)] text-[color:var(--muted)]">
-                    {l.acquisition_campaign}
-                  </span>
-                ) : null}
-              </>
-            ),
-          },
-          {
-            chave: 'criada',
-            cabecalho: 'Criada',
-            render: (l) => <DataHora valor={l.created_at} />,
-          },
-        ]}
-      />
-
-      <Pagination
-        base="/admin/oportunidades"
-        pagina={pagina}
-        haMais={haMais}
-        parametros={{ fase: filtro, canal, campanha }}
+      <Feedback erro={p.erro} ok={p.ok} textos={TEXTOS_OK_CRM} />
+      {lido === null ? (
+        <p role="alert" className="mb-6 border border-[color:var(--color-signal-700)] px-4 py-3 text-sm">
+          Não foi possível ler as oportunidades. Recarregue a página; se persistir, veja o estado da base.
+        </p>
+      ) : null}
+      <PipelineVista
+        filtros={filtros}
+        itens={itens}
+        contagens={contagens}
+        truncado={lido?.truncado ?? false}
+        activo={activo}
+        escreve={podeEscrever(sessao.papel)}
+        eu={sessao.userId}
+        nomes={new Map((equipa ?? []).map((e) => [e.id, e.nome]))}
+        agora={agora}
       />
     </>
   );
