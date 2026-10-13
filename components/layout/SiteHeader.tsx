@@ -97,7 +97,10 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
               key={item.href}
               href={item.href}
               aria-current={pathname === item.href ? 'page' : undefined}
-              className="rule-label inline-flex min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
+              className={cn(
+                'rule-label min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]',
+                'desde' in item && item.desde === 'xl' ? 'hidden xl:inline-flex' : 'inline-flex',
+              )}
             >
               {item.label}
             </Link>

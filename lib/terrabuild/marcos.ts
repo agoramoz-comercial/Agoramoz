@@ -44,7 +44,7 @@ function linha(passo: PassoId, c: Componente): string {
     case 'selecionar':
       return `Componente escolhido: ${c.nome}. Falta financiar ${valor} (fictício).`;
     case 'comprometer':
-      return `${valor} ficariam comprometidos numa conta de garantia. Nesta demonstração nada foi reservado.`;
+      return `${valor} ficariam comprometidos numa conta de custódia (escrow), numa instituição autorizada. Nesta demonstração nada foi reservado.`;
     case 'executar':
       return `${c.responsavel} executa o marco com o ${c.fornecedor.charAt(0).toLowerCase()}${c.fornecedor.slice(1)}.`;
     case 'evidencias': {

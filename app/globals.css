@@ -63,6 +63,16 @@
   --color-dado-contexto: #85858d; /* 3,12:1 sobre giz; CVD ΔE 11,3 com o verde */
   --color-dado-negativo: #b82200;
 
+  /* Gémeo digital (D-41): a ÚNICA cor fora da regra das três, e só dentro do
+     visualizador da demo TerraBuild, para as camadas de dados. Os três
+     primeiros passos da paleta de referência do skill dataviz para fundo
+     escuro, validados todos-os-pares sobre tinta-950: CVD ΔE 9,4, visão normal
+     ΔE 20,9, ≥ 3:1. O risco de cheia é textura, não cor; a obra em curso é
+     traço tracejado. Cada camada leva também nome na legenda. */
+  --color-gemeo-agua: #3987e5;
+  --color-gemeo-eletrica: #d95926;
+  --color-gemeo-talhoes: #199e70;
+
   /* ------------------------------------------------------------ tipografia */
   --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

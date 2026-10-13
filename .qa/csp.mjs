@@ -23,6 +23,8 @@ const ROTAS = [
   '/contactos',
   '/como-trabalhamos',
   '/privacidade',
+  '/projetos',
+  '/projetos/fazenda-inteligente-001',
 ];
 
 const ECRAS = [
