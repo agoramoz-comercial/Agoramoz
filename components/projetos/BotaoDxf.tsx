@@ -9,6 +9,7 @@ import { useState } from 'react';
 export function BotaoDxf({ rotulo, ficheiro, gerar }: { rotulo: string; ficheiro: string; gerar: () => Promise<string> }) {
   const [estado, setEstado] = useState<'pronto' | 'a-gerar' | 'feito' | 'erro'>('pronto');
   const descarregar = async () => {
+    if (estado === 'a-gerar') return; // aria-disabled não bloqueia o clique
     setEstado('a-gerar');
     try {
       const texto = await gerar();

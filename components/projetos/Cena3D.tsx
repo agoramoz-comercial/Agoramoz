@@ -1,7 +1,7 @@
 'use client';
 
-import { Canvas, useThree } from '@react-three/fiber';
-import { Html, Line, OrbitControls, PerformanceMonitor } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Html, Line, OrbitControls } from '@react-three/drei';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { Elemento, Projeto, Retangulo } from '@/content/projetos/tipos';
@@ -76,10 +76,10 @@ export function Cena3D({
         <color attach="background" args={[COR.tinta]} />
         <Conteudo p={p} estado={estado} orc={orc} selecionado={selecionado} onSelecionar={onSelecionar} onFalha={onFalha} />
         <OrbitControls makeDefault target={[0, 8, 0]} maxPolarAngle={Math.PI / 2.15} minDistance={60} maxDistance={700} enableDamping={false} />
-        {automatico && nivel !== 'leve' ? <PerformanceMonitor flipflops={2} onDecline={() => setTeto(abaixo(nivel))} /> : null}
+        {automatico && nivel !== 'leve' ? <MonitorFluidez onLento={() => setTeto(abaixo(nivel))} /> : null}
         <Medidor caixa={caixa} />
       </Canvas>
-      <p role="status" className="pointer-events-none absolute right-3 bottom-3 max-w-[60%] bg-[color:var(--color-ink-950)]/70 px-2 text-right text-xs text-white empty:hidden">
+      <p role="status" className="pointer-events-none absolute right-3 bottom-3 max-w-[60%] bg-[color:var(--color-ink-950)]/70 px-2 text-right text-xs text-white empty:bg-transparent empty:p-0">
         {automatico && teto !== 'alta' ? `Qualidade 3D: ${NOME_NIVEL[nivel]}, para manter a fluidez neste dispositivo.` : ''}
       </p>
     </div>
@@ -93,6 +93,28 @@ export function Cena3D({
  */
 const SOMBRAS = { type: THREE.PCFShadowMap, autoUpdate: false } as const;
 const GL = { antialias: true, alpha: false, powerPreference: 'default' } as const;
+
+/**
+ * Desce um nível se a cena engasgar enquanto se mexe: 45 quadros seguidos
+ * abaixo de 24 fps. Com frameloop="demand" há pausas entre quadros; essas
+ * não contam (o PerformanceMonitor do drei contava-as como lentidão e
+ * acabava por rebaixar máquinas rápidas).
+ */
+function MonitorFluidez({ onLento }: { onLento: () => void }) {
+  const lentos = useRef(0);
+  useFrame((_, dt) => {
+    if (dt > 0.25) {
+      lentos.current = 0;
+      return;
+    }
+    lentos.current = dt > 1 / 24 ? lentos.current + 1 : 0;
+    if (lentos.current >= 45) {
+      lentos.current = 0;
+      onLento();
+    }
+  });
+  return null;
+}
 
 /** Triângulos do último quadro, no contentor: a QA confirma o orçamento do nível. */
 function Medidor({ caixa }: { caixa: React.RefObject<HTMLDivElement | null> }) {

@@ -41,6 +41,10 @@ export interface Recursos {
 
 /** Suspende até os GLB e as texturas chegarem (a cena procedimental fica entretanto). */
 export function useRecursos(): Recursos {
+  // Os três pedidos em paralelo (sem isto, cada hook suspende antes do seguinte começar).
+  useGLTF.preload(ATIVOS.fazenda, false, false);
+  useGLTF.preload(ATIVOS.instancias, false, false);
+  useTexture.preload(ATIVOS.texturas);
   const fazenda = useGLTF(ATIVOS.fazenda, false, false);
   const inst = useGLTF(ATIVOS.instancias, false, false);
   const [savana, solo, soloNormal, gravilha] = useTexture(ATIVOS.texturas) as THREE.Texture[];
@@ -97,6 +101,12 @@ export class LimiteRecursos extends Component<{ alternativa: ReactNode; children
   static getDerivedStateFromError() {
     return { falhou: true };
   }
+  // A falha fica em cache no loader; limpa-se para a próxima montagem voltar a tentar.
+  componentDidCatch() {
+    useGLTF.clear(ATIVOS.fazenda);
+    useGLTF.clear(ATIVOS.instancias);
+    useTexture.clear(ATIVOS.texturas);
+  }
   render() {
     return this.state.falhou ? this.props.alternativa : this.props.children;
   }
@@ -110,12 +120,18 @@ export class LimiteRecursos extends Component<{ alternativa: ReactNode; children
  * pequeno, refeita só quando a hora muda. Nada é descarregado.
  */
 export function Ceu({ sol, ambiente }: { sol: [number, number, number]; ambiente: boolean }) {
+  // O mesmo elemento enquanto o sol não muda: o Environment só refaz a captura
+  // (e reaproveita o mesmo alvo) quando a hora muda, não a cada render da cena.
+  const ceu = useMemo(
+    () => <Sky distance={1500} sunPosition={sol} turbidity={3} rayleigh={0.9} mieCoefficient={0.003} mieDirectionalG={0.8} />,
+    [sol],
+  );
   return (
     <>
-      <Sky distance={1500} sunPosition={sol} turbidity={3} rayleigh={0.9} mieCoefficient={0.003} mieDirectionalG={0.8} />
+      {ceu}
       {ambiente ? (
-        <Environment key={sol.join(',')} frames={1} resolution={64} environmentIntensity={0.55}>
-          <Sky distance={1500} sunPosition={sol} turbidity={3} rayleigh={0.9} mieCoefficient={0.003} mieDirectionalG={0.8} />
+        <Environment frames={1} resolution={64} environmentIntensity={0.55}>
+          {ceu}
         </Environment>
       ) : null}
       <fog attach="fog" args={['#b7c6d3', 650, 2200]} />
@@ -504,5 +520,7 @@ function MalhaInstanciada({
     im.instanceMatrix.needsUpdate = true;
     im.computeBoundingSphere();
   }, [matrizes, local]);
-  return <instancedMesh ref={ref} args={[geo, mat, matrizes.length]} castShadow={sombra} receiveShadow dispose={null} />;
+  // Sem dispose={null}: o R3F só liberta o próprio buffer de instâncias; a
+  // geometria e o material do GLB (passados em args) não são tocados.
+  return <instancedMesh ref={ref} args={[geo, mat, matrizes.length]} castShadow={sombra} receiveShadow />;
 }

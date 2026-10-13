@@ -80,7 +80,7 @@ Secções da ficha (âncoras):
 
 - **three 0.186.1, @react-three/fiber 9.8.1, @react-three/drei 10.7.9** (licença MIT):
   - versões exactas fixadas;
-  - do drei usam-se `OrbitControls`, `Line`, `Html`, `Sky`, `Environment` (só com filhos: o céu é renderizado para luz ambiente, sem `preset` nem ficheiros de CDN), `useGLTF` (sem Draco nem meshopt), `useTexture` e `PerformanceMonitor`. `Text` e os presets do `Environment` continuam fora, porque vão a CDNs que a CSP bloqueia.
+  - do drei usam-se `OrbitControls`, `Line`, `Html`, `Sky`, `Environment` (só com filhos: o céu é renderizado para luz ambiente, sem `preset` nem ficheiros de CDN), `useGLTF` (sem Draco nem meshopt) e `useTexture`. `Text` e os presets do `Environment` continuam fora, porque vão a CDNs que a CSP bloqueia.
 - **Carregamento:** o 3D entra por `next/dynamic` com `ssr: false`, só ao clicar em «Vista 3D» ou com `#gemeo-3d`. O chunk tem cerca de 257 KB gzip e nada disto está no carregamento inicial.
 - **Desempenho:** `frameloop="demand"`; o `dpr`, as sombras e o resto dependem do nível de qualidade (abaixo).
 - **Recurso 2D:** sem WebGL, ou se o contexto se perder, a vista volta à planta 2D, que tem a mesma informação.
@@ -170,7 +170,7 @@ Activos em `public/terrabuild/`:
 | Alta | ≥ 8 GB, ≥ 8 núcleos e rato | igual | 300 mil | 2048² | ≤ 2 |
 
 - **Escolha manual:** «Qualidade 3D: Automática · Leve · Normal · Alta», na barra da vista 3D. A escolha da pessoa ganha sempre.
-- **Adaptação:** em Automática, o `PerformanceMonitor` desce um nível se a cena engasgar e diz porquê.
+- **Adaptação:** em Automática, um monitor próprio (`MonitorFluidez`) desce um nível ao fim de 45 quadros seguidos abaixo de 24 fps, e diz porquê. As pausas do `frameloop="demand"` não contam: o `PerformanceMonitor` do drei contava-as e rebaixava máquinas rápidas (achado da revisão ECC).
 - **Medido na QA (SwiftShader):**
   - Leve: 35 mil triângulos, sem nenhum pedido `.glb`;
   - Normal: 115 mil.
