@@ -23,3 +23,7 @@ next-env.d.ts
 .qa/*.png
 .qa/*.json
 .qa/*.txt
+
+# Saída intermédia do pipeline Blender (os activos finais vão para public/terrabuild)
+.qa/blender/saida/
+.qa/blender/__pycache__/
