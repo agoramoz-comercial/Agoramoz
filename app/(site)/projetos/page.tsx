@@ -17,7 +17,7 @@ import { buildMetadata } from '@/lib/seo/site';
  * devem aparecer em pesquisas como se fossem da AGORAMOZ.
  */
 export const metadata: Metadata = buildMetadata({
-  title: 'Projetos: demonstração TerraBuild em Moçambique',
+  title: 'Projetos: demonstração TerraBuild (dados fictícios)',
   description:
     'Demonstração com dados fictícios: terreno em 2D e 3D, construção simulada, materiais e custos, cenários agrícolas e financiamento por marcos verificáveis.',
   path: '/projetos',

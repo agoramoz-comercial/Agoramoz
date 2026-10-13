@@ -85,3 +85,10 @@ describe('hreflang no sitemap', () => {
     }
   });
 });
+
+describe('demonstração fora do sitemap (D-41)', () => {
+  it('nenhum URL de /projetos (nem /en/projetos) entra no sitemap', () => {
+    const demo = ENTRADAS.map((e) => new URL(e.url).pathname).filter((p) => /^\/(en\/)?projetos(\/|$)/.test(p));
+    expect(demo).toEqual([]);
+  });
+});

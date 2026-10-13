@@ -108,6 +108,20 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        /**
+         * Demonstração TerraBuild (D-41): números fictícios fora do índice em
+         * toda a árvore, mesmo numa página nova que esqueça `noindex: true`.
+         * As duas fontes, porque `:path*` não garante o caminho sem barra.
+         * Sai quando houver um projeto real e autorizado.
+         */
+        source: '/projetos',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/projetos/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
         // Pré-visualizações de QA (só com ADMIN_PREVIEW, nunca em produção):
         // fora dos motores de busca mesmo que algum dia respondam.
         source: '/qa/:path*',

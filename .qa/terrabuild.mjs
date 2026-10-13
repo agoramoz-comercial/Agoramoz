@@ -293,10 +293,10 @@ for (const largura of [1024, 1280]) {
   await p.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   const [sw, iw] = await p.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
   confere(sw <= iw, `${largura} px: o cabeçalho não transborda`, `(${sw} > ${iw})`);
-  const noCabecalho = await p.locator('header').getByRole('link', { name: 'Projetos', exact: true }).first().isVisible();
+  const noCabecalho = await p.locator('header').getByRole('link', { name: 'Projetos (demo)', exact: true }).first().isVisible();
   // Entre 1024 e 1279 px não cabe sem mudar o desenho: fica no rodapé e nos CTAs.
   confere(noCabecalho === largura >= 1280, `${largura} px: «Projetos» ${largura >= 1280 ? 'visível' : 'fora'} do cabeçalho`);
-  confere((await p.locator('footer').getByRole('link', { name: 'Projetos', exact: true }).count()) === 1, `${largura} px: «Projetos» no rodapé`);
+  confere((await p.locator('footer').getByRole('link', { name: 'Projetos (demo)', exact: true }).count()) === 1, `${largura} px: «Projetos» no rodapé`);
   await p.locator('header').screenshot({ path: `${SAIDA}/terrabuild-cabecalho-${largura}.png` });
   await ctx.close();
 }
@@ -305,7 +305,7 @@ for (const largura of [1024, 1280]) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   await p.locator('header').getByRole('button', { name: /menu/i }).first().click();
-  confere(await p.getByRole('link', { name: 'Projetos', exact: true }).first().isVisible(), '390 px: «Projetos» na gaveta do menu');
+  confere(await p.getByRole('link', { name: 'Projetos (demo)', exact: true }).first().isVisible(), '390 px: «Projetos» na gaveta do menu');
   await ctx.close();
 }
 const sitemap = await (await fetch(`${BASE}/sitemap.xml`)).text();

@@ -29,6 +29,8 @@ export function regrasPara(host: string | null): MetadataRoute.Robots {
      * evita o pedido. Para uma área cuja própria existência não interessa
      * anunciar, poupar o pedido é o ponto.
      */
+    // `/projetos` (demo, D-41) NÃO entra aqui de propósito: o rastreador tem de
+    // pedir a página para ler o `noindex`; recusá-la deixava o URL no índice.
     rules: { userAgent: '*', allow: '/', disallow: ['/api/', '/admin/'] },
     sitemap: absolute('/sitemap.xml'),
   };

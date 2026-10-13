@@ -351,3 +351,12 @@ describe('directivas de robots', () => {
     expect(m.robots).toEqual({ index: false, follow: false });
   });
 });
+
+describe('demonstração /projetos fora do índice (D-41)', () => {
+  it('todas as páginas da árvore declaram noindex', () => {
+    const paginas = ficheiros('app/(site)/projetos', 'page.tsx');
+    // Pelo menos o hub e a ficha: o teste não pode passar por não encontrar nada.
+    expect(paginas.length).toBeGreaterThanOrEqual(2);
+    for (const f of paginas) expect(readFileSync(f, 'utf-8'), f).toMatch(/noindex:\s*true/);
+  });
+});

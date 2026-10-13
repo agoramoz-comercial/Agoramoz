@@ -12,6 +12,10 @@ describe('robots.txt por host', () => {
     expect(r).not.toHaveProperty('host');
   });
 
+  it('a demonstração /projetos não é recusada: o rastreador tem de ver o noindex (D-41)', () => {
+    expect(JSON.stringify(regrasPara(canonico).rules)).not.toContain('projetos');
+  });
+
   it('maiúsculas e porta não mudam a decisão', () => {
     expect(regrasPara(`${canonico.toUpperCase()}:443`).rules).toMatchObject({ allow: '/' });
   });

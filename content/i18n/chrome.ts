@@ -79,7 +79,7 @@ export const NAV_TEXTO: Record<
   Texto
 > = {
   '/como-trabalhamos': { pt: 'Como trabalhamos', en: 'How we work' },
-  '/projetos': { pt: 'Projetos', en: 'Projects' },
+  '/projetos': { pt: 'Projetos (demo)', en: 'Projects (demo)' },
   '/setores': { pt: 'Setores', en: 'Sectors' },
   '/seguranca-qualidade': { pt: 'Segurança e qualidade', en: 'Security and quality' },
   '/faq': { pt: 'Perguntas frequentes', en: 'FAQ' },

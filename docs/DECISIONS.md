@@ -521,8 +521,13 @@ está em `docs/TERRABUILD.md`.
 - **Excepção à regra monocromática:** três cores de camada validadas para
   daltonismo (água, eléctrica, talhões). O risco é textura; obra em curso é
   contorno tracejado.
-- **Cabeçalho:** «Projetos» só a partir de `xl` (1280 px). Entre 1024 e 1279 px
-  não cabia sem mudar o desenho; aí fica no rodapé e na gaveta.
+- **Navegação:** o rótulo é «Projetos (demo)», o selo antes do clique. No
+  cabeçalho só a partir de `xl` (1280 px); entre 1024 e 1279 px não cabia sem
+  mudar o desenho, e aí fica no rodapé e na gaveta.
+- **Fora do índice por três vias:** `noindex, nofollow` nas páginas, o cabeçalho
+  `X-Robots-Tag` em toda a árvore `/projetos` (`next.config.ts`) e testes que
+  falham se uma página perder o `noindex` ou entrar no sitemap. O `robots.txt`
+  não recusa `/projetos`, para o rastreador conseguir ler o `noindex`.
 
 **Consequência:**
 - A demo serve o G0 do documento do fundador. Passar a real exige o G1:

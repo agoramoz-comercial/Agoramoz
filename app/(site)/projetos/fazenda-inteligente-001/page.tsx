@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils/cn';
  * estado em memória (`GemeoProvider`).
  */
 export const metadata: Metadata = buildMetadata({
-  title: 'Fazenda Inteligente 001 — demonstração',
+  title: 'Fazenda Inteligente 001: demonstração (dados fictícios)',
   description:
     'Gémeo digital fictício de uma fazenda de 12 ha: camadas, linha temporal da obra, quantidades e custos ao vivo, cenários agrícolas e marcos simulados.',
   path: '/projetos/fazenda-inteligente-001',
