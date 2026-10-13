@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { Component, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { Elemento, FaseId } from '@/content/projetos/tipos';
 import { mzn } from '@/lib/terrabuild/formato';
+import { NIVEIS, NOME_NIVEL, type EscolhaQualidade } from '@/lib/terrabuild/qualidade';
 import { contarNaFase, custoElemento, estadoNaFase } from '@/lib/terrabuild/obra';
 import { cn } from '@/lib/utils/cn';
 import { CAMADAS, useGemeo, type Base, type Camada } from './estado';
@@ -144,6 +145,17 @@ export function Visualizador() {
               </Alternar>
             ))}
           </fieldset>
+          {estado.vista === '3d' ? (
+            <fieldset className="flex flex-wrap items-center gap-2">
+              {/* Automática: pelo dispositivo (memória, núcleos, ecrã táctil, poupança de dados). */}
+              <legend className={cn(ROTULO, 'mb-2 w-full')}>Qualidade 3D</legend>
+              {(['auto', ...NIVEIS] as EscolhaQualidade[]).map((q) => (
+                <Alternar key={q} ativo={estado.qualidade === q} onClick={() => despachar({ tipo: 'qualidade', qualidade: q })}>
+                  {NOME_NIVEL[q]}
+                </Alternar>
+              ))}
+            </fieldset>
+          ) : null}
         </div>
         <fieldset className="flex flex-wrap items-center gap-2">
           <legend className={cn(ROTULO, 'mb-2 w-full')}>Camadas</legend>

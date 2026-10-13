@@ -1,8 +1,8 @@
 'use client';
 
 import { Canvas, useThree } from '@react-three/fiber';
-import { Html, Line, OrbitControls } from '@react-three/drei';
-import { useEffect, useMemo, useState } from 'react';
+import { Html, Line, OrbitControls, PerformanceMonitor } from '@react-three/drei';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { Elemento, Projeto, Retangulo } from '@/content/projetos/tipos';
 import { cantos } from '@/lib/terrabuild/geometria';
@@ -10,20 +10,21 @@ import { INCLINACAO } from '@/lib/terrabuild/quantidades';
 import { interferencias } from '@/lib/terrabuild/interferencia';
 import { estadoNaFase, type EstadoElemento } from '@/lib/terrabuild/obra';
 import { direcaoSol, posicaoSol } from '@/lib/terrabuild/sol';
-import { altura, COTA_CHEIA, distanciaAoDreno, type Terreno } from '@/lib/terrabuild/terreno';
+import { abaixo, detectarNivel, lerSinais, minimo, NOME_NIVEL, ORCAMENTO, type Nivel, type Orcamento } from '@/lib/terrabuild/qualidade';
+import { altura, COTA_CHEIA, distanciaAoDreno } from '@/lib/terrabuild/terreno';
+import { Ceu, ElementoModelo, Entorno, Instancias, LimiteRecursos, TILE, useRecursos, volume, type Recursos } from './CenaRealista';
 import { useGemeo, type Base, type EstadoGemeo } from './estado';
+import { aMundo, cota } from './mundo';
 
 /**
- * A vista 3D do gémeo, toda gerada no browser a partir dos mesmos dados da
- * planta: nenhum ficheiro, textura ou tile vem de fora (a CSP não deixava, e
- * não é preciso). `frameloop="demand"`: só desenha quando algo muda — parada,
- * não gasta bateria.
- *
- * Eixos: x (este) → X; y (norte) → −Z; cota → Y, exagerada ×2 para o relevo
- * de 15 m num terreno de 400 m se ler.
+ * A vista 3D do gémeo, feita no browser a partir dos mesmos dados da planta.
+ * Por nível de qualidade (lib/terrabuild/qualidade): Leve é toda procedimental
+ * e não descarrega nada; Normal e Alta juntam os modelos, a vegetação e as
+ * texturas do Blender (CenaRealista), do próprio site, nunca de fora.
+ * `frameloop="demand"`: só desenha quando algo muda; parada, não gasta bateria.
+ * Eixos e cotas: ver ./mundo.
  */
 
-const EXAGERO = 2;
 const COR = {
   giz: '#ededeb',
   tinta: '#141417',
@@ -35,14 +36,6 @@ const COR = {
 
 const DIA_DO_ANO = 172; // inverno austral: sombras mais compridas, mais legíveis
 
-function aMundo(p: Projeto, x: number, y: number): [number, number] {
-  return [x - p.terreno.largura / 2, -(y - p.terreno.profundidade / 2)];
-}
-
-function cota(t: Terreno, x: number, y: number): number {
-  return altura(t, x, y) * EXAGERO;
-}
-
 export function Cena3D({
   selecionado,
   onSelecionar,
@@ -53,26 +46,42 @@ export function Cena3D({
   onFalha: () => void;
 }) {
   const { projeto: p, estado } = useGemeo();
+  const [sinais] = useState(lerSinais);
+  // Se a cena engasgar (só no modo automático), desce um degrau e diz porquê.
+  const [teto, setTeto] = useState<Nivel>('alta');
+  const automatico = estado.qualidade === 'auto';
+  const nivel = automatico ? minimo(detectarNivel(sinais), teto) : estado.qualidade;
+  const orc = ORCAMENTO[nivel];
+  const caixa = useRef<HTMLDivElement>(null);
   return (
     <div
+      ref={caixa}
       className="relative aspect-[424/324] w-full"
+      data-qualidade={nivel}
       role="group"
       aria-roledescription="vista 3D"
       aria-label={`Vista 3D do terreno fictício na fase «${p.fases[estado.fase]!.nome}». Arraste para rodar; roda do rato ou dois dedos para aproximar. Sem arrastar, a Planta 2D e a lista «Elementos do terreno» dão a mesma informação.`}
       data-testid="cena-3d"
     >
+      {/* Mudar de nível recria o contexto: o dpr e as sombras só se escolhem ao criar. */}
       <Canvas
+        key={nivel}
         frameloop="demand"
-        dpr={[1, 1.5]}
-        shadows={SOMBRAS}
-        camera={{ position: [210, 190, 260], fov: 38, near: 1, far: 2000 }}
+        dpr={[orc.dpr[0], orc.dpr[1]]}
+        shadows={orc.sombras ? SOMBRAS : false}
+        camera={{ position: [210, 190, 260], fov: 38, near: 1, far: 3000 }}
         gl={GL}
         onPointerMissed={() => onSelecionar(null)}
       >
         <color attach="background" args={[COR.tinta]} />
-        <Conteudo p={p} estado={estado} selecionado={selecionado} onSelecionar={onSelecionar} onFalha={onFalha} />
+        <Conteudo p={p} estado={estado} orc={orc} selecionado={selecionado} onSelecionar={onSelecionar} onFalha={onFalha} />
         <OrbitControls makeDefault target={[0, 8, 0]} maxPolarAngle={Math.PI / 2.15} minDistance={60} maxDistance={700} enableDamping={false} />
+        {automatico && nivel !== 'leve' ? <PerformanceMonitor flipflops={2} onDecline={() => setTeto(abaixo(nivel))} /> : null}
+        <Medidor caixa={caixa} />
       </Canvas>
+      <p role="status" className="pointer-events-none absolute right-3 bottom-3 max-w-[60%] bg-[color:var(--color-ink-950)]/70 px-2 text-right text-xs text-white empty:hidden">
+        {automatico && teto !== 'alta' ? `Qualidade 3D: ${NOME_NIVEL[nivel]}, para manter a fluidez neste dispositivo.` : ''}
+      </p>
     </div>
   );
 }
@@ -85,15 +94,32 @@ export function Cena3D({
 const SOMBRAS = { type: THREE.PCFShadowMap, autoUpdate: false } as const;
 const GL = { antialias: true, alpha: false, powerPreference: 'default' } as const;
 
+/** Triângulos do último quadro, no contentor: a QA confirma o orçamento do nível. */
+function Medidor({ caixa }: { caixa: React.RefObject<HTMLDivElement | null> }) {
+  const obter = useThree((s) => s.get);
+  useEffect(() => {
+    const { scene } = obter();
+    scene.onAfterRender = (r) => {
+      if (caixa.current) caixa.current.dataset.triangulos = String(r.info.render.triangles);
+    };
+    return () => {
+      scene.onAfterRender = () => {};
+    };
+  }, [obter, caixa]);
+  return null;
+}
+
 function Conteudo({
   p,
   estado,
+  orc,
   selecionado,
   onSelecionar,
   onFalha,
 }: {
   p: Projeto;
   estado: EstadoGemeo;
+  orc: Orcamento;
   selecionado: string | null;
   onSelecionar: (id: string | null) => void;
   onFalha: () => void;
@@ -101,8 +127,6 @@ function Conteudo({
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
   const obter = useThree((s) => s.get);
-  // Ecrã táctil: mapa de sombras de 1024², quatro vezes menos memória.
-  const [mapaSombra] = useState(() => (window.matchMedia('(pointer: coarse)').matches ? 1024 : 2048));
 
   // Perder o contexto (GPU reiniciada, separador em segundo plano num
   // telemóvel) devolve a pessoa à planta 2D em vez de deixar um quadro preto.
@@ -121,20 +145,29 @@ function Conteudo({
   useEffect(() => {
     obter().gl.shadowMap.needsUpdate = true;
     invalidate();
-  }, [estado.casa, estado.fase, estado.hora, estado.base, estado.camadas, selecionado, obter, invalidate]);
+  }, [estado.casa, estado.fase, estado.hora, estado.base, estado.camadas, estado.cultura, selecionado, obter, invalidate]);
 
-  const sol = direcaoSol(posicaoSol(estado.hora, DIA_DO_ANO));
-  const luz: [number, number, number] = [sol[0] * 400, Math.max(sol[2], 0.08) * 400, -sol[1] * 400];
-  const ver = (c: string) => (estado.camadas as readonly string[]).includes(c);
+  // Construções em obra mostram-se cortadas a meia altura (plano de corte local).
+  useEffect(() => {
+    obter().gl.localClippingEnabled = true;
+  }, [obter]);
+
+  const hora = estado.hora;
+  const luz = useMemo<[number, number, number]>(() => {
+    const sol = direcaoSol(posicaoSol(hora, DIA_DO_ANO));
+    return [sol[0] * 400, Math.max(sol[2], 0.08) * 400, -sol[1] * 400];
+  }, [hora]);
+  const mundo = (r: Recursos | null) => (
+    <Mundo p={p} estado={estado} selecionado={selecionado} onSelecionar={onSelecionar} recursos={r} ambiente={0.55} />
+  );
 
   return (
     <>
-      <hemisphereLight args={['#d8d8dc', '#1a1a1d', 0.55]} />
       <directionalLight
         position={luz}
         intensity={2.1}
-        castShadow
-        shadow-mapSize={[mapaSombra, mapaSombra]}
+        castShadow={orc.sombras > 0}
+        shadow-mapSize={[orc.sombras || 1024, orc.sombras || 1024]}
         shadow-camera-left={-230}
         shadow-camera-right={230}
         shadow-camera-top={180}
@@ -143,7 +176,96 @@ function Conteudo({
         shadow-camera-far={1200}
         shadow-bias={-0.0006}
       />
-      <TerrenoMalha p={p} base={estado.base} />
+      {orc.modelos ? (
+        // Enquanto os modelos descarregam (ou se falharem), fica a cena procedimental.
+        <LimiteRecursos alternativa={mundo(null)}>
+          <Suspense fallback={mundo(null)}>
+            <MundoRealista p={p} estado={estado} orc={orc} sol={luz} selecionado={selecionado} onSelecionar={onSelecionar} />
+          </Suspense>
+        </LimiteRecursos>
+      ) : (
+        mundo(null)
+      )}
+    </>
+  );
+}
+
+function MundoRealista({
+  p,
+  estado,
+  orc,
+  sol,
+  selecionado,
+  onSelecionar,
+}: {
+  p: Projeto;
+  estado: EstadoGemeo;
+  orc: Orcamento;
+  sol: [number, number, number];
+  selecionado: string | null;
+  onSelecionar: (id: string | null) => void;
+}) {
+  const r = useRecursos();
+  const obter = useThree((s) => s.get);
+  const invalidate = useThree((s) => s.invalidate);
+  // Os modelos chegaram: um quadro novo, com sombras.
+  useEffect(() => {
+    obter().gl.shadowMap.needsUpdate = true;
+    invalidate();
+  }, [r, obter, invalidate]);
+  const ceu = estado.base === 'ortofoto';
+  return (
+    <>
+      {ceu ? (
+        <>
+          <Ceu sol={sol} ambiente={orc.ambiente} />
+          <Entorno p={p} material={r.entorno} />
+        </>
+      ) : null}
+      <Mundo
+        p={p}
+        estado={estado}
+        selecionado={selecionado}
+        onSelecionar={onSelecionar}
+        recursos={r}
+        ambiente={ceu && orc.ambiente ? 0.2 : 0.55}
+      />
+      <Instancias p={p} r={r} fase={estado.fase} cultura={estado.cultura} camadas={estado.camadas} orcamentoCulturas={orc.triangulosCulturas} />
+    </>
+  );
+}
+
+interface Materiais {
+  readonly talhao: THREE.Material | null;
+  readonly estrada: THREE.Material | null;
+}
+
+/** O terreno e tudo o que nele assenta; com `recursos`, nas versões do Blender. */
+function Mundo({
+  p,
+  estado,
+  selecionado,
+  onSelecionar,
+  recursos,
+  ambiente,
+}: {
+  p: Projeto;
+  estado: EstadoGemeo;
+  selecionado: string | null;
+  onSelecionar: (id: string | null) => void;
+  recursos: Recursos | null;
+  ambiente: number;
+}) {
+  const ver = (c: string) => (estado.camadas as readonly string[]).includes(c);
+  const satelite = recursos !== null && estado.base === 'ortofoto';
+  const mats: Materiais = {
+    talhao: satelite ? (estado.fase >= 8 ? recursos.soloCultura : recursos.solo) : null,
+    estrada: satelite ? recursos.estrada : null,
+  };
+  return (
+    <>
+      <hemisphereLight args={['#d8d8dc', '#1a1a1d', ambiente]} />
+      <TerrenoMalha p={p} base={estado.base} material={satelite ? recursos.terreno : null} />
       {ver('risco') ? <Cheia p={p} /> : null}
       {p.elementos
         .filter((e) => e.id !== 'casa-principal' && ver(e.camada))
@@ -156,10 +278,12 @@ function Conteudo({
             progresso={ver('progresso')}
             selecionado={selecionado === e.id}
             onSelecionar={onSelecionar}
+            recursos={recursos}
+            mats={mats}
           />
         ))}
       {ver('infraestruturas') ? (
-        <Casa p={p} estado={estado} selecionado={selecionado === 'casa-principal'} onSelecionar={onSelecionar} />
+        <Casa p={p} estado={estado} selecionado={selecionado === 'casa-principal'} onSelecionar={onSelecionar} recursos={recursos} />
       ) : null}
     </>
   );
@@ -167,7 +291,8 @@ function Conteudo({
 
 /* ------------------------------------------------------------------ terreno */
 
-function TerrenoMalha({ p, base }: { p: Projeto; base: Base }) {
+function TerrenoMalha({ p, base, material }: { p: Projeto; base: Base; material: THREE.Material | null }) {
+  const texturado = material !== null;
   const geo = useMemo(() => {
     const L = p.terreno.largura;
     const H = p.terreno.profundidade;
@@ -181,17 +306,24 @@ function TerrenoMalha({ p, base }: { p: Projeto; base: Base }) {
     const baixo = new THREE.Color('#1e1e22');
     const alto = new THREE.Color('#74747c');
     const mapa = new THREE.Color('#2b2b30');
+    // Com a textura de savana, a cor de vértice só tinge (clara), não pinta.
+    const seco = new THREE.Color('#f3e7cf');
+    const verde = new THREE.Color('#c4d3a2');
+    const uv = g.attributes.uv!;
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i) + L / 2;
       const y = -pos.getZ(i) + H / 2;
       const h = altura(p.terreno, x, y);
-      pos.setY(i, h * EXAGERO);
+      pos.setY(i, cota(p.terreno, x, y));
+      uv.setXY(i, x / TILE.chao, y / TILE.chao);
       if (base === 'mapa') c.copy(mapa);
       else if (base === 'relevo') c.copy(baixo).lerp(alto, Math.min(1, h / 16));
       else {
         // «Satélite» simulado: terra e mato pela ondulação, mais verde no vale.
         const k = (Math.sin(x * 0.11) * Math.cos(y * 0.13) + Math.sin(x * 0.031 + y * 0.027)) * 0.25 + 0.5;
-        c.copy(terra).lerp(oliva, Math.min(1, k + Math.exp(-((distanciaAoDreno(x, y) / 35) ** 2)) * 0.6));
+        const t = Math.min(1, k + Math.exp(-((distanciaAoDreno(x, y) / 35) ** 2)) * 0.6);
+        if (texturado) c.copy(seco).lerp(verde, t);
+        else c.copy(terra).lerp(oliva, t);
       }
       cores[i * 3] = c.r;
       cores[i * 3 + 1] = c.g;
@@ -200,8 +332,9 @@ function TerrenoMalha({ p, base }: { p: Projeto; base: Base }) {
     g.setAttribute('color', new THREE.BufferAttribute(cores, 3));
     g.computeVertexNormals();
     return g;
-  }, [p, base]);
+  }, [p, base, texturado]);
   useEffect(() => () => geo.dispose(), [geo]);
+  if (material) return <mesh geometry={geo} material={material} receiveShadow dispose={null} />;
   return (
     <mesh geometry={geo} receiveShadow>
       <meshStandardMaterial vertexColors roughness={0.95} metalness={0} />
@@ -274,6 +407,8 @@ function ElementoMalha({
   progresso,
   selecionado,
   onSelecionar,
+  recursos,
+  mats,
 }: {
   p: Projeto;
   e: Elemento;
@@ -281,7 +416,16 @@ function ElementoMalha({
   progresso: boolean;
   selecionado: boolean;
   onSelecionar: (id: string) => void;
+  recursos: Recursos | null;
+  mats: Materiais;
 }) {
+  // Construção com modelo do Blender: o modelo, no lugar da caixa.
+  const no = recursos && volume(e) ? recursos.nos[`el-${e.id}`] : undefined;
+  if (no) {
+    return (
+      <ElementoModelo p={p} e={e} no={no} estado={estado} progresso={progresso} selecionado={selecionado} onSelecionar={onSelecionar} />
+    );
+  }
   if (estado === 'ausente' && !progresso) return null;
   const fantasma = estado === 'ausente' || estado === 'futuro';
   const emObra = estado === 'em-obra';
@@ -294,7 +438,7 @@ function ElementoMalha({
 
   if (f.tipo === 'linha') {
     const pontos = linhaAmostrada(p, f.pontos, f.largura > 1 ? 0.35 : 0.9);
-    if (f.largura > 1) return <Estrada pontos={pontos} largura={f.largura} fantasma={fantasma} />;
+    if (f.largura > 1) return <Estrada pontos={pontos} largura={f.largura} fantasma={fantasma} material={fantasma ? null : mats.estrada} />;
     return (
       <Line
         points={pontos}
@@ -319,6 +463,7 @@ function ElementoMalha({
         opacidade={fantasma ? 0.12 : e.camada === 'talhoes' ? 0.5 : 0.25}
         corContorno={selecionado ? COR.sinal : cor}
         tracejado={fantasma || emObra}
+        material={e.camada === 'talhoes' && !fantasma ? mats.talhao : null}
         onClick={clicar}
       />
     );
@@ -398,15 +543,18 @@ function Casa({
   estado,
   selecionado,
   onSelecionar,
+  recursos,
 }: {
   p: Projeto;
   estado: EstadoGemeo;
   selecionado: boolean;
   onSelecionar: (id: string) => void;
+  recursos: Recursos | null;
 }) {
   const el = p.elementos.find((e) => e.id === 'casa-principal')!;
   const s = estadoNaFase(el, estado.fase);
   const conflito = useMemo(() => interferencias(p, estado.casa).length > 0, [p, estado.casa]);
+  const pele = usePele(recursos, estado.casa.cobertura);
   if (s === 'ausente') return null;
   const c = estado.casa;
   const [X, Z] = aMundo(p, c.x, c.y);
@@ -422,6 +570,7 @@ function Casa({
         telhado="duas-aguas"
         inclinacao={INCLINACAO[c.cobertura]}
         cor={conflito || selecionado ? COR.sinal : COR.giz}
+        pele={conflito || selecionado ? null : pele}
         estado={s}
         onClick={(ev) => {
           ev.stopPropagation();
@@ -446,6 +595,7 @@ function Construcao({
   telhado,
   inclinacao,
   cor,
+  pele = null,
   estado,
   translucido = false,
   onClick,
@@ -458,10 +608,13 @@ function Construcao({
   telhado: 'duas-aguas' | 'plano' | 'arco';
   inclinacao: number;
   cor: string;
+  pele?: Pele | null;
   estado: EstadoElemento;
   translucido?: boolean;
   onClick: (ev: Clique) => void;
 }) {
+  const tileTelhado = pele?.tileTelhado ?? 0;
+  const tileParedes = pele?.tileParedes ?? 0;
   const fantasma = estado === 'ausente' || estado === 'futuro';
   const emObra = estado === 'em-obra';
   const telhadoGeo = useMemo(() => {
@@ -471,9 +624,14 @@ function Construcao({
     const g = new THREE.ExtrudeGeometry(forma, { depth: w + 1, bevelEnabled: false });
     g.rotateY(Math.PI / 2);
     g.translate(-(w + 1) / 2, 0, 0);
+    if (tileTelhado) uvMetricos(g, tileTelhado);
     return g;
-  }, [telhado, w, d, inclinacao]);
-  const paredes = useMemo(() => new THREE.BoxGeometry(w, h + 1, d), [w, h, d]);
+  }, [telhado, w, d, inclinacao, tileTelhado]);
+  const paredes = useMemo(() => {
+    const g = new THREE.BoxGeometry(w, h + 1, d);
+    if (tileParedes) uvMetricos(g, tileParedes);
+    return g;
+  }, [w, h, d, tileParedes]);
   const arestas = useMemo(() => new THREE.EdgesGeometry(paredes), [paredes]);
   useEffect(() => () => telhadoGeo?.dispose(), [telhadoGeo]);
   useEffect(
@@ -493,19 +651,74 @@ function Construcao({
             <lineBasicMaterial color={cor} transparent opacity={fantasma ? 0.35 : 0.95} />
           </lineSegments>
         ) : null}
-        {!fantasma ? (
+        {pele && estado === 'concluido' ? (
+          <mesh geometry={paredes} material={pele.paredes} castShadow receiveShadow />
+        ) : !fantasma ? (
           <mesh geometry={paredes} castShadow receiveShadow>
             <meshStandardMaterial color={cor} roughness={0.8} transparent={translucido || emObra} opacity={translucido ? 0.4 : emObra ? 0.35 : 1} />
           </mesh>
         ) : null}
       </group>
       {telhadoGeo && estado === 'concluido' ? (
-        <mesh geometry={telhadoGeo} position={[0, h, 0]} castShadow>
-          <meshStandardMaterial color="#9a9aa2" roughness={0.6} metalness={0.2} />
-        </mesh>
+        pele ? (
+          <mesh geometry={telhadoGeo} material={pele.telhado} position={[0, h, 0]} castShadow receiveShadow />
+        ) : (
+          <mesh geometry={telhadoGeo} position={[0, h, 0]} castShadow>
+            <meshStandardMaterial color="#9a9aa2" roughness={0.6} metalness={0.2} />
+          </mesh>
+        )
       ) : null}
     </group>
   );
+}
+
+/** Materiais do Blender para a casa paramétrica (reboco e a cobertura escolhida). */
+interface Pele {
+  readonly paredes: THREE.Material;
+  readonly telhado: THREE.Material;
+  readonly tileParedes: number;
+  readonly tileTelhado: number;
+}
+
+/**
+ * Os materiais vêm do GLB, partilhados por nome; aqui clonam-se sem cor de
+ * vértice (a caixa da casa não a tem) e com a escala de UV do Blender.
+ */
+function usePele(r: Recursos | null, cobertura: string): Pele | null {
+  const pele = useMemo(() => {
+    if (!r?.materiais.reboco) return null;
+    const semCor = (nome: string) => {
+      const m = (r.materiais[nome] ?? r.materiais.reboco!).clone() as THREE.MeshStandardMaterial;
+      m.vertexColors = false;
+      return m;
+    };
+    const telha = cobertura === 'telha-ceramica';
+    return { paredes: semCor('reboco'), telhado: semCor(telha ? 'telha' : 'zinco'), tileParedes: 3, tileTelhado: telha ? 2.4 : 2 };
+  }, [r, cobertura]);
+  useEffect(
+    () => () => {
+      pele?.paredes.dispose();
+      pele?.telhado.dispose();
+    },
+    [pele],
+  );
+  return pele;
+}
+
+/** UV em metros por projecção na face dominante (como o Blender faz nos modelos). */
+function uvMetricos(g: THREE.BufferGeometry, tile: number) {
+  const pos = g.attributes.position!;
+  const nor = g.attributes.normal!;
+  const uv = new Float32Array(pos.count * 2);
+  for (let i = 0; i < pos.count; i++) {
+    const ax = Math.abs(nor.getX(i));
+    const ay = Math.abs(nor.getY(i));
+    const az = Math.abs(nor.getZ(i));
+    const [u, v] = ay >= ax && ay >= az ? [pos.getX(i), pos.getZ(i)] : ax >= az ? [pos.getZ(i), pos.getY(i)] : [pos.getX(i), pos.getY(i)];
+    uv[i * 2] = u / tile;
+    uv[i * 2 + 1] = v / tile;
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 }
 
 /**
@@ -521,6 +734,7 @@ function AreaAssente({
   opacidade,
   corContorno,
   tracejado,
+  material = null,
   onClick,
 }: {
   p: Projeto;
@@ -529,6 +743,8 @@ function AreaAssente({
   opacidade: number;
   corContorno: string;
   tracejado: boolean;
+  /** Solo lavrado (nível Normal/Alta, base satélite); sem ele, cor translúcida. */
+  material?: THREE.Material | null;
   onClick: (ev: Clique) => void;
 }) {
   const geo = useMemo(() => {
@@ -536,6 +752,7 @@ function AreaAssente({
     const nu = Math.max(1, Math.ceil(r.w / 4));
     const nv = Math.max(1, Math.ceil(r.d / 4));
     const pos: number[] = [];
+    const uv: number[] = [];
     const idx: number[] = [];
     for (let j = 0; j <= nv; j++)
       for (let i = 0; i <= nu; i++) {
@@ -546,6 +763,7 @@ function AreaAssente({
         const [x, y] = [ax + (bx - ax) * v, ay + (by - ay) * v];
         const [X, Z] = aMundo(p, x, y);
         pos.push(X, cota(p.terreno, x, y) + 0.3, Z);
+        uv.push(u * (r.w / TILE.solo), v * (r.d / TILE.solo));
       }
     for (let j = 0; j < nv; j++)
       for (let i = 0; i < nu; i++) {
@@ -555,6 +773,7 @@ function AreaAssente({
       }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
     g.setIndex(idx);
     g.computeVertexNormals();
     return g;
@@ -566,9 +785,13 @@ function AreaAssente({
   }, [p, r]);
   return (
     <group>
-      <mesh geometry={geo} onClick={onClick} receiveShadow>
-        <meshStandardMaterial color={cor} transparent opacity={opacidade} roughness={1} depthWrite={false} side={THREE.DoubleSide} />
-      </mesh>
+      {material ? (
+        <mesh geometry={geo} material={material} onClick={onClick} receiveShadow dispose={null} />
+      ) : (
+        <mesh geometry={geo} onClick={onClick} receiveShadow>
+          <meshStandardMaterial color={cor} transparent opacity={opacidade} roughness={1} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+      )}
       <Line points={contorno} color={corContorno} lineWidth={1.4} dashed={tracejado} dashSize={2} gapSize={1.5} />
     </group>
   );
@@ -589,9 +812,22 @@ function Contorno({ w, d, cor, tracejado, y = 0.05 }: { w: number; d: number; co
   return <Line points={pts} color={cor} lineWidth={1.4} dashed={tracejado} dashSize={2} gapSize={1.5} />;
 }
 
-function Estrada({ pontos, largura, fantasma }: { pontos: [number, number, number][]; largura: number; fantasma: boolean }) {
+function Estrada({
+  pontos,
+  largura,
+  fantasma,
+  material,
+}: {
+  pontos: [number, number, number][];
+  largura: number;
+  fantasma: boolean;
+  material: THREE.Material | null;
+}) {
   const geo = useMemo(() => {
     const pos: number[] = [];
+    const uv: number[] = [];
+    let percorrido = 0;
+    const u = largura / 2 / TILE.gravilha;
     for (let i = 0; i < pontos.length - 1; i++) {
       const a = new THREE.Vector3(...pontos[i]!);
       const b = new THREE.Vector3(...pontos[i + 1]!);
@@ -599,13 +835,19 @@ function Estrada({ pontos, largura, fantasma }: { pontos: [number, number, numbe
       const n = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(largura / 2);
       const [a1, a2, b1, b2] = [a.clone().add(n), a.clone().sub(n), b.clone().add(n), b.clone().sub(n)];
       for (const v of [a1, a2, b1, b1, a2, b2]) pos.push(v.x, v.y, v.z);
+      const v0 = percorrido / TILE.gravilha;
+      percorrido += a.distanceTo(b);
+      const v1 = percorrido / TILE.gravilha;
+      uv.push(u, v0, -u, v0, u, v1, u, v1, -u, v0, -u, v1);
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
     g.computeVertexNormals();
     return g;
   }, [pontos, largura]);
   useEffect(() => () => geo.dispose(), [geo]);
+  if (material) return <mesh geometry={geo} material={material} receiveShadow dispose={null} />;
   return (
     <mesh geometry={geo} receiveShadow>
       <meshStandardMaterial color="#a39d90" roughness={1} transparent={fantasma} opacity={fantasma ? 0.3 : 1} side={THREE.DoubleSide} />

@@ -5,6 +5,7 @@ import { CASA_REFERENCIA, FAZENDA_001 } from '@/content/projetos/fazenda-intelig
 import type { FaseId, Projeto } from '@/content/projetos/tipos';
 import type { CenarioAgro } from '@/lib/terrabuild/agro';
 import type { Classe } from '@/lib/terrabuild/custos';
+import type { EscolhaQualidade } from '@/lib/terrabuild/qualidade';
 import type { CasaConfig } from '@/lib/terrabuild/quantidades';
 
 /**
@@ -31,6 +32,8 @@ export interface EstadoGemeo {
   readonly cultura: string;
   readonly hectares: number;
   readonly cenarioAgro: CenarioAgro;
+  /** Qualidade da vista 3D: automática pelo dispositivo, ou escolhida. */
+  readonly qualidade: EscolhaQualidade;
 }
 
 type Acao =
@@ -46,7 +49,8 @@ type Acao =
   | { tipo: 'hora'; hora: number }
   | { tipo: 'cultura'; cultura: string; hectares?: number }
   | { tipo: 'hectares'; hectares: number }
-  | { tipo: 'cenario-agro'; cenario: CenarioAgro };
+  | { tipo: 'cenario-agro'; cenario: CenarioAgro }
+  | { tipo: 'qualidade'; qualidade: EscolhaQualidade };
 
 export const ESTADO_INICIAL: EstadoGemeo = {
   casa: CASA_REFERENCIA,
@@ -60,6 +64,7 @@ export const ESTADO_INICIAL: EstadoGemeo = {
   cultura: 'milho',
   hectares: 2,
   cenarioAgro: 'base',
+  qualidade: 'auto',
 };
 
 export function redutor(s: EstadoGemeo, a: Acao): EstadoGemeo {
@@ -93,6 +98,8 @@ export function redutor(s: EstadoGemeo, a: Acao): EstadoGemeo {
       return { ...s, hectares: a.hectares };
     case 'cenario-agro':
       return { ...s, cenarioAgro: a.cenario };
+    case 'qualidade':
+      return { ...s, qualidade: a.qualidade };
   }
 }
 

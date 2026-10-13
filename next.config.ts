@@ -29,7 +29,9 @@ const csp = [
   // O Next injeta scripts de arranque em linha. Sem `unsafe-eval`: se for
   // preciso, os relatórios dirão, em vez de o abrirmos por precaução.
   "script-src 'self' 'unsafe-inline'",
-  "connect-src 'self'",
+  // `blob:` só cobre objectos criados pela própria página: o GLTFLoader do three
+  // lê as texturas embutidas nos GLB do TerraBuild com fetch() de um URL blob:.
+  "connect-src 'self' blob:",
   "worker-src 'self' blob:",
   'upgrade-insecure-requests',
   'report-uri /api/csp-report',
