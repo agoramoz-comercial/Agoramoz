@@ -6,7 +6,7 @@ import {
   CENARIOS_AGRO,
   DIAS_BOMBAGEM,
   FATORES_AGRO,
-  fracaoCheiaTalhao,
+  cheiaDaCultura,
   riscoClimatico,
   simularCultura,
 } from '@/lib/terrabuild/agro';
@@ -41,10 +41,7 @@ export function PainelAgricola() {
   const maxReceita = Math.max(...cenarios.map((x) => x.r.receita), 1);
   const agua = balancoAgua(p, r.aguaM3);
   // Milhares de amostras do terreno: só dependem da cultura, não de cada deslizador.
-  const cheiaPior = useMemo(
-    () => Math.max(...cultura.talhoes.map((t) => fracaoCheiaTalhao(p, t))),
-    [p, cultura],
-  );
+  const cheiaPior = useMemo(() => cheiaDaCultura(p, cultura), [p, cultura]);
   const risco = riscoClimatico(cultura, agua.cobertura, cheiaPior);
 
   const mudar = (cul: string) => {

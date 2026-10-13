@@ -4,7 +4,16 @@
  */
 
 const MZN = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'MZN', maximumFractionDigits: 0 });
-const NUM = (casas: number) => new Intl.NumberFormat('pt-PT', { maximumFractionDigits: casas, minimumFractionDigits: 0 });
+const FORMATADORES = new Map<number, Intl.NumberFormat>();
+/** Um formatador por número de casas: criar um `Intl.NumberFormat` por chamada custa dezenas de µs. */
+function NUM(casas: number): Intl.NumberFormat {
+  let f = FORMATADORES.get(casas);
+  if (!f) {
+    f = new Intl.NumberFormat('pt-PT', { maximumFractionDigits: casas, minimumFractionDigits: 0 });
+    FORMATADORES.set(casas, f);
+  }
+  return f;
+}
 
 export const mzn = (v: number): string => MZN.format(Math.round(v));
 

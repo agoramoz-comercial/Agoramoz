@@ -79,9 +79,12 @@ export function balancoAgua(p: Projeto, necessidadeAnual: number): BalancoAgua {
 export function fracaoCheiaTalhao(p: Projeto, talhaoId: string): number {
   const e = p.elementos.find((x) => x.id === talhaoId);
   if (!e || (e.forma.tipo !== 'area' && e.forma.tipo !== 'caixa')) return 0;
-  const [a, , c] = cantos(e.forma.r);
-  const [x0, x1] = [Math.min(a![0], c![0]), Math.max(a![0], c![0])];
-  const [y0, y1] = [Math.min(a![1], c![1]), Math.max(a![1], c![1])];
+  // Caixa envolvente dos quatro cantos: certa também para um talhão rodado.
+  const k = cantos(e.forma.r);
+  const xs = k.map((q) => q[0]);
+  const ys = k.map((q) => q[1]);
+  const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+  const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
   let n = 0;
   let baixo = 0;
   for (let x = x0 + 2.5; x < x1; x += 5)
@@ -111,4 +114,9 @@ export function riscoClimatico(c: Cultura, coberturaAgua: number, fracaoCheia: n
   const cheia = c.sensibilidadeCheia * fracaoCheia;
   const indice = (seca + cheia) / 2;
   return { seca, cheia, indice, nivel: indice < 0.15 ? 'baixo' : indice < 0.35 ? 'medio' : 'alto' };
+}
+
+/** A fração em cheia do talhão mais exposto de uma cultura — o painel e o assistente usam a mesma. */
+export function cheiaDaCultura(p: Projeto, c: Cultura): number {
+  return Math.max(0, ...c.talhoes.map((t) => fracaoCheiaTalhao(p, t)));
 }

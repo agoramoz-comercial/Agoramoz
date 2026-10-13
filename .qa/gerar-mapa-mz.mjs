@@ -102,7 +102,6 @@ const saida = `// GERADO por .qa/gerar-mapa-mz.mjs — não editar à mão.
 export const MAPA_MZ_VIEWBOX = { largura: ${LARGURA}, altura: ${ALTURA} } as const;
 
 /** A mesma projecção do gerador, para pôr pinos por longitude e latitude. */
-export const MAPA_MZ_PROJECCAO = { k: ${K}, minX: ${minX}, minY: ${minY}, escala: ${escala}, margem: ${MARGEM} } as const;
 
 export interface ProvinciaMapa {
   readonly id: string;

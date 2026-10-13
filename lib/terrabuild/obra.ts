@@ -42,11 +42,11 @@ export function custoElemento(e: Elemento, casa: CasaConfig, classe: Classe = 'c
   return orcamento(casa, classe).total;
 }
 
-export function capitalTotal(p: Projeto, casa: CasaConfig, ids?: readonly string[]): number {
+export function capitalTotal(p: Projeto, casa: CasaConfig, ids?: readonly string[], classe: Classe = 'conceptual'): number {
   const conjunto = ids ? new Set(ids) : null;
   return p.elementos
     .filter((e) => !e.futuro && (!conjunto || conjunto.has(e.id)))
-    .reduce((s, e) => s + custoElemento(e, casa), 0);
+    .reduce((s, e) => s + custoElemento(e, casa, classe), 0);
 }
 
 export interface ResumoCapital {

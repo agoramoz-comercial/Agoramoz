@@ -103,6 +103,12 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
               )}
             >
               {item.label}
+              {'selo' in item ? (
+                <>
+                  <span aria-hidden className="ml-1.5 inline-block size-1.5 bg-[color:var(--color-energy-500)]" />
+                  <span className="sr-only"> ({item.selo})</span>
+                </>
+              ) : null}
             </Link>
           ))}
           <Link

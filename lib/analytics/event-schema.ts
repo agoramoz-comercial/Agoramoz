@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DIAGNOSTIC_CODES } from '@/lib/diagnostic/mercado';
 import { CANAIS } from '@/lib/attribution/types';
-import { EVENTOS_DE_BROWSER, PROJECT_DEMO_ACTIONS } from './events';
+import { EVENTOS_DE_BROWSER, PROJECT_DEMO_ACTIONS, PROJECT_DEMO_IDS } from './events';
 
 /**
  * O que a rota de eventos aceita do browser.
@@ -63,7 +63,7 @@ const corpo = z.discriminatedUnion('name', [
   }),
   z.strictObject({
     name: z.literal('project_demo_interaction'),
-    projectId: z.string().regex(/^[a-z0-9-]{3,60}$/),
+    projectId: z.enum(PROJECT_DEMO_IDS),
     action: z.enum(PROJECT_DEMO_ACTIONS),
   }),
 ]);

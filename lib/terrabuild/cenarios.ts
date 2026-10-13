@@ -1,6 +1,7 @@
 import type { Cenario, Projeto } from '@/content/projetos/tipos';
-import { simularCultura } from './agro';
+import { balancoAgua, simularCultura } from './agro';
 import { capitalTotal } from './obra';
+import type { Classe } from './custos';
 import type { CasaConfig } from './quantidades';
 
 /**
@@ -25,19 +26,21 @@ export interface ResultadoCenario {
   readonly retornoAnos: number | null;
   readonly empregos: number;
   readonly aguaM3: number;
+  /** Água do furo a dividir pela necessidade do cenário, em %. */
+  readonly coberturaAgua: number;
   readonly energiaKwh: number;
   readonly emissoesEvitadasT: number;
   readonly risco: Cenario['risco'];
 }
 
-export function avaliarCenario(p: Projeto, cen: Cenario, casa: CasaConfig): ResultadoCenario {
+export function avaliarCenario(p: Projeto, cen: Cenario, casa: CasaConfig, classe: Classe = 'conceptual'): ResultadoCenario {
   const culturas = cen.culturas.map(({ cultura, hectares }) => {
     const c = p.culturas.find((x) => x.id === cultura);
     if (!c) throw new Error(`Cultura desconhecida no cenário ${cen.id}: ${cultura}`);
     return simularCultura(c, hectares, 'base', cen.fatorRendimento);
   });
   const instalacao = culturas.reduce((s, r) => s + r.instalacao, 0);
-  const investimento = capitalTotal(p, casa, cen.elementos) + cen.extras.reduce((s, x) => s + x.custo, 0) + instalacao;
+  const investimento = capitalTotal(p, casa, cen.elementos, classe) + cen.extras.reduce((s, x) => s + x.custo, 0) + instalacao;
   const receita = culturas.reduce((s, r) => s + r.receita, 0) + cen.receitaExtraAnual;
   const custosAnuais = culturas.reduce((s, r) => s + r.custoAnual, 0) + cen.opexAnual;
   const margemAnual = receita - custosAnuais;
@@ -53,12 +56,13 @@ export function avaliarCenario(p: Projeto, cen: Cenario, casa: CasaConfig): Resu
     retornoAnos: margemAnual > 0 ? investimento / margemAnual : null,
     empregos: cen.empregos,
     aguaM3: culturas.reduce((s, r) => s + r.aguaM3, 0),
+    coberturaAgua: balancoAgua(p, culturas.reduce((s, r) => s + r.aguaM3, 0)).cobertura,
     energiaKwh,
     emissoesEvitadasT: (energiaKwh * KG_CO2_POR_KWH_GASOLEO) / 1000,
     risco: cen.risco,
   };
 }
 
-export function avaliarCenarios(p: Projeto, casa: CasaConfig): ResultadoCenario[] {
-  return p.cenarios.map((c) => avaliarCenario(p, c, casa));
+export function avaliarCenarios(p: Projeto, casa: CasaConfig, classe: Classe = 'conceptual'): ResultadoCenario[] {
+  return p.cenarios.map((c) => avaliarCenario(p, c, casa, classe));
 }

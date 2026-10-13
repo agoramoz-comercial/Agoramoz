@@ -507,7 +507,8 @@ está em `docs/TERRABUILD.md`.
 - **Nada guardado:**
   - o que se escreve ou escolhe não sai do browser;
   - a única coisa que sai é o evento anónimo `project_demo_interaction`
-    (`projectId` e `action`), e a página di-lo;
+    (`projectId` de uma lista fechada e `action`, mais o caminho e o canal de
+    origem saneados que todo o evento do site leva), e a página di-lo;
   - «Submeter um terreno» é simulado e não pede dados pessoais. O canal real
     continua a ser o diagnóstico.
 - **Sem linguagem de oferta:**
@@ -521,7 +522,10 @@ está em `docs/TERRABUILD.md`.
 - **Excepção à regra monocromática:** três cores de camada validadas para
   daltonismo (água, eléctrica, talhões). O risco é textura; obra em curso é
   contorno tracejado.
-- **Navegação:** o rótulo é «Projetos (demo)», o selo antes do clique. No
+- **Navegação:** o selo vem antes do clique. Na gaveta e no rodapé o rótulo é
+  «Projetos (demo)»; na barra, «Projetos» com um quadrado na cor do selo de
+  demonstração e o nome acessível «Projetos (demo)», porque o texto completo
+  não cabia a 1280 px. No
   cabeçalho só a partir de `xl` (1280 px); entre 1024 e 1279 px não cabia sem
   mudar o desenho, e aí fica no rodapé e na gaveta.
 - **Fora do índice por três vias:** `noindex, nofollow` nas páginas, o cabeçalho

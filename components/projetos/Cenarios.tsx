@@ -16,7 +16,7 @@ const RISCO = { baixo: 'Baixo', medio: 'Médio', alto: 'Alto' } as const;
 
 export function Cenarios() {
   const { projeto: p, estado } = useGemeo();
-  const r = useMemo(() => avaliarCenarios(p, estado.casa), [p, estado.casa]);
+  const r = useMemo(() => avaliarCenarios(p, estado.casa, estado.classe), [p, estado.casa, estado.classe]);
   const linhas: { rotulo: string; valor: (i: number) => React.ReactNode }[] = [
     { rotulo: 'Capital necessário', valor: (i) => milhoes(r[i]!.investimento) },
     { rotulo: 'Custos anuais', valor: (i) => mzn(r[i]!.custosAnuais) },
@@ -29,6 +29,7 @@ export function Cenarios() {
     },
     { rotulo: 'Risco', valor: (i) => RISCO[r[i]!.risco] },
     { rotulo: 'Empregos', valor: (i) => num(r[i]!.empregos) },
+    { rotulo: 'Água do furo / necessidade', valor: (i) => `${Math.round(r[i]!.coberturaAgua)} %` },
     { rotulo: 'Água consumida', valor: (i) => `${num(r[i]!.aguaM3)} m³/ano` },
     { rotulo: 'Energia solar', valor: (i) => (r[i]!.energiaKwh ? `${num(r[i]!.energiaKwh)} kWh/ano` : '—') },
     { rotulo: 'Emissões evitadas (estimativa)', valor: (i) => (r[i]!.emissoesEvitadasT ? `${num(r[i]!.emissoesEvitadasT, 1)} t CO₂/ano` : '—') },

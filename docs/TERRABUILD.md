@@ -8,7 +8,8 @@ engenharia, capital e execução verificável num único gémeo digital.
 orçamento, oferta de investimento nem pagamento. O que a pessoa escreve ou
 escolhe não sai do browser; só a analítica anónima de primeira parte conta
 que partes são usadas (`project_demo_interaction` com `projectId` e `action`,
-sem texto nem valores). As páginas têm `noindex` e estão fora do sitemap.
+sem texto nem valores; como todo o evento do site, leva também o caminho e o
+canal de origem saneados). As páginas têm `noindex` e estão fora do sitemap.
 
 Decisões do fundador (AskUserQuestion, 12/10/2026): motor 3D próprio com
 Three.js; entrada no menu com selo «Demo»; demonstração completa; assistente
@@ -51,7 +52,7 @@ Secções da ficha (âncoras):
   | `interferencia.ts` | Sobreposição (SAT), afastamento de 3 m, margem de 5 m ao limite, área futura |
   | `terreno.ts` | Relevo por ruído determinístico (semente), linha de drenagem, curvas de nível (marching squares), cota de cheia |
   | `obra.ts` | Estado de cada elemento por fase, capital, progresso ponderado pelo orçamento |
-  | `agro.ts`, `cenarios.ts` | Produção, receita, custos, água (300 dias de bombagem), energia (1600 kWh/kWp/ano) e CO₂ evitado (0,7 kg/kWh de gasóleo) — todos parâmetros de demonstração |
+  | `agro.ts`, `cenarios.ts` | Produção, receita, custos, água (furo de 160 m³/dia, 300 dias de bombagem; cobertura por cenário), energia (1600 kWh/kWp/ano) e CO₂ evitado (0,7 kg/kWh de gasóleo) — todos parâmetros de demonstração. A classe da estimativa escolhida no construtor chega ao custo da casa no terreno e aos cenários |
   | `marcos.ts` | Máquina de estados da simulação de desembolso |
   | `assistente.ts` | Classificador por palavras e respostas com os números do estado actual |
   | `sol.ts` | Posição do sol para as sombras do 3D (latitude −19°) |

@@ -2,7 +2,7 @@
 
 import { useId, useMemo } from 'react';
 import { CASA_REFERENCIA } from '@/content/projetos/fazenda-inteligente-001';
-import { BASE_PRECOS, CLASSE, CLASSES, NOME_CATEGORIA, orcamento, type CategoriaCusto, type Classe } from '@/lib/terrabuild/custos';
+import { BASE_PRECOS, CLASSE, CLASSES, NOME_CATEGORIA, orcamento, TRANSPORTE, type CategoriaCusto, type Classe } from '@/lib/terrabuild/custos';
 import { mzn, num, variacao } from '@/lib/terrabuild/formato';
 import { interferencias } from '@/lib/terrabuild/interferencia';
 import { ACABAMENTOS, COBERTURAS, LIMITES_CASA, medidas, PAREDES, PAVIMENTOS, type CasaConfig } from '@/lib/terrabuild/quantidades';
@@ -209,7 +209,7 @@ export function Construtor() {
                   </tr>
                 ))}
                 <tr className="border-t border-[color:var(--hairline)]">
-                  <th scope="row" className="py-2 pr-3 text-left font-normal">Transporte (6 % dos materiais)</th>
+                  <th scope="row" className="py-2 pr-3 text-left font-normal">Transporte ({Math.round(TRANSPORTE * 100)} % dos materiais)</th>
                   <td colSpan={2} />
                   <td className="py-2 text-right tabular-nums">{mzn(o.transporte)}</td>
                 </tr>
@@ -344,7 +344,7 @@ function PlantaCasa({ c }: { c: CasaConfig }) {
         viewBox={`-28 -24 ${W + 48} ${H + 44}`}
         className="mt-3 block h-auto w-full max-w-[34rem]"
         role="img"
-        aria-label={`Esquema da casa: ${num(c.comprimento, 1)} por ${num(c.largura, 1)} metros, ${c.divisoes} divisões, ${c.portas} portas e ${c.janelas} janelas.`}
+        aria-label={`Esquema da casa: ${num(c.comprimento, 1)} por ${num(c.largura, 1)} metros, ${c.divisoes} divisões, ${c.portas} portas e ${c.janelas} janelas. O esquema mostra a disposição das divisões, não todas as aberturas.`}
       >
         <rect x="0" y="0" width={W} height={H} fill="none" stroke="currentColor" strokeWidth="4" />
         {Array.from({ length: colunas - 1 }, (_, i) => (

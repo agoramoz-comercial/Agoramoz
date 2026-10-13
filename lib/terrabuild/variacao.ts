@@ -36,6 +36,9 @@ export function mudancas(a: CasaConfig, b: CasaConfig): string[] {
   const areaA = a.comprimento * a.largura;
   const areaB = b.comprimento * b.largura;
   if (Math.abs(areaA - areaB) >= 0.5) out.push(`${areaB > areaA ? 'aumentar' : 'reduzir'} a casa de ${num(areaA)} m² para ${num(areaB)} m²`);
+  // A mesma área com outra forma muda o perímetro, logo as paredes e o custo.
+  else if (a.comprimento !== b.comprimento || a.largura !== b.largura)
+    out.push(`mudar as dimensões para ${num(b.comprimento, 1)} × ${num(b.largura, 1)} m (mesma área)`);
   if (a.peDireito !== b.peDireito) out.push(`mudar o pé-direito para ${num(b.peDireito, 1)} m`);
   if (a.divisoes !== b.divisoes) out.push(`passar a ${b.divisoes} divisões`);
   if (a.portas !== b.portas || a.janelas !== b.janelas) out.push(`passar a ${b.portas} portas e ${b.janelas} janelas`);

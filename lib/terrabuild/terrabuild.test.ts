@@ -8,8 +8,8 @@ import { mzn, variacao as fmtVariacao } from './formato';
 import { cantos, intersectam } from './geometria';
 import { interferencias, poligonosElemento } from './interferencia';
 import { avancar, concluida, iniciar, NADA_GUARDADO, PASSOS } from './marcos';
-import { capitalTotal, contarNaFase, estadoNaFase, hectaresPorTalhao, resumoCapital } from './obra';
-import { medidas, quantidades, type CasaConfig } from './quantidades';
+import { capitalTotal, contarNaFase, custoElemento, estadoNaFase, hectaresPorTalhao, resumoCapital } from './obra';
+import { LIMITES_CASA, medidas, quantidades, type CasaConfig } from './quantidades';
 import { posicaoSol } from './sol';
 import { altura, curvasDeNivel, fracaoCheia, grelha } from './terreno';
 import { compararVersoes } from './variacao';
@@ -266,5 +266,86 @@ describe('geometria', () => {
     const p = cantos({ cx: 0, cy: 0, w: 10, d: 2, rot: 90 });
     const xs = p.map((q) => q[0]);
     expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(2);
+  });
+});
+
+describe('revisão ECC: números coerentes entre secções', () => {
+  it('a mesma área com outra forma não diz «não mudou»', () => {
+    const v = compararVersoes(CASA_REFERENCIA, { ...CASA_REFERENCIA, comprimento: 12, largura: 7.5 });
+    expect(v.mudancas.length).toBe(1);
+    expect(v.frase).not.toMatch(/não mudou/);
+    expect(v.frase).toMatch(/12 × 7,5 m/);
+  });
+
+  it('a classe da estimativa chega ao custo da casa no terreno e aos cenários', () => {
+    const casa = P.elementos.find((e) => e.id === 'casa-principal')!;
+    for (const k of CLASSES) expect(custoElemento(casa, CASA_REFERENCIA, k)).toBe(orcamento(CASA_REFERENCIA, k).total);
+    const [, bConceitual] = avaliarCenarios(P, CASA_REFERENCIA, 'conceptual');
+    const [, bContratual] = avaliarCenarios(P, CASA_REFERENCIA, 'contratual');
+    expect(bContratual!.investimento).toBeLessThan(bConceitual!.investimento);
+  });
+
+  it('o furo cobre a água de todos os cenários', () => {
+    for (const r of avaliarCenarios(P, CASA_REFERENCIA)) expect(r.coberturaAgua, r.id).toBeGreaterThanOrEqual(100);
+  });
+
+  it('em «Hoje», a linha temporal e os marcos contam a mesma história', () => {
+    for (const c of P.componentes) {
+      const estados = P.elementos.filter((e) => e.componente === c.id).map((e) => estadoNaFase(e, P.faseAtual));
+      if (c.estado === 'por-iniciar') expect(estados.every((s) => s === 'ausente'), c.id).toBe(true);
+      if (c.estado === 'concluido') expect(estados.every((s) => s === 'concluido'), c.id).toBe(true);
+      if (c.estado === 'em-curso' && estados.length) expect(estados.some((s) => s !== 'ausente'), c.id).toBe(true);
+    }
+  });
+});
+
+describe('revisão ECC: assistente com perguntas livres', () => {
+  it.each([
+    ['Quanto custa a casa?', 'quantidades'],
+    ['Qual é o custo total?', 'quantidades'],
+    ['Quanto custa construir?', 'quantidades'],
+    ['Como acompanho a obra?', 'progresso'],
+    ['Há água para a rega?', 'agua'],
+  ])('«%s» → %s', (pergunta, intencao) => {
+    expect(classificar(pergunta)).toBe(intencao);
+  });
+
+  it.each(['Aguarde um momento', 'Quanto demora a construir? Não sei.'])('«%s» não cai em água nem em «fictício»', (frase) => {
+    expect(['agua', 'ficticio']).not.toContain(classificar(frase));
+  });
+});
+
+describe('revisão ECC: casos limite dos motores', () => {
+  it('a 1–2 m da estrada sem lhe tocar, acusa afastamento', () => {
+    // A estrada transversal está em y=150 com 6 m de largura (147–153); a casa tem 9 m de fundo.
+    const k = interferencias(P, { ...CASA_REFERENCIA, y: 159.5 });
+    expect(k.some((x) => x.tipo === 'afastamento')).toBe(true);
+    expect(k.some((x) => x.tipo === 'sobreposicao')).toBe(false);
+  });
+
+  it('estado por fase: início em obra, fim concluído, área futura sempre futura', () => {
+    const armazem = P.elementos.find((e) => e.id === 'armazem')!;
+    expect(estadoNaFase(armazem, armazem.fases[0])).toBe('em-obra');
+    expect(estadoNaFase(armazem, armazem.fases[1])).toBe('concluido');
+    const futura = P.elementos.find((e) => e.futuro)!;
+    expect(estadoNaFase(futura, 9)).toBe('futuro');
+  });
+
+  it('nos extremos dos deslizadores, todas as quantidades e o total são finitos e positivos', () => {
+    for (const comprimento of LIMITES_CASA.comprimento)
+      for (const largura of LIMITES_CASA.largura)
+        for (const peDireito of LIMITES_CASA.peDireito)
+          for (const divisoes of LIMITES_CASA.divisoes) {
+            const c = { ...CASA_REFERENCIA, comprimento, largura, peDireito, divisoes, portas: 10, janelas: 16 };
+            for (const l of quantidades(c)) expect(Number.isFinite(l.quantidade) && l.quantidade > 0, l.id).toBe(true);
+            const o = orcamento(c, 'conceptual');
+            expect(Number.isFinite(o.total) && o.total > 0).toBe(true);
+          }
+  });
+
+  it('sem necessidade de água, a cobertura é 100 % e a autonomia infinita', () => {
+    const b = balancoAgua(P, 0);
+    expect(b.cobertura).toBe(100);
+    expect(b.autonomiaDias).toBe(Infinity);
   });
 });

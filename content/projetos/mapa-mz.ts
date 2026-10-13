@@ -5,7 +5,6 @@
 export const MAPA_MZ_VIEWBOX = { largura: 600, altura: 963 } as const;
 
 /** A mesma projecção do gerador, para pôr pinos por longitude e latitude. */
-export const MAPA_MZ_PROJECCAO = { k: 0.9510565162951535, minX: 28.735074169581743, minY: 10.469008, escala: 57.74360077542169, margem: 8 } as const;
 
 export interface ProvinciaMapa {
   readonly id: string;

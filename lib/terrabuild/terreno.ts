@@ -14,18 +14,6 @@ export interface Terreno {
   readonly semente: number;
 }
 
-/** mulberry32: pequeno, rápido e suficiente para ruído visual. */
-export function aleatorio(semente: number): () => number {
-  let a = semente >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 function hash(ix: number, iy: number, semente: number): number {
   let h = (ix * 374761393 + iy * 668265263 + semente * 2147483647) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -103,13 +91,6 @@ export function grelha(t: Terreno, passo = 10): Grelha {
       if (h > max) max = h;
     }
   return { nx, ny, passo, alturas, min, max };
-}
-
-/** Declive em % no ponto, por diferenças finitas. */
-export function declive(t: Terreno, x: number, y: number, h = 2): number {
-  const dx = (altura(t, x + h, y) - altura(t, x - h, y)) / (2 * h);
-  const dy = (altura(t, x, y + h) - altura(t, x, y - h)) / (2 * h);
-  return Math.hypot(dx, dy) * 100;
 }
 
 /** Fração do terreno abaixo da cota de cheia, a partir da grelha. */

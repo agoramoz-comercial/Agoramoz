@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Component, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { Elemento, FaseId } from '@/content/projetos/tipos';
 import { mzn } from '@/lib/terrabuild/formato';
 import { contarNaFase, custoElemento, estadoNaFase } from '@/lib/terrabuild/obra';
@@ -66,7 +66,8 @@ export function Visualizador() {
   const { projeto: p, estado, despachar } = useGemeo();
   const rastrear = useRastreio(p.slug);
   const [selecionado, setSelecionado] = useState<string | null>(null);
-  const [semWebGL, setSemWebGL] = useState(false);
+  // Porque é que a vista 3D não está a ser mostrada, quando a pessoa a pediu.
+  const [aviso3D, setAviso3D] = useState<null | 'sem-webgl' | 'falhou'>(null);
   const idFase = useId();
   const idResumo = useId();
   // Quem escolhe na lista vai para o cartão; ao fechar, volta ao botão de onde veio.
@@ -83,18 +84,26 @@ export function Visualizador() {
   };
 
   const abrir3D = () => {
+    if (estado.vista === '3d') return;
     if (!suportaWebGL()) {
-      setSemWebGL(true);
+      setAviso3D('sem-webgl');
       return;
     }
+    setAviso3D(null);
     rastrear('3d_open');
     despachar({ tipo: 'vista', vista: '3d' });
   };
+  const voltarA2D = () => {
+    setAviso3D('falhou');
+    despachar({ tipo: 'vista', vista: '2d' });
+  };
 
-  // Quem chega pelo botão «Explorar projeto em 3D» do hub pediu o 3D.
+  // Quem chega pelo botão «Explorar projeto em 3D» do hub pediu o 3D — e conta.
   useEffect(() => {
-    if (window.location.hash === '#gemeo-3d' && suportaWebGL()) despachar({ tipo: 'vista', vista: '3d' });
-  }, [despachar]);
+    if (window.location.hash !== '#gemeo-3d' || !suportaWebGL()) return;
+    rastrear('3d_open');
+    despachar({ tipo: 'vista', vista: '3d' });
+  }, [despachar, rastrear]);
 
   const contagem = useMemo(() => contarNaFase(p, estado.fase), [p, estado.fase]);
   const fase = p.fases[estado.fase]!;
@@ -154,14 +163,20 @@ export function Visualizador() {
         </fieldset>
         {/* Sempre montado, para o aviso ser anunciado quando aparece. */}
         <div role="status">
-          {semWebGL ? <Aviso>Este navegador não tem WebGL: a planta 2D mostra o mesmo gémeo, com todas as camadas.</Aviso> : null}
+          {aviso3D === 'sem-webgl' ? (
+            <Aviso>Este navegador não tem WebGL: a planta 2D mostra o mesmo gémeo, com todas as camadas.</Aviso>
+          ) : aviso3D === 'falhou' ? (
+            <Aviso>A vista 3D parou neste dispositivo; voltámos à planta 2D, que mostra o mesmo gémeo.</Aviso>
+          ) : null}
         </div>
       </div>
 
       {/* Palco */}
       <div className="relative overflow-hidden border border-[color:var(--hairline)] bg-[color:var(--color-ink-950)]">
         {estado.vista === '3d' ? (
-          <Cena3D selecionado={selecionado} onSelecionar={setSelecionado} onFalha={() => despachar({ tipo: 'vista', vista: '2d' })} />
+          <Limite3D aoFalhar={voltarA2D}>
+            <Cena3D selecionado={selecionado} onSelecionar={setSelecionado} onFalha={voltarA2D} />
+          </Limite3D>
         ) : (
           <Planta2D selecionado={selecionado} onSelecionar={setSelecionado} />
         )}
@@ -225,7 +240,8 @@ export function Visualizador() {
           <strong className="font-semibold">
             Fase {estado.fase + 1} de 10 — {fase.nome}.
           </strong>{' '}
-          {fase.resumo} {contagem.concluidos} elementos concluídos, {contagem.emObra} em obra e {contagem.ausentes} por iniciar.
+          {fase.resumo} {contagem.concluidos} elementos concluídos, {contagem.emObra} em obra e {contagem.ausentes} por iniciar
+          {contagem.futuros ? `; ${contagem.futuros} área reservada para depois` : ''}.
         </p>
       </div>
 
@@ -257,7 +273,7 @@ export function Visualizador() {
             </div>
             <div>
               <dt className={ROTULO}>Custo (fictício)</dt>
-              <dd className="tabular-nums">{el.futuro ? 'Fora do capital necessário' : mzn(custoElemento(el, estado.casa))}</dd>
+              <dd className="tabular-nums">{el.futuro ? 'Fora do capital necessário' : mzn(custoElemento(el, estado.casa, estado.classe))}</dd>
             </div>
             {componente ? (
               <div>
@@ -300,7 +316,7 @@ export function Visualizador() {
                   <td className="py-2 pr-4 text-[color:var(--muted)]">{NOME_CAMADA[e.camada]}</td>
                   <td className="py-2 pr-4 whitespace-nowrap tabular-nums">{posicao(e)}</td>
                   <td className="py-2 pr-4">{ESTADO_TEXTO[estadoNaFase(e, estado.fase)]}</td>
-                  <td className="py-2 text-right tabular-nums">{e.futuro ? '—' : mzn(custoElemento(e, estado.casa))}</td>
+                  <td className="py-2 text-right tabular-nums">{e.futuro ? '—' : mzn(custoElemento(e, estado.casa, estado.classe))}</td>
                 </tr>
               ))}
             </tbody>
@@ -320,6 +336,23 @@ function posicao(e: Elemento): string {
   }
   const [x, y] = f.tipo === 'cilindro' ? [f.cx, f.cy] : [f.r.cx, f.r.cy];
   return `${Math.round(x)}, ${Math.round(y)}`;
+}
+
+/**
+ * Um erro dentro do 3D (contexto WebGL recusado, falta de memória da GPU)
+ * não pode levar a página inteira para o ecrã de erro: volta à planta 2D.
+ */
+class Limite3D extends Component<{ aoFalhar: () => void; children: React.ReactNode }, { erro: boolean }> {
+  state = { erro: false };
+  static getDerivedStateFromError() {
+    return { erro: true };
+  }
+  componentDidCatch() {
+    this.props.aoFalhar();
+  }
+  render() {
+    return this.state.erro ? null : this.props.children;
+  }
 }
 
 function Aviso({ children }: { children: React.ReactNode }) {

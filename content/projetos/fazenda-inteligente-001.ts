@@ -45,7 +45,8 @@ const talhao = (id: string, nome: string, cx: number, cy: number, w: number, d: 
   nome,
   camada: 'talhoes',
   forma: { tipo: 'area', r: { cx, cy, w, d } },
-  fases: [1, 8],
+  // Preparação do solo até às fundações; a sementeira entra no primeiro ciclo.
+  fases: [1, 4],
   custo: 180_000,
   componente: 'preparacao',
 });
@@ -149,7 +150,7 @@ export const ELEMENTOS: readonly Elemento[] = [
     forma: { tipo: 'caixa', r: { cx: 300, cy: 230, w: 50, d: 20 }, altura: 4.5, telhado: 'arco' },
     fases: [4, 6],
     custo: 2_800_000,
-    componente: 'primeiro-ciclo',
+    componente: 'estrutura',
   },
   {
     id: 'viveiro',
@@ -158,7 +159,7 @@ export const ELEMENTOS: readonly Elemento[] = [
     forma: { tipo: 'caixa', r: { cx: 250, cy: 215, w: 20, d: 12 }, altura: 3, telhado: 'plano' },
     fases: [5, 7],
     custo: 600_000,
-    componente: 'primeiro-ciclo',
+    componente: 'cobertura',
   },
   {
     id: 'reservatorio',
@@ -284,7 +285,7 @@ export const FAZENDA_001: Projeto = {
   faseAtual: 5,
   fases: FASES,
   elementos: ELEMENTOS,
-  agua: { reservatorioM3: 1_500, furoM3Dia: 90 },
+  agua: { reservatorioM3: 1_500, furoM3Dia: 160 },
   componentes: [
     {
       id: 'preparacao',
@@ -317,7 +318,7 @@ export const FAZENDA_001: Projeto = {
       certificacao: 'validado',
       libertado: 1_100_000,
       desvio: -2,
-      evidencias: [{ descricao: 'Ensaio de caudal: 90 m³/dia', e: 180, n: 272, data: '2026-06-03' }],
+      evidencias: [{ descricao: 'Ensaio de caudal: 160 m³/dia', e: 180, n: 272, data: '2026-06-03' }],
       versoes: [{ versao: 1, data: '2026-04-10', nota: 'Contrato de sondagem', hash: 'a03d7f9e1c48' }],
     },
     {
@@ -388,8 +389,8 @@ export const FAZENDA_001: Projeto = {
       orcamento: 4_200_000,
       responsavel: 'Engenheiro eletrotécnico',
       fornecedor: 'Integrador solar F',
-      percentagem: 0,
-      estado: 'por-iniciar',
+      percentagem: 15,
+      estado: 'em-curso',
       certificacao: 'pendente',
       libertado: 0,
       desvio: 0,

@@ -1,5 +1,5 @@
 import type { FaseId, Projeto } from '@/content/projetos/tipos';
-import { balancoAgua, DIAS_BOMBAGEM, fracaoCheiaTalhao, riscoClimatico, simularCultura } from './agro';
+import { balancoAgua, cheiaDaCultura, DIAS_BOMBAGEM, riscoClimatico, simularCultura } from './agro';
 import { avaliarCenarios } from './cenarios';
 import { CLASSE, orcamento, type Classe } from './custos';
 import { milhoes, mzn, num, percentagem } from './formato';
@@ -50,17 +50,17 @@ export const SUGESTOES: readonly { intencao: Intencao; pergunta: string }[] = [
 
 const PALAVRAS: Readonly<Record<Intencao, readonly string[]>> = {
   variacao: ['porque', 'subiu', 'desceu', 'variac', 'aument', 'mudou', 'diferenc', 'encareceu'],
-  quantidades: ['quantidad', 'materia', 'cimento', 'areia', 'brita', 'aco', 'bloco', 'chapa', 'telha', 'orcament'],
+  quantidades: ['quantidad', 'materia', 'cimento', 'areia', 'brita', '=aco', 'bloco', 'chapa', 'telha', 'orcament', 'cust', 'prec', 'quanto custa'],
   comparar: ['compar', 'alternativ', 'lado a lado', 'versao'],
-  planta: ['planta', 'casa', 'divis', 'dimens', 'implant', 'quarto', 'janela', 'porta'],
-  terreno: ['terreno', 'relevo', 'declive', 'drenag', 'solo', 'acesso', 'topograf'],
-  agua: ['agua', 'rega', 'furo', 'reservat', 'irriga'],
+  planta: ['planta', '=casa', '=casas', 'divis', 'dimens', 'implant', 'quarto', 'janela', 'porta'],
+  terreno: ['terreno', 'relevo', 'declive', 'drenag', '=solo', '=solos', 'acesso', 'topograf'],
+  agua: ['=agua', '=aguas', 'rega', 'furo', 'reservat', 'irriga'],
   riscos: ['risco', 'perigo', 'problema', 'interferenc', 'conflito', 'cheia', 'seca'],
   cenarios: ['cenario', 'essencial', 'recomendad', 'avancad', 'retorno', 'payback', 'opcao'],
   marcos: ['marco', 'financ', 'desembols', 'pagament', 'investi', 'apoiar', 'desembolso'],
   progresso: ['progress', 'fase', 'obra', 'andamento', 'estado', 'cronograma'],
   privacidade: ['privac', 'publico', 'confidenc', 'coordenad', 'quem ve', 'camada'],
-  ficticio: ['fictic', '=real', '=reais', 'verdade', 'demo', 'inventad', 'simulad'],
+  ficticio: ['fictic', '=real', '=reais', 'verdade', 'demonstra', '=demo', 'inventad', 'simulad'],
 };
 
 export function normalizar(texto: string): string {
@@ -178,7 +178,7 @@ export function responder(intencao: Intencao | null, ctx: ContextoAssistente): R
       const conflitos = interferencias(p, ctx.casa);
       const cultura = p.culturas.find((c) => c.id === ctx.cultura) ?? p.culturas[0]!;
       const b = balancoAgua(p, simularCultura(cultura, ctx.hectares).aguaM3);
-      const rc = riscoClimatico(cultura, b.cobertura, fracaoCheiaTalhao(p, 't4'));
+      const rc = riscoClimatico(cultura, b.cobertura, cheiaDaCultura(p, cultura));
       const k = CLASSE[ctx.classe];
       const partes = [
         `Implantação: ${conflitos.length === 0 ? 'sem interferências na posição atual da casa' : `${conflitos.length} interferência(s) — ${minuscula(conflitos[0]!.mensagem)}`}`,
@@ -189,7 +189,7 @@ export function responder(intencao: Intencao | null, ctx: ContextoAssistente): R
       return { intencao, ancora: '#riscos', texto: partes.map((s) => (s.endsWith('.') ? s : `${s}.`)).join(' ') };
     }
     case 'cenarios': {
-      const r = avaliarCenarios(p, ctx.casa);
+      const r = avaliarCenarios(p, ctx.casa, ctx.classe);
       return {
         intencao,
         ancora: '#cenarios',

@@ -130,8 +130,12 @@ export const CTA = { primary: CTA_PRIMARY, secondary: CTA_SECONDARY } as const;
 export const NAV = {
   primary: [
     { href: '/como-trabalhamos', label: 'Como trabalhamos' },
-    /** Demonstração (D-41). Só na barra a partir de `xl`: entre 1024 e 1279 px não cabe sem mudar o desenho do cabeçalho. */
-    { href: '/projetos', label: 'Projetos (demo)', desde: 'xl' },
+    /**
+     * Demonstração (D-41). Só na barra a partir de `xl`: entre 1024 e 1279 px não cabe sem mudar o
+     * desenho do cabeçalho. Na barra, o selo é um quadrado na cor do selo de demonstração (o nome
+     * acessível diz «(demo)»); na gaveta e no rodapé, `NAV_TEXTO` escreve «Projetos (demo)».
+     */
+    { href: '/projetos', label: 'Projetos', selo: 'demo', desde: 'xl' },
     { href: '/sobre', label: 'Sobre' },
     { href: '/contactos', label: 'Contactos' },
   ],

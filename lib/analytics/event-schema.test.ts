@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NOMES_ACEITES } from './event-schema';
+import { eventoRecebido, NOMES_ACEITES } from './event-schema';
 import { EVENTOS_DE_BROWSER, EVENTOS_DE_SERVIDOR } from './events';
 
 /**
@@ -23,5 +23,22 @@ describe('vocabulário de eventos', () => {
   it('as duas listas não se sobrepõem', () => {
     const browser = new Set<string>(EVENTOS_DE_BROWSER);
     for (const nome of EVENTOS_DE_SERVIDOR) expect(browser.has(nome)).toBe(false);
+  });
+});
+
+describe('project_demo_interaction (demo TerraBuild, D-41)', () => {
+  const envelope = (evento: unknown) => ({ evento, channel: 'directo', campaign: null, path: '/projetos' });
+  const valido = { name: 'project_demo_interaction', projectId: 'fazenda-inteligente-001', action: '3d_open' };
+
+  it('aceita o evento válido', () => {
+    expect(eventoRecebido.safeParse(envelope(valido)).success).toBe(true);
+  });
+
+  it.each([
+    ['uma chave a mais (nada de texto livre)', { ...valido, texto: 'olá' }],
+    ['uma acção desconhecida', { ...valido, action: 'scenario' }],
+    ['um projectId que não é de demonstração', { ...valido, projectId: '841234567890' }],
+  ])('recusa %s', (_, evento) => {
+    expect(eventoRecebido.safeParse(envelope(evento)).success).toBe(false);
   });
 });

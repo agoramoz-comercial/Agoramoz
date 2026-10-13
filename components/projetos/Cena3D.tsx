@@ -4,7 +4,8 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { Html, Line, OrbitControls } from '@react-three/drei';
 import { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
-import type { Elemento, Projeto } from '@/content/projetos/tipos';
+import type { Elemento, Projeto, Retangulo } from '@/content/projetos/tipos';
+import { cantos } from '@/lib/terrabuild/geometria';
 import { INCLINACAO } from '@/lib/terrabuild/quantidades';
 import { interferencias } from '@/lib/terrabuild/interferencia';
 import { estadoNaFase, type EstadoElemento } from '@/lib/terrabuild/obra';
@@ -310,17 +311,16 @@ function ElementoMalha({
   }
 
   if (f.tipo === 'area') {
-    const [X, Z] = aMundo(p, f.r.cx, f.r.cy);
-    const y = cota(p.terreno, f.r.cx, f.r.cy) + 0.3;
-    const talhao = e.camada === 'talhoes';
     return (
-      <group position={[X, y, Z]} rotation={[0, ((f.r.rot ?? 0) * Math.PI) / 180, 0]}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} onClick={clicar} receiveShadow>
-          <planeGeometry args={[f.r.w, f.r.d]} />
-          <meshStandardMaterial color={cor} transparent opacity={fantasma ? 0.12 : talhao ? 0.5 : 0.25} roughness={1} depthWrite={false} />
-        </mesh>
-        <Contorno w={f.r.w} d={f.r.d} cor={selecionado ? COR.sinal : cor} tracejado={fantasma || emObra} />
-      </group>
+      <AreaAssente
+        p={p}
+        r={f.r}
+        cor={cor}
+        opacidade={fantasma ? 0.12 : e.camada === 'talhoes' ? 0.5 : 0.25}
+        corContorno={selecionado ? COR.sinal : cor}
+        tracejado={fantasma || emObra}
+        onClick={clicar}
+      />
     );
   }
 
@@ -330,7 +330,7 @@ function ElementoMalha({
     const h = emObra ? f.altura * 0.6 : f.altura;
     const r = Math.max(f.raio, 1.2);
     return (
-      <mesh position={[X, y + h / 2, Z]} onClick={clicar} castShadow receiveShadow>
+      <mesh position={[X, y + h / 2, Z]} onClick={clicar} castShadow={!fantasma} receiveShadow>
         <cylinderGeometry args={[r, r, h, 32, 1, emObra]} />
         <meshStandardMaterial
           color={selecionado ? COR.sinal : cor}
@@ -355,7 +355,7 @@ function ElementoMalha({
             key={i}
             position={[0, 1.4, -f.r.d / 2 + fila * (i + 0.5)]}
             rotation={[(-20 * Math.PI) / 180, 0, 0]}
-            castShadow
+            castShadow={!fantasma}
             visible={!(emObra && i % 2 === 1)}
           >
             <boxGeometry args={[f.r.w, 0.12, fila * 0.75]} />
@@ -504,6 +504,72 @@ function Construcao({
           <meshStandardMaterial color="#9a9aa2" roughness={0.6} metalness={0.2} />
         </mesh>
       ) : null}
+    </group>
+  );
+}
+
+/**
+ * Uma área (talhão, compostagem…) assente no relevo: a malha segue a cota em
+ * cada vértice, em vez de um plano à altura do centro que ficava enterrado
+ * num lado e a flutuar no outro. Os cantos vêm de `cantos()`, a mesma
+ * geometria da planta 2D e das interferências.
+ */
+function AreaAssente({
+  p,
+  r,
+  cor,
+  opacidade,
+  corContorno,
+  tracejado,
+  onClick,
+}: {
+  p: Projeto;
+  r: Retangulo;
+  cor: string;
+  opacidade: number;
+  corContorno: string;
+  tracejado: boolean;
+  onClick: (ev: Clique) => void;
+}) {
+  const geo = useMemo(() => {
+    const [k0, k1, k2, k3] = cantos(r) as readonly (readonly [number, number])[];
+    const nu = Math.max(1, Math.ceil(r.w / 4));
+    const nv = Math.max(1, Math.ceil(r.d / 4));
+    const pos: number[] = [];
+    const idx: number[] = [];
+    for (let j = 0; j <= nv; j++)
+      for (let i = 0; i <= nu; i++) {
+        const u = i / nu;
+        const v = j / nv;
+        const [ax, ay] = [k0![0] + (k1![0] - k0![0]) * u, k0![1] + (k1![1] - k0![1]) * u];
+        const [bx, by] = [k3![0] + (k2![0] - k3![0]) * u, k3![1] + (k2![1] - k3![1]) * u];
+        const [x, y] = [ax + (bx - ax) * v, ay + (by - ay) * v];
+        const [X, Z] = aMundo(p, x, y);
+        pos.push(X, cota(p.terreno, x, y) + 0.3, Z);
+      }
+    for (let j = 0; j < nv; j++)
+      for (let i = 0; i < nu; i++) {
+        const a = j * (nu + 1) + i;
+        const c = a + nu + 1;
+        idx.push(a, c, a + 1, a + 1, c, c + 1);
+      }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return g;
+  }, [p, r]);
+  useEffect(() => () => geo.dispose(), [geo]);
+  const contorno = useMemo(() => {
+    const k = cantos(r) as readonly (readonly [number, number])[];
+    return amostrarLinha(p, [...k, k[0]!], 0.45);
+  }, [p, r]);
+  return (
+    <group>
+      <mesh geometry={geo} onClick={onClick} receiveShadow>
+        <meshStandardMaterial color={cor} transparent opacity={opacidade} roughness={1} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <Line points={contorno} color={corContorno} lineWidth={1.4} dashed={tracejado} dashSize={2} gapSize={1.5} />
     </group>
   );
 }

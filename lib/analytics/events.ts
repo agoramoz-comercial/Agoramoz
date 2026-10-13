@@ -2,6 +2,22 @@ import type { SectorSlug, SolutionSlug } from '@/content/types';
 import type { DiagnosticCode } from '@/lib/diagnostic/mercado';
 import type { Canal } from '@/lib/attribution/types';
 
+/** Demonstração TerraBuild (D-41): só estes projetos e estas acções existem. */
+export const PROJECT_DEMO_IDS = ['fazenda-inteligente-001'] as const;
+export type ProjectDemoId = (typeof PROJECT_DEMO_IDS)[number];
+export const PROJECT_DEMO_ACTIONS = [
+  '3d_open',
+  'layer',
+  'timeline',
+  'configurator',
+  'milestone_sim',
+  'assistant',
+  'submit_land',
+  'access_layer',
+  'agro',
+] as const;
+export type ProjectDemoAction = (typeof PROJECT_DEMO_ACTIONS)[number];
+
 /**
  * Os eventos, como união discriminada: um evento inválido não compila.
  *
@@ -26,19 +42,6 @@ import type { Canal } from '@/lib/attribution/types';
  * verdade com sintaxe de conveniência: dois nomes para a mesma coisa acabam
  * sempre com relatórios a contar metade de cada.
  */
-export const PROJECT_DEMO_ACTIONS = [
-  '3d_open',
-  'layer',
-  'timeline',
-  'configurator',
-  'scenario',
-  'milestone_sim',
-  'assistant',
-  'submit_land',
-  'access_layer',
-  'agro',
-] as const;
-export type ProjectDemoAction = (typeof PROJECT_DEMO_ACTIONS)[number];
 
 export type AnalyticsEvent =
   | { name: 'country_selected'; country: DiagnosticCode; surface: string }
@@ -75,7 +78,7 @@ export type AnalyticsEvent =
   | { name: 'survey_started'; surveyId: string }
   | { name: 'survey_step_viewed'; surveyId: string; step: number }
   /** Demo TerraBuild (dados fictícios): o que a pessoa explora, nunca o que escreve. */
-  | { name: 'project_demo_interaction'; projectId: string; action: ProjectDemoAction }
+  | { name: 'project_demo_interaction'; projectId: ProjectDemoId; action: ProjectDemoAction }
   /**
    * Do SERVIDOR, não do browser.
    *

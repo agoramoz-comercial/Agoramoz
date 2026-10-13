@@ -91,13 +91,13 @@ for (const e of ECRAS) {
   );
   confere((await h.getByTestId('mapa-mz').locator('path').count()) === 11, 'hub: mapa com as 11 províncias');
   confere((await h.getByTestId('contagem-projetos').textContent()).startsWith('3 projetos'), 'hub: 3 projetos fictícios');
-  await h.getByLabel('Estado').selectOption('concluido');
+  await h.getByLabel('Estado', { exact: true }).selectOption('concluido');
   confere((await h.getByTestId('contagem-projetos').textContent()).startsWith('1 projeto'), 'hub: filtro Estado=Concluído deixa 1');
   confere((await h.getByTestId('mapa-mz').locator('[data-pino]').count()) === 1, 'hub: o mapa só mostra o pino filtrado');
-  await h.getByLabel('Estado').selectOption('todos');
-  await h.getByLabel('Província').selectOption('niassa');
+  await h.getByLabel('Estado', { exact: true }).selectOption('todos');
+  await h.getByLabel('Província', { exact: true }).selectOption('niassa');
   confere(await h.getByText('Nenhum projeto com estes filtros.').isVisible(), 'hub: estado vazio honesto');
-  await h.getByLabel('Província').selectOption('todas');
+  await h.getByLabel('Província', { exact: true }).selectOption('todas');
   confere(
     (await h.getByRole('link', { name: 'Explorar em 3D' }).getAttribute('href')) === '/projetos/fazenda-inteligente-001#gemeo-3d',
     'hub: cartão 001 leva ao 3D',
