@@ -1,8 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useId, useMemo, useState } from 'react';
-import type { FaseId } from '@/content/projetos/tipos';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { Elemento, FaseId } from '@/content/projetos/tipos';
 import { mzn } from '@/lib/terrabuild/formato';
 import { contarNaFase, custoElemento, estadoNaFase } from '@/lib/terrabuild/obra';
 import { cn } from '@/lib/utils/cn';
@@ -53,6 +53,19 @@ export function Visualizador() {
   const [selecionado, setSelecionado] = useState<string | null>(null);
   const [semWebGL, setSemWebGL] = useState(false);
   const idFase = useId();
+  const idResumo = useId();
+  // Quem escolhe na lista vai para o cartão; ao fechar, volta ao botão de onde veio.
+  const refCartao = useRef<HTMLDivElement>(null);
+  const origem = useRef<HTMLButtonElement | null>(null);
+  const escolherDaLista = (id: string, botao: HTMLButtonElement) => {
+    origem.current = botao;
+    setSelecionado(id);
+    requestAnimationFrame(() => refCartao.current?.focus());
+  };
+  const fecharCartao = () => {
+    setSelecionado(null);
+    requestAnimationFrame(() => origem.current?.focus());
+  };
 
   const abrir3D = () => {
     if (!suportaWebGL()) {
@@ -79,7 +92,7 @@ export function Visualizador() {
   };
 
   return (
-    <div className="flex flex-col gap-5" id="gemeo-3d">
+    <div className="flex scroll-mt-28 flex-col gap-5" id="gemeo-3d">
       {/* Barra de ferramentas */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -124,9 +137,10 @@ export function Visualizador() {
             </Alternar>
           ))}
         </fieldset>
-        {semWebGL ? (
-          <Aviso>Este navegador não tem WebGL: a planta 2D mostra o mesmo gémeo, com todas as camadas.</Aviso>
-        ) : null}
+        {/* Sempre montado, para o aviso ser anunciado quando aparece. */}
+        <div role="status">
+          {semWebGL ? <Aviso>Este navegador não tem WebGL: a planta 2D mostra o mesmo gémeo, com todas as camadas.</Aviso> : null}
+        </div>
       </div>
 
       {/* Palco */}
@@ -182,6 +196,7 @@ export function Visualizador() {
           value={estado.fase}
           onChange={(e) => irPara(Number(e.target.value) as FaseId)}
           aria-valuetext={`Fase ${estado.fase + 1} de 10: ${fase.nome}`}
+          aria-describedby={idResumo}
           className="w-full accent-[color:var(--color-signal-500)]"
         />
         <ol className="hidden grid-cols-10 gap-1 text-[0.6875rem] leading-tight text-[color:var(--muted)] md:grid" aria-hidden>
@@ -191,7 +206,7 @@ export function Visualizador() {
             </li>
           ))}
         </ol>
-        <p aria-live="polite" className="text-sm" data-testid="resumo-fase" data-concluidos={contagem.concluidos} data-em-obra={contagem.emObra}>
+        <p id={idResumo} className="text-sm" data-testid="resumo-fase" data-concluidos={contagem.concluidos} data-em-obra={contagem.emObra}>
           <strong className="font-semibold">
             Fase {estado.fase + 1} de 10 — {fase.nome}.
           </strong>{' '}
@@ -201,10 +216,16 @@ export function Visualizador() {
 
       {/* Elemento escolhido */}
       {el ? (
-        <div className="border border-[color:var(--hairline)] p-4 text-sm" aria-live="polite">
+        <div
+          ref={refCartao}
+          tabIndex={-1}
+          role="group"
+          aria-label={`Elemento escolhido: ${el.nome}`}
+          className="border border-[color:var(--hairline)] p-4 text-sm"
+        >
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <p className="font-semibold">{el.nome}</p>
-            <button type="button" className="min-h-11 text-xs underline" onClick={() => setSelecionado(null)}>
+            <button type="button" className="min-h-11 text-xs underline" onClick={fecharCartao}>
               Fechar
             </button>
           </div>
@@ -243,6 +264,7 @@ export function Visualizador() {
               <tr>
                 <th scope="col" className="py-2 pr-4 font-normal">Elemento</th>
                 <th scope="col" className="py-2 pr-4 font-normal">Camada</th>
+                <th scope="col" className="py-2 pr-4 font-normal">Posição (E, N)</th>
                 <th scope="col" className="py-2 pr-4 font-normal">Estado</th>
                 <th scope="col" className="py-2 text-right font-normal">Custo (fictício)</th>
               </tr>
@@ -251,11 +273,17 @@ export function Visualizador() {
               {p.elementos.map((e) => (
                 <tr key={e.id} className="border-t border-[color:var(--hairline)]">
                   <th scope="row" className="py-2 pr-4 font-normal">
-                    <button type="button" className="min-h-9 text-left underline-offset-4 hover:underline" onClick={() => setSelecionado(e.id)}>
+                    <button
+                      type="button"
+                      aria-pressed={selecionado === e.id}
+                      className="min-h-9 text-left underline-offset-4 hover:underline"
+                      onClick={(ev) => escolherDaLista(e.id, ev.currentTarget)}
+                    >
                       {e.nome}
                     </button>
                   </th>
                   <td className="py-2 pr-4 text-[color:var(--muted)]">{NOME_CAMADA[e.camada]}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap tabular-nums">{posicao(e)}</td>
                   <td className="py-2 pr-4">{ESTADO_TEXTO[estadoNaFase(e, estado.fase)]}</td>
                   <td className="py-2 text-right tabular-nums">{e.futuro ? '—' : mzn(custoElemento(e, estado.casa))}</td>
                 </tr>
@@ -266,6 +294,17 @@ export function Visualizador() {
       </details>
     </div>
   );
+}
+
+/** Onde fica o elemento na grelha local (m): o centro, ou o início e o fim de uma linha. */
+function posicao(e: Elemento): string {
+  const f = e.forma;
+  if (f.tipo === 'linha') {
+    const [a, b] = [f.pontos[0]!, f.pontos[f.pontos.length - 1]!];
+    return `${Math.round(a[0])}, ${Math.round(a[1])} → ${Math.round(b[0])}, ${Math.round(b[1])}`;
+  }
+  const [x, y] = f.tipo === 'cilindro' ? [f.cx, f.cy] : [f.r.cx, f.r.cy];
+  return `${Math.round(x)}, ${Math.round(y)}`;
 }
 
 function Aviso({ children }: { children: React.ReactNode }) {

@@ -57,10 +57,10 @@ export function CamadasAcesso() {
             tabIndex={ativa === c.id ? 0 : -1}
             onClick={() => escolher(i)}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowRight') escolher(i + 1);
-              if (e.key === 'ArrowLeft') escolher(i - 1);
-              if (e.key === 'Home') escolher(0);
-              if (e.key === 'End') escolher(CAMADAS.length - 1);
+              const alvo = ({ ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: CAMADAS.length - 1 } as Record<string, number>)[e.key];
+              if (alvo === undefined) return;
+              e.preventDefault(); // sem isto, Home e End também rolam a página
+              escolher(alvo);
             }}
             className={cn(
               'min-h-11 border px-4 text-sm',

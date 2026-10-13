@@ -55,8 +55,9 @@ export function Cena3D({
   return (
     <div
       className="relative aspect-[424/324] w-full"
-      role="img"
-      aria-label={`Vista 3D do terreno fictício na fase «${p.fases[estado.fase]!.nome}». Arraste para rodar; roda do rato ou dois dedos para aproximar. A lista de elementos por baixo diz o mesmo em texto.`}
+      role="group"
+      aria-roledescription="vista 3D"
+      aria-label={`Vista 3D do terreno fictício na fase «${p.fases[estado.fase]!.nome}». Arraste para rodar; roda do rato ou dois dedos para aproximar. Sem arrastar, a Planta 2D e a lista «Elementos do terreno» dão a mesma informação.`}
       data-testid="cena-3d"
     >
       <Canvas

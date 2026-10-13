@@ -78,7 +78,7 @@ export function Assistente() {
                   <p>{t.resposta.texto}</p>
                   {t.resposta.ancora ? (
                     <a href={t.resposta.ancora} className="mt-1 inline-flex min-h-11 items-center text-xs underline">
-                      Ver na página
+                      Ver na página<span className="sr-only"> sobre «{t.pergunta}»</span>
                     </a>
                   ) : null}
                 </div>

@@ -10,6 +10,7 @@ import { compararVersoes } from '@/lib/terrabuild/variacao';
 import { cn } from '@/lib/utils/cn';
 import { useGemeo } from './estado';
 import { useRastreio } from './rastreio';
+import { useAtrasado } from './useAtrasado';
 import { Ficticio, ROTULO } from './ui';
 
 /**
@@ -44,6 +45,8 @@ export function Construtor() {
   const conflitos = useMemo(() => interferencias(p, c), [p, c]);
   const alt = useMemo(() => (estado.alternativa ? orcamento(estado.alternativa, estado.classe) : null), [estado.alternativa, estado.classe]);
   const m = medidas(c);
+  // Uma só frase para o leitor de ecrã, quando o deslizador pára — não a cada passo.
+  const anuncio = useAtrasado(`Custo ${mzn(o.total)}. ${v.frase}`, 700);
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
@@ -117,9 +120,12 @@ export function Construtor() {
           <p className="mt-2 text-sm text-[color:var(--muted)]">
             Faixa: {mzn(o.faixa[0])} a {mzn(o.faixa[1])} · {num(m.area)} m² · {mzn(o.total / m.area)}/m²
           </p>
-          <p className="mt-4 text-sm" aria-live="polite" data-testid="frase-variacao">
+          <p className="mt-4 text-sm" data-testid="frase-variacao">
             {v.mudancas.length ? <strong className="font-semibold">{variacao(v.percentagem)} · </strong> : null}
             {v.frase}
+          </p>
+          <p role="status" className="sr-only">
+            {anuncio}
           </p>
         </div>
 
@@ -142,7 +148,7 @@ export function Construtor() {
 
         {alt && estado.alternativa ? (
           <div>
-            <h4 className={ROTULO}>Alternativa A ao lado da versão atual</h4>
+            <h3 className={ROTULO}>Alternativa A ao lado da versão atual</h3>
             <div role="region" aria-label="Comparação com a alternativa A" tabIndex={0} className="relative mt-3 overflow-x-auto focus-visible:outline-2">
               <table className="w-full min-w-[28rem] text-sm" data-testid="comparacao">
                 <thead className={ROTULO}>
@@ -177,7 +183,7 @@ export function Construtor() {
         ) : null}
 
         <div>
-          <h4 className={ROTULO}>Mapa preliminar de quantidades</h4>
+          <h3 className={ROTULO}>Mapa preliminar de quantidades</h3>
           <div role="region" aria-label="Quantidades de materiais" tabIndex={0} className="relative mt-3 overflow-x-auto focus-visible:outline-2">
             <table className="w-full min-w-[34rem] text-sm" data-testid="quantidades">
               <thead className={ROTULO}>
@@ -258,9 +264,10 @@ function Deslizar({
       <label htmlFor={id} className="text-sm">
         {rotulo}
       </label>
-      <output htmlFor={id} className="text-sm tabular-nums">
+      {/* O deslizador já diz o valor (aria-valuetext); um <output> repetia-o. */}
+      <span aria-hidden className="text-sm tabular-nums">
         {texto}
-      </output>
+      </span>
       <input
         id={id}
         type="range"

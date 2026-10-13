@@ -131,7 +131,7 @@ export function PainelAgricola() {
         </dl>
 
         <div>
-          <h4 className={ROTULO}>Água: necessidade contra disponibilidade</h4>
+          <h3 className={ROTULO}>Água: necessidade contra disponibilidade</h3>
           <p className="mt-2 text-sm">
             A cultura pede cerca de <strong className="font-semibold tabular-nums">{num(agua.necessidade)} m³</strong> por ano. O furo dá{' '}
             <strong className="font-semibold tabular-nums">{num(agua.oferta)} m³</strong> ({p.agua.furoM3Dia} m³/dia em {DIAS_BOMBAGEM} dias):{' '}
@@ -141,7 +141,7 @@ export function PainelAgricola() {
         </div>
 
         <div>
-          <h4 className={ROTULO}>Receita por cenário de mercado</h4>
+          <h3 className={ROTULO}>Receita por cenário de mercado</h3>
           <ul className="mt-3 flex flex-col gap-2 text-sm">
             {cenarios.map(({ k, r: x }) => (
               <li key={k} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-3">

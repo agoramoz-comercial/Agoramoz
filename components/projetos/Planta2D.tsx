@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import type { Elemento, FormaElemento } from '@/content/projetos/tipos';
 import { interferencias } from '@/lib/terrabuild/interferencia';
 import { estadoNaFase, type EstadoElemento } from '@/lib/terrabuild/obra';
+import { num } from '@/lib/terrabuild/formato';
 import { COTA_CHEIA, curvasDeNivel, grelha } from '@/lib/terrabuild/terreno';
 import { useGemeo, type Camada } from './estado';
 
@@ -34,6 +35,15 @@ export function Planta2D({ selecionado, onSelecionar }: { selecionado: string | 
 
   const g = useMemo(() => grelha(p.terreno, 10), [p.terreno]);
   const curvas = useMemo(() => curvasDeNivel(g, 1), [g]);
+  const relevo = useMemo(() => {
+    let baixo = Infinity;
+    let alto = -Infinity;
+    for (const h of g.alturas) {
+      if (h < baixo) baixo = h;
+      if (h > alto) alto = h;
+    }
+    return alto - baixo;
+  }, [g]);
   const cheia = useMemo(() => {
     // Células abaixo da cota de cheia, juntas em faixas por linha.
     const faixas: { x: number; y: number; w: number }[] = [];
@@ -70,9 +80,9 @@ export function Planta2D({ selecionado, onSelecionar }: { selecionado: string | 
       data-testid="planta-2d"
     >
       <title id="planta-titulo">Planta do terreno da Fazenda Inteligente 001 (fictícia)</title>
+      {/* Um só texto, como no <title>: vários filhos num elemento SVG arriscam a hidratação. */}
       <desc id="planta-desc">
-        Terreno de 400 por 300 metros visto de cima, na fase «{p.fases[estado.fase]!.nome}». A lista de elementos por baixo diz o mesmo em
-        texto.
+        {`Terreno de ${L} por ${H} metros visto de cima, na fase «${p.fases[estado.fase]!.nome}». Relevo de cerca de ${num(relevo)} m, com zona de cheia no canto sudeste. A lista «Elementos do terreno em lista», por baixo, dá o nome, a camada, a posição, o estado e o custo de cada elemento.`}
       </desc>
       <defs>
         <pattern id="tb-cheia" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -202,7 +212,7 @@ function Forma({
     <g
       onClick={() => onSelecionar(e.id)}
       className="cursor-pointer"
-      opacity={planeado ? 0.45 : 1}
+      opacity={planeado ? 0.7 : 1}
       data-elemento={e.id}
       data-estado={estado}
     >

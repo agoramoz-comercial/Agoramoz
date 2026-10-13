@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { Componente } from '@/content/projetos/tipos';
 import { milhoes, mzn } from '@/lib/terrabuild/formato';
 import { avancar, concluida, emFalta, iniciar, PASSOS, type Simulacao } from '@/lib/terrabuild/marcos';
@@ -35,6 +35,12 @@ export function Marcos() {
   const [sim, setSim] = useState<Simulacao | null>(null);
   const comp = p.componentes.find((c) => c.id === escolhido)!;
   const idLista = useId();
+  const idDetalhe = useId();
+  // O botão que se carrega desaparece a seguir; o foco passa para o próximo passo.
+  const refSimular = useRef<HTMLButtonElement>(null);
+  const refAvancar = useRef<HTMLButtonElement>(null);
+  const refFim = useRef<HTMLButtonElement>(null);
+  const focar = (r: React.RefObject<HTMLButtonElement | null>) => requestAnimationFrame(() => r.current?.focus());
 
   const escolher = (c: Componente) => {
     setEscolhido(c.id);
@@ -68,15 +74,16 @@ export function Marcos() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="lg:col-span-5">
-          <h4 id={idLista} className={ROTULO}>
+          <h3 id={idLista} className={ROTULO}>
             Componentes financiáveis
-          </h4>
+          </h3>
           <ul aria-labelledby={idLista} className="mt-3 flex flex-col">
             {p.componentes.map((c) => (
               <li key={c.id} className="border-t border-[color:var(--hairline)]">
                 <button
                   type="button"
-                  aria-pressed={escolhido === c.id}
+                  aria-current={escolhido === c.id ? 'true' : undefined}
+                  aria-controls={idDetalhe}
                   onClick={() => escolher(c)}
                   className={cn(
                     'flex min-h-11 w-full flex-col gap-2 px-2 py-3 text-left transition-colors',
@@ -87,7 +94,7 @@ export function Marcos() {
                     <span className="font-medium">{c.nome}</span>
                     <span className="text-xs text-[color:var(--muted)]">{ESTADO[c.estado]}</span>
                   </span>
-                  <Progresso valor={c.percentagem} rotulo={`Execução de ${c.nome}`} />
+                  <Progresso valor={c.percentagem} rotulo={`Execução de ${c.nome}`} decorativa />
                 </button>
               </li>
             ))}
@@ -95,8 +102,10 @@ export function Marcos() {
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-7">
-          <div className="border border-[color:var(--hairline)] p-5">
-            <p className="font-display text-[length:var(--text-h3)] font-semibold">{comp.nome}</p>
+          <div id={idDetalhe} className="border border-[color:var(--hairline)] p-5">
+            <p className="font-display text-[length:var(--text-h3)] font-semibold" aria-live="polite">
+              {comp.nome}
+            </p>
             <dl className="mt-4 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
               <Dado
                 rotulo="Orçamento"
@@ -153,11 +162,13 @@ export function Marcos() {
                   ou cobrado.
                 </p>
                 <button
+                  ref={refSimular}
                   type="button"
                   disabled={emFalta(comp) === 0}
                   onClick={() => {
                     rastrear('milestone_sim');
                     setSim(iniciar(comp));
+                    focar(refAvancar);
                   }}
                   className="inline-flex min-h-12 items-center justify-center self-start bg-[color:var(--color-signal-600)] px-6 font-display font-semibold text-white hover:bg-[color:var(--color-signal-700)] disabled:opacity-40"
                 >
@@ -187,35 +198,49 @@ export function Marcos() {
                     </li>
                   ))}
                 </ol>
-                <div role="log" aria-live="polite" aria-label="Registo da simulação">
-                  <ol className="flex flex-col gap-1.5 border-l border-[color:var(--hairline)] pl-4 text-sm">
-                    {sim.registo.map((linha, i) => (
-                      <li key={i} className={cn(i === sim.registo.length - 1 && concluida(sim) && 'font-semibold')}>
-                        {linha}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
+              </>
+            )}
+            {/* Sempre montado: uma região viva criada já com conteúdo não é anunciada. */}
+            <div role="log" aria-live="polite" aria-label="Registo da simulação">
+              {sim ? (
+                <ol className="flex flex-col gap-1.5 border-l border-[color:var(--hairline)] pl-4 text-sm">
+                  {sim.registo.map((linha, i) => (
+                    <li key={i} className={cn(i === sim.registo.length - 1 && concluida(sim) && 'font-semibold')}>
+                      {linha}
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+            </div>
+            {sim !== null ? (
                 <div className="flex flex-wrap gap-2">
                   {!concluida(sim) ? (
                     <button
+                      ref={refAvancar}
                       type="button"
-                      onClick={() => setSim(avancar(sim, comp))}
+                      onClick={() => {
+                        const seguinte = avancar(sim, comp);
+                        setSim(seguinte);
+                        if (concluida(seguinte)) focar(refFim);
+                      }}
                       className="inline-flex min-h-11 items-center bg-[color:var(--color-signal-600)] px-5 text-sm font-semibold text-white hover:bg-[color:var(--color-signal-700)]"
                     >
                       Avançar: {PASSOS[sim.passo + 1]!.nome.toLowerCase()}
                     </button>
                   ) : null}
                   <button
+                    ref={refFim}
                     type="button"
-                    onClick={() => setSim(null)}
+                    onClick={() => {
+                      setSim(null);
+                      focar(refSimular);
+                    }}
                     className="inline-flex min-h-11 items-center border border-[color:var(--border)] px-5 text-sm hover:border-[color:var(--on-surface)]"
                   >
                     {concluida(sim) ? 'Recomeçar' : 'Cancelar a simulação'}
                   </button>
                 </div>
-              </>
-            )}
+            ) : null}
           </div>
           <p className="text-xs text-[color:var(--muted)]">
             Numa versão real, os fundos ficariam numa instituição de pagamento autorizada, nunca na AGORAMOZ. Os meios de pagamento

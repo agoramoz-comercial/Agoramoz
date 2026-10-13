@@ -41,7 +41,9 @@ export function Cenarios() {
           <caption className="sr-only">Cenários A, B e C da Fazenda Inteligente 001, com valores fictícios</caption>
           <thead>
             <tr className="align-bottom">
-              <td />
+              <th scope="col">
+                <span className="sr-only">Indicador</span>
+              </th>
               {p.cenarios.map((c) => (
                 <th key={c.id} scope="col" className="pb-4 pl-4 text-left font-normal">
                   <span className="numeral block text-[length:var(--text-h2)]">{c.id}</span>

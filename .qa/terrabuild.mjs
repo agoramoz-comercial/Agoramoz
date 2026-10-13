@@ -193,7 +193,7 @@ for (const e of ECRAS) {
   // Agricultura e cenários.
   confere((await f.getByTestId('painel-agricola').textContent()).includes('Produção por ano'), 'agricultura: indicadores');
   const cen = f.getByTestId('cenarios');
-  confere((await cen.locator('thead th').count()) === 3, 'cenários: tabela A/B/C');
+  confere((await cen.locator('thead th').count()) === 4, 'cenários: tabela A/B/C (+ canto «Indicador»)');
   confere((await cen.textContent()).includes('Recomendado'), 'cenários: B marcado como recomendado');
 
   // Marcos.

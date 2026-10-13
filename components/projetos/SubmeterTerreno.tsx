@@ -2,7 +2,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import Link from 'next/link';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { PROVINCIAS_MZ } from '@/content/projetos/mapa-mz';
 import { num } from '@/lib/terrabuild/formato';
@@ -24,6 +24,8 @@ export function SubmeterTerreno({ className }: { className?: string }) {
   const [aberto, setAberto] = useState(false);
   const [feito, setFeito] = useState<null | { provincia: string; area: number; uso: string; titulo: string }>(null);
   const ids = { p: useId(), a: useId(), u: useId(), t: useId() };
+  // O botão de envio desaparece; o foco vai para o resultado, que é lido.
+  const refResultado = useRef<HTMLParagraphElement>(null);
 
   return (
     <Dialog.Root
@@ -55,8 +57,10 @@ export function SubmeterTerreno({ className }: { className?: string }) {
           </Dialog.Description>
 
           {feito ? (
-            <div className="mt-6 flex flex-col gap-4" role="status">
-              <p className="font-semibold">Simulação concluída. As respostas não foram enviadas nem guardadas.</p>
+            <div className="mt-6 flex flex-col gap-4">
+              <p ref={refResultado} tabIndex={-1} className="font-semibold">
+                Simulação concluída. As respostas não foram enviadas nem guardadas.
+              </p>
               <p className="text-sm">
                 Numa versão real, um terreno de {num(feito.area, 1)} ha em {feito.provincia}, para {feito.uso.toLowerCase()}, seguiria para
                 validação: titularidade ({feito.titulo.toLowerCase()}), levantamento com drone ou topografia, avaliação de água e acessos — e só
@@ -82,6 +86,7 @@ export function SubmeterTerreno({ className }: { className?: string }) {
                   uso: String(f.get('uso')),
                   titulo: String(f.get('titulo')),
                 });
+                requestAnimationFrame(() => refResultado.current?.focus());
               }}
             >
               <Campo id={ids.p} rotulo="Província">
