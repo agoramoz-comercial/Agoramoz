@@ -539,3 +539,37 @@ está em `docs/TERRABUILD.md`.
   - cobertura cartográfica ou drone;
   - parecer jurídico sobre o instrumento financeiro e a instituição de pagamento.
 - Até lá, nada desta página é prova comercial nem caso de cliente.
+
+## D-42 — TerraBuild realista: Blender offline, níveis de qualidade e DXF
+
+**Pedido do fundador:** «qualidade avançada do skill blender e ECC», «algo realístico e que não deixe nenhuma máquina lenta», «utilize repositórios de Blender e AutoCAD», e que o trabalho «não atinja o weekly limit».
+**As escolhas dele:** tempo real **e** renders Cycles; exportar DXF; qualidade automática com escolha manual.
+
+### Decisões
+1. **O Blender trabalha offline, no repositório (`.qa/blender/`), nunca no browser.**
+   - O site recebe só os resultados: GLB quantizados, WebP e dois renders.
+   - Os modelos são gerados por código a partir dos mesmos dados do site, e não modelados à mão. Mudar uma medida nos dados e correr `gerar.sh` refaz tudo.
+2. **Sem descodificadores.**
+   - A CSP não permite WebAssembly, por isso não se usa Draco, meshopt nem KTX2.
+   - `KHR_mesh_quantization` e WebP são lidos pelo three sem nada extra. O custo são cerca de 30 % mais bytes do que com meshopt.
+3. **Texturas próprias, geradas por código.**
+   - O Poly Haven e o blender.org estão bloqueados nesta rede.
+   - Assim as texturas são reprodutíveis, sem licença de terceiros, e com tamanho controlado.
+4. **Níveis de qualidade como contrato** («nenhuma máquina lenta»):
+   - Leve não descarrega nada e é a cena procedimental de antes;
+   - os tectos de triângulos e de bytes têm testes (vitest) e QA (Playwright);
+   - a escolha da pessoa ganha à automática;
+   - em Automática, a cena desce de nível se engasgar.
+5. **CSP:** `connect-src` ganha `blob:`, que só cobre objectos criados pela própria página. Nenhum host externo.
+6. **Renders:** são ilustrações dos dados fictícios, sempre com a legenda «Render ilustrativo (Blender Cycles)… Não é fotografia nem projeto aprovado».
+7. **DXF no browser** (`dxf-writer`, MIT, carregado no clique):
+   - em metros, sem georreferência;
+   - a planta e o SVG do construtor partilham a geometria (`lib/terrabuild/planta.ts`);
+   - nada é enviado.
+8. **Para poupar o limite semanal:** uma só revisão ECC (`react-reviewer`, desempenho e WebGL), em vez de seis.
+
+### Limites
+- O realismo é de demonstração: construções low-poly e culturas instanciadas a baixa densidade, para caber nos orçamentos.
+- O render leva cerca de 4 min em CPU. Fica fora do CI e corre-se com `RENDERS=1`.
+- Os sinais do dispositivo são aproximados. O Safari e o Firefox não dizem a memória e ficam em Normal, salvo telemóveis com ≤ 4 núcleos.
+

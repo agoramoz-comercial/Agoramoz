@@ -80,9 +80,9 @@ Secções da ficha (âncoras):
 
 - **three 0.186.1, @react-three/fiber 9.8.1, @react-three/drei 10.7.9** (licença MIT):
   - versões exactas fixadas;
-  - do drei usam-se só `OrbitControls`, `Line` e `Html`, porque `Environment`, `Text` e os loaders vão buscar ficheiros a CDNs que a CSP do site bloqueia.
+  - do drei usam-se `OrbitControls`, `Line`, `Html`, `Sky`, `Environment` (só com filhos: o céu é renderizado para luz ambiente, sem `preset` nem ficheiros de CDN), `useGLTF` (sem Draco nem meshopt), `useTexture` e `PerformanceMonitor`. `Text` e os presets do `Environment` continuam fora, porque vão a CDNs que a CSP bloqueia.
 - **Carregamento:** o 3D entra por `next/dynamic` com `ssr: false`, só ao clicar em «Vista 3D» ou com `#gemeo-3d`. O chunk tem cerca de 257 KB gzip e nada disto está no carregamento inicial.
-- **Desempenho:** `frameloop="demand"`, `dpr [1, 1.5]`.
+- **Desempenho:** `frameloop="demand"`; o `dpr`, as sombras e o resto dependem do nível de qualidade (abaixo).
 - **Recurso 2D:** sem WebGL, ou se o contexto se perder, a vista volta à planta 2D, que tem a mesma informação.
 - **Porque não Cesium, Google Photorealistic 3D Tiles ou Mapbox na demo:**
   - pedem chaves e são pagos por utilização;
@@ -140,6 +140,62 @@ O documento usa a taxa de referência de 63,91 MZN/USD (Banco de Moçambique, 12
 - **KPIs:** produto, engenharia, investimento, agricultura e impacto, no documento, secção 13.
 - **O que a demo já mede:** `project_demo_interaction` dá o equivalente de «abre o modo 3D» (`3d_open`), do uso do configurador, dos cenários, da simulação de marcos, do assistente e de «submeter terreno».
 
+## Realismo: Blender, níveis de qualidade e AutoCAD (TB8–TB11, D-42)
+
+### Pipeline Blender (`.qa/blender/`, fora do bundle)
+`BLENDER_PY=<venv>/bin/python .qa/blender/gerar.sh` (Python 3.11 com `pip install bpy==5.0.1`; cerca de 25 s; `RENDERS=1` junta os renders, cerca de 4 min em CPU).
+
+| Passo | Ficheiro | O que faz |
+|---|---|---|
+| 1 | `exportar-cena.ts` | Exporta para JSON, da fonte única (`content/projetos` + `lib/terrabuild`), a grelha de alturas, os elementos e a casa |
+| 2 | `texturas.py` | 10 texturas sem costura geradas por código (ruído periódico, Voronoi), em WebP pelo `bpy`: savana, solo e normal, gravilha, reboco, zinco e normal, telha, betão, solar |
+| 3 | `modelos.py` | 12 construções com as medidas de cada elemento, origem na base e soco de 1 m; materiais Principled partilhados por nome; oclusão junto ao chão cozida em cor de vértice; 7 instâncias (milho, feijão, hortícolas, bananeira, árvore, poste, estaca) |
+| 4 | `otimizar.sh` | `gltf-transform` dedup + prune + quantize (`KHR_mesh_quantization`), sem Draco, meshopt nem KTX2 (a CSP não permite WebAssembly) |
+| 5 | `render.py` | Fazenda inteira na fase final, Cycles (céu físico, AgX, OIDN, 96 amostras), duas vistas WebP 1600×900 |
+
+Activos em `public/terrabuild/`:
+- `fazenda-001.glb`: 365 KB, 7,3 mil triângulos;
+- `instancias.glb`: 28 KB;
+- `tex/`: 4 texturas do chão;
+- `render-aerea.webp` (90 KB) e `render-patio.webp` (130 KB).
+
+`lib/terrabuild/ativos.test.ts` falha se algum passar o tecto, se faltar um nó `el-<id>` ou se aparecer uma extensão que precise de WebAssembly.
+
+### Níveis de qualidade (`lib/terrabuild/qualidade.ts`)
+
+| Nível | Quem (modo automático) | Descarga 3D | Triângulos (tecto) | Sombras | dpr |
+|---|---|---|---|---|---|
+| Leve | poupança de dados, ≤ 4 GB, ou telemóvel com ≤ 4 núcleos | 0 KB (cena procedimental) | 40 mil | não | 1 |
+| Normal | por omissão | cerca de 500 KB | 150 mil | 1024² | ≤ 1,5 |
+| Alta | ≥ 8 GB, ≥ 8 núcleos e rato | igual | 300 mil | 2048² | ≤ 2 |
+
+- **Escolha manual:** «Qualidade 3D: Automática · Leve · Normal · Alta», na barra da vista 3D. A escolha da pessoa ganha sempre.
+- **Adaptação:** em Automática, o `PerformanceMonitor` desce um nível se a cena engasgar e diz porquê.
+- **Medido na QA (SwiftShader):**
+  - Leve: 35 mil triângulos, sem nenhum pedido `.glb`;
+  - Normal: 115 mil.
+- **Normal e Alta (`CenaRealista.tsx`):**
+  - os modelos por elemento. Em obra, o modelo aparece cortado a meia altura, dentro do volume final; o que está planeado aparece só como volume;
+  - o terreno de savana e o entorno até à neblina;
+  - talhões lavrados, que passam a cultura em linhas a partir da fase 8;
+  - gravilha nas estradas;
+  - céu físico como luz ambiente;
+  - árvores, estacas, postes e culturas instanciados dentro do orçamento.
+- **A casa principal continua paramétrica** (segue o construtor), com o reboco e a cobertura do Blender.
+- **Enquanto os modelos chegam, ou se falharem,** fica a cena procedimental.
+- **CSP:** `connect-src` passa a `'self' blob:`. O GLTFLoader lê as texturas embutidas por `fetch` de um URL `blob:`. Não há nenhum host novo.
+
+### AutoCAD (DXF)
+- **Geometria partilhada:** `lib/terrabuild/planta.ts` é a geometria da planta, usada pelo SVG do construtor e pelo DXF.
+- **`lib/terrabuild/dxf.ts`** (`dxf-writer` 1.18.4, MIT, só carregado no clique; DXF AC1021, metros, textos ASCII):
+  - **planta:** camadas PAREDES, DIVISORIAS, JANELAS, PORTAS, COTAS e TEXTO;
+  - **implantação:** LIMITE, ESTRADAS (com largura), CONSTRUCOES (a casa na posição escolhida), TALHOES, AGUA, ELETRICA, CURVAS (de 1 em 1 m) e TEXTO.
+- **Botões:** «Descarregar planta (DXF · AutoCAD)» no construtor e «Descarregar implantação (DXF · AutoCAD)» no gémeo. O ficheiro nasce num Blob local e nada é enviado.
+- **Validado:**
+  - `dxf-parser` nos testes;
+  - `ezdxf.audit()`: 0 erros, nos dois ficheiros.
+- **Sem georreferência, de propósito:** coordenadas locais da demonstração.
+
 ## QA
 
 - **Testes unitários:** `pnpm vitest run lib/terrabuild`.
@@ -153,7 +209,9 @@ O documento usa a taxa de referência de 63,91 MZN/USD (Banco de Moçambique, 12
     - cenários e marcos;
     - separadores e assistente;
     - a submissão simulada: só o evento anónimo sai;
-    - o 3D a pedido e o recurso à planta 2D.
+    - o 3D a pedido e o recurso à planta 2D;
+    - os níveis de qualidade: 2 GB dá Leve, sem descarregar `.glb` e até 40 mil triângulos; Normal manual fica até 150 mil;
+    - os dois DXF são válidos e descarregam sem nenhum pedido à rede.
 - **CSP:** `.qa/csp.mjs` inclui as duas rotas.
 
 ## Para passar a real

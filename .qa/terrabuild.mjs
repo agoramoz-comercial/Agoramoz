@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -257,7 +258,58 @@ for (const e of ECRAS) {
   await g.getByTestId('cena-3d').waitFor({ timeout: 30000 }).catch(() => {});
   confere((await g.getByTestId('cena-3d').count()) === 1, '#gemeo-3d abre a vista 3D');
   await g.close();
+
+  // Níveis de qualidade 3D e DXF: uma vez, no ecrã largo.
+  if (e.nome === '1440') await niveisEDxf(ctx);
   await ctx.close();
+}
+
+async function niveisEDxf(ctx) {
+  const l = await ctx.newPage();
+  // Máquina de 2 GB: a escolha automática tem de ser Leve.
+  await l.addInitScript(() => Object.defineProperty(navigator, 'deviceMemory', { get: () => 2 }));
+  const v = vigiar(l);
+  const pesados = [];
+  l.on('request', (r) => {
+    if (/\/terrabuild\/(.+\.glb|tex\/)/.test(r.url())) pesados.push(r.url());
+  });
+  await l.goto(`${BASE}/projetos/fazenda-inteligente-001`, { waitUntil: 'networkidle' });
+  await l.locator('#gemeo').scrollIntoViewIfNeeded();
+  await l.getByRole('button', { name: 'Vista 3D' }).click();
+  const cena = l.getByTestId('cena-3d');
+  await cena.locator('canvas').waitFor({ timeout: 30000 });
+  await l.waitForTimeout(2500);
+  confere((await cena.getAttribute('data-qualidade')) === 'leve', 'qualidade: 2 GB escolhe Leve sozinho');
+  confere(pesados.length === 0, 'Leve: nenhum modelo nem textura descarregados', pesados.slice(0, 2).join(' '));
+  const triLeve = Number(await cena.getAttribute('data-triangulos'));
+  confere(triLeve > 0 && triLeve <= 40000, 'Leve: até 40 mil triângulos', `(${triLeve})`);
+
+  await l.getByRole('button', { name: 'Normal', exact: true }).click();
+  await l.getByRole('button', { name: 'Resultado final projetado' }).click();
+  await l.waitForFunction(() => Number(document.querySelector('[data-testid="cena-3d"]')?.getAttribute('data-triangulos')) > 60000, null, { timeout: 60000 }).catch(() => {});
+  await l.waitForTimeout(1500);
+  const triNormal = Number(await cena.getAttribute('data-triangulos'));
+  confere((await cena.getAttribute('data-qualidade')) === 'normal', 'qualidade: escolha manual «Normal» respeitada');
+  confere(pesados.some((u) => u.endsWith('fazenda-001.glb')), 'Normal: descarrega os modelos do Blender');
+  confere(triNormal > 60000 && triNormal <= 150000, 'Normal: modelos montados, até 150 mil triângulos', `(${triNormal})`);
+  await l.locator('#gemeo-3d').screenshot({ path: `${SAIDA}/terrabuild-3d-normal.png` });
+
+  // DXF: gerado no browser, sem pedidos à rede (só o código, já da origem).
+  const dados = [];
+  l.on('request', (r) => {
+    if (!r.url().endsWith('.js') && !r.url().startsWith('blob:') && !r.url().startsWith('data:')) dados.push(r.url());
+  });
+  for (const [botao, marca] of [
+    ['Descarregar implantação (DXF · AutoCAD)', 'CURVAS'],
+    ['Descarregar planta (DXF · AutoCAD)', 'PAREDES'],
+  ]) {
+    const [descarga] = await Promise.all([l.waitForEvent('download'), l.getByRole('button', { name: botao }).click()]);
+    const texto = (await readFile(await descarga.path())).toString('utf8');
+    confere(/^\s*0\s*\r?\nSECTION/.test(texto) && texto.includes(marca) && /\r?\nEOF\s*$/.test(texto), `DXF: «${botao}» é um DXF válido`, descarga.suggestedFilename());
+  }
+  confere(dados.length === 0, 'DXF: nada é enviado à rede', dados.slice(0, 2).join(' '));
+  confere(v.erros.length === 0, 'níveis e DXF: sem erros de consola', v.erros.slice(0, 3).join(' | '));
+  await l.close();
 }
 
 /* ------------------------------------------------- sem WebGL: planta 2D */
