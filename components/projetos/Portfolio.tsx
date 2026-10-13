@@ -9,6 +9,7 @@ import { milhoes } from '@/lib/terrabuild/formato';
 import { cn } from '@/lib/utils/cn';
 import { Badge } from '@/components/ui/Badge';
 import { Progresso, ROTULO } from './ui';
+import { Render } from './Render';
 
 /**
  * Mapa de Moçambique com o portefólio fictício e filtros. Os filtros vivem
@@ -121,6 +122,7 @@ export function Portfolio() {
 function Cartao({ v }: { v: CartaoProjeto }) {
   return (
     <article className="flex flex-col gap-3 border border-[color:var(--hairline)] p-5" aria-labelledby={`cartao-${v.id}`}>
+      {v.slug === 'fazenda-inteligente-001' ? <Render qual="patio" legenda="curta" sizes="(min-width: 1024px) 420px, 100vw" /> : null}
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="conceptual">Demonstração</Badge>
         <Badge>{NOME_ESTADO[v.estado]}</Badge>

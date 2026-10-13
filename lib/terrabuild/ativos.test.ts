@@ -29,9 +29,17 @@ function ficheiros(pasta: string): string[] {
 }
 
 describe('activos 3D do TerraBuild', () => {
-  it('o nível Normal descarrega no máximo 900 KB, tudo junto', () => {
-    const total = ficheiros(PASTA).reduce((s, f) => s + statSync(f).size, 0);
+  it('o nível Normal descarrega no máximo 900 KB, tudo junto (os renders são imagens da página, à parte)', () => {
+    const total = ficheiros(PASTA)
+      .filter((f) => !/render-[a-z]+\.webp$/.test(f))
+      .reduce((s, f) => s + statSync(f).size, 0);
     expect(total).toBeLessThanOrEqual(900 * KB);
+  });
+
+  it('cada render do Cycles fica em 180 KB ou menos', () => {
+    const renders = ficheiros(PASTA).filter((f) => /render-[a-z]+\.webp$/.test(f));
+    expect(renders.length).toBe(2);
+    for (const f of renders) expect(statSync(f).size, f).toBeLessThanOrEqual(180 * KB);
   });
 
   it('cada ficheiro fica dentro do seu tecto', () => {

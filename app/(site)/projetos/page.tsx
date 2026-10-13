@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { Portfolio } from '@/components/projetos/Portfolio';
+import { Render } from '@/components/projetos/Render';
 import { SubmeterTerreno } from '@/components/projetos/SubmeterTerreno';
 import { FinalCta } from '@/components/sections/FinalCta';
 import { Badge } from '@/components/ui/Badge';
@@ -62,6 +63,7 @@ export default function ProjetosPage() {
           </Button>
           <SubmeterTerreno />
         </div>
+        <Render qual="aerea" className="mt-14" sizes="(min-width: 1280px) 1200px, 100vw" priority />
       </Section>
 
       <Section surface="light" aria-labelledby="h-portfolio">

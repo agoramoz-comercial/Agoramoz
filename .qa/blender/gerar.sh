@@ -8,6 +8,7 @@
 # Demora cerca de 1 minuto numa máquina de 4 núcleos.
 #
 # Uso: BLENDER_PY=/caminho/do/venv/bin/python .qa/blender/gerar.sh
+#      RENDERS=1 … também refaz os dois renders do Cycles (≈4 min em CPU).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 PY="${BLENDER_PY:-python3}"
@@ -24,3 +25,6 @@ for t in savana solo solo-normal gravilha; do
   cp "$OUT/tex/$t.webp" "$DEST/tex/"
 done
 du -ch "$DEST"/*.glb "$DEST"/tex/*.webp | tail -1
+if [ "${RENDERS:-0}" = "1" ]; then
+  "$PY" .qa/blender/render.py "$OUT/cena.json" "$OUT/tex" "$DEST" "${AMOSTRAS:-96}" 2>&1 | grep -E 'KB|Error'
+fi

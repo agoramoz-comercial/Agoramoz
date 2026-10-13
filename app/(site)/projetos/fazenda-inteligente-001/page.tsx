@@ -7,6 +7,7 @@ import { Construtor } from '@/components/projetos/Construtor';
 import { GemeoProvider } from '@/components/projetos/estado';
 import { Marcos } from '@/components/projetos/Marcos';
 import { PainelAgricola } from '@/components/projetos/PainelAgricola';
+import { RendersDuplos } from '@/components/projetos/Render';
 import { Visualizador } from '@/components/projetos/Visualizador';
 import { FinalCta } from '@/components/sections/FinalCta';
 import { Badge } from '@/components/ui/Badge';
@@ -99,6 +100,7 @@ export default function Fazenda001Page() {
             </div>
           ))}
         </dl>
+        <RendersDuplos className="mt-12" />
         <nav aria-label="Secções desta página" className="mt-12">
           <ul className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
             {SECCOES.map(([href, nome]) => (
