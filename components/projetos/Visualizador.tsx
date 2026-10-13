@@ -5,6 +5,7 @@ import { Component, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { Elemento, FaseId } from '@/content/projetos/tipos';
 import { mzn } from '@/lib/terrabuild/formato';
 import { NIVEIS, NOME_NIVEL, type EscolhaQualidade } from '@/lib/terrabuild/qualidade';
+import { BotaoDxf } from './BotaoDxf';
 import { contarNaFase, custoElemento, estadoNaFase } from '@/lib/terrabuild/obra';
 import { cn } from '@/lib/utils/cn';
 import { CAMADAS, useGemeo, type Base, type Camada } from './estado';
@@ -210,6 +211,12 @@ export function Visualizador() {
           Interferência na implantação
         </li>
       </ul>
+
+      <BotaoDxf
+        rotulo="Descarregar implantação (DXF · AutoCAD)"
+        ficheiro="fazenda-001-implantacao.dxf"
+        gerar={() => import('@/lib/terrabuild/dxf').then((m) => m.implantacaoDxf(p, estado.casa))}
+      />
 
       {/* Linha temporal */}
       <div className="flex flex-col gap-3 border-t border-[color:var(--hairline)] pt-5">

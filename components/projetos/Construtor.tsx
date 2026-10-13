@@ -8,6 +8,8 @@ import { interferencias } from '@/lib/terrabuild/interferencia';
 import { ACABAMENTOS, COBERTURAS, LIMITES_CASA, medidas, PAREDES, PAVIMENTOS, type CasaConfig } from '@/lib/terrabuild/quantidades';
 import { compararVersoes } from '@/lib/terrabuild/variacao';
 import { cn } from '@/lib/utils/cn';
+import { plantaCasa } from '@/lib/terrabuild/planta';
+import { BotaoDxf } from './BotaoDxf';
 import { useGemeo } from './estado';
 import { useRastreio } from './rastreio';
 import { useAtrasado } from './useAtrasado';
@@ -235,6 +237,11 @@ export function Construtor() {
         </div>
 
         <PlantaCasa c={c} />
+        <BotaoDxf
+          rotulo="Descarregar planta (DXF · AutoCAD)"
+          ficheiro="casa-principal-planta.dxf"
+          gerar={() => import('@/lib/terrabuild/dxf').then((m) => m.plantaCasaDxf(c))}
+        />
       </div>
     </div>
   );
@@ -319,24 +326,14 @@ function Escolher<T extends string>({
 }
 
 /** Esquema da planta da casa: divisões, portas e janelas. Não é um projeto de arquitetura. */
+/** O desenho da planta: a mesma geometria do DXF (lib/terrabuild/planta), em píxeis e com y para baixo. */
 function PlantaCasa({ c }: { c: CasaConfig }) {
   const esc = 18;
+  const pl = plantaCasa(c);
   const W = c.comprimento * esc;
   const H = c.largura * esc;
-  const colunas = Math.ceil(c.divisoes / 2);
-  const linhas = c.divisoes > 1 ? 2 : 1;
-  const perimetro = 2 * (W + H);
-  const ponto = (t: number): [number, number, boolean] => {
-    // Posição ao longo do perímetro (0..1) e se a parede é horizontal.
-    let d = t * perimetro;
-    if (d < W) return [d, 0, true];
-    d -= W;
-    if (d < H) return [W, d, false];
-    d -= H;
-    if (d < W) return [W - d, H, true];
-    d -= W;
-    return [0, H - d, false];
-  };
+  const px = (x: number) => x * esc;
+  const py = (y: number) => (pl.largura - y) * esc;
   return (
     <figure>
       <figcaption className={ROTULO}>Planta arquitetónica · esquema, não é projeto</figcaption>
@@ -347,21 +344,19 @@ function PlantaCasa({ c }: { c: CasaConfig }) {
         aria-label={`Esquema da casa: ${num(c.comprimento, 1)} por ${num(c.largura, 1)} metros, ${c.divisoes} divisões, ${c.portas} portas e ${c.janelas} janelas. O esquema mostra a disposição das divisões, não todas as aberturas.`}
       >
         <rect x="0" y="0" width={W} height={H} fill="none" stroke="currentColor" strokeWidth="4" />
-        {Array.from({ length: colunas - 1 }, (_, i) => (
-          <line key={`c${i}`} x1={((i + 1) * W) / colunas} y1="0" x2={((i + 1) * W) / colunas} y2={H} stroke="currentColor" strokeWidth="2" />
+        {pl.divisorias.map(([x1, y1, x2, y2]) => (
+          <line key={`d${x1}-${y1}-${x2}-${y2}`} x1={px(x1)} y1={py(y1)} x2={px(x2)} y2={py(y2)} stroke="currentColor" strokeWidth="2" />
         ))}
-        {linhas === 2 ? <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="currentColor" strokeWidth="2" /> : null}
-        {Array.from({ length: c.janelas }, (_, i) => {
-          const [x, y, horizontal] = ponto((i + 0.5) / c.janelas);
-          return horizontal ? (
-            <rect key={`j${i}`} x={x - 10} y={y - 3} width="20" height="6" fill="var(--surface)" stroke="currentColor" strokeWidth="1.2" />
+        {pl.janelas.map((j, i) => {
+          const [x, y, m] = [px(j.x), py(j.y), (j.largura * esc) / 2];
+          return j.horizontal ? (
+            <rect key={`j${i}`} x={x - m} y={y - 3} width={m * 2} height="6" fill="var(--surface)" stroke="currentColor" strokeWidth="1.2" />
           ) : (
-            <rect key={`j${i}`} x={x - 3} y={y - 10} width="6" height="20" fill="var(--surface)" stroke="currentColor" strokeWidth="1.2" />
+            <rect key={`j${i}`} x={x - 3} y={y - m} width="6" height={m * 2} fill="var(--surface)" stroke="currentColor" strokeWidth="1.2" />
           );
         })}
-        {Array.from({ length: Math.min(c.portas, colunas * linhas) }, (_, i) => {
-          const x = (((i % colunas) + 0.5) * W) / colunas;
-          const y = linhas === 2 ? H / 2 : H;
+        {pl.portas.map((q, i) => {
+          const [x, y] = [px(q.x), py(q.y)];
           return <path key={`p${i}`} d={`M${x - 8} ${y} A16 16 0 0 1 ${x + 8} ${y - 14}`} fill="none" stroke="var(--color-signal-500)" strokeWidth="1.4" />;
         })}
         <text x={W / 2} y={-8} textAnchor="middle" fontSize="11" fill="currentColor">
