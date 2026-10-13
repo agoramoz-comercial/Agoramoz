@@ -26,6 +26,20 @@ import type { Canal } from '@/lib/attribution/types';
  * verdade com sintaxe de conveniência: dois nomes para a mesma coisa acabam
  * sempre com relatórios a contar metade de cada.
  */
+export const PROJECT_DEMO_ACTIONS = [
+  '3d_open',
+  'layer',
+  'timeline',
+  'configurator',
+  'scenario',
+  'milestone_sim',
+  'assistant',
+  'submit_land',
+  'access_layer',
+  'agro',
+] as const;
+export type ProjectDemoAction = (typeof PROJECT_DEMO_ACTIONS)[number];
+
 export type AnalyticsEvent =
   | { name: 'country_selected'; country: DiagnosticCode; surface: string }
   | { name: 'sector_selected'; country: DiagnosticCode; sector: SectorSlug; surface: string }
@@ -60,6 +74,8 @@ export type AnalyticsEvent =
    */
   | { name: 'survey_started'; surveyId: string }
   | { name: 'survey_step_viewed'; surveyId: string; step: number }
+  /** Demo TerraBuild (dados fictícios): o que a pessoa explora, nunca o que escreve. */
+  | { name: 'project_demo_interaction'; projectId: string; action: ProjectDemoAction }
   /**
    * Do SERVIDOR, não do browser.
    *
@@ -91,6 +107,7 @@ export const EVENTOS_DE_BROWSER = [
   'whatsapp_clicked',
   'survey_started',
   'survey_step_viewed',
+  'project_demo_interaction',
 ] as const satisfies readonly AnalyticsEventName[];
 
 export const EVENTOS_DE_SERVIDOR = [

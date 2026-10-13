@@ -92,6 +92,8 @@ export const RESERVED_TOP_LEVEL_SLUGS = [
   'news',
   // Website Final 2026: páginas de confiança.
   'faq', 'seguranca-qualidade',
+  // TerraBuild: projetos demonstrativos (D-41).
+  'projetos',
 ] as const;
 
 /**
