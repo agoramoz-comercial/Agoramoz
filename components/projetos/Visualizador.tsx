@@ -18,7 +18,12 @@ import { Alternar, ROTULO } from './ui';
  */
 const Cena3D = dynamic(() => import('./Cena3D').then((m) => m.Cena3D), {
   ssr: false,
-  loading: () => <Aviso>A preparar a vista 3D…</Aviso>,
+  // A caixa tem a proporção da cena: a página não salta enquanto o 3D descarrega.
+  loading: () => (
+    <div className="grid aspect-[424/324] w-full place-items-center">
+      <Aviso>A preparar a vista 3D…</Aviso>
+    </div>
+  ),
 });
 
 const NOME_CAMADA: Readonly<Record<Camada, string>> = {
@@ -38,14 +43,24 @@ const NOME_BASE: Readonly<Record<Base, string>> = {
 
 const ESTADO_TEXTO = { ausente: 'Por iniciar', 'em-obra': 'Em obra', concluido: 'Concluído', futuro: 'Área futura' } as const;
 
+let webgl: boolean | null = null;
+
+/** Testa uma vez e liberta o contexto de teste (há um limite de contextos por página). */
 function suportaWebGL(): boolean {
+  if (webgl !== null) return webgl;
   try {
     const c = document.createElement('canvas');
-    return Boolean(c.getContext('webgl2') ?? c.getContext('webgl'));
+    const ctx = c.getContext('webgl2') ?? c.getContext('webgl');
+    ctx?.getExtension('WEBGL_lose_context')?.loseContext();
+    webgl = Boolean(ctx);
   } catch {
-    return false;
+    webgl = false;
   }
+  return webgl;
 }
+
+/** Quem aponta ou foca «Vista 3D» provavelmente vai carregar: começa já o descarregamento. */
+const preCarregar3D = () => void import('./Cena3D');
 
 export function Visualizador() {
   const { projeto: p, estado, despachar } = useGemeo();
@@ -101,7 +116,7 @@ export function Visualizador() {
             <Alternar ativo={estado.vista === '2d'} onClick={() => despachar({ tipo: 'vista', vista: '2d' })}>
               Planta 2D
             </Alternar>
-            <Alternar ativo={estado.vista === '3d'} onClick={abrir3D}>
+            <Alternar ativo={estado.vista === '3d'} onClick={abrir3D} onPointerEnter={preCarregar3D} onFocus={preCarregar3D}>
               Vista 3D
             </Alternar>
           </fieldset>

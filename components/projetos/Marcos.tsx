@@ -6,7 +6,7 @@ import { milhoes, mzn } from '@/lib/terrabuild/formato';
 import { avancar, concluida, emFalta, iniciar, PASSOS, type Simulacao } from '@/lib/terrabuild/marcos';
 import { resumoCapital } from '@/lib/terrabuild/obra';
 import { cn } from '@/lib/utils/cn';
-import { useGemeo } from './estado';
+import { useProjeto } from './estado';
 import { useRastreio } from './rastreio';
 import { Ficticio, Indicador, Progresso, ROTULO } from './ui';
 
@@ -28,7 +28,7 @@ const CERT = {
 } as const;
 
 export function Marcos() {
-  const { projeto: p } = useGemeo();
+  const { projeto: p } = useProjeto();
   const rastrear = useRastreio(p.slug);
   const resumo = resumoCapital(p);
   const [escolhido, setEscolhido] = useState<string>(p.componentes.find((c) => c.estado !== 'concluido')?.id ?? p.componentes[0]!.id);

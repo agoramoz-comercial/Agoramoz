@@ -6,7 +6,7 @@ import { avaliarCenario } from '@/lib/terrabuild/cenarios';
 import { milhoes, mzn, num } from '@/lib/terrabuild/formato';
 import { resumoCapital } from '@/lib/terrabuild/obra';
 import { cn } from '@/lib/utils/cn';
-import { useGemeo } from './estado';
+import { useProjeto } from './estado';
 import { useRastreio } from './rastreio';
 import { ROTULO } from './ui';
 
@@ -24,7 +24,7 @@ const CAMADAS = [
 type IdCamada = (typeof CAMADAS)[number]['id'];
 
 export function CamadasAcesso() {
-  const { projeto: p } = useGemeo();
+  const { projeto: p } = useProjeto();
   const rastrear = useRastreio(p.slug);
   const [ativa, setAtiva] = useState<IdCamada>('publica');
   const base = useId();

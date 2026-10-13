@@ -40,11 +40,12 @@ export function PainelAgricola() {
   const cenarios = CENARIOS_AGRO.map((k) => ({ k, r: simularCultura(cultura, ha, k) }));
   const maxReceita = Math.max(...cenarios.map((x) => x.r.receita), 1);
   const agua = balancoAgua(p, r.aguaM3);
-  const talhaoMaisBaixo = cultura.talhoes.reduce(
-    (pior, t) => (fracaoCheiaTalhao(p, t) > fracaoCheiaTalhao(p, pior) ? t : pior),
-    cultura.talhoes[0]!,
+  // Milhares de amostras do terreno: só dependem da cultura, não de cada deslizador.
+  const cheiaPior = useMemo(
+    () => Math.max(...cultura.talhoes.map((t) => fracaoCheiaTalhao(p, t))),
+    [p, cultura],
   );
-  const risco = riscoClimatico(cultura, agua.cobertura, fracaoCheiaTalhao(p, talhaoMaisBaixo));
+  const risco = riscoClimatico(cultura, agua.cobertura, cheiaPior);
 
   const mudar = (cul: string) => {
     rastrear('agro');

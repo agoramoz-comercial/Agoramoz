@@ -2,7 +2,7 @@
 
 import { Canvas, useThree } from '@react-three/fiber';
 import { Html, Line, OrbitControls } from '@react-three/drei';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import type { Elemento, Projeto } from '@/content/projetos/tipos';
 import { INCLINACAO } from '@/lib/terrabuild/quantidades';
@@ -63,9 +63,9 @@ export function Cena3D({
       <Canvas
         frameloop="demand"
         dpr={[1, 1.5]}
-        shadows
+        shadows={SOMBRAS}
         camera={{ position: [210, 190, 260], fov: 38, near: 1, far: 2000 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        gl={GL}
         onPointerMissed={() => onSelecionar(null)}
       >
         <color attach="background" args={[COR.tinta]} />
@@ -75,6 +75,14 @@ export function Cena3D({
     </div>
   );
 }
+
+/**
+ * PCF (o «soft» foi retirado do three r186) e sem actualização automática: o
+ * mapa de sombras só se refaz quando a luz ou os objectos mudam, não a cada
+ * quadro de rotação da câmara. Fundo opaco: o compositor não mistura alfa.
+ */
+const SOMBRAS = { type: THREE.PCFShadowMap, autoUpdate: false } as const;
+const GL = { antialias: true, alpha: false, powerPreference: 'default' } as const;
 
 function Conteudo({
   p,
@@ -91,6 +99,9 @@ function Conteudo({
 }) {
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
+  const obter = useThree((s) => s.get);
+  // Ecrã táctil: mapa de sombras de 1024², quatro vezes menos memória.
+  const [mapaSombra] = useState(() => (window.matchMedia('(pointer: coarse)').matches ? 1024 : 2048));
 
   // Perder o contexto (GPU reiniciada, separador em segundo plano num
   // telemóvel) devolve a pessoa à planta 2D em vez de deixar um quadro preto.
@@ -104,10 +115,12 @@ function Conteudo({
     return () => el.removeEventListener('webglcontextlost', perdido);
   }, [gl, onFalha]);
 
-  // Mudanças de estado vindas de fora do Canvas pedem um novo quadro.
+  // Só o que a cena desenha pede um quadro novo (e sombras novas); a cultura,
+  // os hectares ou a classe da estimativa não mexem no 3D.
   useEffect(() => {
+    obter().gl.shadowMap.needsUpdate = true;
     invalidate();
-  }, [estado, selecionado, invalidate]);
+  }, [estado.casa, estado.fase, estado.hora, estado.base, estado.camadas, selecionado, obter, invalidate]);
 
   const sol = direcaoSol(posicaoSol(estado.hora, DIA_DO_ANO));
   const luz: [number, number, number] = [sol[0] * 400, Math.max(sol[2], 0.08) * 400, -sol[1] * 400];
@@ -120,7 +133,7 @@ function Conteudo({
         position={luz}
         intensity={2.1}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[mapaSombra, mapaSombra]}
         shadow-camera-left={-230}
         shadow-camera-right={230}
         shadow-camera-top={180}
@@ -279,7 +292,7 @@ function ElementoMalha({
   const f = e.forma;
 
   if (f.tipo === 'linha') {
-    const pontos = amostrarLinha(p, f.pontos, f.largura > 1 ? 0.35 : 0.9);
+    const pontos = linhaAmostrada(p, f.pontos, f.largura > 1 ? 0.35 : 0.9);
     if (f.largura > 1) return <Estrada pontos={pontos} largura={f.largura} fantasma={fantasma} />;
     return (
       <Line
@@ -496,13 +509,17 @@ function Construcao({
 }
 
 function Contorno({ w, d, cor, tracejado, y = 0.05 }: { w: number; d: number; cor: string; tracejado: boolean; y?: number }) {
-  const pts: [number, number, number][] = [
-    [-w / 2, y, -d / 2],
-    [w / 2, y, -d / 2],
-    [w / 2, y, d / 2],
-    [-w / 2, y, d / 2],
-    [-w / 2, y, -d / 2],
-  ];
+  // Pontos estáveis: o <Line> do drei refaz a geometria (e o shader) quando o array muda.
+  const pts = useMemo<[number, number, number][]>(
+    () => [
+      [-w / 2, y, -d / 2],
+      [w / 2, y, -d / 2],
+      [w / 2, y, d / 2],
+      [-w / 2, y, d / 2],
+      [-w / 2, y, -d / 2],
+    ],
+    [w, d, y],
+  );
   return <Line points={pts} color={cor} lineWidth={1.4} dashed={tracejado} dashSize={2} gapSize={1.5} />;
 }
 
@@ -528,6 +545,26 @@ function Estrada({ pontos, largura, fantasma }: { pontos: [number, number, numbe
       <meshStandardMaterial color="#a39d90" roughness={1} transparent={fantasma} opacity={fantasma ? 0.3 : 1} side={THREE.DoubleSide} />
     </mesh>
   );
+}
+
+/**
+ * Os dados são estáticos: cada linha amostra-se uma vez e o mesmo array é
+ * devolvido sempre — o <Line> e a <Estrada> não refazem geometria a cada
+ * mudança de estado.
+ */
+const LINHAS = new WeakMap<object, Map<number, [number, number, number][]>>();
+function linhaAmostrada(p: Projeto, pontos: readonly (readonly [number, number])[], acima: number): [number, number, number][] {
+  let porAltura = LINHAS.get(pontos);
+  if (!porAltura) {
+    porAltura = new Map();
+    LINHAS.set(pontos, porAltura);
+  }
+  let r = porAltura.get(acima);
+  if (!r) {
+    r = amostrarLinha(p, pontos, acima);
+    porAltura.set(acima, r);
+  }
+  return r;
 }
 
 /** Pontos de uma linha a cada ~4 m, colados ao terreno. */

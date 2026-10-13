@@ -102,16 +102,33 @@ interface Contexto {
   readonly despachar: (a: Acao) => void;
 }
 
-const Ctx = createContext<Contexto | null>(null);
+/**
+ * Dois contextos: o projeto e o `despachar` nunca mudam; o estado muda a cada
+ * passo de um deslizador. Quem só lê o projeto (`useProjeto`) não volta a
+ * desenhar quando o estado muda.
+ */
+const CtxProjeto = createContext<Omit<Contexto, 'estado'> | null>(null);
+const CtxEstado = createContext<EstadoGemeo | null>(null);
 
 export function GemeoProvider({ children }: { children: React.ReactNode }) {
   const [estado, despachar] = useReducer(redutor, ESTADO_INICIAL);
-  const valor = useMemo(() => ({ projeto: FAZENDA_001, estado, despachar }), [estado]);
-  return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
+  const fixo = useMemo(() => ({ projeto: FAZENDA_001, despachar }), []);
+  return (
+    <CtxProjeto.Provider value={fixo}>
+      <CtxEstado.Provider value={estado}>{children}</CtxEstado.Provider>
+    </CtxProjeto.Provider>
+  );
+}
+
+export function useProjeto(): Omit<Contexto, 'estado'> {
+  const c = useContext(CtxProjeto);
+  if (!c) throw new Error('useProjeto fora do GemeoProvider');
+  return c;
 }
 
 export function useGemeo(): Contexto {
-  const c = useContext(Ctx);
-  if (!c) throw new Error('useGemeo fora do GemeoProvider');
-  return c;
+  const fixo = useProjeto();
+  const estado = useContext(CtxEstado);
+  if (!estado) throw new Error('useGemeo fora do GemeoProvider');
+  return { ...fixo, estado };
 }
