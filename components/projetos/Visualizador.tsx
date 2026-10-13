@@ -221,7 +221,7 @@ export function Visualizador() {
             </div>
             <div>
               <dt className={ROTULO}>Custo (fictício)</dt>
-              <dd className="tabular-nums">{el.futuro ? 'Fora deste investimento' : mzn(custoElemento(el, estado.casa))}</dd>
+              <dd className="tabular-nums">{el.futuro ? 'Fora do capital necessário' : mzn(custoElemento(el, estado.casa))}</dd>
             </div>
             {componente ? (
               <div>

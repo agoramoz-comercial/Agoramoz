@@ -115,9 +115,9 @@ export function PainelAgricola() {
       <div className="flex flex-col gap-8 lg:col-span-8">
         <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="painel-agricola">
           <Indicador rotulo="Produção por ano" valor={<>{num(r.producaoT, 1)} t<Ficticio /></>} nota={`${cultura.ciclosAno} ciclo(s) de ${cultura.cicloMeses} meses`} />
-          <Indicador rotulo="Receita por ano" valor={mzn(r.receita)} nota={`${num(cultura.preco)} MZN/kg × ${FATORES_AGRO[estado.cenarioAgro].preco}`} />
-          <Indicador rotulo="Custos por ano" valor={mzn(r.custoAnual)} nota={`Instalação única: ${mzn(r.instalacao)}`} />
-          <Indicador rotulo="Margem por ano" valor={mzn(r.margem)} />
+          <Indicador rotulo="Receita por ano" valor={<>{mzn(r.receita)}<Ficticio /></>} nota={`${num(cultura.preco)} MZN/kg × ${FATORES_AGRO[estado.cenarioAgro].preco}`} />
+          <Indicador rotulo="Custos por ano" valor={<>{mzn(r.custoAnual)}<Ficticio /></>} nota={`Instalação única: ${mzn(r.instalacao)}`} />
+          <Indicador rotulo="Margem por ano" valor={<>{mzn(r.margem)}<Ficticio /></>} />
           <Indicador
             rotulo="Preço de equilíbrio"
             valor={r.precoEquilibrio === null ? '—' : `${num(r.precoEquilibrio, 1)} MZN/kg`}

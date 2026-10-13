@@ -18,20 +18,20 @@ export function Cenarios() {
   const { projeto: p, estado } = useGemeo();
   const r = useMemo(() => avaliarCenarios(p, estado.casa), [p, estado.casa]);
   const linhas: { rotulo: string; valor: (i: number) => React.ReactNode }[] = [
-    { rotulo: 'Investimento inicial', valor: (i) => milhoes(r[i]!.investimento) },
+    { rotulo: 'Capital necessário', valor: (i) => milhoes(r[i]!.investimento) },
     { rotulo: 'Custos anuais', valor: (i) => mzn(r[i]!.custosAnuais) },
     { rotulo: 'Produção', valor: (i) => `${num(r[i]!.producaoT, 1)} t/ano` },
     { rotulo: 'Receita potencial', valor: (i) => `${mzn(r[i]!.receita)}/ano` },
     { rotulo: 'Margem anual', valor: (i) => mzn(r[i]!.margemAnual) },
     {
-      rotulo: 'Retorno simples',
-      valor: (i) => (r[i]!.retornoAnos === null ? 'Sem retorno' : `${num(r[i]!.retornoAnos!, 1)} anos`),
+      rotulo: 'Recuperação simples do capital',
+      valor: (i) => (r[i]!.retornoAnos === null ? 'Não recupera o capital' : `${num(r[i]!.retornoAnos!, 1)} anos`),
     },
     { rotulo: 'Risco', valor: (i) => RISCO[r[i]!.risco] },
     { rotulo: 'Empregos', valor: (i) => num(r[i]!.empregos) },
     { rotulo: 'Água consumida', valor: (i) => `${num(r[i]!.aguaM3)} m³/ano` },
     { rotulo: 'Energia solar', valor: (i) => (r[i]!.energiaKwh ? `${num(r[i]!.energiaKwh)} kWh/ano` : '—') },
-    { rotulo: 'Emissões evitadas', valor: (i) => (r[i]!.emissoesEvitadasT ? `${num(r[i]!.emissoesEvitadasT, 1)} t CO₂/ano` : '—') },
+    { rotulo: 'Emissões evitadas (estimativa)', valor: (i) => (r[i]!.emissoesEvitadasT ? `${num(r[i]!.emissoesEvitadasT, 1)} t CO₂/ano` : '—') },
   ];
 
   return (
@@ -47,7 +47,6 @@ export function Cenarios() {
                   <span className="numeral block text-[length:var(--text-h2)]">{c.id}</span>
                   <span className="mt-1 block font-display text-base font-semibold">
                     {c.nome}
-                    {c.id === 'B' ? <span className="rule-label ml-2 text-[color:var(--accent)]">Recomendado</span> : null}
                   </span>
                   <span className="mt-1 block text-xs text-[color:var(--muted)]">{c.resumo}</span>
                 </th>

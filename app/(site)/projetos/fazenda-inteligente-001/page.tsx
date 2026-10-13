@@ -50,8 +50,8 @@ const RISCOS = [
   ['Dados 3D insuficientes', 'Cobertura ou resolução fraca no local real.', 'Validar a cobertura antes de escolher o terreno; levantamento com drone ou fotogrametria como alternativa.'],
   ['Orçamentos incorretos', 'Modelo incompleto ou preços desatualizados.', 'Versões, faixas de incerteza, contingência e aprovação por profissional qualificado.'],
   ['Atividade financeira não autorizada', 'Misturar pagamento, crowdfunding e investimento.', 'Instituição de pagamento autorizada, instrumento jurídico definido e KYC/AML antes de captar fundos.'],
-  ['Dependência tecnológica', 'Um único fornecedor de mapas muda preço ou termos.', 'Arquitetura modular, formatos abertos (IFC), base geoespacial própria e dados de drone.'],
-  ['Visualização confundida com projeto aprovado', 'O realismo do modelo parece aprovação técnica.', 'Selo de maturidade sempre visível: conceito, em validação, aprovado ou as built.'],
+  ['Dependência tecnológica', 'Um único fornecedor de mapas muda preço ou termos.', 'Arquitetura modular, formatos abertos (IFC) e levantamento com drone, quando o projeto for real.'],
+  ['Visualização confundida com projeto aprovado', 'O realismo do modelo parece aprovação técnica.', 'Selo de maturidade visível em cada projeto (aqui: «conceito»): conceito, em validação, aprovado ou as built.'],
 ] as const;
 
 export default function Fazenda001Page() {
@@ -75,22 +75,22 @@ export default function Fazenda001Page() {
           as="h1"
           eyebrow="AGORAMOZ TerraBuild"
           title={P.nome}
-          lead="Um gémeo digital de uma propriedade agrícola: veja o terreno, a obra fase a fase, os materiais e custos de cada decisão, os cenários de produção e o capital por marcos."
+          lead="Um gémeo digital de uma propriedade agrícola fictícia: veja o terreno, a obra fase a fase, os materiais e custos de exemplo de cada decisão, os cenários de produção e o capital por marcos, tudo simulado."
           max="wide"
         />
         <p className="mt-8 max-w-[62ch] border-l-2 border-[color:var(--color-energy-500)] pl-4 text-sm text-[color:var(--muted)]">
-          {DEMO_DISCLAIMER} O que escrever ou escolher nesta página não é guardado, enviado nem cobrado; só contamos, sem identificar ninguém, que partes da demonstração são usadas.
+          {DEMO_DISCLAIMER} Não é um projeto aprovado, um orçamento, nem uma oferta de investimento ou de financiamento. O que escrever ou escolher nesta página não é guardado, enviado nem cobrado; só contamos, sem identificar ninguém, que partes da demonstração são usadas.
         </p>
         <dl className="mt-12 grid grid-cols-2 gap-x-8 gap-y-6 md:grid-cols-4 lg:grid-cols-7">
           {(
             [
-              ['Localização', `${P.provincia} (aproximada)`],
+              ['Localização', `${P.provincia} (aproximada, fictícia)`],
               ['Área', `${num(P.areaHa)} ha`],
               ['Cultura principal', P.culturaPrincipal],
-              ['Capital necessário', `${milhoes(capital.orcamento)}`],
+              ['Capital necessário', `${milhoes(capital.orcamento)} (fictício)`],
               ['Estado', 'Em execução (simulado)'],
               ['Risco', 'Médio'],
-              ['Progresso', `${Math.round(capital.progresso)} %`],
+              ['Progresso', `${Math.round(capital.progresso)} % (simulado)`],
             ] as const
           ).map(([k, v]) => (
             <div key={k} className="border-t border-[color:var(--hairline)] pt-3">
@@ -131,7 +131,7 @@ export default function Fazenda001Page() {
             id="h-construtor"
             number="02"
             eyebrow="Construtor e quantidades"
-            title="Cada decisão de projeto, com o seu custo."
+            title="Cada alteração à casa, com o seu custo de exemplo."
             lead="Mude as medidas, os materiais ou a implantação da casa principal: as quantidades, o custo, as interferências e a explicação da variação atualizam-se."
           />
           <div className="mt-12">
@@ -158,7 +158,7 @@ export default function Fazenda001Page() {
             number="04"
             eyebrow="Cenários"
             title="Essencial, recomendado ou avançado."
-            lead="Investimento, custos, produção, receita, risco, retorno, empregos, água, energia e emissões, lado a lado."
+            lead="Capital necessário, custos, produção, receita, risco, tempo de recuperação do capital, empregos, água, energia e emissões, lado a lado — tudo fictício."
           />
           <div className="mt-12">
             <Cenarios />
@@ -170,8 +170,8 @@ export default function Fazenda001Page() {
             id="h-marcos"
             number="05"
             eyebrow="Construção verificável por marcos"
-            title="O dinheiro só avança quando a obra o prova."
-            lead="Componentes financiáveis com orçamento, responsável, evidências georreferenciadas, validação técnica e histórico de versões."
+            title="Na simulação, o dinheiro só avança quando a obra o prova."
+            lead="Componentes por financiar, com orçamento, responsável, evidências georreferenciadas, validação técnica e histórico de versões — tudo de exemplo."
           />
           <div className="mt-12">
             <Marcos />
@@ -184,7 +184,7 @@ export default function Fazenda001Page() {
             number="06"
             eyebrow="Camadas de acesso"
             title="Público, investidor e técnico veem coisas diferentes."
-            lead="A separação protege plantas, dados comerciais e a localização exata do terreno."
+            lead="Numa versão real, a separação protegeria plantas, dados comerciais e a localização exata do terreno. Aqui as três camadas estão abertas, com dados fictícios."
           />
           <div className="mt-12">
             <CamadasAcesso />
@@ -197,7 +197,7 @@ export default function Fazenda001Page() {
             number="07"
             eyebrow="Assistente de projeto"
             title="Pergunte ao projeto."
-            lead="Explica o terreno, a planta, os materiais, os riscos e o impacto de cada alteração no investimento — com os números desta página."
+            lead="Explica o terreno, a planta, os materiais, os riscos e o impacto de cada alteração no custo — com os números desta página."
           />
           <div className="mt-12">
             <Assistente />
@@ -211,7 +211,7 @@ export default function Fazenda001Page() {
           number="08"
           eyebrow="Riscos e como seria em produção"
           title="O que esta demonstração não é."
-          lead="Não é um projeto aprovado, um orçamento, nem uma oferta de investimento. Para passar a ser real, cada risco abaixo tem uma resposta."
+          lead="Não é um projeto aprovado, um orçamento, nem uma oferta de investimento ou de financiamento. Para passar a ser real, cada risco abaixo exigiria uma resposta concreta."
         />
         <ol className="mt-10 flex flex-wrap items-center gap-2 text-xs" aria-label="Maturidade do modelo">
           {MATURIDADE.map((m, i) => (
@@ -233,7 +233,7 @@ export default function Fazenda001Page() {
               <tr>
                 <th scope="col" className="py-2 pr-6 font-normal">Risco</th>
                 <th scope="col" className="py-2 pr-6 font-normal">Causa</th>
-                <th scope="col" className="py-2 font-normal">Resposta</th>
+                <th scope="col" className="py-2 font-normal">Resposta prevista</th>
               </tr>
             </thead>
             <tbody>
@@ -250,7 +250,10 @@ export default function Fazenda001Page() {
       </Section>
 
       <Section surface="deep" contour>
-        <FinalCta />
+        <FinalCta
+          title="Tem um processo real para melhorar? Comece pelo diagnóstico."
+          body="A demonstração não guarda nada. No diagnóstico, descreve o processo que quer melhorar e a AGORAMOZ analisa o problema, a viabilidade e o próximo passo — com o seu consentimento."
+        />
       </Section>
     </>
   );

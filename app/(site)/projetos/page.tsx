@@ -27,8 +27,8 @@ export const metadata: Metadata = buildMetadata({
 const PASSOS = [
   { n: '01', titulo: 'Terreno', texto: 'Limites, relevo, água, acessos e risco, num gémeo digital do território.' },
   { n: '02', titulo: 'Projeto', texto: 'Construções implantadas no terreno, com quantidades, custos e interferências calculados.' },
-  { n: '03', titulo: 'Capital', texto: 'Cenários de investimento e componentes financiáveis, cada um com orçamento e responsável.' },
-  { n: '04', titulo: 'Execução verificável', texto: 'O dinheiro de cada marco só se liberta depois de evidência georreferenciada e validação técnica.' },
+  { n: '03', titulo: 'Capital', texto: 'Cenários de custo e componentes por financiar (simulados), cada um com orçamento e responsável.' },
+  { n: '04', titulo: 'Execução verificável', texto: 'Na simulação, o dinheiro de cada marco só se liberta depois de evidência georreferenciada e validação técnica.' },
 ] as const;
 
 export default function ProjetosPage() {
@@ -42,13 +42,13 @@ export default function ProjetosPage() {
         </div>
         <SectionHeading
           as="h1"
-          eyebrow="Da terra ao investimento"
+          eyebrow="Da terra ao plano de capital"
           title="Construa o futuro diretamente sobre o território"
-          lead="Explore projetos agrícolas e imobiliários em 3D, simule construções, consulte materiais, custos, impacto e necessidades de capital, e acompanhe cada etapa desde o terreno até à operação."
+          lead="Explore projetos agrícolas em 3D, simule construções, consulte materiais, custos, impacto e necessidades de capital, e veja cada etapa desde o terreno até à operação — aqui com uma fazenda fictícia."
           max="wide"
         />
         <p className="mt-8 max-w-[62ch] border-l-2 border-[color:var(--color-energy-500)] pl-4 text-sm text-[color:var(--muted)]">
-          {DEMO_DISCLAIMER} O que escrever ou escolher nestas páginas não é guardado, enviado nem cobrado; só contamos, sem identificar ninguém, que partes da demonstração são usadas.
+          {DEMO_DISCLAIMER} Não é um projeto aprovado, um orçamento, nem uma oferta de investimento ou de financiamento. O que escrever ou escolher nestas páginas não é guardado, enviado nem cobrado; só contamos, sem identificar ninguém, que partes da demonstração são usadas.
         </p>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Button asChild size="lg">
@@ -68,7 +68,7 @@ export default function ProjetosPage() {
         <SectionHeading
           id="h-portfolio"
           eyebrow="Portefólio de demonstração"
-          title="Projetos ativos, planeados e concluídos — todos fictícios."
+          title="Três projetos de exemplo, em estados diferentes — todos fictícios."
           lead="O mapa mostra a localização aproximada, por província. Só a Fazenda Inteligente 001 tem gémeo digital nesta demonstração."
         />
         <div className="mt-12">
@@ -94,7 +94,10 @@ export default function ProjetosPage() {
       </Section>
 
       <Section surface="deep" contour>
-        <FinalCta />
+        <FinalCta
+          title="Tem um processo real para melhorar? Comece pelo diagnóstico."
+          body="A demonstração não guarda nada. No diagnóstico, descreve o processo que quer melhorar e a AGORAMOZ analisa o problema, a viabilidade e o próximo passo — com o seu consentimento."
+        />
       </Section>
     </>
   );

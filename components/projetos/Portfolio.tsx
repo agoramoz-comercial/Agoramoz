@@ -155,7 +155,7 @@ function Cartao({ v }: { v: CartaoProjeto }) {
             Ver plano de capital
           </Link>
           <Link href={`/projetos/${v.slug}#assistente`} className="inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline">
-            Analisar projeto
+            Perguntar ao assistente
           </Link>
         </div>
       ) : (

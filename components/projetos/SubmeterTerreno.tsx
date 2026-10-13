@@ -45,7 +45,7 @@ export function SubmeterTerreno({ className }: { className?: string }) {
           className="fixed top-1/2 left-1/2 z-[61] max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto bg-[color:var(--surface)] p-6 text-[color:var(--on-surface)]"
         >
           <div className="flex items-start justify-between gap-4">
-            <Dialog.Title className="font-display text-[length:var(--text-h3)] font-semibold">Submeter um terreno</Dialog.Title>
+            <Dialog.Title className="font-display text-[length:var(--text-h3)] font-semibold">Submeter um terreno (simulação)</Dialog.Title>
             <Dialog.Close className="inline-flex size-11 items-center justify-center" aria-label="Fechar">
               <X aria-hidden className="size-5" />
             </Dialog.Close>

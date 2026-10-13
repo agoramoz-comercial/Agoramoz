@@ -50,7 +50,7 @@ export const PORTFOLIO: readonly CartaoProjeto[] = [
     estado: 'planeado',
     capital: 64_000_000,
     progresso: 0,
-    resumo: 'Descasque, secagem e embalagem para cooperativas da zona. Ainda sem gémeo digital nesta demonstração.',
+    resumo: 'Exemplo fictício de descasque, secagem e embalagem de caju. Sem gémeo digital nesta demonstração.',
   },
   {
     id: '003',
@@ -62,14 +62,14 @@ export const PORTFOLIO: readonly CartaoProjeto[] = [
     estado: 'concluido',
     capital: 21_500_000,
     progresso: 100,
-    resumo: 'Energia para bombagem e rega partilhada por pequenos produtores. Ainda sem gémeo digital nesta demonstração.',
+    resumo: 'Exemplo fictício de energia para bombagem e rega partilhada. Sem gémeo digital nesta demonstração.',
   },
 ];
 
 export const NOME_ESTADO: Readonly<Record<EstadoProjeto, string>> = {
   planeado: 'Planeado',
   'em-execucao': 'Em execução',
-  concluido: 'Concluído',
+  concluido: 'Concluído (simulado)',
 };
 
 export const FAIXAS_CAPITAL = [

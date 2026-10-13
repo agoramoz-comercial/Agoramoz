@@ -20,7 +20,7 @@ interface Troca {
 }
 
 const BOAS_VINDAS =
-  'Olá, sou o assistente de projeto da AGORAMOZ nesta demonstração. Posso explicar o terreno, a casa, os materiais, a variação do custo, a água, os riscos, os cenários e os marcos — com os números que está a ver nesta página.';
+  'Esta é a demonstração do assistente de projeto da AGORAMOZ. Não é um modelo de IA: reconhece palavras-chave e responde com os números que está a ver nesta página — o terreno, a casa, os materiais, a variação do custo, a água, os riscos, os cenários e os marcos.';
 
 export function Assistente() {
   const { projeto: p, estado } = useGemeo();

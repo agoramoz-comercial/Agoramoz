@@ -171,7 +171,7 @@ export function responder(intencao: Intencao | null, ctx: ContextoAssistente): R
         texto:
           `Com ${num(ctx.hectares, 1)} ha de ${minuscula(cultura.nome)}, a necessidade é de cerca de ${num(b.necessidade)} m³ por ano. ` +
           `O furo dá ${num(b.oferta)} m³ (${p.agua.furoM3Dia} m³/dia em ${DIAS_BOMBAGEM} dias), ou seja ${percentagem(b.cobertura)} do que a cultura pede. ` +
-          `O reservatório de ${num(p.agua.reservatorioM3)} m³ guarda cerca de ${num(Math.min(b.autonomiaDias, 999))} dias de rega sem bombagem.`,
+          `O reservatório de ${num(p.agua.reservatorioM3)} m³ guarda cerca de ${num(Math.min(b.autonomiaDias, 999))} dias de rega sem bombagem. Valores fictícios.`,
       };
     }
     case 'riscos': {
@@ -197,8 +197,8 @@ export function responder(intencao: Intencao | null, ctx: ContextoAssistente): R
           r
             .map(
               (c) =>
-                `${c.id} ${c.nome}: ${milhoes(c.investimento)} de investimento, ${c.empregos} empregos, ` +
-                (c.retornoAnos === null ? 'sem retorno com estes pressupostos' : `retorno simples em cerca de ${num(c.retornoAnos, 1)} anos`),
+                `${c.id} ${c.nome}: ${milhoes(c.investimento)} de capital necessário, ${c.empregos} empregos, ` +
+                (c.retornoAnos === null ? 'sem recuperação do capital com estes pressupostos' : `recuperação simples do capital em cerca de ${num(c.retornoAnos, 1)} anos`),
             )
             .join('. ') + '. Valores fictícios, sem desconto nem inflação.',
       };
@@ -210,8 +210,8 @@ export function responder(intencao: Intencao | null, ctx: ContextoAssistente): R
         ancora: '#marcos',
         texto:
           `O projeto está dividido em ${p.componentes.length} componentes financiáveis: ${r.concluidos} concluídos, ${r.emCurso} em curso e ` +
-          `${r.porIniciar} por iniciar; ${milhoes(r.libertado)} libertados de ${milhoes(r.orcamento)}. O dinheiro de cada marco só se ` +
-          'liberta depois de evidência georreferenciada e validação técnica. Nesta demonstração nada é reservado nem cobrado.',
+          `${r.porIniciar} por iniciar; ${milhoes(r.libertado)} libertados de ${milhoes(r.orcamento)} (valores fictícios). No modelo, o dinheiro de ` +
+          'cada marco só se libertaria depois de evidência georreferenciada e validação técnica. Nesta demonstração nada é reservado nem cobrado.',
       };
     }
     case 'progresso': {
@@ -235,10 +235,10 @@ export function responder(intencao: Intencao | null, ctx: ContextoAssistente): R
     case 'ficticio':
       return {
         intencao,
-        ancora: '#acesso',
+        ancora: '#riscos',
         texto:
-          'Tudo: o terreno, a província do pino, os preços, os fornecedores, as datas, o progresso e os cenários. As regras de cálculo são ' +
-          'reais no mecanismo e demonstrativas nos coeficientes. Nada do que faz nesta página é guardado, enviado ou cobrado.',
+          'Tudo: o terreno, a província do pino, os preços, os fornecedores, as datas, o progresso e os cenários. O mecanismo de cálculo é ' +
+          'de exemplo e os coeficientes são demonstrativos: não servem para orçamentar uma obra. O que escreve ou escolhe aqui não é guardado, enviado nem cobrado.',
       };
     default:
       return {

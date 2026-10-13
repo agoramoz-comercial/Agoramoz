@@ -13,12 +13,12 @@ import { mzn } from './formato';
 
 export const PASSOS = [
   { id: 'selecionar', nome: 'Escolher o componente' },
-  { id: 'comprometer', nome: 'Comprometer fundos' },
+  { id: 'comprometer', nome: 'Compromisso de fundos (simulado)' },
   { id: 'executar', nome: 'Executar o marco' },
   { id: 'evidencias', nome: 'Carregar evidências georreferenciadas' },
   { id: 'validar', nome: 'Validação técnica' },
   { id: 'comparar', nome: 'Comparar projeto e execução' },
-  { id: 'libertar', nome: 'Libertar o pagamento' },
+  { id: 'libertar', nome: 'Libertação do pagamento (simulada)' },
   { id: 'atualizar', nome: 'Atualizar o gémeo digital' },
 ] as const;
 
@@ -44,7 +44,7 @@ function linha(passo: PassoId, c: Componente): string {
     case 'selecionar':
       return `Componente escolhido: ${c.nome}. Falta financiar ${valor} (fictício).`;
     case 'comprometer':
-      return `${valor} ficariam comprometidos numa conta de custódia (escrow), numa instituição autorizada. Nesta demonstração nada foi reservado.`;
+      return `Numa versão real, ${valor} ficariam numa conta de uma instituição de pagamento autorizada (não na AGORAMOZ). Nesta demonstração nada foi reservado.`;
     case 'executar':
       return `${c.responsavel} executa o marco com o ${c.fornecedor.charAt(0).toLowerCase()}${c.fornecedor.slice(1)}.`;
     case 'evidencias': {
@@ -54,7 +54,7 @@ function linha(passo: PassoId, c: Componente): string {
         : 'Evidência: fotografias georreferenciadas carregadas pela equipa de obra (exemplo).';
     }
     case 'validar':
-      return 'Um técnico qualificado confirma a execução contra o projeto.';
+      return 'Num caso real, um técnico qualificado confirmaria a execução contra o projeto. Aqui é simulado.';
     case 'comparar':
       return c.desvio === 0
         ? 'Execução conforme o orçamento: sem desvio.'

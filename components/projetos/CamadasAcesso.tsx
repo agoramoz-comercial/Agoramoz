@@ -95,21 +95,21 @@ export function CamadasAcesso() {
                 ['Localização', `Aproximada: província de ${p.provincia}. Sem coordenadas — a localização exata é dado sensível.`],
                 ['Área e cultura', `${num(p.areaHa)} ha · ${p.culturaPrincipal.toLowerCase()}`],
                 ['Progresso', `${Math.round(capital.progresso)} % (simulado), fase «${p.fases[p.faseAtual]!.nome}»`],
-                ['Capital-alvo', `${milhoes(capital.orcamento)} (fictício)`],
-                ['Impacto', `${b.empregos} empregos no cenário recomendado; ${num(b.emissoesEvitadasT, 1)} t CO₂/ano evitadas (fatores da demo)`],
+                ['Capital-alvo (fictício)', `${milhoes(capital.orcamento)}`],
+                ['Impacto (fictício)', `${b.empregos} empregos no cenário recomendado; ${num(b.emissoesEvitadasT, 1)} t CO₂/ano evitadas (fatores da demo)`],
                 ['Riscos resumidos', 'Cheia no canto sudeste, custos ainda conceptuais, dependência de mercado.'],
-                ['Componentes disponíveis para apoio', `${capital.porIniciar + capital.emCurso} de ${p.componentes.length}`],
+                ['Componentes disponíveis para apoio (simulado)', `${capital.porIniciar + capital.emCurso} de ${p.componentes.length}`],
               ]}
             />
           ) : c.id === 'investidor' ? (
             <Lista
               itens={[
-                ['Business case (cenário B)', `Investimento ${milhoes(b.investimento)}, margem ${mzn(b.margemAnual)}/ano, retorno simples em ${num(b.retornoAnos ?? 0, 1)} anos`],
+                ['Exemplo de caso económico (cenário B)', `Capital necessário ${milhoes(b.investimento)}, margem ${mzn(b.margemAnual)}/ano, ${b.retornoAnos === null ? 'sem recuperação do capital com estes pressupostos' : `recuperação simples do capital em ${num(b.retornoAnos, 1)} anos`} — tudo fictício. Não é uma projeção nem uma promessa de retorno.`],
                 ['Orçamento por componente', p.componentes.map((x) => `${x.nome}: ${milhoes(x.orcamento)}`).join(' · ')],
                 ['Plano de aquisições', 'Fornecedores fictícios A a H, com versões e desvios por componente (ver «Marcos»).'],
                 ['Contratos autorizados', 'Exemplo: contrato de empreitada e de fornecimento solar — não existem nesta demonstração.'],
                 ['Evidências de execução', `${p.componentes.reduce((s, x) => s + x.evidencias.length, 0)} registos georreferenciados na grelha local`],
-                ['Pagamentos', `${milhoes(capital.libertado)} libertados após validação técnica`],
+                ['Pagamentos simulados', `${milhoes(capital.libertado)} (fictícios) libertados por tranches validadas`],
                 ['Riscos detalhados', 'Ver «Riscos e como seria em produção», mais abaixo.'],
               ]}
             />
@@ -122,7 +122,7 @@ export function CamadasAcesso() {
                 ['Cotações', 'Base de preços fictícia demo-2026-10 (MZN, sem IVA). Não são cotações.'],
                 ['Aprovações', 'Licenças e aprovações por obter: nenhuma existe nesta demonstração.'],
                 ['Documentação da propriedade', 'Título ou autorização de uso da terra (DUAT) a validar antes de qualquer projeto real.'],
-                ['Segurança', 'Perfis e permissões, encriptação, registo de auditoria e de cada alteração feita pela IA.'],
+                ['Segurança', 'Numa versão real: perfis e permissões, encriptação e registo de auditoria de cada alteração, incluindo as feitas por IA. Nada disto existe nesta demonstração.'],
               ]}
             />
           )}

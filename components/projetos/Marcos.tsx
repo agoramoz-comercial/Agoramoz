@@ -53,7 +53,7 @@ export function Marcos() {
             </>
           }
         />
-        <Indicador rotulo="Libertado após validação" valor={milhoes(resumo.libertado)} />
+        <Indicador rotulo="Libertado após validação" valor={milhoes(resumo.libertado)} nota="Só as tranches já validadas; o resto aguarda validação" />
         <Indicador
           rotulo="Progresso físico"
           valor={`${Math.round(resumo.progresso)} %`}
@@ -218,9 +218,10 @@ export function Marcos() {
             )}
           </div>
           <p className="text-xs text-[color:var(--muted)]">
-            Numa versão real, os fundos ficam numa instituição de pagamento autorizada (carteiras móveis como M-Pesa, e-Mola ou mKesh
-            através de agregador autorizado, transferência ou cartão), com o instrumento jurídico definido — patrocínio, compra antecipada,
-            empréstimo ou participação — e verificação de identidade (KYC/AML) antes do primeiro pagamento.
+            Numa versão real, os fundos ficariam numa instituição de pagamento autorizada, nunca na AGORAMOZ. Os meios de pagamento
+            (M-Pesa, e-Mola e mKesh só através de agregador autorizado; transferência; cartão) e o instrumento jurídico, a definir com
+            aconselhamento jurídico, dependeriam de autorização e de verificação de identidade (KYC/AML) antes do primeiro pagamento. Nesta
+            demonstração não existe parceria, integração nem pagamento.
           </p>
         </div>
       </div>

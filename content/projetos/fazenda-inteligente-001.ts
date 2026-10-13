@@ -265,7 +265,7 @@ export const ELEMENTOS: readonly Elemento[] = [
     fases: [2, 9],
     custo: 0,
     futuro: true,
-    nota: 'Reservada; não faz parte deste investimento.',
+    nota: 'Reservada; não faz parte do capital necessário desta demonstração.',
   },
 ];
 
@@ -530,7 +530,7 @@ export const FAZENDA_001: Projeto = {
       solarKwp: 120,
       risco: 'medio',
       riscoNota: 'Menor risco climático, mais capital em jogo e mais competências técnicas para operar.',
-      expansibilidade: 'Pronta para replicar noutros terrenos com o mesmo modelo digital.',
+      expansibilidade: 'O mesmo modelo digital poderia servir de base a outros terrenos.',
     },
   ],
 };

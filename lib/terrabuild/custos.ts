@@ -50,8 +50,8 @@ export const CLASSE: Readonly<Record<Classe, { nome: string; menos: number; mais
   conceptual: { nome: 'Conceptual', menos: 0.3, mais: 0.5, contingencia: 0.15 },
   preliminar: { nome: 'Preliminar', menos: 0.2, mais: 0.3, contingencia: 0.12 },
   validacao: { nome: 'Para validação técnica', menos: 0.15, mais: 0.2, contingencia: 0.1 },
-  aprovado: { nome: 'Aprovado por medidor-orçamentista ou engenheiro', menos: 0.1, mais: 0.15, contingencia: 0.07 },
-  contratual: { nome: 'Contratual', menos: 0.05, mais: 0.1, contingencia: 0.05 },
+  aprovado: { nome: 'Aprovado por medidor-orçamentista ou engenheiro (exemplo de faixa)', menos: 0.1, mais: 0.15, contingencia: 0.07 },
+  contratual: { nome: 'Contratual (exemplo de faixa)', menos: 0.05, mais: 0.1, contingencia: 0.05 },
 };
 
 /** O acabamento encarece o que se vê: caixilharia, pavimento e pintura. */
