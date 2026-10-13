@@ -489,3 +489,44 @@ das consolas da Palantir e da Bloomberg. O mapa está em `docs/CRM.md`.
   ficam «por activar».
 - A auditoria das exportações é de detecção; restringir leituras do papel
   `leitura` seria uma decisão de RLS.
+
+## D-41 — `/projetos`: demonstração TerraBuild com dados fictícios, fora do índice
+
+O fundador pediu a página de projetos a partir do conceito «AGORAMOZ
+TerraBuild» (terreno, arquitectura, agricultura, capital e execução num
+gémeo digital), como **demo com dados fictícios que não guarda nada**. O mapa
+está em `docs/TERRABUILD.md`.
+- **Escolhas do fundador** (AskUserQuestion, 12/10/2026):
+  - Three.js próprio, não Cesium nem Google 3D Tiles;
+  - entrada no menu com selo «Demo»;
+  - demonstração completa;
+  - assistente com respostas guiadas locais, sem modelo de IA.
+- **Fora do índice:** `noindex` e fora do sitemap. Números fictícios não podem
+  aparecer em pesquisas como se fossem da AGORAMOZ. Volta a indexar-se só com
+  um projecto real e autorizado.
+- **Nada guardado:**
+  - o que se escreve ou escolhe não sai do browser;
+  - a única coisa que sai é o evento anónimo `project_demo_interaction`
+    (`projectId` e `action`), e a página di-lo;
+  - «Submeter um terreno» é simulado e não pede dados pessoais. O canal real
+    continua a ser o diagnóstico.
+- **Sem linguagem de oferta:**
+  - o botão é «Simular financiamento» e «Ver plano de capital», nunca «Investir»;
+  - pagamentos só por instituição autorizada, com KYC/AML;
+  - nenhum instrumento financeiro é anunciado.
+- **3D só a pedido:**
+  - `next/dynamic` sem SSR, cerca de 257 KB gzip, fora do carregamento inicial;
+  - a planta 2D é a vista por omissão e o recurso sem WebGL;
+  - a CSP não muda, porque nada vem de terceiros.
+- **Excepção à regra monocromática:** três cores de camada validadas para
+  daltonismo (água, eléctrica, talhões). O risco é textura; obra em curso é
+  contorno tracejado.
+- **Cabeçalho:** «Projetos» só a partir de `xl` (1280 px). Entre 1024 e 1279 px
+  não cabia sem mudar o desenho; aí fica no rodapé e na gaveta.
+
+**Consequência:**
+- A demo serve o G0 do documento do fundador. Passar a real exige o G1:
+  - terreno autorizado;
+  - cobertura cartográfica ou drone;
+  - parecer jurídico sobre o instrumento financeiro e a instituição de pagamento.
+- Até lá, nada desta página é prova comercial nem caso de cliente.
