@@ -1,34 +1,41 @@
 import type { Entrada, GrupoNav } from '@/components/admin/AdminNav';
+import type { Permissoes, Regra } from './aeos';
 
 /**
- * Secções agrupadas pelo trabalho que servem, como numa consola: primeiro o
- * trabalho do dia, depois o comercial, o crescimento, os espaços privados e,
- * só para administradores, o sistema. Cada grupo é filtrado por flag, módulo
- * e papel — uma entrada que daria 404 ou que o papel não usa não aparece.
+ * Secções agrupadas pelos blocos do AEOS (`lib/admin/aeos.ts`), como numa
+ * consola: a direcção e o trabalho do dia, a receita, o marketing, os
+ * espaços privados e, só para administradores, o controlo. Cada grupo é
+ * filtrado por flag, módulo e papel — uma entrada que daria 404 ou que o
+ * papel não usa não aparece.
+ *
+ * Os Inquéritos e o News continuam aqui, no Marketing (bloco 2): mudam de
+ * grupo, não de endereço nem de regra.
  */
 interface EntradaComRegra extends Entrada {
-  readonly so?: 'inqueritos' | 'news' | 'energia' | 'direcao' | 'admin';
+  readonly so?: Regra;
 }
 
 const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[] = [
   {
-    titulo: 'Trabalho',
+    titulo: 'Direcção',
     entradas: [
       { href: '/admin', texto: 'Hoje', icone: 'hoje' },
       { href: '/admin/painel', texto: 'Painel', icone: 'painel' },
+      { href: '/admin/aeos', texto: 'Mapa AEOS', icone: 'aeos' },
     ],
   },
   {
-    titulo: 'Comercial',
+    titulo: 'Receita',
     entradas: [
       { href: '/admin/oportunidades', texto: 'Pipeline', icone: 'oportunidades' },
       { href: '/admin/diagnosticos', texto: 'Diagnósticos', icone: 'diagnosticos' },
+      { href: '/admin/propostas', texto: 'Propostas', icone: 'propostas' },
       { href: '/admin/contactos', texto: 'Contactos', icone: 'contactos' },
       { href: '/admin/organizacoes', texto: 'Organizações', icone: 'organizacoes' },
     ],
   },
   {
-    titulo: 'Crescimento',
+    titulo: 'Marketing',
     entradas: [
       { href: '/admin/aquisicao', texto: 'Aquisição', icone: 'aquisicao' },
       { href: '/admin/inqueritos', texto: 'Inquéritos', icone: 'inqueritos', so: 'inqueritos' },
@@ -43,7 +50,7 @@ const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[
     ],
   },
   {
-    titulo: 'Sistema',
+    titulo: 'Controlo',
     entradas: [
       { href: '/admin/fila', texto: 'Fila de envio', icone: 'fila', so: 'admin' },
       { href: '/admin/equipa', texto: 'Equipa', icone: 'equipa', so: 'admin' },
@@ -52,7 +59,7 @@ const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[
   },
 ];
 
-export type Permissoes = Readonly<Record<NonNullable<EntradaComRegra['so']>, boolean>>;
+export type { Permissoes };
 
 export function gruposVisiveis(permite: Permissoes): GrupoNav[] {
   return GRUPOS.map((g) => ({

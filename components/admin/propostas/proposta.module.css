@@ -1,0 +1,341 @@
+/*
+ * Proposta editorial AGORAMOZ em A4 — o sistema de desenho da skill
+ * «agoramoz-editorial-proposal», transposto para o admin.
+ *
+ * As medidas são em mm e pt, como no papel: o que se vê no ecrã é o que sai
+ * na impressão («Guardar como PDF» do browser). No ecrã as folhas são
+ * reduzidas com `zoom`; na impressão, tamanho real.
+ */
+
+@page proposta {
+  size: 210mm 297mm;
+  margin: 0;
+}
+
+.folhas {
+  --ink: #0b0b0c;
+  --paper: #f3f3f1;
+  /* Um pouco mais escuros do que a referência (#7C7C7C, #9A9FA6): a 5,9 pt, o cinza
+     de origem não chega aos 4,5:1 no ecrã nem se lê bem no papel. */
+  --mute: #666666;
+  --mute-d: #b9bfc6;
+  --line: rgba(0, 0, 0, 0.13);
+  --line-d: rgba(255, 255, 255, 0.16);
+  --green: #00be64;
+  --yellow: #ffd21f;
+  --red: #ff3300;
+  --grad: linear-gradient(180deg, #020509 0%, #07121f 28%, #13304b 62%, #4f7a93 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8mm;
+  zoom: var(--escala, 0.62);
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-size: 8.4pt;
+  line-height: 1.5;
+  color: var(--ink);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.folhas * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.pagina {
+  page: proposta;
+  width: 210mm;
+  height: 297mm;
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  padding: 13mm 14mm 18mm;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  break-after: page;
+  break-inside: avoid;
+}
+.pagina:last-child {
+  break-after: auto;
+}
+.dark {
+  background: #080808;
+  color: #efefed;
+}
+.grad {
+  background: var(--grad);
+  color: #f1f4f7;
+}
+.white {
+  background: #fff;
+}
+.paper {
+  background: var(--paper);
+}
+
+.transborda {
+  outline: 2mm solid var(--red);
+  outline-offset: -2mm;
+}
+
+.disp {
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.93;
+}
+.xxl {
+  font-size: 60pt;
+}
+.xl {
+  font-size: 42pt;
+}
+.lg {
+  font-size: 30pt;
+}
+.md {
+  font-size: 19pt;
+}
+.sm {
+  font-size: 13.5pt;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+.light {
+  font-weight: 300;
+}
+.cinza {
+  color: #858585;
+}
+
+.lab {
+  font-size: 5.9pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 500;
+}
+.dark .lab,
+.grad .lab {
+  color: var(--mute-d);
+}
+.idx {
+  font-size: 6.4pt;
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+  letter-spacing: 0.04em;
+}
+.dark .idx,
+.grad .idx {
+  color: var(--mute-d);
+}
+.corpo {
+  font-size: 8.4pt;
+  line-height: 1.55;
+  color: #2a2a2a;
+}
+.dark .corpo,
+.grad .corpo {
+  color: #c9cdd2;
+}
+.small {
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: #4a4a4a;
+}
+.dark .small,
+.grad .small {
+  color: #aeb4bb;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+.nb {
+  white-space: nowrap;
+}
+.vazio {
+  color: var(--mute);
+  font-style: italic;
+}
+
+.pill {
+  display: inline-block;
+  border: 0.7pt solid currentColor;
+  border-radius: 99px;
+  padding: 0.9mm 2.8mm;
+  font-size: 5.8pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.solid {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.dark .solid,
+.grad .solid {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6mm;
+}
+.topbar > * {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar > :nth-child(2) {
+  text-align: center;
+}
+.topbar > :last-child {
+  text-align: right;
+}
+
+.foot {
+  position: absolute;
+  left: 14mm;
+  right: 14mm;
+  bottom: 8.5mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.brandline {
+  display: flex;
+  align-items: center;
+  gap: 2.2mm;
+}
+.marca {
+  height: 4.2mm;
+  width: auto;
+  color: var(--ink);
+}
+.dark .marca,
+.grad .marca {
+  color: #fff;
+}
+.brandline b {
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  font-size: 6.6pt;
+}
+
+.rule {
+  border-top: 0.6pt solid var(--line);
+}
+.dark .rule,
+.grad .rule {
+  border-top-color: var(--line-d);
+}
+.row {
+  display: grid;
+  border-top: 0.6pt solid var(--line);
+  padding: 3.1mm 0;
+}
+.dark .row,
+.grad .row {
+  border-top-color: var(--line-d);
+}
+.row:last-child {
+  border-bottom: 0.6pt solid var(--line);
+}
+.dark .row:last-child,
+.grad .row:last-child {
+  border-bottom-color: var(--line-d);
+}
+.total {
+  background: var(--paper);
+  font-weight: 600;
+  padding-inline: 2mm;
+}
+
+.callout {
+  background: var(--ink);
+  color: #eee;
+  padding: 6mm 7mm;
+  border-radius: 1.2mm;
+  position: relative;
+  overflow: hidden;
+}
+.callout.grad {
+  background: var(--grad);
+}
+.callout .lab {
+  color: #b9bfc6;
+}
+.callout p {
+  font-size: 9.4pt;
+  line-height: 1.5;
+  color: #e8ecef;
+}
+.ticks {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1.3mm;
+  background: linear-gradient(180deg, var(--green) 0 33%, #fff 33% 66%, var(--yellow) 66%);
+}
+
+.cartao {
+  border: 0.6pt solid var(--line-d);
+  border-radius: 1.2mm;
+  padding: 6mm;
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+}
+.cartaoRecomendado {
+  background: var(--grad);
+  border-color: transparent;
+}
+
+.grow {
+  flex: 1;
+}
+.mt1 {
+  margin-top: 2mm;
+}
+.mt2 {
+  margin-top: 4mm;
+}
+.mt3 {
+  margin-top: 7mm;
+}
+.mt4 {
+  margin-top: 11mm;
+}
+.mt5 {
+  margin-top: 16mm;
+}
+.svg {
+  display: block;
+}
+
+@media print {
+  .folhas {
+    zoom: 1 !important;
+    gap: 0;
+  }
+  .pagina {
+    box-shadow: none;
+  }
+  .transborda {
+    outline: 0;
+  }
+  :global(body):has(.folhas) {
+    background: #fff !important;
+  }
+}

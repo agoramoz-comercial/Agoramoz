@@ -5,19 +5,23 @@ const tudo = { inqueritos: true, news: true, energia: true, direcao: true, admin
 const nada = { inqueritos: false, news: false, energia: false, direcao: false, admin: false };
 
 describe('navegação agrupada do admin', () => {
-  it('com tudo ligado, mostra os cinco grupos pela ordem do trabalho', () => {
-    expect(gruposVisiveis(tudo).map((g) => g.titulo)).toEqual([
-      'Trabalho',
-      'Comercial',
-      'Crescimento',
-      'Espaços',
-      'Sistema',
-    ]);
+  it('com tudo ligado, mostra os cinco grupos do AEOS pela ordem do trabalho', () => {
+    expect(gruposVisiveis(tudo).map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing', 'Espaços', 'Controlo']);
   });
 
-  it('sem módulos nem papel admin, esconde Espaços e Sistema e as flags desligadas', () => {
+  it('os Inquéritos e o News continuam no admin, com o mesmo endereço e a mesma regra', () => {
+    const marketing = gruposVisiveis(tudo).find((g) => g.titulo === 'Marketing')!;
+    expect(marketing.entradas.map((e) => e.href)).toEqual(['/admin/aquisicao', '/admin/inqueritos', '/admin/news']);
+  });
+
+  it('as Propostas ficam na Receita, entre os Diagnósticos e os Contactos', () => {
+    const receita = gruposVisiveis(nada).find((g) => g.titulo === 'Receita')!;
+    expect(receita.entradas.map((e) => e.texto)).toEqual(['Pipeline', 'Diagnósticos', 'Propostas', 'Contactos', 'Organizações']);
+  });
+
+  it('sem módulos nem papel admin, esconde Espaços e Controlo e as flags desligadas', () => {
     const grupos = gruposVisiveis(nada);
-    expect(grupos.map((g) => g.titulo)).toEqual(['Trabalho', 'Comercial', 'Crescimento']);
+    expect(grupos.map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing']);
     const hrefs = grupos.flatMap((g) => g.entradas.map((e) => e.href));
     expect(hrefs).not.toContain('/admin/inqueritos');
     expect(hrefs).not.toContain('/admin/news');
@@ -34,10 +38,11 @@ describe('navegação agrupada do admin', () => {
     expect(so({ energia: true })).toContain('/admin/energia');
   });
 
-  it('o trabalho abre pelo Hoje; o painel analítico vem a seguir', () => {
+  it('o trabalho abre pelo Hoje; o painel analítico e o mapa AEOS vêm a seguir', () => {
     expect(gruposVisiveis(nada)[0]!.entradas.map((e) => [e.texto, e.href])).toEqual([
       ['Hoje', '/admin'],
       ['Painel', '/admin/painel'],
+      ['Mapa AEOS', '/admin/aeos'],
     ]);
   });
 

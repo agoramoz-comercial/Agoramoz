@@ -631,3 +631,24 @@ está em `docs/TERRABUILD.md`.
 - Ligar o Turnstile no portal parte esta integração.
 - Sem voz e sem «memória» com conta, que o portal tem.
 
+
+## D-44 — Admin organizado pelo AEOS; criador de propostas no estilo editorial
+
+**Pedido do fundador:** adaptar o admin ao «AGORAMOZ Enterprise Operating System» (documento AGZ-ORG-001, «Draft para validação») **sem eliminar os Inquéritos nem o News**, e criar no admin o criador de propostas com a skill editorial de proposta.
+
+### Decisões
+1. **A navegação segue os blocos do AEOS, sem mudar endereços nem regras.** Grupos: Direcção (Hoje, Painel, Mapa AEOS), Receita (Pipeline, Diagnósticos, Propostas, Contactos, Organizações), Marketing (Aquisição, Inquéritos, News), Espaços (Gabinete, Espaço CEnO) e Controlo (Fila, Equipa, Auditoria). Os Inquéritos e o News mudam de grupo; o endereço, a flag (`SURVEYS`, `NEWS_BLOG`) e o código ficam iguais. Um teste guarda isto.
+2. **`/admin/aeos`: o mapa, não um painel.** Os nove blocos, os sete painéis, a cadência, o roadmap com gates e o Red Team, com o texto do documento (`lib/admin/aeos.ts`). O que é nosso é só o mapeamento para ecrãs que existem. Sem dados e sem números: nenhum painel aparece «completo», os que têm ecrãs são «parcial» e os outros «por construir». A quem não tem o Gabinete ou o CEnO, o mapa não os liga nem os nomeia (como na navegação). Um teste confirma que cada ligação leva a uma página que existe.
+3. **`/admin/propostas`: o criador de propostas** (AEOS bloco 2, «Gestão de Propostas»). Formulário à esquerda, folhas A4 à direita no estilo da skill (capa em gradiente com esfera, carta com decisão recomendada, índice, contexto, objectivos, solução, plano com Gantt, investimento com barras de peso, opções A/B/C, riscos, próximos passos com assinaturas, contracapa). «Imprimir / guardar PDF» pelo browser, em A4 (página com nome `@page proposta`).
+   - A aritmética é calculada (total, semanas, validade), nunca escrita; números com espaço fino de milhar (`1 735 000 MZN`).
+   - Uma secção vazia não tem página; o que falta escrever aparece entre parêntesis rectos, nunca inventado.
+   - Contactos comerciais em capa, carta, investimento, próximos passos e contracapa; «Confidencial» na capa. O logótipo é o `Mark` do site; a frase da contracapa é a tagline do site.
+   - Regra do AEOS (limites de Finanças): «nenhuma proposta sem margem projetada» — o custo de cada fase é pedido e a margem aparece nas verificações. **O custo e a margem nunca vão para o papel.**
+   - Verificações antes de imprimir: sem cliente ou projecto, semanas trocadas ou duas opções recomendadas, o botão fica desligado. Uma folha que transborda é marcada e listada.
+4. **Nada é guardado no servidor.** O rascunho vive no `sessionStorage` do separador (prefixo `proposta:`, apagado ao terminar a sessão, como os dos espaços privados) e guarda-se de vez exportando um `.json`, que se volta a importar (validado com zod, campos fechados). Guardar propostas na base pede uma migração aplicada pelo fundador — fica como passo seguinte.
+
+### Limites
+- O mapa é estático: não mede nada. Os painéis 3 (Product Portfolio) e, para quem não tem o Gabinete, 4 e 5 continuam por construir.
+- As propostas não ficam ligadas a uma oportunidade do Pipeline nem têm histórico de versões (precisa da migração do ponto 4).
+- O PDF é o do browser (Chrome dá o melhor resultado). Os cinzentos das labels foram ligeiramente escurecidos face à referência (#7C7C7C → #666666) para chegarem aos 4,5:1.
+- QA: `.qa/propostas.mjs` contra `/qa/aeos` e `/qa/propostas` (`ADMIN_PREVIEW=on`), com axe e geração do PDF.

@@ -30,7 +30,7 @@ type Valores = Record<string, string | boolean>;
 export const VALIDADE_RASCUNHO_MS = 30 * 60 * 1000;
 
 /** Os prefixos dos espaços privados, para os apagar todos ao terminar a sessão. */
-export const PREFIXOS_RASCUNHO = ['ceno:', 'gabinete:'] as const;
+export const PREFIXOS_RASCUNHO = ['ceno:', 'gabinete:', 'proposta:'] as const;
 
 function ler(prefixo: string, chave: string): Valores | null {
   try {
