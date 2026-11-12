@@ -60,6 +60,8 @@ export const CIVICO = {
 
   erroCurta: `Escreva a pergunta com pelo menos ${PERGUNTA_MIN} caracteres.`,
   erroLonga: `A pergunta tem de caber em ${PERGUNTA_MAX} caracteres. Faça uma pergunta de cada vez.`,
+  erroAmbito:
+    'Isto parece uma ordem ao assistente, não uma pergunta. Escreva a sua dúvida sobre a lei ou sobre um serviço público.',
   erroDado: {
     email: 'A pergunta parece ter um endereço de e-mail. Retire-o: não é preciso para responder.',
     numero:
@@ -100,6 +102,23 @@ export const CIVICO = {
   novaConversa: 'Nova conversa',
   novaConversaAria: 'Apagar esta conversa e começar outra',
   abreNoutroSeparador: '(abre noutro separador)',
+
+  // ── Texto oficial e conferência ────────────────────────────────────────
+  oficialTitulo: 'Texto oficial',
+  oficialNota:
+    'Copiado do Boletim da República, não escrito pelo assistente. A escolha dos artigos é automática: podem não ser todos os que se aplicam ao seu caso.',
+  oficialArtigo: 'Artigo',
+  oficialCortado: 'O artigo continua no diploma.',
+  oficialVer: 'Ver o diploma completo',
+  iaEyebrow: 'Explicação gerada por IA',
+  /** `{partes}` é substituído pelo que saiu («2 citações e 1 número de artigo»). */
+  conferenciaNota:
+    'Retirámos desta resposta {partes}: o assistente escreveu-os, mas não constam do texto oficial que conferimos.',
+  conferenciaPartes: {
+    citacoes: ['citação entre aspas', 'citações entre aspas'],
+    artigos: ['número de artigo', 'números de artigo'],
+    contactos: ['contacto', 'contactos'],
+  },
 
   // ── Verificação de vigência ────────────────────────────────────────────
   vigenciaRevogadoTitulo: 'Atenção: esta resposta cita legislação revogada',
@@ -202,7 +221,7 @@ export const CIVICO = {
     {
       titulo: 'Leia, confirme, decida',
       corpo:
-        'A resposta diz que lei cita, e a página confere-a com um registo de revogações. Confirme na fonte antes de agir.',
+        'A página mostra o texto oficial dos artigos que encontrou e confere o que o assistente escreveu. O que não consta do texto oficial é retirado.',
     },
   ],
 
@@ -212,8 +231,8 @@ export const CIVICO = {
   eTitulo: 'É',
   e: [
     'Informação pública explicada em linguagem simples.',
-    'Um caminho para a fonte: a lei citada pelo nome, e cada ligação com o domínio para onde vai.',
-    'Com verificação de vigência: se a resposta citar um diploma que sabemos revogado, a página avisa.',
+    'Com texto oficial: nos temas que já cobrimos, os artigos vêm copiados do Boletim da República.',
+    'Conferido: citações, números de artigo e contactos que não constam do texto oficial são retirados.',
     'Anónimo: sem conta, sem nome, sem e-mail e sem telefone.',
   ],
   naoETitulo: 'Não é',
@@ -246,6 +265,14 @@ export const CIVICO = {
     {
       q: 'A resposta pode estar errada?',
       a: 'Pode. A inteligência artificial engana-se, e a lei muda: um diploma pode ter sido revogado ou alterado depois de o documento ter sido lido. É por isso que cada resposta pede que confirme na fonte.',
+    },
+    {
+      q: 'O assistente pode inventar uma lei ou um artigo?',
+      a: 'Um modelo de inteligência artificial pode sempre escrever algo que não existe; nenhum sistema o impede por completo. O que fazemos é não o deixar passar: uma citação entre aspas só aparece se estiver, palavra por palavra, no texto oficial que temos; um número de artigo só aparece se for de um artigo que mostramos; um contacto escrito pelo assistente é sempre retirado. Quando retiramos alguma coisa, a página diz quantas.',
+    },
+    {
+      q: 'Que leis têm texto oficial na página?',
+      a: 'Para já, a Lei do Trabalho, a Lei das Sucessões e a Lei da Família. Nos outros temas o assistente explica por palavras suas, sem citações nem números de artigo, e a página manda confirmar no Boletim da República.',
     },
     {
       q: 'O que é a verificação de vigência?',

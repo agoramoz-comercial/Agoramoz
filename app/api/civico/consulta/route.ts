@@ -1,5 +1,8 @@
 import { NextResponse, after } from 'next/server';
 import { registarEventoServidor, type PropsEscalares } from '@/lib/analytics/servidor';
+import { conferir } from '@/lib/civico/conferir';
+import { citacaoNoCorpus, procurarArtigos } from '@/lib/civico/corpus';
+import { ordemAoAssistente } from '@/lib/civico/limites';
 import { abrirConsulta, lerConsulta, type FalhaMotor } from '@/lib/civico/motor';
 import { anonimizarPedido, dadoPessoalNoPedido, pedidoSchema } from '@/lib/civico/pedido';
 import { temaDaPergunta } from '@/lib/civico/tema';
@@ -19,17 +22,20 @@ import { log } from '@/lib/log/logger';
  *
  * ## A resposta é um fluxo
  *
- * Tudo o que se sabe ANTES de o motor começar a escrever responde em JSON,
- * com o status certo (400, 413, 422, 429, 503…). Depois disso a resposta é
+ * Um pedido que não chega a ser uma consulta responde em JSON, com o status
+ * certo (400, 413, 422, 429, 503…). Uma consulta responde em
  * `text/event-stream`, um JSON por linha `data:`:
  *
- *   {"t":"d","v":"…"}                       um pedaço do texto, em Markdown
- *   {"t":"fim","resposta":{…},"vigencia":{…}}  a resposta inteira, no NOSSO modelo
- *   {"t":"erro","status":502}                 o motor falhou a meio
+ *   {"t":"inicio","oficial":[…]}            os artigos do texto oficial, do NOSSO corpus
+ *   {"t":"d","v":"…"}                       um pedaço do texto do motor, em Markdown
+ *   {"t":"fim","resposta":{…},"vigencia":{…},"conferencia":{…},"oficial":[…]}
+ *   {"t":"erro","status":502}                 o motor falhou
  *
- * Os pedaços servem para a página escrever enquanto o motor escreve. O que
- * fica é o `fim`: a resposta normalizada no servidor, com as fontes e com a
- * verificação de vigência — os pedaços são descartados quando ele chega.
+ * O `inicio` sai logo, antes de o motor responder: quem pergunta lê o texto
+ * da lei enquanto a explicação é escrita. Os pedaços servem para escrever
+ * enquanto chega. O que fica é o `fim`: a resposta normalizada no servidor,
+ * CONFERIDA (`conferir.ts` — citações, números de artigo e contactos que não
+ * constam do texto oficial saem) e com a verificação de vigência.
  *
  * **Nada é guardado aqui, e a pergunta nunca vai para o log.** O que alguém
  * pergunta sobre um despedimento ou uma herança não é nosso para arquivar.
@@ -148,6 +154,15 @@ export async function POST(request: Request) {
     return fail(400, correlationId);
   }
 
+  // Uma ordem ao assistente («ignora as instruções…») não é uma pergunta: não segue.
+  if (ordemAoAssistente(parsed.data.pergunta)) {
+    log.warn('civico.falhou', { correlationId, reason: 'ordem-ao-assistente', outcome: 'rejected' });
+    return NextResponse.json(
+      { error: 'Isto não é uma pergunta sobre a lei.', motivo: 'ambito', correlationId },
+      { status: 422, headers: SEM_CACHE },
+    );
+  }
+
   // Um contacto ou um número de documento não segue para o motor. O log leva
   // só o padrão recusado (`email`/`numero`), nunca o texto.
   const dado = dadoPessoalNoPedido(parsed.data);
@@ -180,17 +195,14 @@ export async function POST(request: Request) {
     return STATUS_DA_FALHA[motivo] ?? 502;
   };
 
+  // O texto oficial para esta pergunta, do nosso corpus. Sem artigos, o motor
+  // é avisado de que não pode citar — e o conferidor retira o que citar.
+  const oficial = procurarArtigos(pedido.pergunta, tema);
+  const artigos = new Set(oficial.map((a) => a.n));
+
   // Quem perguntou foi-se embora: o pedido ao motor é cancelado, não fica a gastar.
   const desistir = new AbortController();
   request.signal?.addEventListener('abort', () => desistir.abort(), { once: true });
-
-  const abertura = await abrirConsulta(
-    pedido,
-    { url: env.LOVABLE_CIVICO_URL, timeoutMs: TIMEOUT_MOTOR_MS, perguntaNoFim: env.CIVICO_PERGUNTA_NO_FIM === 'on' },
-    fetch,
-    desistir.signal,
-  );
-  if (!abertura.ok) return fail(falhou(abertura.motivo, abertura.status, abertura.codigo), correlationId);
 
   const codificar = new TextEncoder();
   const fluxo = new ReadableStream<Uint8Array>({
@@ -206,36 +218,61 @@ export async function POST(request: Request) {
         }
       };
 
-      const resultado = await lerConsulta(abertura.res, (v) => enviar({ t: 'd', v }));
+      // Primeiro o que é nosso e é certo: o texto da lei.
+      enviar({ t: 'inicio', correlationId, oficial });
+
+      const abertura = await abrirConsulta(
+        pedido,
+        {
+          url: env.LOVABLE_CIVICO_URL!,
+          timeoutMs: TIMEOUT_MOTOR_MS,
+          perguntaNoFim: env.CIVICO_PERGUNTA_NO_FIM === 'on',
+          oficial,
+        },
+        fetch,
+        desistir.signal,
+      );
+      const resultado = abertura.ok ? await lerConsulta(abertura.res, (v) => enviar({ t: 'd', v })) : abertura;
 
       if (!resultado.ok) {
         enviar({ t: 'erro', status: falhou(resultado.motivo, resultado.status, resultado.codigo) });
       } else {
-        const { resposta } = resultado;
+        // O conferidor: o que não consta do texto oficial sai antes de sair daqui.
+        const { resposta, conferencia } = conferir(resultado.resposta, {
+          artigos,
+          citacaoConferida: citacaoNoCorpus,
+          pergunta: pedido.pergunta,
+        });
         const vigencia = verificarVigencia(resposta);
         const revogados = vigencia.alertas.filter((a) => a.tipo === 'revogado').length;
+        const retirados = conferencia.citacoes + conferencia.artigos + conferencia.contactos;
         /**
-         * Uma resposta que cita lei revogada, ou sem nenhuma ligação, é
-         * entregue (o ecrã avisa), mas fica no log como aviso: se o motor
-         * piorar, é aqui que se vê primeiro.
+         * Uma resposta que cita lei revogada, a que foi preciso retirar
+         * alguma coisa, ou sem nenhum apoio (nem artigos nossos, nem ligação)
+         * é entregue — o ecrã diz o que aconteceu —, mas fica no log como
+         * aviso: se o motor piorar, é aqui que se vê primeiro.
          */
-        const semFonte = resposta.fontes.length === 0;
-        (revogados > 0 || semFonte ? log.warn : log.info)('civico.respondida', {
+        const semApoio = resposta.fontes.length === 0 && oficial.length === 0;
+        (revogados > 0 || retirados > 0 || semApoio ? log.warn : log.info)('civico.respondida', {
           ...baseLog,
           fontes: resposta.fontes.length,
+          oficiais: oficial.length,
           revogados,
+          retirados,
           durationMs: Date.now() - started,
-          outcome: revogados > 0 ? 'lei-revogada' : semFonte ? 'sem-fonte' : 'ok',
+          outcome: revogados > 0 ? 'lei-revogada' : retirados > 0 ? 'conferida-com-cortes' : semApoio ? 'sem-fonte' : 'ok',
         });
         medir('civico_consulta', {
           tema,
           trocas: pedido.historico.length,
           fontes: resposta.fontes.length,
           fontesEstado: resposta.fontes.filter((f) => f.estado).length,
+          oficiais: oficial.length,
           revogados,
+          retirados,
           durationMs: Date.now() - started,
         });
-        enviar({ t: 'fim', correlationId, resposta, vigencia });
+        enviar({ t: 'fim', correlationId, resposta, vigencia, conferencia, oficial });
       }
 
       if (aberto) controlador.close();

@@ -615,12 +615,18 @@ está em `docs/TERRABUILD.md`.
     - A última mensagem passa a ser o tema («Tema: Trabalho.»); a pergunta vai antes, sem nomes de pessoas.
     - `CIVICO_PERGUNTA_NO_FIM=on` repõe a ordem simples, para depois de o portal ser corrigido.
 12. **Partilha onde as pessoas estão:** WhatsApp, impressão (uma folha limpa, com os avisos) e cópia.
+13. **Texto oficial e conferidor contra a alucinação** (`lib/civico/corpus.ts`, `lib/civico/conferir.ts`; `docs/CIVICO.md` «3.»).
+    - Uma pessoa pôs o assistente a inventar; um ensaio de 8 perguntas confirmou citações e números de artigo inventados.
+    - O texto de lei mostrado vem do nosso corpus (Trabalho, Sucessões, Família: 1 001 artigos do Boletim da República), não do modelo.
+    - Citações entre aspas que não constam do corpus, números de artigo que não foram dados ao motor e telefones saem da resposta, e a página diz o que saiu. Determinístico, sem segundo modelo.
+    - Ordens ao assistente e perguntas sobre outro país não chegam ao motor / ao corpus.
+    - Não se promete «zero alucinação»: promete-se que essas três coisas só passam conferidas.
 
 ### Limites
 - **Provado com o motor real em 2026-11-12**, com duas consultas: o contrato lido no bundle confirmou-se e a página respondeu de ponta a ponta (7,3 s). O resto da prova é contra um motor simulado que fala o mesmo protocolo, para não gastar o motor.
 - **O motor cita a lei pelo nome e quase nunca liga ao diploma** (a ligação é a raiz de um portal). A lista chama-se por isso «Ligações citadas», e o aviso de resposta sem ligação manda procurar o diploma no Boletim da República.
 - **Os dois problemas do portal estão contidos do nosso lado, não resolvidos na origem** (`docs/CIVICO.md` tem os pedidos prontos para o Lovable):
-  - o verificador confere que diploma é citado, não o conteúdo dos artigos;
+  - o verificador confere que diploma é citado; o conferidor confere citações, números de artigo e contactos — o sentido da explicação, prazos e valores não são conferidos;
   - o motor recebe a pergunta (sem nomes) e pode guardá-la fora da página pública.
 - Ligar o Turnstile no portal parte esta integração.
 - Sem voz e sem «memória» com conta, que o portal tem.

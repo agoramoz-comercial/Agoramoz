@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MAX_TEXTO, abrirConsulta, consultarLovable, corpoDoPedido, lerConsulta } from './motor';
+import { MAX_TEXTO, abrirConsulta, consultarLovable, contextoOficial, corpoDoPedido, lerConsulta } from './motor';
 import { notaDeVigencia } from './vigencia';
 import { pedidoSchema } from './pedido';
 
@@ -98,12 +98,13 @@ describe('corpoDoPedido', () => {
     expect(corpo.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(textos(corpo)).toEqual([
       ['user', notaDeVigencia()],
+      ['user', contextoOficial([])],
       ['user', 'Que aviso prévio tem de dar o empregador?'],
       ['assistant', 'Depende da antiguidade.'],
       ['user', 'E se o contrato de trabalho for a prazo?'],
       ['user', 'Tema: Trabalho. A pergunta está na mensagem anterior.'],
     ]);
-    expect(new Set(corpo.messages.map((m) => m.id)).size).toBe(5);
+    expect(new Set(corpo.messages.map((m) => m.id)).size).toBe(6);
   });
 
   /**

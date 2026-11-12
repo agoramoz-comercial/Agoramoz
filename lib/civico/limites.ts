@@ -44,6 +44,34 @@ export function dadoPessoalEm(texto: string): DadoPessoal | null {
   return null;
 }
 
+/**
+ * Uma tentativa de dar ordens ao assistente em vez de lhe fazer uma pergunta
+ * («ignora as instruções anteriores», «finge que és…»).
+ *
+ * O motor recusou estas tentativas quando foi testado — mas recusar depois de
+ * gastar uma consulta, e confiar que o modelo recusa sempre, é pior do que não
+ * a enviar. Padrões de ordem, não de assunto: uma pergunta sobre a lei nunca
+ * precisa de dizer ao assistente quem ele é.
+ */
+const ORDEM = new RegExp(
+  [
+    // «ignora (todas) as (tuas) instruções» — mas não «ignora as regras de segurança», que é uma pergunta.
+    String.raw`ignor[ae]\w*\s+(?:todas\s+)?(?:as\s+)?(?:tuas\s+|suas\s+)?instru[cç][oõ]es`,
+    String.raw`ignor[ae]\w*\s+(?:todas\s+)?as\s+(?:tuas|suas)\s+regras`,
+    String.raw`esquec\w+\s+(?:todas\s+)?(?:as\s+)?(?:tuas\s+|suas\s+)?instru[cç][oõ]es`,
+    String.raw`esquec\w+\s+(?:todas\s+)?as\s+(?:tuas|suas)\s+regras`,
+    String.raw`instru[cç][oõ]es\s+anteriores`,
+    String.raw`prompt\s+d[oe]\s+sistema|system\s+prompt`,
+    String.raw`finge\s+que\s+[eé]s|faz\s+de\s+conta\s+que\s+[eé]s|a\s+partir\s+de\s+agora\s+[eé]s|responde\s+como\s+se\s+fosses`,
+    String.raw`\bjailbreak\b|modo\s+(?:dan|desenvolvedor|sem\s+restri)`,
+  ].join('|'),
+  'iu',
+);
+
+export function ordemAoAssistente(texto: string): boolean {
+  return ORDEM.test(texto);
+}
+
 /** A pergunta tal como segue para o motor: espaços normalizados, sem controlos. */
 export function limparPergunta(texto: string): string {
   // `\p{Cc}` inclui as quebras de linha e os tabuladores: passam a espaço.

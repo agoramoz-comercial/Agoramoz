@@ -206,6 +206,11 @@ function textoDoBloco(b: Bloco): string {
   }
 }
 
+/** O texto corrido de uma lista de blocos: para copiar, para o contexto e para a verificação. */
+export function textoDosBlocos(blocos: readonly Bloco[]): string {
+  return blocos.map(textoDoBloco).join('\n\n').trim();
+}
+
 /**
  * Markdown do motor → o nosso modelo. Devolve `null` quando não sobra nada
  * que se possa chamar resposta.
@@ -321,7 +326,7 @@ export function normalizar(markdown: string): Resposta | null {
   fecharParagrafo();
 
   const comTexto = blocos.slice(0, MAX_BLOCOS);
-  const texto = comTexto.map(textoDoBloco).join('\n\n').trim();
+  const texto = textoDosBlocos(comTexto);
   if (!texto) return null;
   return { blocos: comTexto, fontes: fontes.lista(), texto };
 }

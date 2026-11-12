@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { CIVICO } from '@/content/civico';
 import type { Bloco, Fonte, Resposta, Trecho } from '@/lib/civico/resposta';
+import type { ArtigoOficial, Conferencia } from '@/lib/civico/conferir';
 import type { AlertaVigencia, Vigencia } from '@/lib/civico/vigencia';
 import { cn } from '@/lib/utils/cn';
 
@@ -230,6 +231,82 @@ function Diplomas({ vigencia }: { vigencia: Vigencia }) {
         {CIVICO.diplomasNota.replace('{data}', dataPt(vigencia.verificadoEm))}
       </p>
     </section>
+  );
+}
+
+/* ------------------------------------------------------------ texto oficial */
+
+/**
+ * O texto da lei, do NOSSO corpus. É a única parte da resposta que não foi
+ * escrita por um modelo — e por isso vem primeiro, com outro tipo de letra e
+ * com o nome do que é. O primeiro artigo abre; os outros ficam a um toque.
+ */
+export function OficialVista({ oficial }: { oficial: readonly ArtigoOficial[] }) {
+  if (oficial.length === 0) return null;
+  return (
+    <section aria-labelledby="civico-oficial" className="border-b border-[color:var(--border)] bg-[color:var(--surface-raised)] p-5 sm:p-8">
+      <h3 id="civico-oficial" className="rule-label text-[color:var(--on-surface)]">
+        {CIVICO.oficialTitulo}
+      </h3>
+      <p className="mt-2 max-w-[70ch] text-[length:var(--text-micro)] leading-relaxed text-[color:var(--muted)]">
+        {CIVICO.oficialNota}
+      </p>
+      <div className="mt-5 border-b border-[color:var(--hairline)]">
+        {oficial.map((a, i) => (
+          <details key={`${a.numero}-${a.n}`} open={i === 0} className="group border-t border-[color:var(--hairline)]">
+            <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-baseline gap-x-4 gap-y-1 py-3 [&::-webkit-details-marker]:hidden">
+              <span className="font-techno text-[length:var(--text-micro)] tracking-[0.08em] text-[color:var(--muted)]">
+                {a.titulo} · {CIVICO.oficialArtigo} {a.n}
+              </span>
+              <span className="min-w-0 flex-1 font-display font-semibold tracking-[-0.02em]">{a.epigrafe}</span>
+              <span aria-hidden className="font-techno text-[color:var(--muted)] transition-transform group-open:rotate-45">
+                +
+              </span>
+            </summary>
+            <div className="max-w-[70ch] pb-5">
+              {a.paragrafos.map((p, j) => (
+                <p key={j} className="mt-2.5 text-[1rem] leading-[1.65] first:mt-0">
+                  {p}
+                </p>
+              ))}
+              <p className="mt-4 text-sm text-[color:var(--muted)]">
+                {a.cortado && <span>{CIVICO.oficialCortado} </span>}
+                <a href={a.fonte.href} target="_blank" rel="noopener noreferrer" className={LIGACAO}>
+                  {a.diploma} · {CIVICO.oficialVer}
+                  <span aria-hidden> ↗</span>
+                  <span className="sr-only"> {CIVICO.abreNoutroSeparador}</span>
+                </a>
+              </p>
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** «2 citações entre aspas e 1 número de artigo». */
+function partesRetiradas(c: Conferencia): string {
+  const P = CIVICO.conferenciaPartes;
+  const partes = (
+    [
+      [c.citacoes, P.citacoes],
+      [c.artigos, P.artigos],
+      [c.contactos, P.contactos],
+    ] as const
+  )
+    .filter(([n]) => n > 0)
+    .map(([n, [um, varios]]) => `${n} ${n === 1 ? um : varios}`);
+  return partes.length > 1 ? `${partes.slice(0, -1).join(', ')} e ${partes.at(-1)}` : (partes[0] ?? '');
+}
+
+/** Retirar em silêncio seria outra forma de não dizer a verdade: a página diz o que saiu. */
+export function ConferenciaVista({ conferencia }: { conferencia: Conferencia }) {
+  if (conferencia.citacoes + conferencia.artigos + conferencia.contactos === 0) return null;
+  return (
+    <p role="note" className="mb-8 border border-dashed border-[color:var(--on-surface)] p-4 text-sm font-medium">
+      {CIVICO.conferenciaNota.replace('{partes}', partesRetiradas(conferencia))}
+    </p>
   );
 }
 

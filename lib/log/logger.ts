@@ -71,6 +71,10 @@ const SAFE_FIELDS = [
   'tema',
   'nomes',
   'revogados',
+  // Quantos artigos do nosso corpus seguiram com o pedido, e quantas citações,
+  // números de artigo e contactos o conferidor retirou da resposta.
+  'oficiais',
+  'retirados',
   // Erro de servidor (instrumentation.ts): o digest que o ecrã mostra, a rota
   // como padrão (`/admin/inqueritos/[id]`), o tipo, o método, o nome e a
   // mensagem do erro (cortada) e o primeiro «ficheiro:linha» da stack.

@@ -113,6 +113,8 @@ export function notaDeVigencia(): string {
     ...linhas,
     'Responde com base nos diplomas em vigor e não cites artigos de diplomas revogados.',
     'Se não tiveres o texto do diploma em vigor, não inventes citações literais nem números de artigo: explica a regra sem aspas e diz que o texto deve ser confirmado no Boletim da República.',
+    'Não escrevas números de telefone, moradas, valores ou prazos de que não tenhas a certeza: diz a que instituição perguntar.',
+    'Se a pergunta partir de uma lei, de um direito ou de uma instituição que não reconheces, diz que não a reconheces em vez de a confirmar.',
   ].join('\n');
 }
 

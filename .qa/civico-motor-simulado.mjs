@@ -13,7 +13,8 @@ import { createServer } from 'node:http';
  *   pnpm start
  *
  * Na pergunta: «sem fonte» devolve uma resposta sem ligações, «revogada» uma
- * que cita a Lei n.º 23/2007 (para ver o aviso de vigência), «falha» faz o
+ * que cita a Lei n.º 23/2007 (para ver o aviso de vigência), «inventa» uma com
+ * artigo, citação e contacto que não existem (para ver o conferidor), «falha» faz o
  * motor responder 500, «bloqueio» 403 e «erro» um evento de erro no fluxo.
  *
  * A resposta sai aos pedaços, com `PAUSA` ms entre eles, como no motor real:
@@ -55,6 +56,15 @@ Segundo a **Lei n.º 23/2007**, art. 130, o aviso prévio é de 30 dias. Ver tam
 ### 6. Fonte legal
 1. **Lei n.º 23/2007, de 1 de Agosto** — Lei do Trabalho. https://www.portaldogoverno.gov.mz`;
 
+// A alucinação medida no motor real a 2026-11-12: um artigo, uma citação e um
+// contacto que não existem. A página não pode mostrar nenhum dos três.
+const INVENTA = `### 2. O que diz a lei (citação literal)
+> **Artigo 13.º (Licença de paternidade) — [Lei n.º 13/2023, de 25 de Agosto]**
+> "1. O trabalhador pai tem direito a uma licença de paternidade de sete dias, seguidos ou interpolados."
+
+### 5. Contactos
+- **Contacto institucional:** Linha Verde: 800 124 124.`;
+
 const SEM_FONTES = `Esta resposta de demonstração **não cita nenhuma fonte**. A página tem de o dizer com o aviso próprio, em vez de a apresentar como as outras.`;
 
 function eventos(texto) {
@@ -93,7 +103,7 @@ createServer((req, res) => {
       res.writeHead(200, { 'content-type': 'text/event-stream', 'x-request-id': 'qa-1' });
       const lista = /\berro\b/i.test(ultima)
         ? [{ type: 'start' }, { type: 'error', errorText: 'detalhe interno do motor' }]
-        : eventos(/sem fonte/i.test(ultima) ? SEM_FONTES : /revogada/i.test(ultima) ? REVOGADA : COM_FONTES);
+        : eventos(/sem fonte/i.test(ultima) ? SEM_FONTES : /revogada/i.test(ultima) ? REVOGADA : /inventa/i.test(ultima) ? INVENTA : COM_FONTES);
       let i = 0;
       const seguinte = () => {
         if (i >= lista.length) return res.end('data: [DONE]\n\n');

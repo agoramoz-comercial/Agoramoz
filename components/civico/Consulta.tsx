@@ -12,13 +12,15 @@ import {
   TROCAS_MAX,
   dadoPessoalEm,
   limparPergunta,
+  ordemAoAssistente,
   type DadoPessoal,
 } from '@/lib/civico/limites';
 import { normalizar, validarResposta, type Resposta } from '@/lib/civico/resposta';
+import { conferir, validarConferencia, validarOficial, type ArtigoOficial, type Conferencia } from '@/lib/civico/conferir';
 import { validarVigencia, type Vigencia } from '@/lib/civico/vigencia';
 import { SITE } from '@/content/site';
 import { cn } from '@/lib/utils/cn';
-import { RespostaVista } from './RespostaVista';
+import { ConferenciaVista, OficialVista, RespostaVista } from './RespostaVista';
 
 /**
  * A consulta cívica: o estado partilhado, o campo da pergunta e a conversa.
@@ -46,12 +48,16 @@ interface Troca {
   readonly resposta: Resposta;
   /** A verificação de vigência feita no servidor sobre a resposta inteira. */
   readonly vigencia: Vigencia | null;
+  /** Os artigos do texto oficial, do nosso corpus. */
+  readonly oficial: readonly ArtigoOficial[];
+  /** O que o conferidor retirou da resposta. */
+  readonly conferencia: Conferencia | null;
 }
 
 type Estado =
   | { readonly tipo: 'parado' }
-  /** `parcial` é o que o motor já escreveu, enquanto escreve. */
-  | { readonly tipo: 'a-perguntar'; readonly pergunta: string; readonly parcial: Resposta | null }
+  /** `parcial` é o que o motor já escreveu, enquanto escreve; `oficial` chega antes dele. */
+  | { readonly tipo: 'a-perguntar'; readonly pergunta: string; readonly parcial: Resposta | null; readonly oficial: readonly ArtigoOficial[] }
   /** `repetir` é a pergunta que falhou, quando faz sentido tentar a mesma outra vez. */
   | { readonly tipo: 'erro'; readonly mensagem: string; readonly repetir: string | null };
 
@@ -107,8 +113,9 @@ const abortado = (erro: unknown) => (erro as { name?: string }).name === 'AbortE
 
 /** Um evento do fluxo da NOSSA rota (ver `app/api/civico/consulta/route.ts`). */
 type Evento =
+  | { readonly t: 'inicio'; readonly oficial: unknown }
   | { readonly t: 'd'; readonly v: string }
-  | { readonly t: 'fim'; readonly resposta: unknown; readonly vigencia: unknown }
+  | { readonly t: 'fim'; readonly resposta: unknown; readonly vigencia: unknown; readonly conferencia: unknown; readonly oficial: unknown }
   | { readonly t: 'erro'; readonly status: number };
 
 /** Lê o fluxo linha a linha e entrega cada evento. Uma linha partida é ignorada. */
@@ -175,7 +182,7 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
     abortar.current?.abort();
     const controlador = new AbortController();
     abortar.current = controlador;
-    setEstado({ tipo: 'a-perguntar', pergunta, parcial: null });
+    setEstado({ tipo: 'a-perguntar', pergunta, parcial: null, oficial: [] });
     // Quem perguntou lá em cima vê logo que a pergunta seguiu.
     requestAnimationFrame(() =>
       regiaoRef.current?.scrollIntoView({ behavior: movimentoReduzido() ? 'auto' : 'smooth', block: 'start' }),
@@ -201,11 +208,14 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
 
     // Tudo o que a rota sabe antes de o motor escrever vem em JSON, com o status.
     if (!res.ok) {
-      let corpo: { dado?: unknown } = {};
+      let corpo: { dado?: unknown; motivo?: unknown } = {};
       try {
         corpo = (await res.json()) as typeof corpo;
       } catch (erro) {
         if (abortado(erro)) return;
+      }
+      if (res.status === 422 && corpo.motivo === 'ambito') {
+        return setEstado({ tipo: 'erro', mensagem: CIVICO.erroAmbito, repetir: null });
       }
       if (res.status === 422 && ehDado(corpo.dado)) {
         return setEstado({ tipo: 'erro', mensagem: CIVICO.erroDado[corpo.dado], repetir: null });
@@ -217,24 +227,36 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
     // A partir daqui é o fluxo: pedaços de texto, e no fim a resposta inteira.
     let markdown = '';
     let desenhado = 0;
+    let oficial: readonly ArtigoOficial[] = [];
+    let artigos: ReadonlySet<number> = new Set();
     let final: Troca | null = null;
     let falha: number | null = null;
     try {
       await lerEventos(res, (e) => {
-        if (e.t === 'd' && typeof e.v === 'string') {
+        if (e.t === 'inicio' && validarOficial(e.oficial)) {
+          // O texto da lei chega primeiro, do nosso corpus: lê-se enquanto a explicação é escrita.
+          oficial = e.oficial;
+          artigos = new Set(oficial.map((a) => a.n));
+          setEstado({ tipo: 'a-perguntar', pergunta, parcial: null, oficial });
+        } else if (e.t === 'd' && typeof e.v === 'string') {
           markdown += e.v;
           const agora = performance.now();
           if (agora - desenhado < RITMO_MS) return;
           desenhado = agora;
-          // O mesmo normalizador do servidor: o texto a meio é desenhado pelo
-          // mesmo modelo fechado, sem HTML, que a resposta final.
-          setEstado({ tipo: 'a-perguntar', pergunta, parcial: normalizar(markdown) });
+          // O mesmo normalizador e o mesmo conferidor do servidor. A meio da
+          // escrita nenhuma citação está conferida — por isso nenhuma aparece;
+          // a resposta final repõe as que constam do texto oficial.
+          const bruto = normalizar(markdown);
+          const parcial = bruto ? conferir(bruto, { artigos, citacaoConferida: () => false, pergunta }).resposta : null;
+          setEstado({ tipo: 'a-perguntar', pergunta, parcial, oficial });
         } else if (e.t === 'fim' && validarResposta(e.resposta)) {
           final = {
             id: novoId(),
             pergunta,
             resposta: e.resposta,
             vigencia: validarVigencia(e.vigencia) ? e.vigencia : null,
+            oficial: validarOficial(e.oficial) ? e.oficial : oficial,
+            conferencia: validarConferencia(e.conferencia) ? e.conferencia : null,
           };
         } else if (e.t === 'erro') {
           falha = typeof e.status === 'number' ? e.status : 502;
@@ -265,6 +287,7 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
       if (pergunta.length > PERGUNTA_MAX) return CIVICO.erroLonga;
       const dado = dadoPessoalEm(pergunta);
       if (dado) return CIVICO.erroDado[dado];
+      if (ordemAoAssistente(pergunta)) return CIVICO.erroAmbito;
       void enviar(pergunta);
       return null;
     },
@@ -538,12 +561,15 @@ function Copiar({ troca }: { troca: Troca }) {
 function Artigo({
   pergunta,
   resposta,
+  oficial,
   troca,
   tituloRef,
 }: {
   pergunta: string;
   /** `null` enquanto o motor ainda não escreveu nada. */
   resposta: Resposta | null;
+  /** Os artigos do texto oficial: chegam antes da explicação. */
+  oficial: readonly ArtigoOficial[];
   /** Só na resposta pronta. */
   troca: Troca | null;
   tituloRef: React.RefObject<HTMLHeadingElement | null>;
@@ -568,11 +594,15 @@ function Artigo({
         </h2>
       </header>
 
+      <OficialVista oficial={oficial} />
+
       <div className="p-5 sm:p-8">
         <p className="rule-label mb-6 flex items-center gap-2.5 text-[color:var(--accent)]">
           <DitherMark size="sm" />
-          {CIVICO.respostaEyebrow}
+          {/* Com o texto da lei por cima, o que vem a seguir tem de dizer o que é. */}
+          {oficial.length > 0 ? CIVICO.iaEyebrow : CIVICO.respostaEyebrow}
         </p>
+        {troca?.conferencia && <ConferenciaVista conferencia={troca.conferencia} />}
         {aEscrever && (
           <div className="mb-6">
             <Fio />
@@ -638,11 +668,18 @@ export function Conversa() {
             )}
 
             {aPerguntar ? (
-              <Artigo pergunta={estado.pergunta} resposta={estado.parcial} troca={null} tituloRef={tituloRef} />
+              <Artigo pergunta={estado.pergunta} resposta={estado.parcial} oficial={estado.oficial} troca={null} tituloRef={tituloRef} />
             ) : (
               aberta && (
                 // A chave por troca repõe o estado interno (o «Copiado») a cada resposta.
-                <Artigo key={aberta.id} pergunta={aberta.pergunta} resposta={aberta.resposta} troca={aberta} tituloRef={tituloRef} />
+                <Artigo
+                  key={aberta.id}
+                  pergunta={aberta.pergunta}
+                  resposta={aberta.resposta}
+                  oficial={aberta.oficial}
+                  troca={aberta}
+                  tituloRef={tituloRef}
+                />
               )
             )}
 

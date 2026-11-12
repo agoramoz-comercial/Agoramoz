@@ -2,6 +2,7 @@ import { criarLeitorDeFluxo } from './fluxo';
 import type { Pedido } from './pedido';
 import { normalizar, type Resposta } from './resposta';
 import { mensagemDeTema, temaDaPergunta } from './tema';
+import type { ArtigoOficial } from './conferir';
 import { notaDeVigencia } from './vigencia';
 
 /**
@@ -23,9 +24,12 @@ import { notaDeVigencia } from './vigencia';
  *
  * 1. **A nota de vigência** (`vigencia.ts`): que diplomas foram substituídos,
  *    e o pedido de não inventar citações literais.
- * 2. As trocas anteriores da conversa, se as houver.
- * 3. **A pergunta**, já sem nomes (`anonimo.ts`).
- * 4. **O tema**, como última mensagem (`tema.ts`).
+ * 2. **O texto oficial** (`corpus.ts`): os artigos que a procura encontrou para
+ *    esta pergunta, com a ordem de citar só esses — ou, se não houver nenhum,
+ *    a ordem de não escrever citações nem números de artigo.
+ * 3. As trocas anteriores da conversa, se as houver.
+ * 4. **A pergunta**, já sem nomes (`anonimo.ts`).
+ * 5. **O tema**, como última mensagem (`tema.ts`).
  *
  * A ordem não é estética. Medido com o motor real a 2026-11-12: o portal
  * regista a ÚLTIMA mensagem de cada consulta e mostra-a, palavra por palavra,
@@ -43,6 +47,8 @@ export interface ConfigMotor {
   readonly timeoutMs: number;
   /** A pergunta como última mensagem (sem a linha de tema). Por omissão, não. */
   readonly perguntaNoFim?: boolean;
+  /** Os artigos do texto oficial encontrados para esta pergunta. */
+  readonly oficial?: readonly ArtigoOficial[];
 }
 
 /**
@@ -83,13 +89,45 @@ const mensagem = (role: 'user' | 'assistant', text: string) => ({
   parts: [{ type: 'text', text }],
 });
 
+/**
+ * O texto oficial que segue para o motor. O que o motor escrever para além
+ * disto é conferido à saída (`conferir.ts`) — a ordem aqui reduz o que há a
+ * retirar, não é o que garante o resultado.
+ */
+export function contextoOficial(oficial: readonly ArtigoOficial[]): string {
+  if (oficial.length === 0) {
+    return [
+      'Texto oficial conferido pela AGORAMOZ: não temos artigos conferidos para esta pergunta.',
+      'Por isso, nesta resposta não escrevas citações entre aspas nem números de artigo. Explica a regra por palavras tuas, diz qual é o diploma e manda confirmar no Boletim da República.',
+    ].join('\n');
+  }
+  const artigos = oficial.map(
+    (a) => `[${a.diploma} (${a.titulo}), artigo ${a.n} — ${a.epigrafe}]\n${a.paragrafos.join('\n')}${a.cortado ? '\n(…o artigo continua.)' : ''}`,
+  );
+  return [
+    'Texto oficial conferido pela AGORAMOZ, extraído do Boletim da República. A selecção é automática e pode não incluir tudo o que se aplica.',
+    'Regras para esta resposta: cita entre aspas APENAS frases destes artigos, copiadas sem alterar. Indica APENAS os números destes artigos. Se a resposta não estiver nestes artigos, diz que o texto conferido não cobre esse ponto — não vás buscar outros artigos à memória.',
+    '',
+    ...artigos,
+  ].join('\n\n');
+}
+
+export interface OpcoesDoPedido {
+  /** A pergunta como última mensagem (sem a linha de tema). Por omissão, não. */
+  readonly perguntaNoFim?: boolean;
+  /** Os artigos do texto oficial encontrados para esta pergunta. */
+  readonly oficial?: readonly ArtigoOficial[];
+}
+
 /** O corpo que o transporte de chat do portal envia, pela ordem descrita no topo. */
-export function corpoDoPedido(pedido: Pedido, perguntaNoFim = false) {
+export function corpoDoPedido(pedido: Pedido, opcoes: OpcoesDoPedido | boolean = {}) {
+  const { perguntaNoFim = false, oficial = [] } = typeof opcoes === 'boolean' ? { perguntaNoFim: opcoes } : opcoes;
   return {
     id: crypto.randomUUID(),
     trigger: 'submit-message',
     messages: [
       mensagem('user', notaDeVigencia()),
+      mensagem('user', contextoOficial(oficial)),
       ...pedido.historico.flatMap((t) => [mensagem('user', t.pergunta), mensagem('assistant', t.resposta)]),
       mensagem('user', pedido.pergunta),
       ...(perguntaNoFim ? [] : [mensagem('user', mensagemDeTema(temaDaPergunta(pedido.pergunta)))]),
@@ -121,7 +159,7 @@ export async function abrirConsulta(
         // O idioma da resposta. A página é portuguesa; o motor aceita outros.
         'x-idioma': 'pt',
       },
-      body: JSON.stringify(corpoDoPedido(pedido, cfg.perguntaNoFim)),
+      body: JSON.stringify(corpoDoPedido(pedido, { perguntaNoFim: cfg.perguntaNoFim, oficial: cfg.oficial })),
       // O prazo cobre também a leitura do fluxo até ao fim.
       signal: sinal ? AbortSignal.any([prazo, sinal]) : prazo,
       cache: 'no-store',
