@@ -604,7 +604,11 @@ está em `docs/TERRABUILD.md`.
 9. **Só em português**, e na barra do cabeçalho só a partir de 1536 px (medido: a 1280 px transbordava 52 px). Na gaveta e no rodapé, sempre.
 
 ### Limites
-- **Ainda não houve uma consulta real.** A rede onde isto foi escrito não chega a `lovable.app`; a prova é contra um motor simulado que fala o mesmo protocolo. A primeira consulta verdadeira faz-se numa pré-visualização (ver `docs/CIVICO.md`).
-- **Três coisas do lado do portal, antes de ligar** (`docs/CIVICO.md`): a página `/estado` do portal publica as perguntas dos utilizadores; o corpus é pequeno e cita leis revogadas; e ligar o Turnstile no portal parte esta integração.
+- **Provado com o motor real em 2026-11-12**, com duas consultas: o contrato lido no bundle confirmou-se e a página respondeu de ponta a ponta (7,3 s). O resto da prova é contra um motor simulado que fala o mesmo protocolo, para não gastar o motor.
+- **O motor cita a lei pelo nome e quase nunca liga ao diploma** (a ligação é a raiz de um portal). A lista chama-se por isso «Ligações citadas», e o aviso de resposta sem ligação manda procurar o diploma no Boletim da República.
+- **Três coisas do lado do portal, antes de ligar** (`docs/CIVICO.md`):
+  - a página `/estado` do portal publica as perguntas dos utilizadores;
+  - o motor respondeu a uma pergunta sobre heranças com artigos do Código Civil revogados pela Lei n.º 23/2019 — o corpus não tem os diplomas em vigor;
+  - ligar o Turnstile no portal parte esta integração.
 - Sem voz e sem «memória» com conta, que o portal tem.
 

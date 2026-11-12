@@ -76,12 +76,17 @@ export const CIVICO = {
   respostaEyebrow: 'Resposta',
   perguntaRotulo: 'Pergunta',
   tabelaAria: 'Tabela da resposta',
-  fontesTitulo: 'Fontes citadas nesta resposta',
+  fontesTitulo: 'Ligações citadas nesta resposta',
   fonteEstado: 'gov.mz',
   fonteEstadoAria: 'Domínio do Estado moçambicano',
   fonteExterna: 'Fonte externa',
+  /**
+   * O motor cita muitas vezes a lei pelo nome («Lei n.º 22/2022») sem ligação —
+   * visto na primeira consulta real. O aviso diz o que fazer com isso, em vez
+   * de dizer que a resposta «não tem fonte», o que nesses casos seria falso.
+   */
   semFonte:
-    'Esta resposta não traz ligação para nenhuma fonte. Trate-a como ponto de partida e confirme num texto oficial antes de agir.',
+    'Esta resposta não traz ligação para um texto oficial. Se citar uma lei pelo nome, procure esse diploma no Boletim da República e confirme antes de agir.',
   avisoResposta:
     'Gerado por inteligência artificial a partir de informação pública. Pode conter erros ou estar desactualizado: a lei muda. Confirme na fonte e, num caso concreto, fale com um advogado.',
   tentarDeNovo: 'Tentar de novo',
@@ -173,7 +178,7 @@ export const CIVICO = {
     {
       titulo: 'Leia, confirme, decida',
       corpo:
-        'A resposta chega com as fontes numeradas e o domínio de cada uma à vista. Abra a fonte antes de agir.',
+        'A resposta diz que lei cita. As ligações que trouxer ficam numeradas, com o domínio à vista. Confirme na fonte antes de agir.',
     },
   ],
 
@@ -183,7 +188,7 @@ export const CIVICO = {
   eTitulo: 'É',
   e: [
     'Informação pública explicada em linguagem simples.',
-    'Um caminho para a fonte: cada ligação mostra o domínio para onde vai.',
+    'Um caminho para a fonte: a lei citada pelo nome, e cada ligação com o domínio para onde vai.',
     'Anónimo: sem conta, sem nome, sem e-mail e sem telefone.',
     'Um ponto de partida para saber o que perguntar e a quem.',
   ],
@@ -212,7 +217,7 @@ export const CIVICO = {
     },
     {
       q: 'De onde vêm as respostas?',
-      a: 'De um motor de inteligência artificial que procura em documentos públicos moçambicanos e escreve a explicação. Quando a resposta cita uma fonte, a ligação aparece numerada no fim, com o domínio à vista. Quando não cita nenhuma, a página avisa.',
+      a: 'De um motor de inteligência artificial que procura em documentos públicos moçambicanos e escreve a explicação, citando a lei pelo nome. Quando a resposta traz ligações, aparecem numeradas no fim, com o domínio à vista. Quando não traz nenhuma, a página avisa.',
     },
     {
       q: 'A resposta pode estar errada?',

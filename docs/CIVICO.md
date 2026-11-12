@@ -12,8 +12,8 @@ lógica, não a página. Decisão: D-43.
 |---|---|
 | Página, navegação, sitemap, OG, FAQ estruturado | Feito |
 | Rota `/api/civico/consulta` | Feita |
-| Motor real (Lovable) | **Desligado** (`CIVICO_ENGINE=off`). O contrato foi lido no bundle público do portal a 2026-11-12, mas **ainda não houve uma consulta real**: a rede onde isto foi escrito não chega a `lovable.app`. Tudo foi provado contra o motor simulado (`.qa/civico-motor-simulado.mjs`), que fala o mesmo protocolo |
-| Testes | 102 (vitest) + `.qa/civico.mjs` (Playwright e axe, desktop e telemóvel) |
+| Motor real (Lovable) | **Desligado em produção** (`CIVICO_ENGINE=off`), **provado em 2026-11-12**: duas consultas reais, uma directa ao `/api/consulta` (HTTP 200 em ~10 s) e uma pela página inteira a correr localmente (`/api/civico/consulta` 200 em 7,3 s, 12 blocos, 1 ligação). O contrato lido no bundle confirmou-se: `text/event-stream`, cabeçalho `x-vercel-ai-ui-message-stream: v1`, sem Turnstile e sem verificação de origem |
+| Testes | 103 (vitest, um deles com o fluxo real capturado) + `.qa/civico.mjs` (Playwright e axe, desktop e telemóvel, contra o motor simulado) |
 
 Com o motor desligado, a página apresenta-se com o campo desligado e a frase
 «A consulta ainda não está activa neste site». Nada é simulado em produção.
@@ -38,6 +38,13 @@ Com o motor desligado, a página apresenta-se com o campo desligado e a frase
   `text/event-stream` com eventos `text-delta`. O cliente do portal envia um
   `X-Turnstile-Token` quando o tem — hoje a função que o obtém devolve sempre
   `null`, ou seja, o Turnstile está desligado no portal.
+- **A forma da resposta real.** Sete secções numeradas — resposta directa,
+  citação literal, prática, onde tratar, prazos e contactos, «Fonte legal» e
+  aviso. A lei vem citada **pelo nome** («Lei n.º 22/2022, de 22 de Dezembro»);
+  a ligação, quando existe, é a raiz de um portal (`https://www.at.gov.mz`),
+  não o diploma. Por isso a lista por baixo da resposta chama-se «Ligações
+  citadas», e o aviso de resposta sem ligação manda procurar o diploma no
+  Boletim da República em vez de dizer que «não há fonte».
 - **A resposta é lida inteira e normalizada antes de sair** (`lib/civico/resposta.ts`):
   parágrafos, títulos, listas, citações e tabelas; negrito, ênfase e ligações.
   Não há variante que transporte HTML. Só ligações `https` públicas sobrevivem,
@@ -65,12 +72,19 @@ Não se resolvem neste repositório.
    nomes nem histórias. **Tirar essa secção da página pública do portal antes de
    ligar.** O texto de privacidade em `content/civico.ts` diz a verdade sobre
    isto («o motor pode guardar o texto da pergunta»), mas não cobre publicação.
-2. **O corpus é pequeno e os exemplos do portal citam leis revogadas.** A página
-   de estado do portal mostrava 8 documentos, de duas fontes. A Lei do Trabalho
-   em vigor é a n.º 13/2023 (revogou a 23/2007) e as sucessões regem-se pela
-   Lei n.º 23/2019 (revogou o Livro V do Código Civil). Sem estes diplomas no
-   corpus, as perguntas mais comuns (trabalho, heranças, INSS) saem sem fonte
-   ou erradas. A nossa página não promete cobertura nem números por isso mesmo.
+2. **O motor responde com leis revogadas — visto numa resposta real.** À
+   pergunta «Quem herda quando alguém morre sem deixar testamento?» (a primeira
+   do tema «Família e heranças»), o motor citou os artigos 2133.º e 2134.º do
+   Código Civil e a Lei n.º 10/2004. O Livro V do Código Civil foi revogado
+   pela Lei n.º 23/2019 (Lei das Sucessões), e a Lei da Família em vigor é a
+   n.º 22/2019. A resposta veio bem formada, confiante e desactualizada. O
+   mesmo vale para o trabalho: a lei em vigor é a n.º 13/2023, que revogou a
+   23/2007. A página de estado do portal mostrava 8 documentos, de duas fontes.
+   **Enquanto o corpus não tiver os diplomas em vigor, ligar isto ao público é
+   publicar informação jurídica errada com a marca AGORAMOZ.** Os avisos da
+   página («pode estar desactualizado», «confirme na fonte») são verdadeiros,
+   mas não chegam para isto. A nossa página não promete cobertura nem números
+   por isso mesmo.
 3. **Se o Turnstile for ligado no portal, esta integração deixa de funcionar**
    (o motor responde 403 e a rota 503): um servidor não resolve um desafio de
    browser. Nesse dia o caminho certo é o portal expor uma rota de servidor a
@@ -87,9 +101,10 @@ Não se resolvem neste repositório.
    | `LOVABLE_CIVICO_URL` | `https://fonte-clara-source-guide.lovable.app/api/consulta` |
 
    Não há chave: o `/api/consulta` do portal é público.
-3. Abrir `/civico` na pré-visualização e fazer uma pergunta real. É a primeira
-   consulta verdadeira — confirmar que a resposta chega, que traz fontes, e ver
-   o log `civico.respondida` (ou `civico.falhou` com o `reason`).
+3. Abrir `/civico` na pré-visualização e fazer as perguntas dos seis temas.
+   Confirmar que as respostas chegam e, sobretudo, **que citam a lei em vigor**
+   (ponto 2). O log mostra `civico.respondida` (ou `civico.falhou` com o
+   `reason`).
 4. Só depois repetir as variáveis em **Production** e pedir o redeploy (as
    variáveis só entram num deploy novo; a página lê o interruptor no build).
 
@@ -118,6 +133,13 @@ O motor simulado devolve texto **sintético** (não é informação jurídica). 
 pergunta, «sem fonte» devolve uma resposta sem ligações, «falha» um 500,
 «bloqueio» um 403 e «erro» um evento de erro no fluxo. Usar `pnpm start`, não
 `pnpm dev`: é como o resto do arnês de QA corre.
+
+Para apontar o servidor local ao motor **real** a partir de uma rede com proxy
+de saída (como os contentores de QA), o Node precisa de
+`NODE_USE_ENV_PROXY=1` e `NODE_EXTRA_CA_CERTS=<bundle>`; sem isso a rota
+responde 502 com `reason: rede` e `errorCode: ENOTFOUND`. Na Vercel não é
+preciso. Cada consulta real gasta modelos de IA e pode ficar na página
+`/estado` do portal — não correr `.qa/civico.mjs` contra o motor real.
 
 ## Limites conhecidos
 

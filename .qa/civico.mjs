@@ -97,7 +97,7 @@ for (const [vista, width, height] of [['desktop', 1440, 900], ['telemovel', 390,
   const seguimento = pagina.getByLabel('Pergunta de seguimento');
   await seguimento.fill('E se a resposta vier sem fonte nenhuma?');
   await seguimento.press('Enter');
-  await pagina.getByText(/não traz ligação para nenhuma fonte/).waitFor({ timeout: 15000 });
+  await pagina.getByText(/não traz ligação para um texto oficial/).waitFor({ timeout: 15000 });
   const ultimo = pedidos.at(-1);
   ok(ultimo?.historico?.length === 1 && !('nome' in ultimo), `${vista}: o seguimento leva uma troca de histórico`);
   ok((await pagina.locator('aside ol > li').count()) === 2, `${vista}: duas perguntas na lista da conversa`);

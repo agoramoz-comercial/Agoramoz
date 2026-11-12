@@ -134,9 +134,12 @@ function FonteVista({ fonte }: { fonte: Fonte }) {
           <span className="sr-only"> {CIVICO.abreNoutroSeparador}</span>
         </a>
         <span className="mt-1.5 flex flex-wrap items-center gap-2.5">
-          <span className="font-techno text-[length:var(--text-micro)] tracking-[0.08em] text-[color:var(--muted)] [overflow-wrap:anywhere]">
-            {fonte.dominio}
-          </span>
+          {/* Um endereço solto tem o domínio por título: não se escreve duas vezes. */}
+          {fonte.titulo !== fonte.dominio && (
+            <span className="font-techno text-[length:var(--text-micro)] tracking-[0.08em] text-[color:var(--muted)] [overflow-wrap:anywhere]">
+              {fonte.dominio}
+            </span>
+          )}
           {fonte.estado && (
             <Badge>
               <span aria-hidden>{CIVICO.fonteEstado}</span>

@@ -28,6 +28,62 @@ function motor(corpo: string, init: ResponseInit = {}) {
   );
 }
 
+/**
+ * O fluxo tal como o motor real o devolveu a 2026-11-12 (primeira consulta
+ * verdadeira, encurtada): `content-type: text/event-stream`, cabeçalho
+ * `x-vercel-ai-ui-message-stream: v1`, pedaços cortados a meio de palavras e
+ * de marcadores. A forma da resposta é a que o motor usa sempre — secções
+ * numeradas, citação literal, «Fonte legal» com a lei pelo nome e, quando
+ * muito, a raiz de um portal como ligação.
+ */
+const FLUXO_REAL = [
+  { type: 'start' },
+  { type: 'start-step' },
+  { type: 'text-start', id: 'txt-0' },
+  { type: 'text-delta', id: 'txt-0', delta: '### 1.' },
+  { type: 'text-delta', id: 'txt-0', delta: ' Resposta directa\nA taxa normal do Imposto sobre o Valor Acrescentado (IVA) em' },
+  { type: 'text-delta', id: 'txt-0', delta: ' Moçambique é de 16%.\n\n### 2. O que diz a lei (citação' },
+  { type: 'text-delta', id: 'txt-0', delta: ' literal)\n> **Artigo 18.º (Taxas) — [Lei n.º 2' },
+  { type: 'text-delta', id: 'txt-0', delta: '2/2022, de 22 de Dezembro]**\n> "1. A taxa do imposto é' },
+  { type: 'text-delta', id: 'txt-0', delta: ' de 16%."\n\n### 5. Prazos, custos e contactos úteis\n- **Contacto institucional:** Linha' },
+  { type: 'text-delta', id: 'txt-0', delta: ' de Apoio ao Contribuinte: 800 124 124.\n\n### 6. Fonte legal\n1. **Lei n.º 22/2022, de 22 de Dezembro** — Altera o CIVA. Órgão: Assembleia' },
+  { type: 'text-delta', id: 'txt-0', delta: ' da República. https://www.at.gov.mz\n2. **' },
+  { type: 'text-delta', id: 'txt-0', delta: 'Lei n.º 32/2007, de 31 de Dezembro** — Aprova o Código do IVA.\n\n### 7. Aviso\nInformação' },
+  { type: 'text-delta', id: 'txt-0', delta: ' pública, não parecer jurídico.' },
+  { type: 'text-end', id: 'txt-0' },
+  { type: 'finish-step' },
+  { type: 'finish', finishReason: 'stop' },
+]
+  .map((e) => `data: ${JSON.stringify(e)}\n\n`)
+  .join('') + 'data: [DONE]\n\n';
+
+describe('o formato real do motor', () => {
+  it('lê-se inteiro: secções, citação com a lei pelo nome, e a única ligação como fonte', async () => {
+    const f = motor(FLUXO_REAL, { headers: { 'content-type': 'text/event-stream', 'x-vercel-ai-ui-message-stream': 'v1' } });
+    const r = await consultarLovable(PEDIDO, CFG, f as unknown as typeof fetch);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+
+    expect(r.resposta.blocos.map((b) => b.tipo)).toEqual([
+      'titulo', 'paragrafo', 'titulo', 'citacao', 'titulo', 'lista', 'titulo', 'lista', 'titulo', 'paragrafo',
+    ]);
+    expect(r.resposta.blocos[0]).toEqual({ tipo: 'titulo', texto: '1. Resposta directa' });
+    // A lei citada entre parênteses rectos, sem endereço, fica em texto — não é uma ligação partida.
+    expect(r.resposta.blocos[3]).toEqual({
+      tipo: 'citacao',
+      trechos: [
+        { t: 'forte', v: 'Artigo 18.º (Taxas) — [Lei n.º 22/2022, de 22 de Dezembro]' },
+        { t: 'texto', v: ' "1. A taxa do imposto é de 16%."' },
+      ],
+    });
+    expect(r.resposta.fontes).toEqual([
+      { n: 1, titulo: 'at.gov.mz', href: 'https://www.at.gov.mz/', dominio: 'at.gov.mz', estado: true },
+    ]);
+    // O número de uma linha de atendimento na RESPOSTA não é dado pessoal de quem pergunta.
+    expect(r.resposta.texto).toContain('800 124 124');
+  });
+});
+
 describe('corpoDoPedido', () => {
   it('escreve as mensagens no formato do transporte de chat, com as trocas anteriores à frente', () => {
     const pedido = pedidoSchema.parse({
