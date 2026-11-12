@@ -32,7 +32,7 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
     <ConsultaProvider activo={activo}>
       <FaqJsonLd items={faq} path="/civico" />
 
-      <Section surface="deep" contour>
+      <Section surface="deep" contour className="print:hidden">
         {trilho}
         <div className="rule flex flex-wrap items-baseline gap-4 pt-6">
           <span className="rule-label text-[color:var(--muted)]">{CIVICO.eyebrow}</span>
@@ -81,7 +81,7 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
         <Conversa />
       </Section>
 
-      <Section surface="tint" aria-labelledby="h-civico-passos">
+      <Section surface="tint" aria-labelledby="h-civico-passos" className="print:hidden">
         <SectionHeading id="h-civico-passos" eyebrow={CIVICO.passosEyebrow} title={CIVICO.passosTitulo} max="wide" />
         <ol className="mt-12 grid gap-px bg-[color:var(--border)] md:grid-cols-3">
           {CIVICO.passos.map((p, i) => (
@@ -96,7 +96,7 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
         </ol>
       </Section>
 
-      <Section surface="light" aria-labelledby="h-civico-limites">
+      <Section surface="light" aria-labelledby="h-civico-limites" className="print:hidden">
         <SectionHeading
           id="h-civico-limites"
           eyebrow={CIVICO.limitesEyebrow}
@@ -147,14 +147,14 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
         </div>
       </Section>
 
-      <Section surface="tint" aria-labelledby="h-civico-faq">
+      <Section surface="tint" aria-labelledby="h-civico-faq" className="print:hidden">
         <SectionHeading id="h-civico-faq" eyebrow={CIVICO.faqEyebrow} title={CIVICO.faqTitulo} max="wide" />
         <div className="mt-12 max-w-[52rem]">
           <Accordion items={faq} />
         </div>
       </Section>
 
-      <Section surface="deep" contour aria-labelledby="h-civico-org">
+      <Section surface="deep" contour aria-labelledby="h-civico-org" className="print:hidden">
         <SplitHeading
           as="h2"
           id="h-civico-org"

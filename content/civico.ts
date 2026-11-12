@@ -50,6 +50,9 @@ export const CIVICO = {
   perguntar: 'Perguntar',
   aPerguntar: 'A procurar…',
   aPerguntarDetalhe: 'A procurar nas fontes e a escrever a resposta. Costuma levar alguns segundos.',
+  aEscrever: 'A escrever a resposta…',
+  /** `{p}` é substituído por uma pergunta de exemplo, que vai rodando. */
+  exemplo: 'Por exemplo: {p}',
   pronta: 'Resposta pronta.',
   /** `{n}` é substituído pelos caracteres que faltam. */
   contador: '{n} caracteres disponíveis',
@@ -90,11 +93,32 @@ export const CIVICO = {
   avisoResposta:
     'Gerado por inteligência artificial a partir de informação pública. Pode conter erros ou estar desactualizado: a lei muda. Confirme na fonte e, num caso concreto, fale com um advogado.',
   tentarDeNovo: 'Tentar de novo',
+  whatsapp: 'Enviar por WhatsApp',
+  imprimir: 'Imprimir ou guardar em PDF',
   copiar: 'Copiar resposta',
   copiado: 'Copiado',
   novaConversa: 'Nova conversa',
   novaConversaAria: 'Apagar esta conversa e começar outra',
   abreNoutroSeparador: '(abre noutro separador)',
+
+  // ── Verificação de vigência ────────────────────────────────────────────
+  vigenciaRevogadoTitulo: 'Atenção: esta resposta cita legislação revogada',
+  vigenciaRevogadoCorpo:
+    'As regras descritas abaixo podem já não ser as que valem. Leia o diploma que a substituiu antes de agir.',
+  vigenciaMencionadoTitulo: 'A resposta refere um diploma revogado e o que o substituiu',
+  vigenciaMencionadoCorpo: 'Confirme que as regras descritas são as do diploma mais recente.',
+  vigenciaCitado: 'Citado na resposta',
+  vigenciaSubstituto: 'Revogado por',
+  vigenciaVer: 'Ver o diploma no Boletim da República',
+  diplomasTitulo: 'Diplomas citados e verificação de vigência',
+  diplomaEstado: {
+    revogado: 'Revogado',
+    substituto: 'Conferido',
+    'por-verificar': 'Por verificar',
+  },
+  /** `{data}` é substituído pela data em que o registo foi conferido. */
+  diplomasNota:
+    '«Conferido»: lemos no Boletim da República, a {data}, que este diploma revogou o anterior sobre a mesma matéria. «Por verificar»: a AGORAMOZ ainda não conferiu a vigência deste diploma.',
 
   anterioresTitulo: 'Nesta conversa',
   anterioresNota:
@@ -173,12 +197,12 @@ export const CIVICO = {
     {
       titulo: 'O assistente procura',
       corpo:
-        'A pergunta segue para o motor do portal cívico, que procura em documentos públicos e escreve a explicação.',
+        'A pergunta segue, sem nomes, para o motor do portal cívico, com uma nota sobre os diplomas que já foram revogados.',
     },
     {
       titulo: 'Leia, confirme, decida',
       corpo:
-        'A resposta diz que lei cita. As ligações que trouxer ficam numeradas, com o domínio à vista. Confirme na fonte antes de agir.',
+        'A resposta diz que lei cita, e a página confere-a com um registo de revogações. Confirme na fonte antes de agir.',
     },
   ],
 
@@ -189,8 +213,8 @@ export const CIVICO = {
   e: [
     'Informação pública explicada em linguagem simples.',
     'Um caminho para a fonte: a lei citada pelo nome, e cada ligação com o domínio para onde vai.',
+    'Com verificação de vigência: se a resposta citar um diploma que sabemos revogado, a página avisa.',
     'Anónimo: sem conta, sem nome, sem e-mail e sem telefone.',
-    'Um ponto de partida para saber o que perguntar e a quem.',
   ],
   naoETitulo: 'Não é',
   naoE: [
@@ -204,7 +228,7 @@ export const CIVICO = {
   privacidade: [
     'A pergunta segue do nosso servidor para o motor do portal cívico, que a processa com modelos de inteligência artificial de terceiros.',
     'A AGORAMOZ não guarda a pergunta nem a resposta, e não as associa a si: não pedimos nome, e-mail nem telefone.',
-    'O motor pode guardar o texto da pergunta para saber que temas lhe falta cobrir. Por isso recusamos perguntas com contactos ou números de documentos, e pedimos que não escreva nomes.',
+    'Antes de a pergunta seguir, recusamos contactos e números de documentos e retiramos os nomes de pessoas que conseguimos reconhecer. O motor pode guardar o texto da conversa; na página pública dele aparece só o tema da consulta, nunca a pergunta.',
   ],
 
   // ── Perguntas frequentes ───────────────────────────────────────────────
@@ -224,8 +248,12 @@ export const CIVICO = {
       a: 'Pode. A inteligência artificial engana-se, e a lei muda: um diploma pode ter sido revogado ou alterado depois de o documento ter sido lido. É por isso que cada resposta pede que confirme na fonte.',
     },
     {
+      q: 'O que é a verificação de vigência?',
+      a: 'A AGORAMOZ mantém um registo de revogações lidas no Boletim da República. Cada resposta é comparada com esse registo: se citar um diploma revogado, aparece um aviso com o diploma que o substituiu. O registo é pequeno e vai crescendo; um diploma marcado «por verificar» ainda não foi conferido.',
+    },
+    {
       q: 'Guardam o que eu pergunto?',
-      a: 'A AGORAMOZ não guarda perguntas nem respostas. O motor que responde pode guardar o texto da pergunta para melhorar a cobertura. Não escreva nomes, contactos nem números de documentos.',
+      a: 'A AGORAMOZ não guarda perguntas nem respostas. O motor que responde pode guardar o texto da conversa para melhorar a cobertura; na página pública dele aparece só o tema. Não escreva nomes, contactos nem números de documentos.',
     },
     {
       q: 'É gratuito?',

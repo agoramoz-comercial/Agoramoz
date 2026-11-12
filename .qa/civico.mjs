@@ -9,8 +9,9 @@
  * Verifica: sem transbordo horizontal, a consulta do princípio ao fim, o foco
  * na resposta, as fontes numeradas, o aviso de resposta sem fonte, a recusa de
  * dados pessoais sem pedido à rede, o erro com «Tentar de novo», o seguimento
- * com histórico, «Nova conversa», nada no armazenamento do browser, e axe
- * (WCAG 2.1 AA) nos três estados.
+ * com histórico, o aviso de lei revogada, a resposta a ser escrita em fluxo,
+ * a ligação de WhatsApp, «Nova conversa», nada no armazenamento do browser, e
+ * axe (WCAG 2.1 AA) nos quatro estados.
  */
 import { chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
@@ -77,8 +78,13 @@ for (const [vista, width, height] of [['desktop', 1440, 900], ['telemovel', 390,
   await campo.fill('Que aviso prévio tem de dar o empregador para rescindir o contrato?');
   await campo.press('Enter');
   await pagina.getByText('A procurar nas fontes').first().waitFor({ timeout: 3000 });
-  await pagina.getByRole('heading', { name: /Que aviso prévio/ }).waitFor({ timeout: 15000 });
-  await pagina.waitForTimeout(400);
+  // Em fluxo: o texto começa a aparecer ANTES de haver ligações ou botões.
+  await pagina.locator('article[aria-busy="true"] .civico-cursor').waitFor({ timeout: 10000 });
+  const aMeio = await pagina.locator('article').innerText();
+  ok(aMeio.includes('Resposta de demonstração') && (await pagina.locator('#civico-fontes').count()) === 0, `${vista}: a resposta escreve-se enquanto chega`);
+  await pagina.locator('#civico-fontes').waitFor({ timeout: 20000 });
+  ok((await pagina.locator('.civico-cursor').count()) === 0, `${vista}: o cursor sai quando a resposta está pronta`);
+  await pagina.waitForTimeout(300);
   ok((await pagina.evaluate(() => document.activeElement?.id)) === 'civico-resposta', `${vista}: o foco vai para a resposta`);
   ok((await erro.count()) === 0, `${vista}: o erro anterior saiu`);
   const fontes = pagina.locator('#civico-fontes + ol > li');
@@ -91,6 +97,9 @@ for (const [vista, width, height] of [['desktop', 1440, 900], ['telemovel', 390,
   ok((await pagina.locator('article script, article img').count()) === 0, `${vista}: HTML do motor não vira marcação`);
   ok(await pagina.getByText('<script>alert(1)</script>', { exact: false }).isVisible(), `${vista}: o HTML do motor lê-se como texto`);
   ok(await pagina.getByText(/Gerado por inteligência artificial/).isVisible(), `${vista}: aviso de IA junto à resposta`);
+  const wa = await pagina.getByRole('link', { name: /Enviar por WhatsApp/ }).getAttribute('href');
+  ok(wa?.startsWith('https://wa.me/?text=') && decodeURIComponent(wa).includes('Que aviso prévio'), `${vista}: ligação de WhatsApp com a pergunta e a resposta`);
+  ok((await pagina.locator('#civico-diplomas').count()) === 0, `${vista}: sem diplomas citados, não há painel de vigência`);
   await axe(pagina, `${vista} com resposta`);
 
   // Seguimento: leva o histórico; resposta sem fonte mostra o aviso.
@@ -102,6 +111,23 @@ for (const [vista, width, height] of [['desktop', 1440, 900], ['telemovel', 390,
   ok(ultimo?.historico?.length === 1 && !('nome' in ultimo), `${vista}: o seguimento leva uma troca de histórico`);
   ok((await pagina.locator('aside ol > li').count()) === 2, `${vista}: duas perguntas na lista da conversa`);
   await axe(pagina, `${vista} sem fonte`);
+
+  // Lei revogada: o aviso vem antes da resposta, com o diploma que a substituiu.
+  await seguimento.fill('E se a resposta citar uma lei revogada?');
+  await seguimento.press('Enter');
+  const alerta = pagina.locator('article [role="alert"]', { hasText: 'cita legislação revogada' });
+  await alerta.waitFor({ timeout: 20000 });
+  ok((await alerta.innerText()).includes('13/2023'), `${vista}: o aviso de lei revogada nomeia o diploma que a substituiu`);
+  ok((await alerta.locator('a[href^="https://ts.gov.mz/"]').count()) === 1, `${vista}: o aviso liga ao Boletim da República`);
+  const antesDoTexto = await pagina.evaluate(() => {
+    const a = document.querySelector('article [role="alert"]');
+    const t = document.querySelector('article h3');
+    return !!a && !!t && (a.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  });
+  ok(antesDoTexto, `${vista}: o aviso aparece antes do texto da resposta`);
+  const estados = await pagina.locator('#civico-diplomas + ul > li').allInnerTexts();
+  ok(estados.length === 2 && /23\/2007[\s\S]*REVOGADO/i.test(estados[0]) && /4\/2007[\s\S]*POR VERIFICAR/i.test(estados[1]), `${vista}: diplomas citados com o estado de cada um`, estados.join(' | '));
+  await axe(pagina, `${vista} lei revogada`);
 
   // Voltar à primeira e recomeçar.
   await pagina.locator('aside ol > li button').first().click();

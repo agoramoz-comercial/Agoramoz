@@ -1,7 +1,9 @@
 import { NextResponse, after } from 'next/server';
 import { registarEventoServidor, type PropsEscalares } from '@/lib/analytics/servidor';
-import { consultarLovable, type FalhaMotor } from '@/lib/civico/motor';
-import { dadoPessoalNoPedido, pedidoSchema } from '@/lib/civico/pedido';
+import { abrirConsulta, lerConsulta, type FalhaMotor } from '@/lib/civico/motor';
+import { anonimizarPedido, dadoPessoalNoPedido, pedidoSchema } from '@/lib/civico/pedido';
+import { temaDaPergunta } from '@/lib/civico/tema';
+import { verificarVigencia } from '@/lib/civico/vigencia';
 import { serverEnv } from '@/lib/config/env';
 import { lerCorpoLimitado } from '@/lib/http/corpo';
 import { clientKey, createMemoryRateLimiter, type RateLimiter } from '@/lib/http/rate-limit';
@@ -11,16 +13,26 @@ import { log } from '@/lib/log/logger';
  * AGORAMOZ Cívico — uma pergunta sobre a lei, uma resposta com as fontes.
  *
  * O browser nunca fala com o motor. Esta rota é o único caminho: valida o
- * pedido, recusa contactos e números de documento, limita a taxa (cada
- * consulta gasta modelos de IA na conta do portal), chama o motor do lado do
- * servidor e devolve a resposta já normalizada — o que sai daqui é o nosso
- * modelo, não o Markdown do motor.
+ * pedido, recusa contactos e números de documento, tira os nomes, limita a
+ * taxa (cada consulta gasta modelos de IA na conta do portal) e chama o motor
+ * do lado do servidor.
+ *
+ * ## A resposta é um fluxo
+ *
+ * Tudo o que se sabe ANTES de o motor começar a escrever responde em JSON,
+ * com o status certo (400, 413, 422, 429, 503…). Depois disso a resposta é
+ * `text/event-stream`, um JSON por linha `data:`:
+ *
+ *   {"t":"d","v":"…"}                       um pedaço do texto, em Markdown
+ *   {"t":"fim","resposta":{…},"vigencia":{…}}  a resposta inteira, no NOSSO modelo
+ *   {"t":"erro","status":502}                 o motor falhou a meio
+ *
+ * Os pedaços servem para a página escrever enquanto o motor escreve. O que
+ * fica é o `fim`: a resposta normalizada no servidor, com as fontes e com a
+ * verificação de vigência — os pedaços são descartados quando ele chega.
  *
  * **Nada é guardado aqui, e a pergunta nunca vai para o log.** O que alguém
- * pergunta sobre um despedimento ou uma herança não é nosso para arquivar. O
- * motor, do lado dele, fica com o texto da pergunta (ver `docs/CIVICO.md`) —
- * é por isso que a guarda de dados pessoais existe e que o aviso está junto
- * ao campo.
+ * pergunta sobre um despedimento ou uma herança não é nosso para arquivar.
  *
  * Limite conhecido: o limitador é em memória, por instância. Trava repetição
  * e abuso ingénuo; não é um tecto global de custo.
@@ -53,8 +65,8 @@ function fail(status: number, correlationId: string, headers?: Record<string, st
 
 /**
  * O evento para o painel, depois de a resposta sair. Fora de um pedido (testes
- * unitários) o `after` lança, e aí corre-se já — com a persistência desligada,
- * não faz nada.
+ * unitários, ou já dentro do fluxo) o `after` lança, e aí corre-se já — com a
+ * persistência desligada, não faz nada.
  */
 function medir(nome: 'civico_consulta' | 'civico_falhou', props: PropsEscalares) {
   const tarefa = () => registarEventoServidor(nome, props, { path: '/civico' });
@@ -135,11 +147,10 @@ export async function POST(request: Request) {
     log.warn('civico.falhou', { correlationId, reason: `schema:${campos}`.slice(0, 80), outcome: 'rejected' });
     return fail(400, correlationId);
   }
-  const pedido = parsed.data;
 
   // Um contacto ou um número de documento não segue para o motor. O log leva
   // só o padrão recusado (`email`/`numero`), nunca o texto.
-  const dado = dadoPessoalNoPedido(pedido);
+  const dado = dadoPessoalNoPedido(parsed.data);
   if (dado) {
     log.warn('civico.falhou', { correlationId, reason: 'dado-pessoal', dado, outcome: 'rejected' });
     return NextResponse.json(
@@ -148,48 +159,99 @@ export async function POST(request: Request) {
     );
   }
 
+  // Os nomes de pessoas saem aqui: o motor recebe «o meu patrão [nome]».
+  const { pedido, nomes } = anonimizarPedido(parsed.data);
+  const tema = temaDaPergunta(pedido.pergunta);
+
   // A pergunta NUNCA vai para o log: diz o que alguém está a viver.
-  const baseLog = { correlationId, trocas: pedido.historico.length, caracteres: pedido.pergunta.length };
+  const baseLog = { correlationId, tema, trocas: pedido.historico.length, caracteres: pedido.pergunta.length, nomes };
 
-  const resultado = await consultarLovable(pedido, { url: env.LOVABLE_CIVICO_URL, timeoutMs: TIMEOUT_MOTOR_MS });
-
-  if (!resultado.ok) {
+  const falhou = (motivo: FalhaMotor, status?: number, codigo?: string) => {
     log.error('civico.falhou', {
       ...baseLog,
-      reason: resultado.motivo,
-      status: resultado.status,
-      errorCode: resultado.codigo,
+      reason: motivo,
+      status,
+      errorCode: codigo,
       durationMs: Date.now() - started,
       outcome: 'failed',
     });
     // Só as falhas do motor: um pedido inválido não é uma consulta tentada.
-    medir('civico_falhou', {
-      motivo: resultado.motivo,
-      status: resultado.status ?? null,
-      durationMs: Date.now() - started,
-    });
-    return fail(STATUS_DA_FALHA[resultado.motivo] ?? 502, correlationId);
-  }
+    medir('civico_falhou', { tema, motivo, status: status ?? null, durationMs: Date.now() - started });
+    return STATUS_DA_FALHA[motivo] ?? 502;
+  };
 
-  const { resposta } = resultado;
-  /**
-   * Uma resposta sem nenhuma ligação é entregue (o ecrã avisa que não traz
-   * fonte), mas fica no log como aviso: se o motor deixar de citar, é aqui
-   * que se vê primeiro.
-   */
-  const semFonte = resposta.fontes.length === 0;
-  (semFonte ? log.warn : log.info)('civico.respondida', {
-    ...baseLog,
-    fontes: resposta.fontes.length,
-    durationMs: Date.now() - started,
-    outcome: semFonte ? 'sem-fonte' : 'ok',
-  });
-  medir('civico_consulta', {
-    trocas: pedido.historico.length,
-    fontes: resposta.fontes.length,
-    fontesEstado: resposta.fontes.filter((f) => f.estado).length,
-    durationMs: Date.now() - started,
+  // Quem perguntou foi-se embora: o pedido ao motor é cancelado, não fica a gastar.
+  const desistir = new AbortController();
+  request.signal?.addEventListener('abort', () => desistir.abort(), { once: true });
+
+  const abertura = await abrirConsulta(
+    pedido,
+    { url: env.LOVABLE_CIVICO_URL, timeoutMs: TIMEOUT_MOTOR_MS, perguntaNoFim: env.CIVICO_PERGUNTA_NO_FIM === 'on' },
+    fetch,
+    desistir.signal,
+  );
+  if (!abertura.ok) return fail(falhou(abertura.motivo, abertura.status, abertura.codigo), correlationId);
+
+  const codificar = new TextEncoder();
+  const fluxo = new ReadableStream<Uint8Array>({
+    async start(controlador) {
+      let aberto = true;
+      const enviar = (evento: unknown) => {
+        if (!aberto) return;
+        try {
+          controlador.enqueue(codificar.encode(`data: ${JSON.stringify(evento)}\n\n`));
+        } catch {
+          // O browser fechou a ligação: não há a quem enviar.
+          aberto = false;
+        }
+      };
+
+      const resultado = await lerConsulta(abertura.res, (v) => enviar({ t: 'd', v }));
+
+      if (!resultado.ok) {
+        enviar({ t: 'erro', status: falhou(resultado.motivo, resultado.status, resultado.codigo) });
+      } else {
+        const { resposta } = resultado;
+        const vigencia = verificarVigencia(resposta);
+        const revogados = vigencia.alertas.filter((a) => a.tipo === 'revogado').length;
+        /**
+         * Uma resposta que cita lei revogada, ou sem nenhuma ligação, é
+         * entregue (o ecrã avisa), mas fica no log como aviso: se o motor
+         * piorar, é aqui que se vê primeiro.
+         */
+        const semFonte = resposta.fontes.length === 0;
+        (revogados > 0 || semFonte ? log.warn : log.info)('civico.respondida', {
+          ...baseLog,
+          fontes: resposta.fontes.length,
+          revogados,
+          durationMs: Date.now() - started,
+          outcome: revogados > 0 ? 'lei-revogada' : semFonte ? 'sem-fonte' : 'ok',
+        });
+        medir('civico_consulta', {
+          tema,
+          trocas: pedido.historico.length,
+          fontes: resposta.fontes.length,
+          fontesEstado: resposta.fontes.filter((f) => f.estado).length,
+          revogados,
+          durationMs: Date.now() - started,
+        });
+        enviar({ t: 'fim', correlationId, resposta, vigencia });
+      }
+
+      if (aberto) controlador.close();
+    },
+    cancel() {
+      desistir.abort();
+    },
   });
 
-  return NextResponse.json({ ok: true, correlationId, motor: 'lovable', resposta }, { status: 200, headers: SEM_CACHE });
+  return new Response(fluxo, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      // `no-transform` e `X-Accel-Buffering`: um proxy que junte ou comprima o fluxo entrega-o todo no fim.
+      'Cache-Control': 'no-store, no-transform',
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }

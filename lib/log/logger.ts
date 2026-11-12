@@ -66,6 +66,11 @@ const SAFE_FIELDS = [
   'trocas',
   'fontes',
   'dado',
+  // O tema por palavras (`trabalho`, `familia`…), quantos nomes saíram da
+  // pergunta antes de seguir, e quantos diplomas revogados a resposta citou.
+  'tema',
+  'nomes',
+  'revogados',
   // Erro de servidor (instrumentation.ts): o digest que o ecrã mostra, a rota
   // como padrão (`/admin/inqueritos/[id]`), o tipo, o método, o nome e a
   // mensagem do erro (cortada) e o primeiro «ficheiro:linha» da stack.

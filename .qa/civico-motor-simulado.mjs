@@ -12,11 +12,17 @@ import { createServer } from 'node:http';
  *   LOVABLE_CIVICO_URL=http://127.0.0.1:4020/api/consulta \
  *   pnpm start
  *
- * Na pergunta: «sem fonte» devolve uma resposta sem ligações, «falha» faz o
+ * Na pergunta: «sem fonte» devolve uma resposta sem ligações, «revogada» uma
+ * que cita a Lei n.º 23/2007 (para ver o aviso de vigência), «falha» faz o
  * motor responder 500, «bloqueio» 403 e «erro» um evento de erro no fluxo.
+ *
+ * A resposta sai aos pedaços, com `PAUSA` ms entre eles, como no motor real:
+ * é o que deixa ver a página a escrever. A pergunta é procurada em TODAS as
+ * mensagens do utilizador — a última, na nossa rota, é só o tema.
  */
 const PORTA = Number(process.env.PORTA ?? 4020);
-const ATRASO = Number(process.env.ATRASO ?? 900);
+const ATRASO = Number(process.env.ATRASO ?? 500);
+const PAUSA = Number(process.env.PAUSA ?? 25);
 
 const COM_FONTES = `## Resposta de demonstração
 
@@ -40,11 +46,20 @@ Este texto é **sintético**: vem do motor simulado de QA e *não* é informaç�
 
 Uma ligação insegura fica só em texto: [não é ligação](http://127.0.0.1/admin) e <script>alert(1)</script> lê-se como texto.`;
 
+const REVOGADA = `### 1. Resposta directa
+Resposta de demonstração que cita lei revogada.
+
+### 2. O que diz a lei
+Segundo a **Lei n.º 23/2007**, art. 130, o aviso prévio é de 30 dias. Ver também a Lei n.º 4/2007.
+
+### 6. Fonte legal
+1. **Lei n.º 23/2007, de 1 de Agosto** — Lei do Trabalho. https://www.portaldogoverno.gov.mz`;
+
 const SEM_FONTES = `Esta resposta de demonstração **não cita nenhuma fonte**. A página tem de o dizer com o aviso próprio, em vez de a apresentar como as outras.`;
 
 function eventos(texto) {
   const id = 't1';
-  const pedacos = texto.match(/[\s\S]{1,40}/g) ?? [];
+  const pedacos = texto.match(/[\s\S]{1,28}/g) ?? [];
   return [
     { type: 'start' },
     { type: 'start-step' },
@@ -66,18 +81,27 @@ createServer((req, res) => {
   req.on('end', () => {
     const pedido = JSON.parse(corpo || '{}');
     const mensagens = Array.isArray(pedido.messages) ? pedido.messages : [];
-    const ultima = mensagens.at(-1)?.parts?.[0]?.text ?? '';
-    // Só a forma do pedido vai para o terminal — nunca o texto da pergunta.
-    console.log(`[motor] mensagens=${mensagens.length} idioma=${req.headers['x-idioma']} trigger=${pedido.trigger}`);
+    const doUtilizador = mensagens.filter((m) => m.role === 'user').map((m) => m.parts?.[0]?.text ?? '');
+    // A pergunta é a última mensagem do utilizador que não é a linha de tema.
+    const ultima = doUtilizador.filter((t) => !t.startsWith('Tema: ')).at(-1) ?? '';
+    // Só a forma do pedido vai para o terminal — e a ÚLTIMA mensagem, que é o
+    // que o portal real publica: tem de ser o tema, nunca a pergunta.
+    console.log(`[motor] mensagens=${mensagens.length} idioma=${req.headers['x-idioma']} ultima=${JSON.stringify(doUtilizador.at(-1)?.slice(0, 40))}`);
     setTimeout(() => {
       if (/\bfalha\b/i.test(ultima)) return res.writeHead(500).end('erro');
       if (/\bbloqueio\b/i.test(ultima)) return res.writeHead(403).end('bloqueado');
       res.writeHead(200, { 'content-type': 'text/event-stream', 'x-request-id': 'qa-1' });
       const lista = /\berro\b/i.test(ultima)
         ? [{ type: 'start' }, { type: 'error', errorText: 'detalhe interno do motor' }]
-        : eventos(/sem fonte/i.test(ultima) ? SEM_FONTES : COM_FONTES);
-      for (const e of lista) res.write(`data: ${JSON.stringify(e)}\n\n`);
-      res.end('data: [DONE]\n\n');
+        : eventos(/sem fonte/i.test(ultima) ? SEM_FONTES : /revogada/i.test(ultima) ? REVOGADA : COM_FONTES);
+      let i = 0;
+      const seguinte = () => {
+        if (i >= lista.length) return res.end('data: [DONE]\n\n');
+        res.write(`data: ${JSON.stringify(lista[i])}\n\n`);
+        i += 1;
+        setTimeout(seguinte, PAUSA);
+      };
+      seguinte();
     }, ATRASO);
   });
 }).listen(PORTA, '127.0.0.1', () => console.log(`[motor] cívico simulado em http://127.0.0.1:${PORTA}`));

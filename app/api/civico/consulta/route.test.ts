@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- os eventos do fluxo são lidos como JSON solto nos testes */
+
 /**
  * A rota da consulta cívica, com o motor simulado por `fetch`. Nenhum teste
  * aqui fala com a rede.
@@ -27,6 +29,17 @@ function pedido(body: unknown, headers: Record<string, string> = {}) {
   });
 }
 
+/** Os eventos do fluxo da NOSSA rota, já lidos até ao fim. */
+type Evento = { t: 'd'; v: string } | { t: 'fim'; resposta: any; vigencia: any; correlationId: string } | { t: 'erro'; status: number };
+async function eventos(res: Response): Promise<Evento[]> {
+  return (await res.text())
+    .split('\n')
+    .filter((l) => l.startsWith('data: '))
+    .map((l) => JSON.parse(l.slice(6)) as Evento);
+}
+const fim = (lista: Evento[]) => lista.find((e) => e.t === 'fim') as Extract<Evento, { t: 'fim' }> | undefined;
+
+/** O fluxo do MOTOR (formato do AI SDK), para o `fetch` simulado. */
 const fluxo = (texto: string) =>
   [{ type: 'text-start', id: 't1' }, { type: 'text-delta', id: 't1', delta: texto }, { type: 'text-end', id: 't1' }]
     .map((e) => `data: ${JSON.stringify(e)}\n\n`)
@@ -74,37 +87,80 @@ describe('POST /api/civico/consulta', () => {
     expect(linhas.join('\n')).toContain('config-invalida');
   });
 
-  it('uma pergunta válida devolve a resposta normalizada, sem cache', async () => {
+  it('uma pergunta válida devolve um fluxo: os pedaços e, no fim, a resposta normalizada', async () => {
     const f = motorResponde(fluxo(MARKDOWN));
     const POST = await carregarRota();
     const res = await POST(pedido({ pergunta: PERGUNTA }));
     expect(res.status).toBe(200);
-    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(res.headers.get('content-type')).toContain('text/event-stream');
+    expect(res.headers.get('cache-control')).toContain('no-store');
 
-    const corpo = await res.json();
-    expect(corpo.ok).toBe(true);
-    expect(corpo.resposta.blocos.map((b: { tipo: string }) => b.tipo)).toEqual(['titulo', 'paragrafo']);
-    expect(corpo.resposta.fontes).toHaveLength(1);
-    expect(corpo.resposta.fontes[0]).toMatchObject({ n: 1, dominio: 'mitess.gov.mz', estado: true });
-    // O Markdown do motor não sai: sai o nosso modelo.
-    expect(JSON.stringify(corpo)).not.toContain('## Aviso');
+    const lista = await eventos(res);
+    // Os pedaços, juntos, são o texto do motor; servem só para escrever enquanto chega.
+    expect(lista.filter((e) => e.t === 'd').map((e) => (e as { v: string }).v).join('')).toBe(MARKDOWN);
+    expect(lista.at(-1)!.t).toBe('fim');
+
+    const final = fim(lista)!;
+    expect(final.correlationId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(final.resposta.blocos.map((b: { tipo: string }) => b.tipo)).toEqual(['titulo', 'paragrafo']);
+    expect(final.resposta.fontes).toHaveLength(1);
+    expect(final.resposta.fontes[0]).toMatchObject({ n: 1, dominio: 'mitess.gov.mz', estado: true });
+    // O que fica é o nosso modelo, não o Markdown do motor.
+    expect(JSON.stringify(final)).not.toContain('## Aviso');
+    expect(final.vigencia).toMatchObject({ alertas: [], diplomas: [] });
 
     expect(f).toHaveBeenCalledTimes(1);
     expect(f.mock.calls[0]![0]).toBe(URL_MOTOR);
   });
 
-  it('o histórico segue para o motor como mensagens anteriores', async () => {
+  it('ao motor segue a nota de vigência, o histórico, a pergunta, e o tema em último', async () => {
     const f = motorResponde(fluxo(MARKDOWN));
     const POST = await carregarRota();
-    await POST(pedido({ pergunta: 'E se o contrato for a prazo?', historico: [{ pergunta: PERGUNTA, resposta: 'Depende.' }] }));
+    await (await POST(pedido({ pergunta: 'E se o contrato de trabalho for a prazo?', historico: [{ pergunta: PERGUNTA, resposta: 'Depende.' }] }))).text();
     const enviado = JSON.parse(f.mock.calls[0]![1]!.body as string);
-    expect(enviado.messages.map((m: { role: string }) => m.role)).toEqual(['user', 'assistant', 'user']);
+    expect(enviado.messages.map((m: { role: string }) => m.role)).toEqual(['user', 'user', 'assistant', 'user', 'user']);
+    expect(enviado.messages[0].parts[0].text).toMatch(/^Nota de vigência/);
+    expect(enviado.messages.at(-2).parts[0].text).toBe('E se o contrato de trabalho for a prazo?');
+    expect(enviado.messages.at(-1).parts[0].text).toMatch(/^Tema: Trabalho\./);
+  });
+
+  it('com CIVICO_PERGUNTA_NO_FIM=on a pergunta é a última mensagem', async () => {
+    const f = motorResponde(fluxo(MARKDOWN));
+    const POST = await carregarRota({ ...LIGADO, CIVICO_PERGUNTA_NO_FIM: 'on' });
+    await (await POST(pedido({ pergunta: PERGUNTA }))).text();
+    const enviado = JSON.parse(f.mock.calls[0]![1]!.body as string);
+    expect(enviado.messages.at(-1).parts[0].text).toBe(PERGUNTA);
+  });
+
+  it('os nomes de pessoas não chegam ao motor', async () => {
+    const f = motorResponde(fluxo(MARKDOWN));
+    const POST = await carregarRota();
+    await (await POST(pedido({ pergunta: 'O meu patrão Carlos Macamo despediu-me sem aviso, pode?' }))).text();
+    const corpo = f.mock.calls[0]![1]!.body as string;
+    expect(corpo).not.toContain('Carlos');
+    expect(corpo).not.toContain('Macamo');
+    expect(corpo).toContain('O meu patrão [nome] despediu-me sem aviso, pode?');
+    const linha = linhas.map((l) => JSON.parse(l)).find((l) => l.event === 'civico.respondida');
+    expect(linha).toMatchObject({ nomes: 1, tema: 'trabalho' });
+    expect(linhas.join('\n')).not.toContain('Macamo');
+  });
+
+  it('uma resposta que cita lei revogada chega com o alerta, e fica no log como aviso', async () => {
+    motorResponde(fluxo('Segundo a Lei n.º 23/2007, art. 130, o aviso prévio é de 30 dias.'));
+    const POST = await carregarRota();
+    const final = fim(await eventos(await POST(pedido({ pergunta: PERGUNTA }))))!;
+    expect(final.vigencia.alertas).toHaveLength(1);
+    expect(final.vigencia.alertas[0]).toMatchObject({ id: 'trabalho', tipo: 'revogado' });
+    expect(final.vigencia.alertas[0].substituto).toContain('13/2023');
+    expect(final.vigencia.diplomas).toEqual([{ nome: 'Lei n.º 23/2007', estado: 'revogado' }]);
+    const linha = linhas.map((l) => JSON.parse(l)).find((l) => l.event === 'civico.respondida');
+    expect(linha).toMatchObject({ level: 'warn', outcome: 'lei-revogada', revogados: 1 });
   });
 
   it('a pergunta e a resposta nunca vão para o log', async () => {
     motorResponde(fluxo(MARKDOWN));
     const POST = await carregarRota();
-    await POST(pedido({ pergunta: PERGUNTA }));
+    await (await POST(pedido({ pergunta: PERGUNTA }))).text();
     const log = linhas.join('\n');
     expect(log).toContain('civico.respondida');
     expect(log).not.toContain('aviso prévio');
@@ -148,8 +204,11 @@ describe('POST /api/civico/consulta', () => {
     motorResponde(fluxo(MARKDOWN));
     const POST = await carregarRota({ ...LIGADO, CIVICO_RATE_LIMIT_MAX: '2' });
     const mesmo = { 'x-forwarded-for': '203.0.113.9' };
-    expect((await POST(pedido({ pergunta: PERGUNTA }, mesmo))).status).toBe(200);
-    expect((await POST(pedido({ pergunta: PERGUNTA }, mesmo))).status).toBe(200);
+    for (let i = 0; i < 2; i += 1) {
+      const res = await POST(pedido({ pergunta: PERGUNTA }, mesmo));
+      expect(res.status).toBe(200);
+      await res.text();
+    }
     const terceiro = await POST(pedido({ pergunta: PERGUNTA }, mesmo));
     expect(terceiro.status).toBe(429);
     expect(Number(terceiro.headers.get('retry-after'))).toBeGreaterThan(0);
@@ -158,20 +217,35 @@ describe('POST /api/civico/consulta', () => {
   });
 
   it.each([
-    ['o motor bloqueia (403)', 'x', 403, 503],
-    ['o motor esgota a quota (429)', 'x', 429, 503],
-    ['o motor falha (500)', 'x', 500, 502],
-    ['o motor devolve uma página', '<html>manutenção</html>', 200, 502],
-    ['o fluxo traz um erro', `data: ${JSON.stringify({ type: 'error', errorText: 'segredo interno' })}\n\n`, 200, 502],
-  ])('quando %s, a rota responde com a mesma mensagem vaga', async (_nome, corpo, statusMotor, esperado) => {
-    motorResponde(corpo, statusMotor);
+    ['o motor bloqueia (403)', 403, 503],
+    ['o motor esgota a quota (429)', 429, 503],
+    ['o motor falha (500)', 500, 502],
+  ])('quando %s, a rota responde em JSON com o status certo, sem abrir fluxo', async (_nome, statusMotor, esperado) => {
+    motorResponde('segredo interno', statusMotor);
     const POST = await carregarRota();
     const res = await POST(pedido({ pergunta: PERGUNTA }));
     expect(res.status).toBe(esperado);
+    expect(res.headers.get('content-type')).toContain('application/json');
     const json = await res.json();
     expect(json.error).toBe('Não foi possível responder a esta pergunta.');
     expect(JSON.stringify(json)).not.toContain('segredo');
     expect(linhas.join('\n')).not.toContain('segredo');
+  });
+
+  it.each([
+    ['o motor devolve uma página', '<html>manutenção</html>'],
+    ['o fluxo traz um erro a meio', `${fluxo('Começo').replace('data: [DONE]\n\n', '')}data: ${JSON.stringify({ type: 'error', errorText: 'segredo interno' })}\n\n`],
+  ])('quando %s, o fluxo acaba com um evento de erro e sem resposta', async (_nome, corpo) => {
+    motorResponde(corpo);
+    const POST = await carregarRota();
+    const res = await POST(pedido({ pergunta: PERGUNTA }));
+    expect(res.status).toBe(200);
+    const lista = await eventos(res);
+    expect(lista.at(-1)).toEqual({ t: 'erro', status: 502 });
+    expect(fim(lista)).toBeUndefined();
+    expect(JSON.stringify(lista)).not.toContain('segredo');
+    expect(linhas.join('\n')).not.toContain('segredo');
+    expect(linhas.join('\n')).toContain('civico.falhou');
   });
 
   it('timeout do motor é 504', async () => {
@@ -190,7 +264,7 @@ describe('POST /api/civico/consulta', () => {
     const POST = await carregarRota();
     const res = await POST(pedido({ pergunta: PERGUNTA }));
     expect(res.status).toBe(200);
-    expect((await res.json()).resposta.fontes).toEqual([]);
+    expect(fim(await eventos(res))!.resposta.fontes).toEqual([]);
     const linha = linhas.map((l) => JSON.parse(l)).find((l) => l.event === 'civico.respondida');
     expect(linha).toMatchObject({ level: 'warn', outcome: 'sem-fonte', fontes: 0 });
   });
@@ -201,11 +275,11 @@ describe('POST /api/civico/consulta', () => {
 
     motorResponde(fluxo(MARKDOWN));
     let POST = await carregarRota();
-    await POST(pedido({ pergunta: PERGUNTA }));
+    await (await POST(pedido({ pergunta: PERGUNTA }))).text();
     expect(registar).toHaveBeenCalledTimes(1);
     const [nome, props, opcoes] = registar.mock.calls[0] as unknown as [string, Record<string, unknown>, { path: string }];
     expect(nome).toBe('civico_consulta');
-    expect(props).toMatchObject({ trocas: 0, fontes: 1, fontesEstado: 1 });
+    expect(props).toMatchObject({ tema: 'trabalho', trocas: 0, fontes: 1, fontesEstado: 1, revogados: 0 });
     expect(opcoes).toEqual({ path: '/civico' });
     expect(JSON.stringify(props)).not.toContain('empregador');
 

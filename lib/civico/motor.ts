@@ -1,31 +1,48 @@
-import { lerFluxo } from './fluxo';
+import { criarLeitorDeFluxo } from './fluxo';
 import type { Pedido } from './pedido';
 import { normalizar, type Resposta } from './resposta';
+import { mensagemDeTema, temaDaPergunta } from './tema';
+import { notaDeVigencia } from './vigencia';
 
 /**
  * Adaptador do motor cívico (o portal Lovable `fonte-clara-source-guide`).
  *
- * O contrato foi lido no bundle público do portal: o browser deles faz
- * `POST /api/consulta` com as mensagens no formato do AI SDK —
+ * O contrato foi lido no bundle público do portal e confirmado com consultas
+ * reais: o browser deles faz `POST /api/consulta` com as mensagens no formato
+ * do AI SDK —
  *
  *   { id, trigger: 'submit-message',
  *     messages: [{ id, role: 'user' | 'assistant', parts: [{ type: 'text', text }] }] }
  *
  * — e o cabeçalho `x-idioma`, e recebe um fluxo de eventos com o texto da
  * resposta em Markdown (ver `fluxo.ts`). Aqui fazemos a mesma chamada, mas do
- * servidor: com tempo máximo, tecto de tamanho, e a resposta lida inteira e
- * normalizada ANTES de sair. O browser de quem pergunta nunca vê o motor.
+ * servidor, com tempo máximo e tecto de tamanho. O browser de quem pergunta
+ * nunca vê o motor.
  *
- * Porque não se repassa o fluxo ao browser: uma resposta sobre a lei mostrada
- * a meio, antes de se saber se o motor a acaba ou a recusa, é pior do que
- * esperar uns segundos por ela inteira.
+ * ## O que segue, e por que ordem
  *
- * Trocar de motor é escrever outra função com esta assinatura.
+ * 1. **A nota de vigência** (`vigencia.ts`): que diplomas foram substituídos,
+ *    e o pedido de não inventar citações literais.
+ * 2. As trocas anteriores da conversa, se as houver.
+ * 3. **A pergunta**, já sem nomes (`anonimo.ts`).
+ * 4. **O tema**, como última mensagem (`tema.ts`).
+ *
+ * A ordem não é estética. Medido com o motor real a 2026-11-12: o portal
+ * regista a ÚLTIMA mensagem de cada consulta e mostra-a, palavra por palavra,
+ * na sua página pública de estado. Com o tema em último, o que lá aparece é
+ * «Tema: Trabalho.» — e o motor responde à pergunta na mesma, porque lê a
+ * conversa inteira. `perguntaNoFim` repõe a ordem simples, para o dia em que
+ * o portal deixar de publicar as perguntas e quiser procurar no corpus pela
+ * pergunta exacta.
+ *
+ * Trocar de motor é escrever outras funções com estas assinaturas.
  */
 
 export interface ConfigMotor {
   readonly url: string;
   readonly timeoutMs: number;
+  /** A pergunta como última mensagem (sem a linha de tema). Por omissão, não. */
+  readonly perguntaNoFim?: boolean;
 }
 
 /**
@@ -36,9 +53,9 @@ export interface ConfigMotor {
  */
 export type FalhaMotor = 'timeout' | 'rede' | 'http' | 'indisponivel' | 'grande' | 'motor' | 'vazio';
 
-export type ResultadoMotor =
-  | { readonly ok: true; readonly resposta: Resposta }
-  | { readonly ok: false; readonly motivo: FalhaMotor; readonly status?: number; readonly codigo?: string };
+export type Falha = { readonly ok: false; readonly motivo: FalhaMotor; readonly status?: number; readonly codigo?: string };
+export type ResultadoMotor = { readonly ok: true; readonly resposta: Resposta } | Falha;
+export type Abertura = { readonly ok: true; readonly res: Response } | Falha;
 
 /** O texto de uma resposta longa anda pelos 6–8 KB. Isto é folga, não alvo. */
 export const MAX_TEXTO = 24_000;
@@ -57,29 +74,43 @@ function codigoDe(e: unknown): string {
   return /^[A-Za-z_]{1,40}$/.test(codigo ?? '') ? codigo! : 'desconhecido';
 }
 
+const falhaDe = (erro: unknown): Falha =>
+  eTimeout(erro) ? { ok: false, motivo: 'timeout' } : { ok: false, motivo: 'rede', codigo: codigoDe(erro) };
+
 const mensagem = (role: 'user' | 'assistant', text: string) => ({
   id: crypto.randomUUID(),
   role,
   parts: [{ type: 'text', text }],
 });
 
-/** O corpo que o transporte de chat do portal envia, com as trocas anteriores à frente. */
-export function corpoDoPedido(pedido: Pedido) {
+/** O corpo que o transporte de chat do portal envia, pela ordem descrita no topo. */
+export function corpoDoPedido(pedido: Pedido, perguntaNoFim = false) {
   return {
     id: crypto.randomUUID(),
     trigger: 'submit-message',
     messages: [
+      mensagem('user', notaDeVigencia()),
       ...pedido.historico.flatMap((t) => [mensagem('user', t.pergunta), mensagem('assistant', t.resposta)]),
       mensagem('user', pedido.pergunta),
+      ...(perguntaNoFim ? [] : [mensagem('user', mensagemDeTema(temaDaPergunta(pedido.pergunta)))]),
     ],
   };
 }
 
-export async function consultarLovable(
+/**
+ * Faz o pedido e espera pelos cabeçalhos. Uma recusa do motor conhece-se
+ * aqui, antes de haver uma palavra de resposta — é o que deixa a rota
+ * responder com o status certo em vez de começar um fluxo para o cortar.
+ *
+ * `sinal` cancela o pedido quando quem perguntou se vai embora.
+ */
+export async function abrirConsulta(
   pedido: Pedido,
   cfg: ConfigMotor,
   fetchImpl: typeof fetch = fetch,
-): Promise<ResultadoMotor> {
+  sinal?: AbortSignal,
+): Promise<Abertura> {
+  const prazo = AbortSignal.timeout(cfg.timeoutMs);
   let res: Response;
   try {
     res = await fetchImpl(cfg.url, {
@@ -90,14 +121,15 @@ export async function consultarLovable(
         // O idioma da resposta. A página é portuguesa; o motor aceita outros.
         'x-idioma': 'pt',
       },
-      body: JSON.stringify(corpoDoPedido(pedido)),
-      signal: AbortSignal.timeout(cfg.timeoutMs),
+      body: JSON.stringify(corpoDoPedido(pedido, cfg.perguntaNoFim)),
+      // O prazo cobre também a leitura do fluxo até ao fim.
+      signal: sinal ? AbortSignal.any([prazo, sinal]) : prazo,
       cache: 'no-store',
       // O motor não redirecciona; se o fizer, a pergunta não segue para outro sítio.
       redirect: 'error',
     });
   } catch (erro) {
-    return eTimeout(erro) ? { ok: false, motivo: 'timeout' } : { ok: false, motivo: 'rede', codigo: codigoDe(erro) };
+    return falhaDe(erro);
   }
 
   if (!res.ok) {
@@ -107,19 +139,62 @@ export async function consultarLovable(
 
   const declarado = Number(res.headers?.get('content-length') ?? '0');
   if (Number.isFinite(declarado) && declarado > MAX_CORPO) return { ok: false, motivo: 'grande' };
+  return { ok: true, res };
+}
 
-  let corpo: string;
+/**
+ * Lê o fluxo até ao fim. `aoReceber` é chamado com cada pedaço de texto, à
+ * medida que chega — é o que deixa a página escrever a resposta enquanto o
+ * motor a escreve. O resultado final é sempre a resposta INTEIRA normalizada:
+ * é essa que fica, e é sobre essa que corre a verificação de vigência.
+ */
+export async function lerConsulta(res: Response, aoReceber?: (pedaco: string) => void): Promise<ResultadoMotor> {
+  const leitor = criarLeitorDeFluxo(MAX_TEXTO);
+  const entregar = (novos: readonly string[]) => {
+    if (aoReceber) for (const n of novos) aoReceber(n);
+  };
+
   try {
-    // O `AbortSignal.timeout` também cobre a leitura do fluxo até ao fim.
-    corpo = await res.text();
+    if (res.body) {
+      const corpo = res.body.getReader();
+      const descodificar = new TextDecoder();
+      let bytes = 0;
+      for (;;) {
+        const { done, value } = await corpo.read();
+        if (done) break;
+        bytes += value.byteLength;
+        if (bytes > MAX_CORPO) {
+          await corpo.cancel().catch(() => {});
+          return { ok: false, motivo: 'grande' };
+        }
+        // `stream: true`: um carácter acentuado partido entre dois pedaços não se estraga.
+        entregar(leitor.receber(descodificar.decode(value, { stream: true })));
+      }
+      entregar(leitor.receber(descodificar.decode()));
+    } else {
+      const texto = await res.text();
+      if (texto.length > MAX_CORPO) return { ok: false, motivo: 'grande' };
+      entregar(leitor.receber(texto));
+    }
   } catch (erro) {
-    return eTimeout(erro) ? { ok: false, motivo: 'timeout' } : { ok: false, motivo: 'rede', codigo: codigoDe(erro) };
+    return falhaDe(erro);
   }
-  if (corpo.length > MAX_CORPO) return { ok: false, motivo: 'grande' };
 
-  const fluxo = lerFluxo(corpo, MAX_TEXTO);
-  if (!fluxo.ok) return { ok: false, motivo: fluxo.motivo };
+  const { resultado, novos } = leitor.fechar();
+  entregar(novos);
+  if (!resultado.ok) return { ok: false, motivo: resultado.motivo };
 
-  const resposta = normalizar(fluxo.texto);
+  const resposta = normalizar(resultado.texto);
   return resposta ? { ok: true, resposta } : { ok: false, motivo: 'vazio' };
+}
+
+/** As duas metades de seguida, para quem não precisa do fluxo. */
+export async function consultarLovable(
+  pedido: Pedido,
+  cfg: ConfigMotor,
+  fetchImpl: typeof fetch = fetch,
+  aoReceber?: (pedaco: string) => void,
+): Promise<ResultadoMotor> {
+  const abertura = await abrirConsulta(pedido, cfg, fetchImpl);
+  return abertura.ok ? lerConsulta(abertura.res, aoReceber) : abertura;
 }

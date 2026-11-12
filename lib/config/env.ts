@@ -189,6 +189,14 @@ const serverSchema = z.object({
    * Cada consulta gasta modelos de IA na conta do portal. Tecto por origem:
    * uma pessoa faz uma pergunta e dois ou três seguimentos, não vinte.
    */
+  /**
+   * `off` (omissão) — a última mensagem enviada ao motor é o TEMA, não a
+   * pergunta: o portal publica a última mensagem de cada consulta na sua
+   * página de estado. `on` — a pergunta vai em último, como no cliente do
+   * portal. Só passar a `on` depois de o portal deixar de publicar as
+   * perguntas (ver docs/CIVICO.md).
+   */
+  CIVICO_PERGUNTA_NO_FIM: z.enum(['off', 'on']).default('off'),
   CIVICO_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
   CIVICO_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(600_000),
 
@@ -418,6 +426,7 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       NEWS_RATE_LIMIT_WINDOW_MS: process.env.NEWS_RATE_LIMIT_WINDOW_MS,
       CIVICO_ENGINE: process.env.CIVICO_ENGINE,
       LOVABLE_CIVICO_URL: process.env.LOVABLE_CIVICO_URL,
+      CIVICO_PERGUNTA_NO_FIM: process.env.CIVICO_PERGUNTA_NO_FIM,
       CIVICO_RATE_LIMIT_MAX: process.env.CIVICO_RATE_LIMIT_MAX,
       CIVICO_RATE_LIMIT_WINDOW_MS: process.env.CIVICO_RATE_LIMIT_WINDOW_MS,
       SCHEDULING: process.env.SCHEDULING,

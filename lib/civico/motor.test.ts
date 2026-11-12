@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MAX_TEXTO, consultarLovable, corpoDoPedido } from './motor';
+import { MAX_TEXTO, abrirConsulta, consultarLovable, corpoDoPedido, lerConsulta } from './motor';
+import { notaDeVigencia } from './vigencia';
 import { pedidoSchema } from './pedido';
 
 /**
@@ -85,20 +86,41 @@ describe('o formato real do motor', () => {
 });
 
 describe('corpoDoPedido', () => {
-  it('escreve as mensagens no formato do transporte de chat, com as trocas anteriores à frente', () => {
-    const pedido = pedidoSchema.parse({
-      pergunta: 'E se o contrato for a prazo?',
-      historico: [{ pergunta: 'Que aviso prévio tem de dar o empregador?', resposta: 'Depende da antiguidade.' }],
-    });
+  const pedido = pedidoSchema.parse({
+    pergunta: 'E se o contrato de trabalho for a prazo?',
+    historico: [{ pergunta: 'Que aviso prévio tem de dar o empregador?', resposta: 'Depende da antiguidade.' }],
+  });
+  const textos = (corpo: ReturnType<typeof corpoDoPedido>) => corpo.messages.map((m) => [m.role, m.parts[0]!.text]);
+
+  it('a nota de vigência à frente, as trocas, a pergunta, e o TEMA em último', () => {
     const corpo = corpoDoPedido(pedido);
     expect(corpo.trigger).toBe('submit-message');
     expect(corpo.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(corpo.messages.map((m) => [m.role, m.parts])).toEqual([
-      ['user', [{ type: 'text', text: 'Que aviso prévio tem de dar o empregador?' }]],
-      ['assistant', [{ type: 'text', text: 'Depende da antiguidade.' }]],
-      ['user', [{ type: 'text', text: 'E se o contrato for a prazo?' }]],
+    expect(textos(corpo)).toEqual([
+      ['user', notaDeVigencia()],
+      ['user', 'Que aviso prévio tem de dar o empregador?'],
+      ['assistant', 'Depende da antiguidade.'],
+      ['user', 'E se o contrato de trabalho for a prazo?'],
+      ['user', 'Tema: Trabalho. A pergunta está na mensagem anterior.'],
     ]);
-    expect(new Set(corpo.messages.map((m) => m.id)).size).toBe(3);
+    expect(new Set(corpo.messages.map((m) => m.id)).size).toBe(5);
+  });
+
+  /**
+   * O portal publica a ÚLTIMA mensagem de cada consulta na sua página de
+   * estado (medido a 2026-11-12). Este teste é o que impede a pergunta de
+   * alguém de voltar a ir parar lá por uma arrumação distraída das mensagens.
+   */
+  it('a última mensagem nunca leva uma palavra da pergunta', () => {
+    const ultima = corpoDoPedido(pedido).messages.at(-1)!.parts[0]!.text;
+    expect(ultima.startsWith('Tema: ')).toBe(true);
+    for (const palavra of ['contrato', 'prazo', 'aviso', 'empregador']) expect(ultima).not.toContain(palavra);
+  });
+
+  it('com perguntaNoFim, a pergunta volta a ser a última (para quando o portal deixar de a publicar)', () => {
+    const corpo = corpoDoPedido(pedido, true);
+    expect(textos(corpo).at(-1)).toEqual(['user', 'E se o contrato de trabalho for a prazo?']);
+    expect(textos(corpo)[0]).toEqual(['user', notaDeVigencia()]);
   });
 });
 
@@ -118,7 +140,7 @@ describe('consultarLovable', () => {
     expect(headers['content-type']).toBe('application/json');
     // O motor é público: nada de `authorization`, `cookie` ou IP de quem pergunta.
     expect(Object.keys(headers).map((h) => h.toLowerCase()).sort()).toEqual(['accept', 'content-type', 'x-idioma']);
-    expect(JSON.parse(init!.body as string).messages.at(-1).parts[0].text).toBe(PEDIDO.pergunta);
+    expect(JSON.parse(init!.body as string).messages.at(-2).parts[0].text).toBe(PEDIDO.pergunta);
   });
 
   it('devolve a resposta normalizada, com as fontes', async () => {
@@ -186,5 +208,54 @@ describe('consultarLovable', () => {
 
     const longa = motor(fluxo('palavra '.repeat(MAX_TEXTO / 8 + 100)));
     expect(await consultarLovable(PEDIDO, CFG, longa as unknown as typeof fetch)).toEqual({ ok: false, motivo: 'grande' });
+  });
+});
+
+describe('em fluxo', () => {
+  /** Um corpo que chega aos bocados, cortado em sítios arbitrários (incluindo a meio de um «ç»). */
+  function aosBocados(corpo: string, tamanho: number): Response {
+    const bytes = new TextEncoder().encode(corpo);
+    let i = 0;
+    return new Response(
+      new ReadableStream<Uint8Array>({
+        pull(c) {
+          if (i >= bytes.length) return c.close();
+          c.enqueue(bytes.slice(i, i + tamanho));
+          i += tamanho;
+        },
+      }),
+      { status: 200 },
+    );
+  }
+
+  it('entrega os pedaços à medida que chegam e, no fim, a resposta inteira', async () => {
+    const md = 'A **Lei n.º 13/2023** fixa a indemnização e as férias: ver [fonte](https://www.mitess.gov.mz/lei).';
+    for (const tamanho of [1, 5, 17, 4096]) {
+      const recebidos: string[] = [];
+      const r = await lerConsulta(aosBocados(fluxo(md), tamanho), (p) => recebidos.push(p));
+      expect(recebidos.join(''), `tamanho ${tamanho}`).toBe(md);
+      expect(r.ok && r.resposta.texto, `tamanho ${tamanho}`).toBe('A Lei n.º 13/2023 fixa a indemnização e as férias: ver fonte.');
+    }
+  });
+
+  it('abrirConsulta devolve a recusa do motor antes de haver fluxo', async () => {
+    const r = await abrirConsulta(PEDIDO, CFG, motor('bloqueado', { status: 403 }) as unknown as typeof fetch);
+    expect(r).toEqual({ ok: false, motivo: 'indisponivel', status: 403 });
+  });
+
+  it('um sinal já cancelado não chega a incomodar o motor com sucesso', async () => {
+    const desistir = new AbortController();
+    desistir.abort();
+    const f = vi.fn(async (_u: unknown, init?: RequestInit) => {
+      if (init?.signal?.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+      return new Response('x');
+    });
+    const r = await abrirConsulta(PEDIDO, CFG, f as unknown as typeof fetch, desistir.signal);
+    expect(r).toEqual({ ok: false, motivo: 'timeout' });
+  });
+
+  it('um erro a meio do fluxo não deixa passar o que veio antes como resposta', async () => {
+    const corpo = fluxo('Começo de resposta').replace('data: [DONE]', `data: ${JSON.stringify({ type: 'error', errorText: 'x' })}`);
+    expect(await lerConsulta(aosBocados(corpo, 9))).toEqual({ ok: false, motivo: 'motor' });
   });
 });

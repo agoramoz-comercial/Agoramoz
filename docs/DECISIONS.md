@@ -592,7 +592,10 @@ está em `docs/TERRABUILD.md`.
    - Cada ligação é numerada no texto e listada no fim com o domínio por extenso.
    - O selo `gov.mz` vem do endereço, não do que o motor afirma.
    - Uma resposta sem nenhuma ligação leva um aviso próprio, nunca escondido.
-5. **A resposta aparece inteira, não em fluxo.** Não se mostra a meio uma resposta sobre a lei que o motor ainda pode recusar ou cortar.
+5. **A resposta chega em fluxo, e a que fica é a final.**
+   - A primeira versão esperava pela resposta inteira; o fundador pediu uma experiência à altura («algo incrível de verdade») e 7 a 10 segundos de ecrã parado não o são.
+   - A rota repassa os pedaços e a página escreve com o mesmo normalizador do servidor — o texto a meio passa pelo mesmo modelo fechado, sem HTML.
+   - No fim chega a resposta normalizada no servidor, com as ligações e a verificação de vigência, e substitui o que estava a meio. Um fluxo sem `fim` é erro.
 6. **Nada é guardado.**
    - A pergunta nunca vai para o log nem para a base; os eventos levam só contagens.
    - No browser não há `localStorage` (ao contrário do News): a pergunta de alguém sobre um despedimento não fica num telemóvel partilhado.
@@ -603,12 +606,22 @@ está em `docs/TERRABUILD.md`.
    - Um teste falha se o texto de apresentação ganhar um algarismo.
 9. **Só em português**, e na barra do cabeçalho só a partir de 1536 px (medido: a 1280 px transbordava 52 px). Na gaveta e no rodapé, sempre.
 
+10. **Verificador de vigência** (`lib/civico/vigencia.ts`).
+    - O motor respondeu a uma pergunta real sobre heranças com artigos do Código Civil revogados em 2019.
+    - Antes: uma nota de vigência segue com cada pedido. Depois: a resposta é comparada com um registo de revogações, e um aviso aparece antes do texto.
+    - O registo guarda revogações lidas no Boletim da República, nunca a afirmação de que um diploma «está em vigor». Fora do registo, «por verificar».
+11. **A pergunta nunca é a última mensagem enviada ao motor.**
+    - O portal publica a última mensagem de cada consulta na sua página de estado. Medido.
+    - A última mensagem passa a ser o tema («Tema: Trabalho.»); a pergunta vai antes, sem nomes de pessoas.
+    - `CIVICO_PERGUNTA_NO_FIM=on` repõe a ordem simples, para depois de o portal ser corrigido.
+12. **Partilha onde as pessoas estão:** WhatsApp, impressão (uma folha limpa, com os avisos) e cópia.
+
 ### Limites
 - **Provado com o motor real em 2026-11-12**, com duas consultas: o contrato lido no bundle confirmou-se e a página respondeu de ponta a ponta (7,3 s). O resto da prova é contra um motor simulado que fala o mesmo protocolo, para não gastar o motor.
 - **O motor cita a lei pelo nome e quase nunca liga ao diploma** (a ligação é a raiz de um portal). A lista chama-se por isso «Ligações citadas», e o aviso de resposta sem ligação manda procurar o diploma no Boletim da República.
-- **Três coisas do lado do portal, antes de ligar** (`docs/CIVICO.md`):
-  - a página `/estado` do portal publica as perguntas dos utilizadores;
-  - o motor respondeu a uma pergunta sobre heranças com artigos do Código Civil revogados pela Lei n.º 23/2019 — o corpus não tem os diplomas em vigor;
-  - ligar o Turnstile no portal parte esta integração.
+- **Os dois problemas do portal estão contidos do nosso lado, não resolvidos na origem** (`docs/CIVICO.md` tem os pedidos prontos para o Lovable):
+  - o verificador confere que diploma é citado, não o conteúdo dos artigos;
+  - o motor recebe a pergunta (sem nomes) e pode guardá-la fora da página pública.
+- Ligar o Turnstile no portal parte esta integração.
 - Sem voz e sem «memória» com conta, que o portal tem.
 

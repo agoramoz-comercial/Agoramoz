@@ -702,6 +702,81 @@
   }
 }
 
+/* ===========================================================================
+   Impressão da resposta do Cívico («Imprimir ou guardar em PDF»).
+
+   O mesmo método do relatório do News, acima: só age quando há uma resposta
+   na página (`:has`), tira a casca do site com `display: none` e imprime em
+   papel branco e tinta preta. As outras secções de `/civico` levam
+   `print:hidden` no próprio componente.
+
+   Quem leva a resposta impressa a uma conservatória ou a um advogado leva a
+   pergunta, a resposta, os avisos de vigência e as ligações — e o aviso de
+   que foi gerada por inteligência artificial, que nunca sai da folha.
+   =========================================================================== */
+@media print {
+  body:has([data-civico-imprimir]) {
+    background: #fff !important;
+  }
+  body:has([data-civico-imprimir]) main ~ *,
+  body:has([data-civico-imprimir]) :has(~ main) {
+    display: none !important;
+  }
+  body:has([data-civico-imprimir]) .grain::after {
+    display: none;
+  }
+  body:has([data-civico-imprimir]) main [data-surface] {
+    padding-block: 0 !important;
+    --surface: #fff;
+    --surface-raised: #f1f1f1;
+    --on-surface: #000;
+    --muted: #333;
+    --border: #bbb;
+    --hairline: #ccc;
+    --accent: #000;
+    --signal: #b01e00;
+    color: #000;
+    background: #fff;
+  }
+  [data-civico-imprimir] {
+    border: 0 !important;
+  }
+  [data-civico-imprimir] li,
+  [data-civico-imprimir] blockquote,
+  [data-civico-imprimir] table {
+    break-inside: avoid;
+  }
+  /* No papel, a ligação tem de se ler: o endereço vai escrito a seguir. */
+  [data-civico-imprimir] ol a[href^='https']::after {
+    content: ' (' attr(href) ')';
+    font-weight: 400;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* O cursor de escrita da resposta do Cívico, enquanto o motor escreve. */
+@keyframes civico-cursor {
+  50% {
+    opacity: 0;
+  }
+}
+
+.civico-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 1.05em;
+  margin-left: 0.15em;
+  vertical-align: text-bottom;
+  background: var(--on-surface);
+  animation: civico-cursor 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .civico-cursor {
+    animation: none;
+  }
+}
+
 /* Carrossel do diagnóstico: o cartão novo entra do lado para onde se anda.
    Curto (220 ms) — o que conta é a pergunta seguinte, não a transição. Com
    movimento reduzido, troca sem animação. */

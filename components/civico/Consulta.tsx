@@ -14,7 +14,9 @@ import {
   limparPergunta,
   type DadoPessoal,
 } from '@/lib/civico/limites';
-import { validarResposta, type Resposta } from '@/lib/civico/resposta';
+import { normalizar, validarResposta, type Resposta } from '@/lib/civico/resposta';
+import { validarVigencia, type Vigencia } from '@/lib/civico/vigencia';
+import { SITE } from '@/content/site';
 import { cn } from '@/lib/utils/cn';
 import { RespostaVista } from './RespostaVista';
 
@@ -22,6 +24,10 @@ import { RespostaVista } from './RespostaVista';
  * A consulta cívica: o estado partilhado, o campo da pergunta e a conversa.
  *
  * Fala só com `/api/civico/consulta` — nunca com o motor.
+ *
+ * A resposta chega em fluxo: a página escreve enquanto o motor escreve, com o
+ * mesmo normalizador do servidor (`normalizar`), e troca o texto a meio pela
+ * resposta final — a que traz as fontes e a verificação de vigência.
  *
  * **Nada fica guardado no browser.** O News guarda o histórico no
  * `localStorage`; aqui não, de propósito: uma pergunta sobre um despedimento
@@ -38,11 +44,14 @@ interface Troca {
   readonly id: string;
   readonly pergunta: string;
   readonly resposta: Resposta;
+  /** A verificação de vigência feita no servidor sobre a resposta inteira. */
+  readonly vigencia: Vigencia | null;
 }
 
 type Estado =
   | { readonly tipo: 'parado' }
-  | { readonly tipo: 'a-perguntar'; readonly pergunta: string }
+  /** `parcial` é o que o motor já escreveu, enquanto escreve. */
+  | { readonly tipo: 'a-perguntar'; readonly pergunta: string; readonly parcial: Resposta | null }
   /** `repetir` é a pergunta que falhou, quando faz sentido tentar a mesma outra vez. */
   | { readonly tipo: 'erro'; readonly mensagem: string; readonly repetir: string | null };
 
@@ -94,6 +103,40 @@ function movimentoReduzido(): boolean {
   );
 }
 
+const abortado = (erro: unknown) => (erro as { name?: string }).name === 'AbortError';
+
+/** Um evento do fluxo da NOSSA rota (ver `app/api/civico/consulta/route.ts`). */
+type Evento =
+  | { readonly t: 'd'; readonly v: string }
+  | { readonly t: 'fim'; readonly resposta: unknown; readonly vigencia: unknown }
+  | { readonly t: 'erro'; readonly status: number };
+
+/** Lê o fluxo linha a linha e entrega cada evento. Uma linha partida é ignorada. */
+async function lerEventos(res: Response, aoEvento: (e: Evento) => void): Promise<void> {
+  if (!res.body) return;
+  const leitor = res.body.getReader();
+  const descodificar = new TextDecoder();
+  let pendente = '';
+  for (;;) {
+    const { done, value } = await leitor.read();
+    if (done) break;
+    pendente += descodificar.decode(value, { stream: true });
+    const linhas = pendente.split('\n');
+    pendente = linhas.pop() ?? '';
+    for (const linha of linhas) {
+      if (!linha.startsWith('data: ')) continue;
+      try {
+        aoEvento(JSON.parse(linha.slice(6)) as Evento);
+      } catch {
+        // Segue para a linha seguinte.
+      }
+    }
+  }
+}
+
+/** De quanto em quanto tempo a resposta parcial é redesenhada. Mais depressa não se lê melhor. */
+const RITMO_MS = 70;
+
 export function ConsultaProvider({ activo, children }: { activo: boolean; children: React.ReactNode }) {
   const [estado, setEstado] = useState<Estado>({ tipo: 'parado' });
   const [trocas, setTrocas] = useState<readonly Troca[]>([]);
@@ -101,6 +144,9 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
   const abortar = useRef<AbortController | null>(null);
   const regiaoRef = useRef<HTMLDivElement>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
+  // Só se desliza até à resposta quando a pessoa a escolhe na lista: no fim de
+  // um fluxo ela já está a lê-la, e puxá-la para o topo tirava-lhe o sítio.
+  const deslizar = useRef(false);
   // As trocas lidas dentro de `perguntar` sem o recriar a cada resposta.
   const trocasRef = useRef(trocas);
   useEffect(() => {
@@ -109,12 +155,14 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
 
   useEffect(() => () => abortar.current?.abort(), []);
 
-  // Uma resposta nova leva o foco ao seu título: quem usa leitor de ecrã ouve
-  // que chegou, e quem perguntou no hero não fica a olhar para o campo.
+  // Uma resposta pronta leva o foco ao seu título: quem usa leitor de ecrã ouve
+  // que chegou. O foco não desliza a página; só `abrir` o pede.
   useEffect(() => {
     if (!abertaId) return;
     const titulo = tituloRef.current;
     titulo?.focus({ preventScroll: true });
+    if (!deslizar.current) return;
+    deslizar.current = false;
     // O artigo inteiro, e não o título: o rótulo «Pergunta» fica por cima dele e
     // ficaria escondido atrás do cabeçalho fixo.
     (titulo?.closest('article') ?? titulo)?.scrollIntoView({
@@ -127,7 +175,7 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
     abortar.current?.abort();
     const controlador = new AbortController();
     abortar.current = controlador;
-    setEstado({ tipo: 'a-perguntar', pergunta });
+    setEstado({ tipo: 'a-perguntar', pergunta, parcial: null });
     // Quem perguntou lá em cima vê logo que a pergunta seguiu.
     requestAnimationFrame(() =>
       regiaoRef.current?.scrollIntoView({ behavior: movimentoReduzido() ? 'auto' : 'smooth', block: 'start' }),
@@ -147,31 +195,63 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
         signal: controlador.signal,
       });
     } catch (erro) {
-      if ((erro as { name?: string }).name === 'AbortError') return;
+      if (abortado(erro)) return;
       return setEstado({ tipo: 'erro', mensagem: CIVICO.erros.rede, repetir: pergunta });
     }
 
-    // Um corpo que não é JSON (uma página de proxy) é falha do serviço.
-    let corpo: { resposta?: unknown; dado?: unknown } = {};
-    try {
-      corpo = (await res.json()) as typeof corpo;
-    } catch (erro) {
-      if ((erro as { name?: string }).name === 'AbortError') return;
-    }
-
-    if (res.status === 422 && ehDado(corpo.dado)) {
-      return setEstado({ tipo: 'erro', mensagem: CIVICO.erroDado[corpo.dado], repetir: null });
-    }
+    // Tudo o que a rota sabe antes de o motor escrever vem em JSON, com o status.
     if (!res.ok) {
+      let corpo: { dado?: unknown } = {};
+      try {
+        corpo = (await res.json()) as typeof corpo;
+      } catch (erro) {
+        if (abortado(erro)) return;
+      }
+      if (res.status === 422 && ehDado(corpo.dado)) {
+        return setEstado({ tipo: 'erro', mensagem: CIVICO.erroDado[corpo.dado], repetir: null });
+      }
       // Um pedido recusado (4xx) falharia igual à segunda; uma falha do serviço pode passar.
-      const repetir = res.status >= 500 ? pergunta : null;
-      return setEstado({ tipo: 'erro', mensagem: mensagemDoStatus(res.status), repetir });
-    }
-    if (!validarResposta(corpo.resposta)) {
-      return setEstado({ tipo: 'erro', mensagem: CIVICO.erros[502], repetir: pergunta });
+      return setEstado({ tipo: 'erro', mensagem: mensagemDoStatus(res.status), repetir: res.status >= 500 ? pergunta : null });
     }
 
-    const troca: Troca = { id: novoId(), pergunta, resposta: corpo.resposta };
+    // A partir daqui é o fluxo: pedaços de texto, e no fim a resposta inteira.
+    let markdown = '';
+    let desenhado = 0;
+    let final: Troca | null = null;
+    let falha: number | null = null;
+    try {
+      await lerEventos(res, (e) => {
+        if (e.t === 'd' && typeof e.v === 'string') {
+          markdown += e.v;
+          const agora = performance.now();
+          if (agora - desenhado < RITMO_MS) return;
+          desenhado = agora;
+          // O mesmo normalizador do servidor: o texto a meio é desenhado pelo
+          // mesmo modelo fechado, sem HTML, que a resposta final.
+          setEstado({ tipo: 'a-perguntar', pergunta, parcial: normalizar(markdown) });
+        } else if (e.t === 'fim' && validarResposta(e.resposta)) {
+          final = {
+            id: novoId(),
+            pergunta,
+            resposta: e.resposta,
+            vigencia: validarVigencia(e.vigencia) ? e.vigencia : null,
+          };
+        } else if (e.t === 'erro') {
+          falha = typeof e.status === 'number' ? e.status : 502;
+        }
+      });
+    } catch (erro) {
+      if (abortado(erro)) return;
+      return setEstado({ tipo: 'erro', mensagem: CIVICO.erros.rede, repetir: pergunta });
+    }
+    if (controlador.signal.aborted) return;
+
+    // Um fluxo que acaba sem o `fim` (ligação cortada, proxy) é falha do
+    // serviço: o texto a meio não fica no ecrã a fazer de resposta.
+    const troca = final as Troca | null;
+    if (!troca) {
+      return setEstado({ tipo: 'erro', mensagem: mensagemDoStatus(falha ?? 502), repetir: pergunta });
+    }
     setTrocas((t) => [...t, troca]);
     setAbertaId(troca.id);
     setEstado({ tipo: 'parado' });
@@ -194,6 +274,7 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
   const abrir = useCallback((id: string) => {
     // Uma resposta em curso, ao chegar, taparia a que a pessoa escolheu abrir.
     abortar.current?.abort();
+    deslizar.current = true;
     setEstado({ tipo: 'parado' });
     setAbertaId(id);
   }, []);
@@ -229,6 +310,9 @@ export function ConsultaProvider({ activo, children }: { activo: boolean; childr
  * O campo da pergunta. Existe em dois sítios — no hero e por baixo de cada
  * resposta — com o texto próprio de cada um e o mesmo destino.
  */
+/** A primeira pergunta de cada tema. */
+const EXEMPLOS = CIVICO.temas.map((t) => t.perguntas[0]);
+
 export function Compositor({ variante = 'principal', className }: { variante?: 'principal' | 'seguimento'; className?: string }) {
   const { activo, estado, perguntar } = useConsulta();
   const [texto, setTexto] = useState('');
@@ -237,6 +321,15 @@ export function Compositor({ variante = 'principal', className }: { variante?: '
   const ocupado = estado.tipo === 'a-perguntar';
   const principal = variante === 'principal';
   const restam = PERGUNTA_MAX - texto.length;
+
+  // No campo principal, uma pergunta de exemplo que vai rodando. É exemplo,
+  // não rótulo (o rótulo é real, por cima). Com movimento reduzido, fica a primeira.
+  const [exemplo, setExemplo] = useState(0);
+  useEffect(() => {
+    if (!principal || !activo || movimentoReduzido()) return;
+    const t = setInterval(() => setExemplo((i) => (i + 1) % EXEMPLOS.length), 3800);
+    return () => clearInterval(t);
+  }, [principal, activo]);
 
   const submeter = () => {
     if (ocupado) return;
@@ -273,6 +366,7 @@ export function Compositor({ variante = 'principal', className }: { variante?: '
             id={id}
             rows={principal ? 3 : 2}
             maxLength={PERGUNTA_MAX}
+            placeholder={principal && activo ? CIVICO.exemplo.replace('{p}', EXEMPLOS[exemplo]!) : undefined}
             value={texto}
             disabled={!activo}
             onChange={(e) => {
@@ -374,33 +468,39 @@ function Temas() {
   );
 }
 
-/** O fio de espera: a altura é fixa, por isso não há salto de layout quando a resposta chega. */
-function AEspera({ pergunta }: { pergunta: string }) {
+/** O fio de espera: a altura é fixa, por isso não há salto de layout quando o texto começa. */
+function Fio() {
   return (
-    <div className="border border-[color:var(--border)] p-5 sm:p-8">
-      <p className="rule-label text-[color:var(--muted)]">{CIVICO.perguntaRotulo}</p>
-      <p className="mt-3 max-w-[40ch] text-[length:var(--text-h3)] font-bold tracking-[var(--tracking-heading)]">
-        {pergunta}
-      </p>
-      <div aria-hidden className="relative mt-8 h-0.5 overflow-hidden bg-[color:var(--hairline)]">
-        <div
-          className="chrome-wire absolute inset-y-0 left-0 w-1/3"
-          style={{ background: 'linear-gradient(90deg, transparent, var(--on-surface), transparent)' }}
-        />
-      </div>
-      <p className="mt-5 text-sm text-[color:var(--muted)]">{CIVICO.aPerguntarDetalhe}</p>
+    <div aria-hidden className="relative h-0.5 overflow-hidden bg-[color:var(--hairline)]">
+      <div
+        className="chrome-wire absolute inset-y-0 left-0 w-1/3"
+        style={{ background: 'linear-gradient(90deg, transparent, var(--on-surface), transparent)' }}
+      />
     </div>
   );
 }
 
 function textoParaCopiar(t: Troca): string {
   const fontes = t.resposta.fontes.map((f) => `[${f.n}] ${f.titulo} — ${f.href}`);
+  const alertas = (t.vigencia?.alertas ?? [])
+    .filter((a) => a.tipo === 'revogado')
+    .map((a) => `${CIVICO.vigenciaRevogadoTitulo}: ${a.revogado}. ${CIVICO.vigenciaSubstituto}: ${a.substituto}.`);
   return [
     `${CIVICO.perguntaRotulo}: ${t.pergunta}`,
+    ...alertas,
     t.resposta.texto,
     fontes.length ? `${CIVICO.fontesTitulo}:\n${fontes.join('\n')}` : CIVICO.semFonte,
     CIVICO.avisoResposta,
   ].join('\n\n');
+}
+
+/** O WhatsApp corta mensagens muito longas: vai o princípio da resposta e a ligação para a página. */
+const MAX_WHATSAPP = 1_200;
+
+function ligacaoWhatsApp(t: Troca): string {
+  const corpo = t.resposta.texto.length > MAX_WHATSAPP ? `${t.resposta.texto.slice(0, MAX_WHATSAPP).trimEnd()}…` : t.resposta.texto;
+  const texto = [`*${t.pergunta}*`, corpo, CIVICO.avisoResposta, `${SITE.url}/civico`].join('\n\n');
+  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
 }
 
 function Copiar({ troca }: { troca: Troca }) {
@@ -431,6 +531,81 @@ function Copiar({ troca }: { troca: Troca }) {
 }
 
 /**
+ * A resposta, a ser escrita ou já pronta. É o MESMO artigo nos dois momentos:
+ * o título e o corpo não mudam de sítio quando o fluxo acaba — só chegam, por
+ * baixo, as ligações, os diplomas e as acções.
+ */
+function Artigo({
+  pergunta,
+  resposta,
+  troca,
+  tituloRef,
+}: {
+  pergunta: string;
+  /** `null` enquanto o motor ainda não escreveu nada. */
+  resposta: Resposta | null;
+  /** Só na resposta pronta. */
+  troca: Troca | null;
+  tituloRef: React.RefObject<HTMLHeadingElement | null>;
+}) {
+  const aEscrever = !troca;
+  return (
+    <article
+      data-civico-imprimir={troca ? '' : undefined}
+      aria-labelledby="civico-resposta"
+      aria-busy={aEscrever}
+      className="scroll-mt-28 border border-[color:var(--border)]"
+    >
+      <header className="border-b border-[color:var(--border)] p-5 sm:p-8">
+        <p className="rule-label text-[color:var(--muted)]">{CIVICO.perguntaRotulo}</p>
+        <h2
+          id="civico-resposta"
+          ref={tituloRef}
+          tabIndex={-1}
+          className="mt-3 max-w-[40ch] text-[length:var(--text-h3)] tracking-[var(--tracking-heading)]"
+        >
+          {pergunta}
+        </h2>
+      </header>
+
+      <div className="p-5 sm:p-8">
+        <p className="rule-label mb-6 flex items-center gap-2.5 text-[color:var(--accent)]">
+          <DitherMark size="sm" />
+          {CIVICO.respostaEyebrow}
+        </p>
+        {aEscrever && (
+          <div className="mb-6">
+            <Fio />
+            <p className="mt-4 text-sm text-[color:var(--muted)]">
+              {resposta ? CIVICO.aEscrever : CIVICO.aPerguntarDetalhe}
+            </p>
+          </div>
+        )}
+        {resposta && <RespostaVista resposta={resposta} vigencia={troca?.vigencia} aEscrever={aEscrever} />}
+      </div>
+
+      {troca && (
+        <footer className="grid gap-5 border-t border-[color:var(--border)] bg-[color:var(--surface-raised)] p-5 sm:p-8">
+          <p className="max-w-[70ch] text-sm text-[color:var(--muted)]">{CIVICO.avisoResposta}</p>
+          <div className="flex flex-wrap gap-3 print:hidden">
+            <Button asChild variant="solid" size="sm">
+              <a href={ligacaoWhatsApp(troca)} target="_blank" rel="noopener noreferrer">
+                {CIVICO.whatsapp}
+                <span className="sr-only"> {CIVICO.abreNoutroSeparador}</span>
+              </a>
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => window.print()}>
+              {CIVICO.imprimir}
+            </Button>
+            <Copiar troca={troca} />
+          </div>
+        </footer>
+      )}
+    </article>
+  );
+}
+
+/**
  * A conversa: a resposta aberta, o seguimento, a lista do que já se perguntou
  * e os temas. Sem nenhuma pergunta feita, os temas são a página.
  */
@@ -441,17 +616,18 @@ export function Conversa() {
 
   return (
     <div ref={regiaoRef} className="grid scroll-mt-28 gap-20">
-      {/* Sempre montada: uma região viva que nasce já com texto não é anunciada. */}
+      {/* Sempre montada: uma região viva que nasce já com texto não é anunciada.
+          Diz os três momentos — nunca o texto a meio, que seria lido aos soluços. */}
       <div role="status" aria-live="polite" className="sr-only">
-        {aPerguntar && CIVICO.aPerguntarDetalhe}
+        {aPerguntar && (estado.parcial ? CIVICO.aEscrever : CIVICO.aPerguntarDetalhe)}
         {estado.tipo === 'parado' && aberta && CIVICO.pronta}
       </div>
 
       {emUso && (
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-16">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-16 print:block">
           <div className="min-w-0">
             {estado.tipo === 'erro' && (
-              <div role="alert" className="mb-8 flex flex-wrap items-center justify-between gap-4 border border-[color:var(--signal)] p-4">
+              <div role="alert" className="mb-8 flex flex-wrap items-center justify-between gap-4 border border-[color:var(--signal)] p-4 print:hidden">
                 <p className="text-sm font-medium text-[color:var(--signal)]">{estado.mensagem}</p>
                 {estado.repetir && (
                   <Button type="button" variant="outline" size="sm" onClick={() => perguntar(estado.repetir!)}>
@@ -462,49 +638,18 @@ export function Conversa() {
             )}
 
             {aPerguntar ? (
-              <AEspera pergunta={estado.pergunta} />
+              <Artigo pergunta={estado.pergunta} resposta={estado.parcial} troca={null} tituloRef={tituloRef} />
             ) : (
               aberta && (
                 // A chave por troca repõe o estado interno (o «Copiado») a cada resposta.
-                <article
-                  key={aberta.id}
-                  aria-labelledby="civico-resposta"
-                  className="scroll-mt-28 border border-[color:var(--border)]"
-                >
-                  <header className="border-b border-[color:var(--border)] p-5 sm:p-8">
-                    <p className="rule-label text-[color:var(--muted)]">{CIVICO.perguntaRotulo}</p>
-                    <h2
-                      id="civico-resposta"
-                      ref={tituloRef}
-                      tabIndex={-1}
-                      className="mt-3 max-w-[40ch] text-[length:var(--text-h3)] tracking-[var(--tracking-heading)]"
-                    >
-                      {aberta.pergunta}
-                    </h2>
-                  </header>
-
-                  <div className="p-5 sm:p-8">
-                    <p className="rule-label mb-6 flex items-center gap-2.5 text-[color:var(--accent)]">
-                      <DitherMark size="sm" />
-                      {CIVICO.respostaEyebrow}
-                    </p>
-                    <RespostaVista resposta={aberta.resposta} />
-                  </div>
-
-                  <footer className="grid gap-5 border-t border-[color:var(--border)] bg-[color:var(--surface-raised)] p-5 sm:p-8">
-                    <p className="max-w-[70ch] text-sm text-[color:var(--muted)]">{CIVICO.avisoResposta}</p>
-                    <div className="flex flex-wrap gap-3">
-                      <Copiar troca={aberta} />
-                    </div>
-                  </footer>
-                </article>
+                <Artigo key={aberta.id} pergunta={aberta.pergunta} resposta={aberta.resposta} troca={aberta} tituloRef={tituloRef} />
               )
             )}
 
-            {!aPerguntar && trocas.length > 0 && <Compositor variante="seguimento" className="mt-10" />}
+            {!aPerguntar && trocas.length > 0 && <Compositor variante="seguimento" className="mt-10 print:hidden" />}
           </div>
 
-          <aside aria-labelledby="civico-anteriores">
+          <aside aria-labelledby="civico-anteriores" className="print:hidden">
             <div className="flex items-baseline justify-between gap-4">
               <h2 id="civico-anteriores" className="rule-label text-[color:var(--muted)]">
                 {CIVICO.anterioresTitulo}
@@ -548,7 +693,9 @@ export function Conversa() {
         </div>
       )}
 
-      <Temas />
+      <div className="print:hidden">
+        <Temas />
+      </div>
     </div>
   );
 }

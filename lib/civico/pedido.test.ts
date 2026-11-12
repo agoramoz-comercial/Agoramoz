@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONTEXTO_MAX, PERGUNTA_MAX, TROCAS_MAX, dadoPessoalEm, limparPergunta } from './limites';
-import { dadoPessoalNoPedido, pedidoSchema } from './pedido';
+import { anonimizarPedido, dadoPessoalNoPedido, pedidoSchema } from './pedido';
 
 const PERGUNTA = 'Que aviso prévio tem de dar o empregador?';
 
@@ -92,5 +92,25 @@ describe('dadoPessoalNoPedido', () => {
       historico: [{ pergunta: 'Escrevam para ana@exemplo.mz por favor', resposta: 'Resposta.' }],
     });
     expect(dadoPessoalNoPedido(noHistorico)).toBe('email');
+  });
+});
+
+describe('anonimizarPedido', () => {
+  it('tira os nomes da pergunta e das perguntas anteriores, e conta-os', () => {
+    const p = pedidoSchema.parse({
+      pergunta: 'O meu patrão Carlos Macamo pode despedir-me assim?',
+      historico: [{ pergunta: 'Chamo-me Ana Machel, que aviso prévio me é devido?', resposta: 'A Dra. Luísa explica: 30 dias.' }],
+    });
+    const { pedido, nomes } = anonimizarPedido(p);
+    expect(nomes).toBe(2);
+    expect(pedido.pergunta).toBe('O meu patrão [nome] pode despedir-me assim?');
+    expect(pedido.historico[0]!.pergunta).toBe('Chamo-me [nome], que aviso prévio me é devido?');
+    // A resposta anterior é do motor: fica como veio.
+    expect(pedido.historico[0]!.resposta).toBe('A Dra. Luísa explica: 30 dias.');
+  });
+
+  it('sem nomes, devolve o mesmo pedido', () => {
+    const p = pedidoSchema.parse({ pergunta: PERGUNTA });
+    expect(anonimizarPedido(p)).toEqual({ pedido: p, nomes: 0 });
   });
 });

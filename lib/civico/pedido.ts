@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { anonimizar } from './anonimo';
 import { CONTEXTO_MAX, PERGUNTA_MAX, PERGUNTA_MIN, TROCAS_MAX, dadoPessoalEm, limparPergunta } from './limites';
 
 /**
@@ -32,6 +33,26 @@ export const pedidoSchema = z.strictObject({
 });
 
 export type Pedido = z.infer<typeof pedidoSchema>;
+
+/**
+ * O pedido tal como segue para o motor: as perguntas sem nomes de pessoas
+ * (`anonimo.ts`). As respostas anteriores ficam como estão — são do motor.
+ */
+export function anonimizarPedido(p: Pedido): { pedido: Pedido; nomes: number } {
+  let nomes = 0;
+  const limpar = (texto: string) => {
+    const r = anonimizar(texto);
+    nomes += r.retirados;
+    return r.texto;
+  };
+  return {
+    pedido: {
+      pergunta: limpar(p.pergunta),
+      historico: p.historico.map((t) => ({ pergunta: limpar(t.pergunta), resposta: t.resposta })),
+    },
+    nomes,
+  };
+}
 
 /**
  * O contacto ou o número de documento, se algum texto do pedido o trouxer.
