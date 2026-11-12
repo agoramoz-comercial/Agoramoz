@@ -42,7 +42,7 @@ describe('números no estilo editorial', () => {
   });
 
   it('o valor leva a moeda depois de um espaço que não parte', () => {
-    expect(valor(1_735_000, 'MZN')).toBe(`1${MILHAR}735${MILHAR}000 MZN`);
+    expect(valor(1_735_000, 'MZN')).toBe(`1${MILHAR}735${MILHAR}000\u00A0MZN`);
   });
 
   it('o compacto dos gráficos arredonda a milhares', () => {

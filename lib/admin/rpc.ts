@@ -1,6 +1,6 @@
 /**
  * O contrato com as migrações 0006 (acções do CRM), 0013 (inquéritos), 0015
- * (News) e 0017 (Espaço CEnO).
+ * (News), 0017 (Espaço CEnO) e 0020 (Propostas).
  *
  * Existe como dado, e não espalhado por chamadas, para que um teste o possa
  * comparar com a assinatura real lida do ficheiro SQL. Um parâmetro renomeado
@@ -15,6 +15,9 @@ export const RPC = {
   atribuir_oportunidade: ['p_deal_id', 'p_owner'],
   registar_actividade: ['p_deal_id', 'p_tipo', 'p_corpo'],
   registar_exportacao_crm: ['p_lista', 'p_linhas', 'p_filtros'],
+  // 0020 — Propostas.
+  guardar_proposta: ['p_id', 'p_revisao', 'p_deal_id', 'p_conteudo', 'p_texto_colado', 'p_nota'],
+  mudar_estado_proposta: ['p_id', 'p_revisao', 'p_estado'],
   // 0019 — CRM operacional.
   definir_proxima_accao: ['p_deal_id', 'p_revisao', 'p_accao', 'p_quando'],
   guardar_oportunidade_crm: ['p_deal_id', 'p_revisao', 'p_valor', 'p_moeda', 'p_data_prevista_fecho'],

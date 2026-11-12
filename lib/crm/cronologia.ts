@@ -52,6 +52,22 @@ export function descrever(a: ActividadeCrua, nomes: ReadonlyMap<string, string>)
         : '';
       return { titulo: 'Valor e fecho actualizados', detalhe: `${valor}${fecho}` };
     }
+    case 'proposta': {
+      // 0020: cada versão guardada e cada mudança de estado de uma proposta ligada.
+      const versao = Number.isInteger(m.versao) ? ` (versão ${String(m.versao)})` : '';
+      const estados: Record<string, string> = {
+        rascunho: 'voltou a rascunho',
+        enviada: 'enviada',
+        aceite: 'aceite',
+        recusada: 'recusada',
+        arquivada: 'arquivada',
+      };
+      if (typeof m.estado === 'string') return { titulo: `Proposta ${estados[m.estado] ?? m.estado}${versao}` };
+      return {
+        titulo: `Proposta guardada${versao}`,
+        detalhe: m.total === undefined ? undefined : formatarValor(Number(m.total), String(m.moeda ?? '')),
+      };
+    }
     default: {
       const titulo = TIPO_ACTIVIDADE[a.activity_type] ?? a.activity_type;
       if (a.activity_type.startsWith('reuniao_') && m.inicio) return { titulo, detalhe: formatarQuando(String(m.inicio)) };

@@ -137,7 +137,7 @@ export function lerProposta(x: unknown): Proposta | null {
 /* --------------------------------------------------------------- números */
 
 /** Espaço fino que não parte a linha: o separador de milhar do estilo editorial. */
-export const MILHAR = ' ';
+export const MILHAR = '\u202F';
 
 /** `1735000` → `1 735 000`. Até duas casas decimais, só quando as há. */
 export function agrupar(n: number): string {
@@ -151,7 +151,7 @@ export function agrupar(n: number): string {
 }
 
 export function valor(n: number, moeda: Moeda): string {
-  return `${agrupar(n)} ${moeda}`;
+  return `${agrupar(n)}\u00A0${moeda}`;
 }
 
 /** `1185000` → `1 185k`; abaixo de mil, o número inteiro. Para os gráficos. */

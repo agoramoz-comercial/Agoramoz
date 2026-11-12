@@ -23,6 +23,12 @@ describe('cronologia legível', () => {
     expect(descrever(a('fase', { de: 'novo', para: 'qualificacao', origem: 'diagnostico_aprovado' }), nomes).detalhe)
       .toBe('Pelo diagnóstico aprovado');
   });
+  it('propostas ligadas: versão guardada com o total, e mudanças de estado (0020)', () => {
+    const g = descrever(a('proposta', { versao: 2, total: 1735000, moeda: 'MZN' }), nomes);
+    expect(g.titulo).toBe('Proposta guardada (versão 2)');
+    expect(g.detalhe).toMatch(/MZN/);
+    expect(descrever(a('proposta', { versao: 2, estado: 'enviada' }), nomes).titulo).toBe('Proposta enviada (versão 2)');
+  });
   it('atribuição por nome, nunca UUID', () => {
     expect(descrever(a('atribuicao', { de: null, para: 'u1' }), nomes).titulo).toBe('Responsável: ninguém → Ana');
     expect(descrever(a('atribuicao', { de: 'u1', para: 'desconhecido' }), nomes).titulo).toBe('Responsável: Ana → (perfil removido)');

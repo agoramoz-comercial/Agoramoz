@@ -59,7 +59,7 @@ ok(!/margem projec|custo/i.test(texto), 'propostas: o custo e a margem não apar
 await pagina.waitForTimeout(400);
 const avisos = await pagina.locator('#proposta-verificacoes').locator('..').innerText();
 ok(/Tudo certo para sair/.test(avisos), `propostas: sem avisos nem transbordos com o exemplo`);
-ok(await pagina.getByRole('button', { name: /Imprimir/ }).isEnabled(), 'propostas: imprimir activo');
+ok(await pagina.getByRole('button', { name: /Descarregar PDF/ }).isEnabled(), 'propostas: descarregar PDF activo');
 const axe = await new AxeBuilder({ page: pagina }).analyze();
 ok(graves(axe).length === 0, `axe propostas ${graves(axe).map((v) => `${v.id}(${v.nodes.length})`).join(',')}`);
 if (SAIDA) await pagina.screenshot({ path: `${SAIDA}/propostas.png` });
@@ -67,7 +67,7 @@ if (SAIDA) await pagina.screenshot({ path: `${SAIDA}/propostas.png` });
 // Editar: o total muda, um campo vazio bloqueia a impressão
 const cliente = pagina.getByLabel('Preparada para (cliente)');
 await cliente.fill('');
-ok(await pagina.getByRole('button', { name: /Imprimir/ }).isDisabled(), 'propostas: sem cliente, não imprime');
+ok(await pagina.getByRole('button', { name: /Descarregar PDF/ }).isDisabled(), 'propostas: sem cliente, não descarrega');
 await cliente.fill('Cliente de exemplo');
 
 // Texto longo de mais transborda e é avisado
@@ -86,6 +86,62 @@ ok(/transborda/.test(await pagina.locator('#proposta-verificacoes').locator('..'
 await pagina.reload();
 await pagina.waitForSelector('[data-pagina]');
 ok((await pagina.locator('[data-pagina]').count()) >= 11, 'propostas: recarregar mantém o rascunho deste separador');
+
+// Colar o texto de uma proposta → desenho editorial (TUDO DE EXEMPLO).
+const COLADO = [
+  'Proposta comercial — Portal de pedidos',
+  '',
+  'Cliente: Cliente de Exemplo, Lda.',
+  'Data: 12 de Novembro de 2026',
+  'Validade: 45 dias',
+  '',
+  'Contexto',
+  '- Pedidos por telefone: hoje os revendedores fazem pedidos por telefone.',
+  '',
+  'Investimento',
+  'Fase\tDuração\tValor',
+  'Diagnóstico\t2–3 semanas\t285 000 MZN',
+  'Implementação\t6 semanas\t1 450 000 MZN',
+  'Total\t\t1 800 000 MZN',
+  '',
+  'Próximos passos',
+  '1. Aprovar a proposta.',
+  '',
+  'Anexo técnico',
+  'Requisitos de alojamento a confirmar.',
+].join('\n');
+await pagina.goto(`${BASE}/qa/propostas?vazia=1`);
+await pagina.evaluate(() => sessionStorage.clear());
+await pagina.goto(`${BASE}/qa/propostas?vazia=1`);
+await pagina.waitForSelector('[data-pagina]');
+await pagina.getByRole('textbox', { name: 'Texto da proposta' }).fill(COLADO);
+await pagina.getByRole('button', { name: 'Gerar o desenho editorial' }).click();
+await pagina.waitForTimeout(500);
+const folhasColadas = await pagina.locator('[data-proposta-folhas]').innerText();
+ok(folhasColadas.includes('Portal') && folhasColadas.includes('Cliente de Exemplo, Lda.'), 'colar: capa com título e cliente do texto');
+ok(folhasColadas.includes('1\u202F735\u202F000\u00A0MZN'), 'colar: total pela soma das fases (1 735 000 MZN)');
+ok(folhasColadas.includes('Pedidos por telefone'), 'colar: contexto nas folhas');
+const painel = await pagina.locator('section[aria-labelledby="proposta-colar"]').innerText();
+ok(/Reconhecido:/.test(painel) && /Fases e investimento: 2/.test(painel), 'colar: relatório do que foi reconhecido');
+ok(/soma das fases/.test(painel), 'colar: o total escrito que não bate é avisado');
+ok(/Anexo técnico/.test(painel), 'colar: o que não tem lugar fica listado');
+const axeColar = await new AxeBuilder({ page: pagina }).analyze();
+ok(graves(axeColar).length === 0, `axe colar ${graves(axeColar).map((v) => `${v.id}(${v.nodes.length})`).join(',')}`);
+if (SAIDA) await pagina.screenshot({ path: `${SAIDA}/colar.png` });
+
+// Lista das guardadas e painel «Guardar» (sem sessão: o erro de acesso aparece, não parte)
+await pagina.goto(`${BASE}/qa/propostas?vista=lista`);
+const lista = await pagina.locator('main').innerText();
+ok(/Propostas guardadas/.test(lista) && /Nova proposta/.test(lista) && /Enviada/.test(lista), 'lista: guardadas com estado e «Nova proposta»');
+const axeLista = await new AxeBuilder({ page: pagina }).analyze();
+ok(graves(axeLista).length === 0, `axe lista ${graves(axeLista).map((v) => v.id).join(',')}`);
+await pagina.goto(`${BASE}/qa/propostas?vista=guardar`);
+await pagina.waitForSelector('#proposta-guardar');
+ok((await pagina.getByRole('combobox', { name: 'Oportunidade no Pipeline' }).locator('option').count()) === 2, 'guardar: oportunidades para ligar');
+await pagina.getByRole('button', { name: 'Guardar proposta' }).click();
+await pagina.waitForFunction(() => /permissão|guardar agora|inválid/i.test(document.querySelector('#proposta-guardar')?.parentElement?.textContent ?? ''), null, { timeout: 15000 }).catch(() => {});
+ok(/permissão|guardar agora|inválid/i.test(await pagina.locator('#proposta-guardar').locator('..').innerText()), 'guardar: sem base, a falha aparece no painel e a proposta fica no editor');
+ok((await pagina.locator('[data-pagina]').count()) > 1, 'guardar: as folhas continuam lá depois da falha');
 
 // PDF: tamanho A4, uma folha por página
 await pagina.goto(`${BASE}/qa/propostas`);

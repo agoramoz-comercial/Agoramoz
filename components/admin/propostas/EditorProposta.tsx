@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Download, Plus, Printer, Trash2, Upload } from 'lucide-react';
+import { useEffect, useId, useRef, useState, useTransition, type CSSProperties, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { ClipboardPaste, Download, Plus, Printer, Save, Trash2, Upload } from 'lucide-react';
+import { guardarProposta } from '@/lib/admin/propostas-actions';
+import { lerTexto, MAX_TEXTO_COLADO, type Relatorio } from '@/lib/propostas/texto';
 import { inputClass } from '@/components/form/Field';
 import { cn } from '@/lib/utils/cn';
 import {
@@ -17,18 +20,20 @@ import {
   type Moeda,
   type Proposta,
 } from '@/lib/propostas/modelo';
+import type { OportunidadeOpcao } from '@/lib/propostas/leitura';
 import { PropostaA4 } from './PropostaA4';
 
 /**
  * O criador de propostas: o formulário à esquerda, as folhas A4 à direita,
- * actualizadas enquanto se escreve, e «Imprimir / guardar PDF» pelo browser.
+ * actualizadas enquanto se escreve, e «Descarregar PDF» pelo browser. O
+ * texto de uma proposta pode ser colado e lido para as folhas (`texto.ts`).
  *
- * **Nada vai para o servidor.** A proposta vive neste separador: um
- * rascunho no `sessionStorage` (apagado ao fechar o separador e ao terminar
- * a sessão, como os dos espaços privados) e, para a guardar de vez, um
- * ficheiro `.json` que se exporta e volta a importar. Guardar propostas na
- * base pediria uma migração que o fundador aplica à mão — fica como passo
- * seguinte, não como promessa.
+ * **Onde fica.** Com a 0020 aplicada (`base`), «Guardar» grava uma versão
+ * nova e imutável na base, ligada ou não a uma oportunidade do Pipeline. Sem
+ * ela, a proposta vive só neste separador e guarda-se exportando um `.json`.
+ * Em ambos os casos, o que se está a escrever fica num rascunho do
+ * `sessionStorage` (apagado ao fechar o separador e ao terminar a sessão),
+ * para um recarregar não deitar trabalho fora.
  *
  * O que o papel não pode levar fica fora dele: o custo e a margem de cada
  * fase (AEOS: «nenhuma proposta sem margem projetada») aparecem só nas
@@ -194,6 +199,191 @@ function Lista<T>({
   );
 }
 
+/* ------------------------------------------------------- colar e guardar */
+
+function PainelColar({
+  colado,
+  mudar,
+  gerar,
+  relatorio,
+}: {
+  colado: string;
+  mudar: (v: string) => void;
+  gerar: () => void;
+  relatorio: Relatorio | null;
+}) {
+  return (
+    <section aria-labelledby="proposta-colar" className={CAIXA}>
+      <div>
+        <h2 id="proposta-colar" className="text-base font-medium">
+          Colar o texto da proposta
+        </h2>
+        <p className={cn(AJUDA, 'mt-1')}>
+          Cole a proposta inteira (do Word, Google Docs ou e-mail). O leitor reconhece os títulos das secções — Contexto, Objectivos,
+          Solução, Cronograma, Investimento, Opções, Condições, Riscos, Próximos passos — e os dados da capa em linhas «Cliente:», «Data:»,
+          «Validade:». Não reescreve nada: só arruma o texto nas folhas e diz o que não soube onde pôr.
+        </p>
+      </div>
+      <label htmlFor="proposta-texto" className="sr-only">
+        Texto da proposta
+      </label>
+      <textarea
+        id="proposta-texto"
+        value={colado}
+        maxLength={MAX_TEXTO_COLADO}
+        rows={8}
+        onChange={(e) => mudar(e.target.value)}
+        placeholder={
+          'Proposta comercial — Nome do projecto\n\nCliente: …\nData: …\nValidade: 30 dias\n\nContexto\n- …\n\nInvestimento\nFase\tSemanas\tValor\n…'
+        }
+        className={cn(inputClass, 'min-h-0 font-mono text-sm')}
+      />
+      <button type="button" onClick={gerar} disabled={colado.trim().length < 20} className={cn(BOTAO, 'justify-self-start')}>
+        <ClipboardPaste aria-hidden className="size-4" />
+        Gerar o desenho editorial
+      </button>
+      {relatorio && (
+        <div className="grid gap-3 border-t border-[color:var(--border)] pt-3 text-sm" aria-live="polite">
+          <p>
+            <span className="font-medium">Reconhecido: </span>
+            {relatorio.reconhecidas.length ? relatorio.reconhecidas.join(' · ') : 'nenhuma secção.'}
+          </p>
+          {relatorio.avisos.length > 0 && (
+            <ul role="list" className="grid gap-1">
+              {relatorio.avisos.map((a) => (
+                <li key={a} className="flex gap-2">
+                  <span className="shrink-0 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
+                    Aviso
+                  </span>
+                  {a}
+                </li>
+              ))}
+            </ul>
+          )}
+          {relatorio.naoReconhecido.length > 0 && (
+            <div className="grid gap-2">
+              <p className="font-medium">
+                Sem lugar nas folhas ({relatorio.naoReconhecido.length}) — copie para o campo certo, se fizer falta:
+              </p>
+              {relatorio.naoReconhecido.map((x, i) => (
+                <details key={i} className="border border-[color:var(--border)] px-3 py-2">
+                  <summary className="cursor-pointer">{x.titulo || 'Sem título'}</summary>
+                  <p className="mt-2 whitespace-pre-wrap text-[color:var(--muted)]">{x.texto}</p>
+                </details>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PainelGuardar({
+  base,
+  p,
+  textoColado,
+  pode,
+  limparRascunho,
+}: {
+  base: GuardarNaBase;
+  p: Proposta;
+  textoColado: string | null;
+  pode: boolean;
+  limparRascunho: () => void;
+}) {
+  const router = useRouter();
+  const [dealId, setDealId] = useState(base.dealId ?? '');
+  const [nota, setNota] = useState('');
+  const [revisao, setRevisao] = useState(base.revisao);
+  const [resultado, setResultado] = useState<string | null>(null);
+  const [aGuardar, comecar] = useTransition();
+  const idOportunidade = useId();
+  const idNota = useId();
+
+  function guardar() {
+    comecar(async () => {
+      let r: Awaited<ReturnType<typeof guardarProposta>>;
+      try {
+        r = await guardarProposta({
+          id: base.id,
+          revisao: base.id ? revisao : null,
+          dealId: dealId || null,
+          conteudo: p,
+          textoColado: textoColado?.trim() ? textoColado : null,
+          nota: nota.trim() || null,
+        });
+      } catch {
+        setResultado('Não foi possível guardar agora. A proposta continua no editor: tente de novo ou exporte o rascunho.');
+        return;
+      }
+      if (!r.ok) {
+        setResultado(r.erro);
+        return;
+      }
+      limparRascunho();
+      setNota('');
+      setRevisao(r.revisao);
+      if (!base.id) {
+        router.replace(`/admin/propostas/${r.id}`);
+        return;
+      }
+      setResultado(r.nova ? `Versão ${r.versao} guardada.` : `Sem alterações desde a versão ${r.versao}.`);
+      router.replace(`/admin/propostas/${r.id}`);
+      router.refresh();
+    });
+  }
+
+  return (
+    <section aria-labelledby="proposta-guardar" className={CAIXA}>
+      <h2 id="proposta-guardar" className="text-base font-medium">
+        {base.id ? `Guardar como versão ${(base.versao ?? 0) + 1}` : 'Guardar na base'}
+      </h2>
+      {base.fechada ? (
+        <p className="text-sm">Esta proposta está fechada: pode lê-la e descarregá-la. Para a mudar, volte a pô-la em rascunho.</p>
+      ) : (
+        <>
+          <div className="grid gap-1.5">
+            <label htmlFor={idOportunidade} className={ROTULO}>
+              Oportunidade no Pipeline
+            </label>
+            <select id={idOportunidade} value={dealId} onChange={(e) => setDealId(e.target.value)} className={inputClass}>
+              <option value="">Sem oportunidade</option>
+              {base.oportunidades.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.rotulo}
+                </option>
+              ))}
+            </select>
+            <p className={AJUDA}>Ligada, cada versão e cada mudança de estado aparecem na cronologia da oportunidade.</p>
+          </div>
+          <div className="grid gap-1.5">
+            <label htmlFor={idNota} className={ROTULO}>
+              Nota desta versão (opcional)
+            </label>
+            <input
+              id={idNota}
+              value={nota}
+              maxLength={300}
+              onChange={(e) => setNota(e.target.value)}
+              className={inputClass}
+              placeholder="Ex.: preço revisto depois da reunião"
+            />
+          </div>
+          <button type="button" onClick={guardar} disabled={!pode || aGuardar} className={cn(BOTAO, 'justify-self-start')}>
+            <Save aria-hidden className="size-4" />
+            {aGuardar ? 'A guardar…' : base.id ? 'Guardar nova versão' : 'Guardar proposta'}
+          </button>
+          {!pode && <p className={AJUDA}>Para guardar, resolva primeiro o que as verificações marcam como «Falta».</p>}
+        </>
+      )}
+      <p role="status" className={cn('text-sm', !resultado && 'sr-only')}>
+        {resultado ?? ''}
+      </p>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------- editor */
 
 /** As folhas cujo conteúdo passa da margem de baixo (acima do rodapé). */
@@ -216,12 +406,31 @@ function folhasQueTransbordam(raiz: HTMLElement): number[] {
   return res;
 }
 
-export function EditorProposta({ hoje, inicial }: { hoje: string; inicial?: Proposta }) {
+/** Guardar na base (0020). Sem isto, o editor trabalha só no separador. */
+export interface GuardarNaBase {
+  /** `null` numa proposta nova. */
+  readonly id: string | null;
+  readonly revisao: number | null;
+  readonly versao: number | null;
+  readonly dealId: string | null;
+  readonly oportunidades: readonly OportunidadeOpcao[];
+  readonly textoColado: string | null;
+  /** Aceite, recusada ou arquivada: lê-se e descarrega-se, não se grava. */
+  readonly fechada: boolean;
+}
+
+export function EditorProposta({ hoje, inicial, base }: { hoje: string; inicial?: Proposta; base?: GuardarNaBase }) {
+  const chaveRascunho = `${CHAVE_RASCUNHO}:${base?.id ?? 'nova'}:${base?.versao ?? 0}`;
   const [p, setP] = useState<Proposta>(() => inicial ?? propostaVazia(hoje));
-  const [carregado, setCarregado] = useState(Boolean(inicial));
+  // Uma proposta guardada abre como está na base; só a nova (ou uma versão
+  // com alterações por guardar neste separador) lê o rascunho.
+  const [carregado, setCarregado] = useState(false);
   const [escala, setEscala] = useState(0.62);
   const [transbordam, setTransbordam] = useState<number[]>([]);
   const [mensagem, setMensagem] = useState<string | null>(null);
+  const [colado, setColado] = useState(base?.textoColado ?? '');
+  const [usadoColado, setUsadoColado] = useState(Boolean(base?.textoColado));
+  const [relatorio, setRelatorio] = useState<Relatorio | null>(null);
   const folhas = useRef<HTMLDivElement>(null);
   const ficheiro = useRef<HTMLInputElement>(null);
 
@@ -229,24 +438,37 @@ export function EditorProposta({ hoje, inicial }: { hoje: string; inicial?: Prop
   useEffect(() => {
     if (carregado) return;
     try {
-      const guardado = sessionStorage.getItem(CHAVE_RASCUNHO);
+      const guardado = sessionStorage.getItem(chaveRascunho);
       const lido = guardado ? lerProposta(JSON.parse(guardado)) : null;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- leitura única de um armazenamento externo
-      if (lido) setP(lido);
+      if (lido && JSON.stringify(lido) !== JSON.stringify(inicial ?? propostaVazia(hoje))) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- leitura única de um armazenamento externo
+        setP(lido);
+        if (inicial) setMensagem('Recuperámos alterações por guardar deste separador.');
+      }
     } catch {
-      /* sem armazenamento ou rascunho estragado: começa vazio */
+      /* sem armazenamento ou rascunho estragado: começa como veio */
     }
     setCarregado(true);
-  }, [carregado]);
+  }, [carregado, chaveRascunho, inicial, hoje]);
 
   useEffect(() => {
     if (!carregado) return;
     try {
-      sessionStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(p));
+      sessionStorage.setItem(chaveRascunho, JSON.stringify(p));
     } catch {
       /* sem armazenamento: o rascunho fica só na memória */
     }
-  }, [p, carregado]);
+  }, [p, carregado, chaveRascunho]);
+
+  function gerar() {
+    const vazia = JSON.stringify(p) === JSON.stringify(propostaVazia(p.data));
+    if (!vazia && !window.confirm('Substituir a proposta que está no editor pelo texto colado?')) return;
+    const leitura = lerTexto(colado, hoje);
+    setP(leitura.proposta);
+    setRelatorio(leitura.relatorio);
+    setUsadoColado(true);
+    setMensagem('Desenho gerado a partir do texto colado. Reveja o relatório e as folhas.');
+  }
 
   // Medir depois de desenhar: uma folha que transborda fica marcada e listada.
   useEffect(() => {
@@ -313,31 +535,56 @@ export function EditorProposta({ hoje, inicial }: { hoje: string; inicial?: Prop
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(22rem,30rem)_1fr]">
       <div className="grid content-start gap-5 print:hidden">
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={imprimir} disabled={!pode} className={BOTAO_PRIMARIO}>
-            <Printer aria-hidden className="size-4" />
-            Imprimir / guardar PDF
-          </button>
-          <button type="button" onClick={exportar} className={BOTAO}>
-            <Download aria-hidden className="size-4" />
-            Exportar rascunho
-          </button>
-          <button type="button" onClick={() => ficheiro.current?.click()} className={BOTAO}>
-            <Upload aria-hidden className="size-4" />
-            Importar
-          </button>
-          <input
-            ref={ficheiro}
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            tabIndex={-1}
-            aria-label="Importar rascunho"
-            onChange={(e) => void importar(e.target.files?.[0])}
+        <PainelColar colado={colado} mudar={setColado} gerar={gerar} relatorio={relatorio} />
+
+        {base && (
+          <PainelGuardar
+            base={base}
+            p={p}
+            textoColado={usadoColado ? colado : null}
+            pode={pode}
+            limparRascunho={() => {
+              try {
+                sessionStorage.removeItem(chaveRascunho);
+              } catch {
+                /* sem armazenamento */
+              }
+            }}
           />
-          <button type="button" onClick={limpar} className={BOTAO}>
-            Nova
-          </button>
+        )}
+
+        <div className="grid gap-2">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={imprimir} disabled={!pode} className={BOTAO_PRIMARIO}>
+              <Printer aria-hidden className="size-4" />
+              Descarregar PDF
+            </button>
+            <button type="button" onClick={exportar} className={BOTAO}>
+              <Download aria-hidden className="size-4" />
+              Exportar rascunho
+            </button>
+            <button type="button" onClick={() => ficheiro.current?.click()} className={BOTAO}>
+              <Upload aria-hidden className="size-4" />
+              Importar
+            </button>
+            <input
+              ref={ficheiro}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              tabIndex={-1}
+              aria-label="Importar rascunho"
+              onChange={(e) => void importar(e.target.files?.[0])}
+            />
+            {!base && (
+              <button type="button" onClick={limpar} className={BOTAO}>
+                Nova
+              </button>
+            )}
+          </div>
+          <p className={AJUDA}>
+            «Descarregar PDF» abre o diálogo de impressão: em «Destino», escolha «Guardar como PDF». Fica em A4, uma folha por página.
+          </p>
         </div>
         <p role="status" className={cn('text-sm', !mensagem && 'sr-only')}>
           {mensagem ?? ''}
@@ -638,7 +885,11 @@ export function EditorProposta({ hoje, inicial }: { hoje: string; inicial?: Prop
             <span className="w-10 tabular-nums">{Math.round(escala * 100)}%</span>
           </label>
         </div>
-        <div ref={folhas} className="overflow-x-auto pb-4 print:overflow-visible print:pb-0" style={{ '--escala': escala } as CSSProperties}>
+        <div
+          ref={folhas}
+          className="overflow-x-auto pb-4 print:overflow-visible print:pb-0"
+          style={{ '--escala': escala } as CSSProperties}
+        >
           <PropostaA4 p={p} transbordam={transbordam} />
         </div>
       </section>

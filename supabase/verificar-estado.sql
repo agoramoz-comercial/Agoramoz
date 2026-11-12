@@ -12,7 +12,7 @@
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
 -- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News), a 29 para
 -- 0017 (Espaço CEnO), a 30 para 0018 (Gabinete do Fundador), a 31 para 0019
--- (CRM operacional).
+-- (CRM operacional), a 32 para 0020 (Propostas).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -358,5 +358,24 @@ select 31, 'crm', 'CRM operacional: próxima acção, valor, motivo de perda e p
                  or not coalesce((select 'security_invoker=true' = any(c.reloptions) from pg_class c
                                    where c.oid = to_regclass('public.crm_oportunidades')), false)
                  then 'ATENCAO - protecção incompleta; correr as três partes de aplicar-0019 de novo'
+            else 'ok' end
+-- 0020: Propostas guardadas, com versões, ligadas ao Pipeline.
+union all
+select 32, 'propostas', 'Propostas com versões, ligadas ao Pipeline (0020)',
+       case when to_regclass('public.propostas') is null
+                 or to_regclass('public.propostas_versoes') is null
+                 or to_regprocedure('public.guardar_proposta(uuid, integer, uuid, jsonb, text, text)') is null
+                 or to_regprocedure('public.mudar_estado_proposta(uuid, integer, text)') is null
+                 then 'EM FALTA - correr aplicar-0020.sql'
+            when not coalesce((select c.relrowsecurity from pg_class c where c.oid = to_regclass('public.propostas')), false)
+                 or not coalesce((select c.relrowsecurity from pg_class c where c.oid = to_regclass('public.propostas_versoes')), false)
+                 or has_table_privilege('anon', 'public.propostas', 'select')
+                 or has_table_privilege('anon', 'public.propostas_versoes', 'select')
+                 or has_table_privilege('authenticated', 'public.propostas', 'insert, update, delete')
+                 or has_table_privilege('authenticated', 'public.propostas_versoes', 'insert, update, delete')
+                 or has_function_privilege('anon', 'public.guardar_proposta(uuid, integer, uuid, jsonb, text, text)', 'execute')
+                 or has_function_privilege('anon', 'public.mudar_estado_proposta(uuid, integer, text)', 'execute')
+                 or has_function_privilege('authenticated', 'public.total_da_proposta(jsonb)', 'execute')
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0020.sql de novo'
             else 'ok' end
 order by ordem;

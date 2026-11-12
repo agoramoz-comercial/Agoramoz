@@ -652,3 +652,22 @@ está em `docs/TERRABUILD.md`.
 - As propostas não ficam ligadas a uma oportunidade do Pipeline nem têm histórico de versões (precisa da migração do ponto 4).
 - O PDF é o do browser (Chrome dá o melhor resultado). Os cinzentos das labels foram ligeiramente escurecidos face à referência (#7C7C7C → #666666) para chegarem aos 4,5:1.
 - QA: `.qa/propostas.mjs` contra `/qa/aeos` e `/qa/propostas` (`ADMIN_PREVIEW=on`), com axe e geração do PDF.
+
+## D-45 — Propostas na base (0020) e colar o texto para gerar o desenho
+
+**Pedido do fundador:** preparar a migração das propostas; um campo onde colar o texto de uma proposta, que gera o desenho editorial já escolhido, e poder descarregá-lo.
+
+### Decisões
+1. **Colar o texto, sem IA.** `lib/propostas/texto.ts` reconhece títulos de secção, dados da capa, listas e tabelas (Word, Excel, Markdown), semanas e valores, e arruma o texto nas secções do desenho. Não reescreve: um teste confirma que cada palavra das folhas veio do texto colado. O que não tem lugar, o que é cortado e o que é convertido (meses, dias) vai para um relatório à vista. Um total escrito que não bate com a soma das fases é dito; as folhas usam a soma.
+2. **0020: versões imutáveis.** Cada «Guardar» é uma versão nova em `propostas_versoes` (conteúdo, texto colado, nota); não há função que altere ou apague uma versão. Gravar sem mudanças não cria versão; repor uma antiga é guardá-la como nova.
+3. **O total é da base.** `guardar_proposta` soma as fases do conteúdo; a aplicação não envia total.
+4. **O mesmo padrão de 0006/0019.** Só leitura por RLS (`is_staff`), escrita só por funções `security definer` com `exigir_papel(admin, comercial)`, revisão contra gravações cruzadas, `lock_timeout`, auditoria sem o conteúdo.
+5. **Ligada ao Pipeline.** Cada versão e mudança de estado de uma proposta ligada entra na cronologia da oportunidade (`activities`, tipo `proposta`).
+6. **Estados**: rascunho → enviada → aceite/recusada; arquivada; «voltar a rascunho» reabre. Aceite só depois de enviada.
+7. **«Descarregar PDF»** é o diálogo de impressão do browser (Guardar como PDF), em A4. Não há geração de PDF no servidor: obrigava a um Chromium nas funções da Vercel.
+8. **Falhar ao guardar não perde trabalho.** Qualquer falha do servidor volta como mensagem no painel; o editor mantém a proposta e o rascunho do separador.
+
+### Limites
+- **A 0020 é aplicada pelo fundador** (`supabase/aplicar-0020.sql`, linha 32 do `verificar-estado`). Até lá, o editor funciona só no separador.
+- O leitor reconhece os títulos da tabela em `docs/PROPOSTAS.md`; um título com outro nome fica em «Sem lugar nas folhas», à vista.
+- Sem ligação de uma proposta a vários clientes nem modelos de proposta reutilizáveis.
