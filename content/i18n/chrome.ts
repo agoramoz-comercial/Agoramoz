@@ -75,7 +75,7 @@ export const CHROME = {
 
 /** As páginas institucionais, que por agora só existem em português. */
 export const NAV_TEXTO: Record<
-  '/como-trabalhamos' | '/projetos' | '/setores' | '/sobre' | '/contactos' | '/seguranca-qualidade' | '/faq',
+  '/como-trabalhamos' | '/projetos' | '/setores' | '/sobre' | '/contactos' | '/civico' | '/seguranca-qualidade' | '/faq',
   Texto
 > = {
   '/como-trabalhamos': { pt: 'Como trabalhamos', en: 'How we work' },
@@ -85,6 +85,8 @@ export const NAV_TEXTO: Record<
   '/faq': { pt: 'Perguntas frequentes', en: 'FAQ' },
   '/sobre': { pt: 'Sobre', en: 'About' },
   '/contactos': { pt: 'Contactos', en: 'Contact' },
+  // Uma marca, como «Moz News»: fica igual nos dois idiomas. A página é portuguesa.
+  '/civico': { pt: 'Cívico', en: 'Cívico' },
 };
 
 /** Nome dos três mercados de operação. O português continua a viver em `COUNTRIES`. */

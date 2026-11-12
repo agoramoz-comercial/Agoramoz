@@ -99,7 +99,9 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
               aria-current={pathname === item.href ? 'page' : undefined}
               className={cn(
                 'rule-label min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]',
-                'desde' in item && item.desde === 'xl' ? 'hidden xl:inline-flex' : 'inline-flex',
+                !('desde' in item) && 'inline-flex',
+                'desde' in item && item.desde === 'xl' && 'hidden xl:inline-flex',
+                'desde' in item && item.desde === '2xl' && 'hidden 2xl:inline-flex',
               )}
             >
               {item.label}

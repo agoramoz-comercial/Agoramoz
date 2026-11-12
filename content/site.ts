@@ -138,6 +138,13 @@ export const NAV = {
     { href: '/projetos', label: 'Projetos', selo: 'demo', desde: 'xl' },
     { href: '/sobre', label: 'Sobre' },
     { href: '/contactos', label: 'Contactos' },
+    /**
+     * AGORAMOZ Cívico (D-43). Na barra só a partir de `2xl` (1536 px). Medido: a
+     * 1280 px a barra transbordava 52 px, e só cabe com folga a partir de ~1430 px
+     * de largura útil — com a barra de deslocamento do Windows, isso é mais do que
+     * um ecrã de 1440. Abaixo disso fica na gaveta (telemóvel e tablet) e no rodapé.
+     */
+    { href: '/civico', label: 'Cívico', desde: '2xl' },
   ],
   /**
    * Só no rodapé: o cabeçalho já tem o mega-menu «Setores» (por país) e uma

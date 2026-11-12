@@ -60,6 +60,12 @@ const SAFE_FIELDS = [
   // Inquérito longo pedido em partes: quantas, e quantas caíram para o local.
   'partes',
   'partesLocal',
+  // Cívico: quantas trocas anteriores seguiram com a pergunta, quantas fontes
+  // a resposta citou e qual o padrão recusado (`email`/`numero`). Contagens e
+  // um rótulo — nunca a pergunta nem a resposta.
+  'trocas',
+  'fontes',
+  'dado',
   // Erro de servidor (instrumentation.ts): o digest que o ecrã mostra, a rota
   // como padrão (`/admin/inqueritos/[id]`), o tipo, o método, o nome e a
   // mensagem do erro (cortada) e o primeiro «ficheiro:linha» da stack.

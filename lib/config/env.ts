@@ -164,6 +164,34 @@ const serverSchema = z.object({
   NEWS_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
   NEWS_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(600_000),
 
+  // ── AGORAMOZ Cívico ─────────────────────────────────────────────────────
+  /**
+   * Motor da consulta cívica. `off` mantém a página `/civico` de apresentação,
+   * com o campo desligado, e faz a rota responder 503 — nada é simulado.
+   * `lovable` usa o `/api/consulta` do portal cívico, chamado só daqui.
+   */
+  CIVICO_ENGINE: z.enum(['off', 'lovable']).default('off'),
+  /** URL completo da consulta, p. ex. `https://<portal>.lovable.app/api/consulta`. */
+  LOVABLE_CIVICO_URL: z
+    .string()
+    .url('deve ser o URL completo da consulta do portal cívico')
+    // `http://` só em loopback: é o motor simulado de QA (`.qa/civico-motor-simulado.mjs`).
+    .refine(
+      (v) => v.startsWith('https://') || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(v),
+      'deve usar https',
+    )
+    .refine((v) => {
+      const u = new URL(v);
+      return !u.username && !u.password && !u.search && !u.hash;
+    }, 'não deve ter credenciais, parâmetros nem fragmento')
+    .optional(),
+  /**
+   * Cada consulta gasta modelos de IA na conta do portal. Tecto por origem:
+   * uma pessoa faz uma pergunta e dois ou três seguimentos, não vinte.
+   */
+  CIVICO_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
+  CIVICO_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(600_000),
+
   // ── Agendamento (Cal.com) ───────────────────────────────────────────────
   /**
    * `off` — o diagnóstico acaba como sempre, sem ligação de marcação, e o
@@ -270,6 +298,12 @@ const serverSchema = z.object({
       if (!env[nome]) {
         ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando NEWS_ENGINE=lovable' });
       }
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.CIVICO_ENGINE !== 'lovable') return;
+    if (!env.LOVABLE_CIVICO_URL) {
+      ctx.addIssue({ code: 'custom', path: ['LOVABLE_CIVICO_URL'], message: 'é obrigatória quando CIVICO_ENGINE=lovable' });
     }
   })
   .superRefine((env, ctx) => {
@@ -382,6 +416,10 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       LOVABLE_NEWS_API_KEY: process.env.LOVABLE_NEWS_API_KEY,
       NEWS_RATE_LIMIT_MAX: process.env.NEWS_RATE_LIMIT_MAX,
       NEWS_RATE_LIMIT_WINDOW_MS: process.env.NEWS_RATE_LIMIT_WINDOW_MS,
+      CIVICO_ENGINE: process.env.CIVICO_ENGINE,
+      LOVABLE_CIVICO_URL: process.env.LOVABLE_CIVICO_URL,
+      CIVICO_RATE_LIMIT_MAX: process.env.CIVICO_RATE_LIMIT_MAX,
+      CIVICO_RATE_LIMIT_WINDOW_MS: process.env.CIVICO_RATE_LIMIT_WINDOW_MS,
       SCHEDULING: process.env.SCHEDULING,
       CAL_ORIGIN: process.env.CAL_ORIGIN,
       CAL_LINK: process.env.CAL_LINK,

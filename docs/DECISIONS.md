@@ -573,3 +573,38 @@ está em `docs/TERRABUILD.md`.
 - O render leva cerca de 4 min em CPU. Fica fora do CI e corre-se com `RENDERS=1`.
 - Os sinais do dispositivo são aproximados. O Safari e o Firefox não dizem a memória e ficam em Normal, salvo telemóveis com ≤ 4 núcleos.
 
+## D-43 — AGORAMOZ Cívico: o portal cívico por trás, a página do AGORAMOZ à frente
+
+**Pedido do fundador:** uma página nova em agoramoz.com, «AGORAMOZ Cívico», que use o portal cívico do Lovable por trás para gerar a informação, com um desenho moderno e alinhado ao do site.
+
+### Decisões
+1. **O mesmo molde do News (D-35, lote N).**
+   - O browser fala só com `/api/civico/consulta`; o motor é chamado do servidor, com tempo máximo, tecto de tamanho e limite de taxa por origem.
+   - `CIVICO_ENGINE=off` por omissão: a página apresenta-se com o campo desligado e a rota responde 503. Nada é simulado.
+   - O contrato do motor foi lido no bundle público do portal (`POST /api/consulta`, mensagens no formato do AI SDK, resposta em fluxo de eventos).
+2. **O desenho é o do site, não o do portal.**
+   - Mesmas superfícies, tipografia, réguas e numerais; nenhuma cor nova. O âmbar, a serifa e a fotografia do portal não entram.
+   - A pergunta faz-se logo no hero; no portal estava atrás de um ecrã de boas-vindas em quatro passos.
+3. **O que sai do servidor é o nosso modelo, não o Markdown do motor.**
+   - Uma árvore fechada (parágrafo, título, lista, citação, tabela; negrito, ênfase, ligação), sem variante que transporte HTML.
+   - Sem biblioteca de Markdown no bundle de `/civico`.
+4. **As fontes ficam à vista.**
+   - Cada ligação é numerada no texto e listada no fim com o domínio por extenso.
+   - O selo `gov.mz` vem do endereço, não do que o motor afirma.
+   - Uma resposta sem nenhuma ligação leva um aviso próprio, nunca escondido.
+5. **A resposta aparece inteira, não em fluxo.** Não se mostra a meio uma resposta sobre a lei que o motor ainda pode recusar ou cortar.
+6. **Nada é guardado.**
+   - A pergunta nunca vai para o log nem para a base; os eventos levam só contagens.
+   - No browser não há `localStorage` (ao contrário do News): a pergunta de alguém sobre um despedimento não fica num telemóvel partilhado.
+7. **Contactos e números de documento são recusados** no browser e no servidor, porque o motor fica com o texto da pergunta.
+8. **Nenhuma promessa do portal que não se possa provar.**
+   - Saem «9.500+ documentos», «10 segundos», os valores «poupados» e o depoimento sem autor.
+   - Os temas trazem perguntas de exemplo, nunca respostas feitas: uma resposta escrita à mão fica errada no dia em que a lei muda.
+   - Um teste falha se o texto de apresentação ganhar um algarismo.
+9. **Só em português**, e na barra do cabeçalho só a partir de 1536 px (medido: a 1280 px transbordava 52 px). Na gaveta e no rodapé, sempre.
+
+### Limites
+- **Ainda não houve uma consulta real.** A rede onde isto foi escrito não chega a `lovable.app`; a prova é contra um motor simulado que fala o mesmo protocolo. A primeira consulta verdadeira faz-se numa pré-visualização (ver `docs/CIVICO.md`).
+- **Três coisas do lado do portal, antes de ligar** (`docs/CIVICO.md`): a página `/estado` do portal publica as perguntas dos utilizadores; o corpus é pequeno e cita leis revogadas; e ligar o Turnstile no portal parte esta integração.
+- Sem voz e sem «memória» com conta, que o portal tem.
+

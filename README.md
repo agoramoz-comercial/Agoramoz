@@ -78,6 +78,7 @@ app/                 rotas (App Router)
   [pais]/[setor]/    15 landings possíveis, dynamicParams = false
   solucoes/[solucao]/
   api/diagnostico/   stub: valida, pontua, regista — não persiste
+  civico/            AGORAMOZ Cívico (docs/CIVICO.md); api/civico/consulta chama o motor
 content/             a fonte de verdade (types, registry, países, setores, soluções)
 components/          ui/ layout/ home/ sections/ form/ motion/ seo/ brand/
 lib/                 motion/ forms/ analytics/ seo/ utils/

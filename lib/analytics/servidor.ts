@@ -17,6 +17,9 @@ export const EVENTOS_DE_ROTA = [
   'news_gosto',
   'news_partilha',
   'anuncio_clique',
+  // Cívico: quantas consultas se fazem e quantas falham. Nunca a pergunta.
+  'civico_consulta',
+  'civico_falhou',
 ] as const;
 export type EventoDeRota = (typeof EVENTOS_DE_ROTA)[number];
 

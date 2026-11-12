@@ -94,6 +94,8 @@ export const RESERVED_TOP_LEVEL_SLUGS = [
   'faq', 'seguranca-qualidade',
   // TerraBuild: projetos demonstrativos (D-41).
   'projetos',
+  // AGORAMOZ Cívico (D-43).
+  'civico',
 ] as const;
 
 /**

@@ -36,6 +36,7 @@ const REVISTO_EM = {
   '/privacidade': '2026-09-24',
   '/global': '2026-10-11',
   '/news': '2026-09-30',
+  '/civico': '2026-11-12',
 } as const;
 
 const em = (rota: keyof typeof REVISTO_EM) => new Date(REVISTO_EM[rota]);
@@ -55,6 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absolute('/faq'), lastModified: em('/faq'), priority: 0.5 },
     { url: absolute('/privacidade'), lastModified: em('/privacidade'), priority: 0.2 },
     { url: absolute('/news'), lastModified: em('/news'), priority: 0.6 },
+    { url: absolute('/civico'), lastModified: em('/civico'), priority: 0.7 },
   ];
 
   /**
