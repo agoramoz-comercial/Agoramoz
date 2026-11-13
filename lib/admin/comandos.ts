@@ -21,6 +21,7 @@ const VISTAS: readonly { base: string; texto: string; href: string }[] = [
   { base: '/admin/oportunidades', texto: 'Pipeline · Sem dono', href: '/admin/oportunidades?vista=sem-dono' },
   { base: '/admin/oportunidades', texto: 'Pipeline · Quadro por fase', href: '/admin/oportunidades?modo=quadro' },
   { base: '/admin/diagnosticos', texto: 'Diagnósticos por rever', href: '/admin/diagnosticos?estado=por-rever' },
+  { base: '/admin/propostas', texto: 'Propostas · Gerar sem guardar', href: '/admin/propostas/rapida' },
   { base: '/admin/painel', texto: 'Painel · últimos 7 dias', href: '/admin/painel?periodo=7' },
   { base: '/admin/painel', texto: 'Painel · últimos 90 dias', href: '/admin/painel?periodo=90' },
 ];

@@ -464,7 +464,8 @@ export interface GuardarNaBase {
 }
 
 export function EditorProposta({ hoje, inicial, base }: { hoje: string; inicial?: Proposta; base?: GuardarNaBase }) {
-  const chaveRascunho = `${CHAVE_RASCUNHO}:${base?.id ?? 'nova'}:${base?.versao ?? 0}`;
+  // Sem base (proposta rápida), o rascunho é outro: não se mistura com a «Nova proposta» que se vai guardar.
+  const chaveRascunho = `${CHAVE_RASCUNHO}:${base ? (base.id ?? 'nova') : 'local'}:${base?.versao ?? 0}`;
   const [p, setP] = useState<Proposta>(() => inicial ?? propostaVazia(hoje));
   // Uma proposta guardada abre como está na base; só a nova (ou uma versão
   // com alterações por guardar neste separador) lê o rascunho.

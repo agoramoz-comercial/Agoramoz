@@ -158,6 +158,7 @@ ok(/guarde como \.docx/.test(await pagina.locator('main').innerText()), 'doc ant
 await pagina.goto(`${BASE}/qa/propostas?vista=lista`);
 const lista = await pagina.locator('main').innerText();
 ok(/Propostas guardadas/.test(lista) && /Nova proposta/.test(lista) && /Enviada/.test(lista), 'lista: guardadas com estado e «Nova proposta»');
+ok((await pagina.getByRole('link', { name: 'Gerar sem guardar' }).getAttribute('href')) === '/admin/propostas/rapida', 'lista: «Gerar sem guardar» leva ao editor sem base');
 const axeLista = await new AxeBuilder({ page: pagina }).analyze();
 ok(graves(axeLista).length === 0, `axe lista ${graves(axeLista).map((v) => v.id).join(',')}`);
 await pagina.goto(`${BASE}/qa/propostas?vista=guardar`);

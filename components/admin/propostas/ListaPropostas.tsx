@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { FileDown, Plus } from 'lucide-react';
 import { DataHora, EmptyState } from '@/components/admin/primitives';
 import { valor, type Moeda } from '@/lib/propostas/modelo';
 import { ROTULO_ESTADO, type PropostaLinha } from '@/lib/propostas/leitura';
@@ -19,15 +19,25 @@ export function ListaPropostas({ itens, truncado, podeCriar }: { itens: readonly
         <h2 id="propostas-lista" className="text-[length:var(--text-h3)] tracking-[-0.02em]">
           Propostas guardadas
         </h2>
-        {podeCriar && (
+        <div className="flex flex-wrap gap-2">
+          {/* Carregar ou colar, ver o desenho e descarregar o PDF — sem gravar nada na base. */}
           <Link
-            href="/admin/propostas/nova"
-            className="inline-flex min-h-11 items-center gap-2 rounded-[--radius-xs] bg-[color:var(--color-signal-600)] px-4 text-sm font-medium text-white"
+            href="/admin/propostas/rapida"
+            className="inline-flex min-h-11 items-center gap-2 rounded-[--radius-xs] border border-[color:var(--border)] px-4 text-sm hover:bg-[color:var(--surface-raised)]"
           >
-            <Plus aria-hidden className="size-4" />
-            Nova proposta
+            <FileDown aria-hidden className="size-4" />
+            Gerar sem guardar
           </Link>
-        )}
+          {podeCriar && (
+            <Link
+              href="/admin/propostas/nova"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[--radius-xs] bg-[color:var(--color-signal-600)] px-4 text-sm font-medium text-white"
+            >
+              <Plus aria-hidden className="size-4" />
+              Nova proposta
+            </Link>
+          )}
+        </div>
       </div>
       {itens.length === 0 ? (
         <EmptyState

@@ -13,6 +13,10 @@ ou campo a campo, e descarrega-as em PDF. Decisões: D-44 e D-45.
 | Carregar o documento (.docx, .pdf, .txt, .md) → desenho editorial (`lib/propostas/ficheiro.ts`, `pdf.ts`) | Feito (D-46) |
 | Guardar na base, com versões, ligadas ao Pipeline (migração 0020) | **Por aplicar pelo fundador** — ver abaixo |
 
+**Gerar sem guardar** (`/admin/propostas/rapida`, também na lista e na paleta
+⌘K): carregar ou colar, ver as folhas e descarregar o PDF sem gravar nada na
+base. Funciona com ou sem a 0020, para toda a equipa.
+
 Até a 0020 ser aplicada, a página mostra o editor a funcionar só no separador
 (com «Exportar rascunho» em `.json`) e diz o passo que falta. Nada é simulado.
 
