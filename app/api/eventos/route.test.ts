@@ -198,3 +198,64 @@ describe('o que NÃO é aceite', () => {
     expect((await POST(pedido(VALIDO))).status).toBe(204);
   });
 });
+
+describe('vistas de página (D-47)', () => {
+  const NAVEGADOR = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36';
+  const vista = (ref: string | null = 'www.google.com') => ({
+    evento: { name: 'page_view', ref, ecra: 'telemovel' },
+    channel: 'organico',
+    campaign: null,
+    path: '/civico',
+  });
+  const cabecalhos = (ip = '203.0.113.7', ua = NAVEGADOR) => ({ 'user-agent': ua, 'x-forwarded-for': ip, 'x-vercel-ip-country': 'MZ' });
+  const gravado = () => insert.mock.calls.at(-1)?.[0] as { props: Record<string, unknown>; path: string };
+
+  it('grava a vista com a visita (resumo de 16 hex), o país e só o host do referenciador', async () => {
+    const POST = await carregarRota({ ANALYTICS_PERSISTENCE: 'on' });
+    await POST(pedido(vista(), { headers: cabecalhos() }));
+    const r = gravado();
+    expect(r.path).toBe('/civico');
+    expect(r.props.visita).toMatch(/^[0-9a-f]{16}$/);
+    expect(r.props).toMatchObject({ ref: 'www.google.com', pais: 'MZ', ecra: 'telemovel' });
+    // Nem o IP nem o navegador ficam guardados, em lado nenhum da linha.
+    expect(JSON.stringify(insert.mock.calls.at(-1))).not.toMatch(/203\.0\.113\.7|Android/);
+  });
+
+  it('a mesma origem e o mesmo navegador dão a mesma visita; outro IP dá outra', async () => {
+    const POST = await carregarRota({ ANALYTICS_PERSISTENCE: 'on' });
+    await POST(pedido(vista(), { headers: cabecalhos() }));
+    const a = gravado().props.visita;
+    await POST(pedido(vista(null), { headers: cabecalhos() }));
+    const b = gravado().props.visita;
+    await POST(pedido(vista(null), { headers: cabecalhos('203.0.113.8') }));
+    expect(b).toBe(a);
+    expect(gravado().props.visita).not.toBe(a);
+  });
+
+  it('robôs e ferramentas não contam', async () => {
+    const POST = await carregarRota({ ANALYTICS_PERSISTENCE: 'on' });
+    for (const ua of ['Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', 'curl/8.4.0', 'Mozilla/5.0 Chrome-Lighthouse']) {
+      await POST(pedido(vista(), { headers: cabecalhos('203.0.113.9', ua) }));
+    }
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it('o referenciador do próprio site não é referência; um referenciador estranho é recusado', async () => {
+    const POST = await carregarRota({ ANALYTICS_PERSISTENCE: 'on' });
+    await POST(pedido(vista('agoramoz.com'), { headers: cabecalhos() }));
+    expect(gravado().props.ref).toBeNull();
+    await POST(pedido({ ...vista(), evento: { name: 'page_view', ref: 'https://x.com/?q=nome', ecra: 'telemovel' } }, { headers: cabecalhos() }));
+    // Recusado pelo esquema (não é só um host): nada gravado de novo.
+    expect(insert).toHaveBeenCalledTimes(1);
+  });
+
+  it('o tempo de leitura e o scroll têm limites', async () => {
+    const POST = await carregarRota({ ANALYTICS_PERSISTENCE: 'on' });
+    const leitura = (ms: number, scroll: number) => ({ evento: { name: 'page_engagement', ms, scroll }, channel: 'directo', campaign: null, path: '/' });
+    await POST(pedido(leitura(42_000, 80), { headers: cabecalhos() }));
+    expect(gravado().props).toMatchObject({ ms: 42_000, scroll: 80 });
+    await POST(pedido(leitura(42_000, 101), { headers: cabecalhos() }));
+    await POST(pedido(leitura(3_600_000, 50), { headers: cabecalhos() }));
+    expect(insert).toHaveBeenCalledTimes(1);
+  });
+});

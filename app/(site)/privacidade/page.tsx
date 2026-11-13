@@ -30,7 +30,7 @@ const BLOCKS = [
   },
   {
     h: 'Cookies e medição',
-    p: 'Este website não utiliza cookies de publicidade nem de perfilagem de terceiros. A medição de utilização é agregada e não identifica visitantes individualmente.',
+    p: 'Este website não utiliza cookies, nem de publicidade nem de perfilagem, nem scripts de medição de terceiros. Medimos que páginas são vistas, de onde chegam as visitas (o site de origem, nunca o endereço completo), o país, o tipo de ecrã, o tempo em que a página esteve visível e até onde foi lida. Para juntar as páginas de uma mesma visita, o nosso servidor calcula um resumo criptográfico do endereço IP e do navegador com um segredo que muda todos os dias; o endereço IP e o navegador não são guardados, e o resumo não permite identificar quem visitou nem seguir a mesma pessoa de um dia para o outro. Nada fica guardado no seu dispositivo para este fim. Se o seu browser enviar o sinal Global Privacy Control, não medimos nada.',
   },
   {
     h: 'Gostos e publicidade no AGORAMOZ News',

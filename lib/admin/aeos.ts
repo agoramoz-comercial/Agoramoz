@@ -49,6 +49,7 @@ export interface Painel {
 const L = {
   hoje: { href: '/admin', texto: 'Hoje' },
   painel: { href: '/admin/painel', texto: 'Painel' },
+  trafego: { href: '/admin/trafego', texto: 'Tráfego' },
   aquisicao: { href: '/admin/aquisicao', texto: 'Aquisição' },
   pipeline: { href: '/admin/oportunidades', texto: 'Pipeline' },
   diagnosticos: { href: '/admin/diagnosticos', texto: 'Diagnósticos' },
@@ -129,7 +130,7 @@ export const BLOCOS: readonly Bloco[] = [
       'Revenue Operations',
       'Gestão de Propostas',
     ],
-    noAdmin: [L.aquisicao, L.pipeline, L.diagnosticos, L.propostas, L.contactos, L.organizacoes, L.inqueritos, L.news, L.ceno],
+    noAdmin: [L.trafego, L.aquisicao, L.pipeline, L.diagnosticos, L.propostas, L.contactos, L.organizacoes, L.inqueritos, L.news, L.ceno],
     porConstruir: ['Parcerias e Canais', 'Renovação e expansão no funil (depois da venda)'],
   },
   {
@@ -251,7 +252,7 @@ export const PAINEIS: readonly Painel[] = [
       'pipeline',
       'receita atribuída',
     ],
-    noAdmin: [L.painel, L.aquisicao, L.pipeline],
+    noAdmin: [L.painel, L.trafego, L.aquisicao, L.pipeline],
   },
   {
     n: 3,

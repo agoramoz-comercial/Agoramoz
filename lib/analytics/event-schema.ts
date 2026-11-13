@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DIAGNOSTIC_CODES } from '@/lib/diagnostic/mercado';
 import { CANAIS } from '@/lib/attribution/types';
-import { EVENTOS_DE_BROWSER, PROJECT_DEMO_ACTIONS, PROJECT_DEMO_IDS } from './events';
+import { ECRAS, EVENTOS_DE_BROWSER, PROJECT_DEMO_ACTIONS, PROJECT_DEMO_IDS } from './events';
 
 /**
  * O que a rota de eventos aceita do browser.
@@ -65,6 +65,18 @@ const corpo = z.discriminatedUnion('name', [
     name: z.literal('project_demo_interaction'),
     projectId: z.enum(PROJECT_DEMO_IDS),
     action: z.enum(PROJECT_DEMO_ACTIONS),
+  }),
+  // O referenciador é só o host (o servidor volta a saneá-lo); nada que identifique.
+  z.strictObject({
+    name: z.literal('page_view'),
+    ref: z.string().max(120).regex(/^[a-z0-9.-]+$/).nullable(),
+    ecra: z.enum(ECRAS),
+  }),
+  // Tempo com a página visível (até 30 min por envio) e o ponto mais fundo lido (0–100 %).
+  z.strictObject({
+    name: z.literal('page_engagement'),
+    ms: z.number().int().min(0).max(1_800_000),
+    scroll: z.number().int().min(0).max(100),
   }),
 ]);
 

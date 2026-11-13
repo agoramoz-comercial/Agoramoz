@@ -126,9 +126,18 @@ const serverSchema = z.object({
   /**
    * Um balde mais largo do que o do diagnóstico, e de propósito: uma visita
    * normal produz vários eventos (entrada, passos do formulário, cliques),
-   * enquanto um diagnóstico legítimo é submetido uma vez.
+   * enquanto um diagnóstico legítimo é submetido uma vez. Com as vistas de
+   * página (D-47) cada página são dois eventos (vista e leitura), e muita
+   * gente em Moçambique partilha o IP da operadora móvel (CGNAT): 240.
    */
-  ANALYTICS_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
+  ANALYTICS_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(240),
+
+  /**
+   * Segredo do resumo diário de visita (`lib/analytics/visita.ts`). Opcional:
+   * sem ele, usa-se a chave de serviço, com um rótulo próprio. Definir um
+   * segredo dedicado permite rodá-lo sem mexer na chave da base.
+   */
+  ANALYTICS_SALT: z.string().min(32).optional(),
 
   /** Slug do questionário usado pela rota pública. */
   DIAGNOSTIC_QUESTIONNAIRE_SLUG: z.string().min(1).default('diagnostico-estrategico'),
@@ -409,6 +418,7 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       VERCEL_ENV: process.env.VERCEL_ENV,
       ANALYTICS_PERSISTENCE: process.env.ANALYTICS_PERSISTENCE,
       ANALYTICS_RATE_LIMIT_MAX: process.env.ANALYTICS_RATE_LIMIT_MAX,
+      ANALYTICS_SALT: process.env.ANALYTICS_SALT,
       DIAGNOSTIC_RATE_LIMIT_MAX: process.env.DIAGNOSTIC_RATE_LIMIT_MAX,
       DIAGNOSTIC_RATE_LIMIT_WINDOW_MS: process.env.DIAGNOSTIC_RATE_LIMIT_WINDOW_MS,
       DIAGNOSTIC_MAX_BODY_BYTES: process.env.DIAGNOSTIC_MAX_BODY_BYTES,

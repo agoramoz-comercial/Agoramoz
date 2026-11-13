@@ -9,6 +9,7 @@ import { TopBar } from '@/components/layout/TopBar';
 import { MobileCtaBar } from '@/components/layout/MobileCtaBar';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { AttributionBoot } from '@/components/analytics/AttributionBoot';
+import { MedicaoPaginas } from '@/components/analytics/MedicaoPaginas';
 import { OutboundTracker } from '@/components/analytics/OutboundTracker';
 import { SiteJsonLd } from '@/components/seo/JsonLd';
 import type { Idioma } from '@/content/types';
@@ -44,6 +45,7 @@ export function SiteChrome({ children, idioma }: { children: React.ReactNode; id
       <SkipLink idioma={idioma} />
       <SiteJsonLd />
       <AttributionBoot />
+      <MedicaoPaginas />
       <OutboundTracker />
       <MotionProvider>
         <ScrollProgress />

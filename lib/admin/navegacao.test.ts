@@ -11,7 +11,7 @@ describe('navegação agrupada do admin', () => {
 
   it('os Inquéritos e o News continuam no admin, com o mesmo endereço e a mesma regra', () => {
     const marketing = gruposVisiveis(tudo).find((g) => g.titulo === 'Marketing')!;
-    expect(marketing.entradas.map((e) => e.href)).toEqual(['/admin/aquisicao', '/admin/inqueritos', '/admin/news']);
+    expect(marketing.entradas.map((e) => e.href)).toEqual(['/admin/trafego', '/admin/aquisicao', '/admin/inqueritos', '/admin/news']);
   });
 
   it('as Propostas ficam na Receita, entre os Diagnósticos e os Contactos', () => {

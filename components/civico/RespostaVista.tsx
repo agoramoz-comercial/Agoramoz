@@ -6,6 +6,13 @@ import type { AlertaVigencia, Vigencia } from '@/lib/civico/vigencia';
 import { cn } from '@/lib/utils/cn';
 
 /**
+ * O número do diploma → a sua página na secção «Leis» (D-47). Uma tabela pequena
+ * em vez de importar `lib/civico/lei.ts`, que traz o corpus inteiro (600 KB) e
+ * é só de servidor.
+ */
+const PAGINA_DA_LEI: Readonly<Record<string, string>> = { '13/2023': 'trabalho', '23/2019': 'sucessoes', '22/2019': 'familia' };
+
+/**
  * A resposta desenhada: os avisos de vigência, o corpo, as ligações numeradas
  * e os diplomas citados.
  *
@@ -18,8 +25,7 @@ import { cn } from '@/lib/utils/cn';
  * revogada — porque é um estado de erro, não um enfeite.
  */
 
-const LIGACAO =
-  'underline decoration-[color:var(--muted)] underline-offset-4 hover:decoration-[color:var(--on-surface)]';
+const LIGACAO = 'underline decoration-[color:var(--muted)] underline-offset-4 hover:decoration-[color:var(--on-surface)]';
 
 function Trechos({ trechos }: { trechos: readonly Trecho[] }) {
   return (
@@ -48,11 +54,7 @@ const CORPO = 'text-[1.0625rem] leading-[1.7] text-pretty';
 function BlocoVista({ bloco }: { bloco: Bloco }) {
   switch (bloco.tipo) {
     case 'titulo':
-      return (
-        <h3 className="mt-9 text-[length:var(--text-h3)] font-bold tracking-[var(--tracking-heading)] first:mt-0">
-          {bloco.texto}
-        </h3>
-      );
+      return <h3 className="mt-9 text-[length:var(--text-h3)] font-bold tracking-[var(--tracking-heading)] first:mt-0">{bloco.texto}</h3>;
     case 'paragrafo':
       return (
         <p className={`${CORPO} mt-4 first:mt-0`}>
@@ -177,9 +179,7 @@ function Alerta({ alerta }: { alerta: AlertaVigencia }) {
       </p>
       <dl className="mt-4 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-[10rem_minmax(0,1fr)]">
         <dt className="rule-label pt-0.5 text-[color:var(--muted)]">{CIVICO.vigenciaCitado}</dt>
-        <dd className={cn('font-medium', grave && 'line-through decoration-[color:var(--signal)] decoration-2')}>
-          {alerta.revogado}
-        </dd>
+        <dd className={cn('font-medium', grave && 'line-through decoration-[color:var(--signal)] decoration-2')}>{alerta.revogado}</dd>
         <dt className="rule-label pt-0.5 text-[color:var(--muted)]">{CIVICO.vigenciaSubstituto}</dt>
         <dd className="font-medium">
           {alerta.substituto}
@@ -248,9 +248,7 @@ export function OficialVista({ oficial }: { oficial: readonly ArtigoOficial[] })
       <h3 id="civico-oficial" className="rule-label text-[color:var(--on-surface)]">
         {CIVICO.oficialTitulo}
       </h3>
-      <p className="mt-2 max-w-[70ch] text-[length:var(--text-micro)] leading-relaxed text-[color:var(--muted)]">
-        {CIVICO.oficialNota}
-      </p>
+      <p className="mt-2 max-w-[70ch] text-[length:var(--text-micro)] leading-relaxed text-[color:var(--muted)]">{CIVICO.oficialNota}</p>
       <div className="mt-5 border-b border-[color:var(--hairline)]">
         {oficial.map((a, i) => (
           <details key={`${a.numero}-${a.n}`} open={i === 0} className="group border-t border-[color:var(--hairline)]">
@@ -271,6 +269,14 @@ export function OficialVista({ oficial }: { oficial: readonly ArtigoOficial[] })
               ))}
               <p className="mt-4 text-sm text-[color:var(--muted)]">
                 {a.cortado && <span>{CIVICO.oficialCortado} </span>}
+                {PAGINA_DA_LEI[a.numero] && (
+                  <>
+                    <a href={`/civico/lei/${PAGINA_DA_LEI[a.numero]}/artigo-${a.n}`} className={LIGACAO}>
+                      {CIVICO.oficialPagina}
+                    </a>
+                    {' · '}
+                  </>
+                )}
                 <a href={a.fonte.href} target="_blank" rel="noopener noreferrer" className={LIGACAO}>
                   {a.diploma} · {CIVICO.oficialVer}
                   <span aria-hidden> ↗</span>
@@ -352,9 +358,7 @@ export function RespostaVista({
           </section>
         ) : (
           // Nunca escondido nem atrasado: é uma obrigação de integridade, não decoração.
-          <p className="mt-10 border border-dashed border-[color:var(--on-surface)] p-4 text-sm font-medium">
-            {CIVICO.semFonte}
-          </p>
+          <p className="mt-10 border border-dashed border-[color:var(--on-surface)] p-4 text-sm font-medium">{CIVICO.semFonte}</p>
         ))}
 
       {!aEscrever && vigencia && <Diplomas vigencia={vigencia} />}

@@ -41,7 +41,7 @@ const DE_BROWSER = new Set<string>(EVENTOS_DE_BROWSER);
  * `response_attribution` e na `deals`. É menos granular — não se segue uma
  * pessoa — e é a única leitura que mantém verdadeira a frase já publicada.
  */
-export function track(event: AnalyticsEvent) {
+export function track(event: AnalyticsEvent, opcoes: { path?: string } = {}) {
   if (typeof window === 'undefined') return;
 
   const { name, ...params } = event;
@@ -65,7 +65,9 @@ export function track(event: AnalyticsEvent) {
       evento: event,
       channel: derivarCanal(atribuicao),
       campaign: atribuicao?.utm_campaign ?? null,
-      path: sanitizarCaminho(window.location.pathname),
+      // Um evento sobre a página anterior (a leitura, enviada ao mudar de
+      // página) leva o caminho dela: nessa altura o URL já é o da seguinte.
+      path: sanitizarCaminho(opcoes.path ?? window.location.pathname),
     });
 
     /**

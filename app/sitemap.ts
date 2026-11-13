@@ -1,18 +1,12 @@
 import type { MetadataRoute } from 'next';
-import {
-  COUNTRIES,
-  COUNTRY_CODES,
-  GLOBAL_CODES,
-  SECTOR_PAGES,
-  SOLUTIONS,
-  mercadosDoSector,
-} from '@/content/registry';
+import { COUNTRIES, COUNTRY_CODES, GLOBAL_CODES, SECTOR_PAGES, SOLUTIONS, mercadosDoSector } from '@/content/registry';
 import { PERFIL } from '@/content/landing/perfil';
 import { SOLUTIONS_EN } from '@/content/en/solutions';
 import { absolute, alternativasDeIdioma } from '@/lib/seo/site';
 import { caminhoNoIdioma } from '@/lib/i18n/texto';
 import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
 import { jornalLigado, listarPublicados } from '@/lib/news/jornal-servidor';
+import { caminhoArtigo, caminhoDiploma, diplomas, LEI_VERIFICADA_EM } from '@/lib/civico/lei';
 
 /**
  * A data da última alteração de CONTEÚDO de cada página sem data própria no
@@ -33,7 +27,7 @@ const REVISTO_EM = {
   '/setores': '2026-10-11',
   '/seguranca-qualidade': '2026-10-11',
   '/faq': '2026-10-11',
-  '/privacidade': '2026-09-24',
+  '/privacidade': '2026-11-13',
   '/global': '2026-10-11',
   '/news': '2026-09-30',
   '/civico': '2026-11-12',
@@ -116,8 +110,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    */
   const MERCADOS = { 'pt-MZ': '/mz', 'pt-PT': '/pt', 'pt-BR': '/br', 'x-default': '/' } as const;
   const comMercados = new Set(['/', ...COUNTRY_CODES.map((c) => `/${c}`)]);
-  const absolutos = (l: Record<string, string>) =>
-    Object.fromEntries(Object.entries(l).map(([k, v]) => [k, absolute(v)]));
+  const absolutos = (l: Record<string, string>) => Object.fromEntries(Object.entries(l).map(([k, v]) => [k, absolute(v)]));
   const bilingues = new Set(ROTAS_BILINGUES);
   const sectores = new Map(Object.values(SECTOR_PAGES).map((p) => [`/${p.country}/${p.sector}`, p.sector]));
 
@@ -137,9 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const jornal = (e: MetadataRoute.Sitemap[number]) => {
     const edicao = caminho(e.url) === '/news' ? '/news/' : caminho(e.url) === '/en/news' ? '/en/news/' : null;
     if (!edicao) return e;
-    const datas = artigos
-      .filter((a) => caminho(a.url).startsWith(edicao))
-      .map((a) => new Date(a.lastModified ?? 0).getTime());
+    const datas = artigos.filter((a) => caminho(a.url).startsWith(edicao)).map((a) => new Date(a.lastModified ?? 0).getTime());
     const base = new Date(e.lastModified ?? 0).getTime();
     return { ...e, lastModified: new Date(Math.max(base, ...datas)) };
   };
@@ -147,6 +138,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...portugues.map((e) => ({ ...jornal(e), ...hreflang(caminho(e.url), false) })),
     ...ingles.map((e, i) => ({ ...jornal(e), ...hreflang(ROTAS_BILINGUES[i]!, true) })),
     ...artigos,
+    ...paginasDaLei(),
   ];
 }
 
@@ -163,4 +155,20 @@ async function artigosDoJornal(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(a.actualizado_em),
     priority: 0.5,
   }));
+}
+
+/**
+ * As páginas da lei (D-47): o índice, as três leis e um artigo por página. O
+ * `lastmod` é a data em que o texto foi extraído do Boletim da República —
+ * verídico, como o resto deste ficheiro exige.
+ */
+function paginasDaLei(): MetadataRoute.Sitemap {
+  const data = new Date(LEI_VERIFICADA_EM);
+  return [
+    { url: absolute('/civico/lei'), lastModified: data, priority: 0.6 },
+    ...diplomas().flatMap((d) => [
+      { url: absolute(caminhoDiploma(d.slug)), lastModified: data, priority: 0.6 },
+      ...d.artigos.map((a) => ({ url: absolute(caminhoArtigo(d.slug, a.n)), lastModified: data, priority: 0.4 })),
+    ]),
+  ];
 }

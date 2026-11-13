@@ -37,6 +37,7 @@ const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[
   {
     titulo: 'Marketing',
     entradas: [
+      { href: '/admin/trafego', texto: 'Tráfego', icone: 'trafego' },
       { href: '/admin/aquisicao', texto: 'Aquisição', icone: 'aquisicao' },
       { href: '/admin/inqueritos', texto: 'Inquéritos', icone: 'inqueritos', so: 'inqueritos' },
       { href: '/admin/news', texto: 'News', icone: 'news', so: 'news' },

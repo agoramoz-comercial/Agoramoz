@@ -109,6 +109,7 @@ export const CIVICO = {
     'Copiado do Boletim da República, não escrito pelo assistente. A escolha dos artigos é automática: podem não ser todos os que se aplicam ao seu caso.',
   oficialArtigo: 'Artigo',
   oficialCortado: 'O artigo continua no diploma.',
+  oficialPagina: 'Abrir a página deste artigo',
   oficialVer: 'Ver o diploma completo',
   iaEyebrow: 'Explicação gerada por IA',
   /** `{partes}` é substituído pelo que saiu («2 citações e 1 número de artigo»). */
@@ -301,3 +302,36 @@ export const CIVICO = {
 } as const;
 
 export type TemaCivico = (typeof CIVICO.temas)[number];
+
+/**
+ * As páginas da lei (D-47): o texto oficial do corpus, artigo a artigo. Só o
+ * enquadramento é texto nosso; o texto de cada artigo é o do Boletim da
+ * República.
+ */
+export const LEI = {
+  trilho: 'Leis',
+  indiceTitulo: 'Leis de Moçambique, artigo a artigo',
+  indiceMetaTitulo: 'Leis de Moçambique: texto oficial artigo a artigo',
+  indiceMetaDescricao:
+    'Lei do Trabalho, Lei das Sucessões e Lei da Família de Moçambique, artigo a artigo, com o texto oficial do Boletim da República, para ler no telemóvel.',
+  indiceLead:
+    'O texto oficial do Boletim da República, um artigo por página, fácil de ler no telemóvel e de partilhar. Cada página liga ao PDF de onde o texto foi extraído.',
+  eyebrow: 'Texto oficial',
+  artigos: 'artigos',
+  verArtigos: 'Ver os artigos',
+  fonte: 'Fonte',
+  fonteNota: (data: string) =>
+    `Texto extraído automaticamente do PDF oficial a ${data}. Antes de agir com base nele, confirme no original do Boletim da República.`,
+  revogou: 'Esta lei revogou',
+  emFalta: (n: number, lista: string) =>
+    `${n === 1 ? 'Falta o artigo' : `Faltam ${n} artigos`} ${lista}: a extracção do PDF não os leu com segurança, e um texto duvidoso não se publica. Consulte-os no original.`,
+  anterior: 'Artigo anterior',
+  seguinte: 'Artigo seguinte',
+  relacionados: 'Artigos relacionados',
+  todos: 'Todos os artigos',
+  perguntaTitulo: 'Tem uma dúvida sobre este artigo?',
+  perguntaTexto:
+    'O AGORAMOZ Cívico responde a perguntas sobre a lei em linguagem simples, com o texto oficial ao lado. Gratuito, sem conta.',
+  perguntaCta: 'Perguntar ao AGORAMOZ Cívico',
+  naoParecer: 'Informação pública, não parecer jurídico. Para o seu caso concreto, consulte um advogado.',
+} as const;

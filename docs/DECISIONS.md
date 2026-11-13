@@ -687,3 +687,22 @@ está em `docs/TERRABUILD.md`.
 - PDF digitalizado (imagem) não tem texto: é recusado com a indicação de enviar o .docx. Sem OCR.
 - .doc (Word antigo), .odt, .pages e .rtf não são lidos: guardar como .docx.
 - Um PDF muito «desenhado» (colunas de revista, caixas) pode sair com a ordem trocada; o texto fica no campo para corrigir antes de gerar.
+
+## D-47 — Tráfego de todas as páginas (sem cookies) e SEO: as leis artigo a artigo
+
+**Pedido do fundador:** ver as vistas de todas as páginas, quem entra, por onde anda e onde pára; melhorar o SEO para trazer mais visitas «como se tivéssemos anúncios pagos»; tornar o site mais rentável.
+
+### Decisões
+1. **Vistas e leitura de todas as páginas, na nossa base.** `page_view` e `page_engagement` em `analytics_events` (já ligada): sem GA4, sem cookies, sem nada no dispositivo — a mesma linha de 0010. Sem migração.
+2. **A visita é um resumo diário calculado no servidor** (HMAC de dia + IP + navegador, 16 hex); o IP e o navegador não se guardam. É o que permite entradas, saídas, percursos e conversões por página de entrada sem identificar ninguém. `/privacidade` foi reescrita para dizer exactamente isto.
+3. **«Quem entra» é anónimo.** Não se identifica pessoas (nem se deve, sem consentimento); identifica-se a visita do dia, o canal, o site de origem, o país e o ecrã. Quem deixa contacto num formulário continua a ligar-se ao CRM pela atribuição que já existia.
+4. **Robôs, GPC, admin e QA não contam.**
+5. **Painel «Tráfego»** com todas as páginas do sitemap (mesmo a zero), «agora», onde param, percursos, fontes e conversões; definições escritas no painel.
+6. **SEO: 1 001 páginas da lei** (Trabalho, Sucessões, Família) com o texto oficial do corpus, estáticas, com títulos e descrições dentro das regras do repositório e JSON-LD. É conteúdo real e útil (o texto do BR é sobretudo PDF digitalizado), não páginas para enganar o motor. Os artigos não extraídos com segurança são listados.
+7. **IndexNow** com botão no painel; para o Google, os passos da Search Console ficam em `docs/TRAFEGO.md`.
+8. **Sem AdSense nem scripts de anúncios de terceiros**: abririam a CSP, trariam cookies e baixariam a confiança num site de serviços. A rentabilidade vem de converter visitas (diagnóstico, WhatsApp, reunião, Cívico) — agora medida por página de entrada — e dos anúncios próprios do News, que já existem.
+
+### Limites
+- Tráfego orgânico leva semanas a meses a crescer depois de indexado; nenhum trabalho de SEO dá, de um dia para o outro, o volume de anúncios pagos.
+- CGNAT: pessoas atrás do mesmo IP e navegador contam como uma visita; quem volta noutro dia conta como novo.
+- O painel lê até 60 000 eventos por período; acima disso, pede um período mais curto (e uma agregação na base passa a valer a pena).

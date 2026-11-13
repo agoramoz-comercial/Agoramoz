@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { eventoRecebido } from '@/lib/analytics/event-schema';
-import { sanitizarCaminho, sanitizarUtm } from '@/lib/attribution/sanitize';
+import { sanitizarCaminho, sanitizarReferenciador, sanitizarUtm } from '@/lib/attribution/sanitize';
+import { diaUtc, eRobo, paisDoPedido, resumoDaVisita } from '@/lib/analytics/visita';
 import { serverEnv } from '@/lib/config/env';
 import { dbAdmin } from '@/lib/db/client';
-import { clientKey, createMemoryRateLimiter, type RateLimiter } from '@/lib/http/rate-limit';
+import { clientKey, clientSource, createMemoryRateLimiter, type RateLimiter } from '@/lib/http/rate-limit';
 import { log } from '@/lib/log/logger';
 
 export const runtime = 'nodejs';
@@ -21,7 +22,8 @@ export const dynamic = 'force-dynamic';
  *
  * 2. **Não aceita identidade.** Não há `contact_id`, `deal_id`, `visitor_id`
  *    nem cookie. O browser não pode afirmar quem é. A ligação ao CRM faz-se
- *    por canal, do lado do servidor.
+ *    por canal, do lado do servidor. A visita (D-47) é um resumo diário que
+ *    só o servidor calcula, e que muda todos os dias (`visita.ts`).
  *
  * 3. **Não aceita eventos de servidor.** `deal_created`, `deal_won` e
  *    `document_confirmed_view` nascem em gatilhos da base; o schema não os
@@ -81,7 +83,20 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!cliente) return aceite();
 
   const { evento, channel, campaign, path } = validado.data;
-  const { name, ...props } = evento;
+  const { name, ...brutas } = evento;
+
+  // Vistas de robôs e de ferramentas não são visitas: não se gravam.
+  const navegador = request.headers.get('user-agent');
+  if ((name === 'page_view' || name === 'page_engagement') && eRobo(navegador)) return aceite();
+
+  // A visita: um resumo diário calculado aqui (ver `visita.ts`). O browser não envia identificador nenhum.
+  const segredo = env.ANALYTICS_SALT ?? env.SUPABASE_SERVICE_ROLE_KEY;
+  const visita = segredo ? await resumoDaVisita(clientSource(request), navegador ?? '', diaUtc(new Date()), segredo) : null;
+  const props: Record<string, unknown> = { ...brutas, ...(visita ? { visita } : {}) };
+  if (name === 'page_view') {
+    props.ref = 'ref' in brutas && brutas.ref ? sanitizarReferenciador(`https://${brutas.ref}`, new URL(request.url).host) : null;
+    props.pais = paisDoPedido(request.headers.get('x-vercel-ip-country'));
+  }
 
   try {
     const { error } = await cliente.from('analytics_events').insert({

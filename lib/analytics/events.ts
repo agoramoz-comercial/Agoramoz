@@ -2,6 +2,8 @@ import type { SectorSlug, SolutionSlug } from '@/content/types';
 import type { DiagnosticCode } from '@/lib/diagnostic/mercado';
 import type { Canal } from '@/lib/attribution/types';
 
+export type Ecra = 'telemovel' | 'tablet' | 'computador';
+
 /** Demonstração TerraBuild (D-41): só estes projetos e estas acções existem. */
 export const PROJECT_DEMO_IDS = ['fazenda-inteligente-001'] as const;
 export type ProjectDemoId = (typeof PROJECT_DEMO_IDS)[number];
@@ -79,6 +81,10 @@ export type AnalyticsEvent =
   | { name: 'survey_step_viewed'; surveyId: string; step: number }
   /** Demo TerraBuild (dados fictícios): o que a pessoa explora, nunca o que escreve. */
   | { name: 'project_demo_interaction'; projectId: ProjectDemoId; action: ProjectDemoAction }
+  // Vistas de página (D-47): cada página vista, e quanto tempo e até onde foi lida.
+  // Sem identificador vindo do browser: a visita é um resumo diário calculado no servidor.
+  | { name: 'page_view'; ref: string | null; ecra: Ecra }
+  | { name: 'page_engagement'; ms: number; scroll: number }
   /**
    * Do SERVIDOR, não do browser.
    *
@@ -111,7 +117,12 @@ export const EVENTOS_DE_BROWSER = [
   'survey_started',
   'survey_step_viewed',
   'project_demo_interaction',
+  'page_view',
+  'page_engagement',
 ] as const satisfies readonly AnalyticsEventName[];
+
+/** A largura do ecrã em três classes: chega para decidir desenho, não identifica ninguém. */
+export const ECRAS = ['telemovel', 'tablet', 'computador'] as const;
 
 export const EVENTOS_DE_SERVIDOR = [
   'deal_created',

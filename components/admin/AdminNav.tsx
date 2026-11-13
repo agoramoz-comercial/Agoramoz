@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  Activity,
   Briefcase,
   Building2,
   ChevronDown,
@@ -44,6 +45,7 @@ const ICONES = {
   oportunidades: Briefcase,
   contactos: Users,
   organizacoes: Building2,
+  trafego: Activity,
   aquisicao: Radar,
   inqueritos: ListChecks,
   news: Newspaper,

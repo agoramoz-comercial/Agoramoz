@@ -6,7 +6,7 @@ import { Accordion } from '@/components/ui/Accordion';
 import { Button } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { CIVICO, MARCA_CIVICO } from '@/content/civico';
+import { CIVICO, LEI, MARCA_CIVICO } from '@/content/civico';
 import { CHROME } from '@/content/i18n/chrome';
 
 /**
@@ -25,6 +25,14 @@ import { CHROME } from '@/content/i18n/chrome';
  *
  * O trilho vem da rota, como nas outras páginas.
  */
+
+/** As três leis com texto oficial na secção «Leis» (D-47). */
+const LEIS_NA_PAGINA = [
+  { titulo: 'Lei do Trabalho', href: '/civico/lei/trabalho' },
+  { titulo: 'Lei das Sucessões', href: '/civico/lei/sucessoes' },
+  { titulo: 'Lei da Família', href: '/civico/lei/familia' },
+] as const;
+
 export function Civico({ activo, trilho }: { activo: boolean; trilho: React.ReactNode }) {
   const faq = CIVICO.faq.map((f) => ({ q: f.q, a: f.a }));
 
@@ -53,9 +61,7 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
             >
               {CIVICO.titulo}
             </SplitHeading>
-            <p className="mt-8 max-w-[54ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">
-              {CIVICO.promessa}
-            </p>
+            <p className="mt-8 max-w-[54ch] text-[length:var(--text-lead)] text-[color:var(--muted)]">{CIVICO.promessa}</p>
           </div>
 
           {/* O campo é o objecto do hero. Sem `data-animate`: um controlo tem de estar disponível no primeiro frame. */}
@@ -86,9 +92,7 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
         <ol className="mt-12 grid gap-px bg-[color:var(--border)] md:grid-cols-3">
           {CIVICO.passos.map((p, i) => (
             <li key={p.titulo} className="bg-[color:var(--surface)] p-6 sm:p-8">
-              <span className="numeral chrome-text block text-[length:var(--text-numeral)]">
-                {String(i + 1).padStart(2, '0')}
-              </span>
+              <span className="numeral chrome-text block text-[length:var(--text-numeral)]">{String(i + 1).padStart(2, '0')}</span>
               <h3 className="mt-6 text-lg font-bold">{p.titulo}</h3>
               <p className="mt-3 text-sm text-[color:var(--muted)]">{p.corpo}</p>
             </li>
@@ -97,12 +101,7 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
       </Section>
 
       <Section surface="light" aria-labelledby="h-civico-limites" className="print:hidden">
-        <SectionHeading
-          id="h-civico-limites"
-          eyebrow={CIVICO.limitesEyebrow}
-          title={CIVICO.limitesTitulo}
-          max="wide"
-        />
+        <SectionHeading id="h-civico-limites" eyebrow={CIVICO.limitesEyebrow} title={CIVICO.limitesTitulo} max="wide" />
         <div className="mt-12 grid gap-x-16 gap-y-12 md:grid-cols-2">
           {[
             { titulo: CIVICO.eTitulo, itens: CIVICO.e, marca: '+' },
@@ -112,10 +111,7 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
               <h3 className="text-2xl font-bold tracking-[var(--tracking-heading)]">{coluna.titulo}</h3>
               <ul className="mt-5" role="list">
                 {coluna.itens.map((item) => (
-                  <li
-                    key={item}
-                    className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2 border-t border-[color:var(--hairline)] py-4"
-                  >
+                  <li key={item} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2 border-t border-[color:var(--hairline)] py-4">
                     <span aria-hidden className="font-techno text-[color:var(--muted)]">
                       {coluna.marca}
                     </span>
@@ -145,6 +141,23 @@ export function Civico({ activo, trilho }: { activo: boolean; trilho: React.Reac
             </Link>
           </p>
         </div>
+      </Section>
+
+      <Section surface="light" aria-labelledby="h-civico-leis" className="print:hidden">
+        <SectionHeading id="h-civico-leis" eyebrow={LEI.eyebrow} title={LEI.indiceTitulo} lead={LEI.indiceLead} max="wide" />
+        <ul role="list" className="mt-10 grid gap-4 md:grid-cols-3">
+          {LEIS_NA_PAGINA.map((l) => (
+            <li key={l.href}>
+              <Link
+                href={l.href}
+                className="flex min-h-11 items-center justify-between gap-3 border border-[color:var(--border)] px-5 py-4 hover:bg-[color:var(--surface-raised)]"
+              >
+                <span>{l.titulo}</span>
+                <span aria-hidden>→</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </Section>
 
       <Section surface="tint" aria-labelledby="h-civico-faq" className="print:hidden">
