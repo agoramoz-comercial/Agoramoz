@@ -15,6 +15,10 @@ export const RPC = {
   atribuir_oportunidade: ['p_deal_id', 'p_owner'],
   registar_actividade: ['p_deal_id', 'p_tipo', 'p_corpo'],
   registar_exportacao_crm: ['p_lista', 'p_linhas', 'p_filtros'],
+  // 0021 — Facturação interna.
+  marcar_facturada: ['p_deal_id', 'p_revisao', 'p_numero', 'p_data', 'p_valor', 'p_moeda', 'p_nota'],
+  anular_facturacao: ['p_deal_id', 'p_revisao', 'p_motivo'],
+  registar_exportacao_facturacao: ['p_linhas', 'p_filtros'],
   // 0020 — Propostas.
   guardar_proposta: ['p_id', 'p_revisao', 'p_deal_id', 'p_conteudo', 'p_texto_colado', 'p_nota'],
   mudar_estado_proposta: ['p_id', 'p_revisao', 'p_estado'],

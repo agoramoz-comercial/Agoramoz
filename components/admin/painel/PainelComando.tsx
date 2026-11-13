@@ -487,13 +487,16 @@ function Erp({ dados }: { dados: DadosPainel }) {
         )}
         <p>
           <span className="font-medium">
-            {configurado ? 'Configurado, sem adaptador.' : 'Por ligar.'}
+            {configurado ? 'Configurado, sem adaptador.' : 'Facturação interna.'}
           </span>{' '}
           <span className="text-[color:var(--muted)]">
             {configurado
               ? 'As variáveis estão definidas, mas falta o adaptador do sistema escolhido. Nada é enviado.'
-              : 'A porta está preparada; falta escolher o ERP. Ver docs/ERP.md.'}
-          </span>
+              : 'Sem ERP por agora: as oportunidades ganhas seguem para a fila «A facturar», onde se registam as facturas e se exporta para o contabilista.'}
+          </span>{' '}
+          <Link href="/admin/facturacao" className="underline underline-offset-4">
+            Abrir a facturação
+          </Link>
         </p>
       </div>
     </Bloco>

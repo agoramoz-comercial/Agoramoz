@@ -46,7 +46,8 @@ describe('o mapa AEOS', () => {
   it('um painel sem ecrã visível é «por construir»; nenhum é «completo»', () => {
     const { paineis } = aeosVisivel(nada);
     expect(paineis.find((p) => p.nome === 'Product Portfolio')!.estado).toBe('por-construir');
-    expect(paineis.find((p) => p.nome === 'Finance')!.estado).toBe('por-construir');
+    // A Facturação (D-48) é de toda a equipa: o painel Finance já tem um ecrã para todos.
+    expect(paineis.find((p) => p.nome === 'Finance')!.estado).toBe('parcial');
     expect(aeosVisivel(tudo).paineis.find((p) => p.nome === 'Finance')!.estado).toBe('parcial');
     expect(new Set(aeosVisivel(tudo).paineis.map((p) => p.estado))).not.toContain('completo');
   });

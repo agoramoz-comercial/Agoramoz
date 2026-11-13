@@ -54,6 +54,7 @@ const L = {
   pipeline: { href: '/admin/oportunidades', texto: 'Pipeline' },
   diagnosticos: { href: '/admin/diagnosticos', texto: 'Diagnósticos' },
   propostas: { href: '/admin/propostas', texto: 'Propostas' },
+  facturacao: { href: '/admin/facturacao', texto: 'Facturação' },
   contactos: { href: '/admin/contactos', texto: 'Contactos' },
   organizacoes: { href: '/admin/organizacoes', texto: 'Organizações' },
   inqueritos: {
@@ -164,8 +165,8 @@ export const BLOCOS: readonly Bloco[] = [
     nome: 'Finanças e Administração',
     missao: 'Orçamento, forecast, caixa, faturação, cobrança, margem por projeto e relatórios à direção.',
     areas: ['Planeamento e Análise Financeira', 'Contabilidade', 'Tesouraria', 'Contas a Receber', 'Contas a Pagar', 'Procurement'],
-    noAdmin: [L.tesouraria],
-    porConstruir: ['Orçamento e forecast', 'Faturação e cobrança', 'Margem por projeto e rentabilidade por cliente'],
+    noAdmin: [L.facturacao, L.tesouraria],
+    porConstruir: ['Orçamento e forecast', 'Cobrança (recebimentos e faturas vencidas)', 'Margem por projeto e rentabilidade por cliente'],
   },
   {
     n: 6,
@@ -300,7 +301,7 @@ export const PAINEIS: readonly Painel[] = [
       'rentabilidade por cliente',
       'concentração',
     ],
-    noAdmin: [L.tesouraria],
+    noAdmin: [L.facturacao, L.tesouraria],
   },
   {
     n: 6,

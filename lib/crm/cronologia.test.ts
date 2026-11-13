@@ -29,6 +29,12 @@ describe('cronologia legível', () => {
     expect(g.detalhe).toMatch(/MZN/);
     expect(descrever(a('proposta', { versao: 2, estado: 'enviada' }), nomes).titulo).toBe('Proposta enviada (versão 2)');
   });
+  it('facturação: factura registada com número e valor, e anulação (0021)', () => {
+    const f = descrever(a('facturada', { numero: 'FT 2026/001', valor: 1700000, moeda: 'MZN' }), nomes);
+    expect(f.titulo).toBe('Facturada: FT 2026/001');
+    expect(f.detalhe).toMatch(/MZN/);
+    expect(descrever(a('facturacao_anulada', { numero: 'FT 2026/001' }, 'Erro no valor'), nomes).titulo).toBe('Factura anulada: FT 2026/001');
+  });
   it('atribuição por nome, nunca UUID', () => {
     expect(descrever(a('atribuicao', { de: null, para: 'u1' }), nomes).titulo).toBe('Responsável: ninguém → Ana');
     expect(descrever(a('atribuicao', { de: 'u1', para: 'desconhecido' }), nomes).titulo).toBe('Responsável: Ana → (perfil removido)');

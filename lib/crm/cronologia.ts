@@ -15,12 +15,19 @@ export interface ActividadeCrua {
 
 export function formatarQuando(iso: string): string {
   const d = new Date(iso);
-  const dia = d.toLocaleDateString('pt-PT', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Africa/Maputo' });
+  const dia = d.toLocaleDateString('pt-PT', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Africa/Maputo',
+  });
   const hora = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Maputo' });
   return `${dia} · ${hora}`;
 }
 
-const fase = (f: unknown) => (typeof f === 'string' && f in FASE_OPORTUNIDADE ? FASE_OPORTUNIDADE[f as keyof typeof FASE_OPORTUNIDADE].texto : String(f ?? '—'));
+const fase = (f: unknown) =>
+  typeof f === 'string' && f in FASE_OPORTUNIDADE ? FASE_OPORTUNIDADE[f as keyof typeof FASE_OPORTUNIDADE].texto : String(f ?? '—');
 
 const ORIGEM: Readonly<Record<string, string>> = {
   diagnostico_aprovado: 'Pelo diagnóstico aprovado',
@@ -52,6 +59,14 @@ export function descrever(a: ActividadeCrua, nomes: ReadonlyMap<string, string>)
         : '';
       return { titulo: 'Valor e fecho actualizados', detalhe: `${valor}${fecho}` };
     }
+    case 'facturada':
+      // 0021: a factura emitida fora do admin, registada na fila «A facturar».
+      return {
+        titulo: `Facturada${typeof m.numero === 'string' ? `: ${m.numero}` : ''}`,
+        detalhe: m.valor === undefined ? undefined : formatarValor(Number(m.valor), String(m.moeda ?? '')),
+      };
+    case 'facturacao_anulada':
+      return { titulo: `Factura anulada${typeof m.numero === 'string' ? `: ${m.numero}` : ''}` };
     case 'proposta': {
       // 0020: cada versão guardada e cada mudança de estado de uma proposta ligada.
       const versao = Number.isInteger(m.versao) ? ` (versão ${String(m.versao)})` : '';

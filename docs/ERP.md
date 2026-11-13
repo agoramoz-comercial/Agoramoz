@@ -1,8 +1,26 @@
-# ERP — a porta preparada
+# ERP — facturação interna, porta preparada
 
-**Estado:** preparado, não ligado. Decisão do fundador: o CRM é o interno
-(`deals`, `activities`); o ERP recebe o que o CRM decide quando houver um ERP
-escolhido.
+**Estado:** facturação **interna** ligada (D-48, migração 0021 por aplicar);
+ERP por escolher. Decisão do fundador (13/11/2026): ainda não há ERP. As
+oportunidades ganhas seguem para a fila **«A facturar»** em `/admin/facturacao`:
+
+1. Uma oportunidade que passa a **Ganho** no Pipeline aparece na fila, com
+   cliente, valor e moeda, e há quantos dias está por facturar.
+2. Emite-se a factura fora daqui (programa de facturação, contabilista) e
+   regista-se: **n.º, data, valor, moeda**. Sai da fila e fica na cronologia
+   da oportunidade. O mesmo número não se usa duas vezes.
+3. Um erro **anula-se** com motivo (o registo fica) e a oportunidade volta à fila.
+4. **«Exportar para o contabilista (CSV)»**: separador `;`, abre no Excel em
+   português, com tudo o que foi registado. Fica na auditoria.
+
+Para activar o registo: aplicar `supabase/aplicar-0021.sql` no SQL Editor; a
+linha 33 do `verificar-estado.sql` deve dizer `ok`. Até lá, a fila mostra as
+ganhas, mas não regista. A 0021 foi provada num Postgres 16 limpo com
+`.qa/facturacao-comportamento.sql`.
+
+Esta consola **não emite facturas** (não numera documentos fiscais nem
+calcula IVA): regista as que foram emitidas. Quando houver um ERP, o
+adaptador abaixo lê esta mesma tabela.
 
 ## O que existe
 

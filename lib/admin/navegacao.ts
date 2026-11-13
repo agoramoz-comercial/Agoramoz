@@ -30,6 +30,7 @@ const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[
       { href: '/admin/oportunidades', texto: 'Pipeline', icone: 'oportunidades' },
       { href: '/admin/diagnosticos', texto: 'Diagnósticos', icone: 'diagnosticos' },
       { href: '/admin/propostas', texto: 'Propostas', icone: 'propostas' },
+      { href: '/admin/facturacao', texto: 'Facturação', icone: 'facturacao' },
       { href: '/admin/contactos', texto: 'Contactos', icone: 'contactos' },
       { href: '/admin/organizacoes', texto: 'Organizações', icone: 'organizacoes' },
     ],

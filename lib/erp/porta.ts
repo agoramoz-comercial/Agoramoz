@@ -19,9 +19,7 @@ export interface OportunidadeGanha {
   readonly organizacaoId: string | null;
 }
 
-export type Resultado<T> =
-  | { readonly ok: true; readonly valor: T }
-  | { readonly ok: false; readonly motivo: string };
+export type Resultado<T> = { readonly ok: true; readonly valor: T } | { readonly ok: false; readonly motivo: string };
 
 export interface ErpAdaptador {
   /** Nome legível do sistema, para o painel e para o log. */
@@ -29,14 +27,10 @@ export interface ErpAdaptador {
   /** Liga ao ERP e confirma as credenciais, sem escrever nada. */
   verificar(): Promise<Resultado<null>>;
   /** Regista a oportunidade ganha no ERP; devolve a referência do lado de lá. */
-  registarGanho(
-    oportunidade: OportunidadeGanha,
-  ): Promise<Resultado<{ readonly referenciaErp: string }>>;
+  registarGanho(oportunidade: OportunidadeGanha): Promise<Resultado<{ readonly referenciaErp: string }>>;
 }
 
-export type EstadoErp =
-  | { readonly estado: 'por-ligar' }
-  | { readonly estado: 'configurado-sem-adaptador'; readonly fornecedor: 'http' };
+export type EstadoErp = { readonly estado: 'por-ligar' } | { readonly estado: 'configurado-sem-adaptador'; readonly fornecedor: 'http' };
 
 export interface ConfigErp {
   readonly ERP_PROVIDER: 'off' | 'http';

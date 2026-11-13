@@ -12,7 +12,7 @@
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
 -- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News), a 29 para
 -- 0017 (Espaço CEnO), a 30 para 0018 (Gabinete do Fundador), a 31 para 0019
--- (CRM operacional), a 32 para 0020 (Propostas).
+-- (CRM operacional), a 32 para 0020 (Propostas), a 33 para 0021 (Facturação).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -377,5 +377,21 @@ select 32, 'propostas', 'Propostas com versões, ligadas ao Pipeline (0020)',
                  or has_function_privilege('anon', 'public.mudar_estado_proposta(uuid, integer, text)', 'execute')
                  or has_function_privilege('authenticated', 'public.total_da_proposta(jsonb)', 'execute')
                  then 'ATENCAO - protecção incompleta; correr aplicar-0020.sql de novo'
+            else 'ok' end
+-- 0021: Facturação interna (a fila «A facturar»).
+union all
+select 33, 'facturacao', 'Facturação interna: a fila «A facturar» (0021)',
+       case when to_regclass('public.facturacao') is null
+                 or to_regprocedure('public.marcar_facturada(uuid, integer, text, date, numeric, text, text)') is null
+                 or to_regprocedure('public.anular_facturacao(uuid, integer, text)') is null
+                 or to_regprocedure('public.registar_exportacao_facturacao(integer, jsonb)') is null
+                 then 'EM FALTA - correr aplicar-0021.sql'
+            when not coalesce((select c.relrowsecurity from pg_class c where c.oid = to_regclass('public.facturacao')), false)
+                 or has_table_privilege('anon', 'public.facturacao', 'select')
+                 or has_table_privilege('authenticated', 'public.facturacao', 'insert, update, delete')
+                 or has_function_privilege('anon', 'public.marcar_facturada(uuid, integer, text, date, numeric, text, text)', 'execute')
+                 or has_function_privilege('anon', 'public.anular_facturacao(uuid, integer, text)', 'execute')
+                 or to_regclass('public.facturacao_numero_unico') is null
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0021.sql de novo'
             else 'ok' end
 order by ordem;

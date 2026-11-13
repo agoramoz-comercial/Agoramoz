@@ -706,3 +706,20 @@ está em `docs/TERRABUILD.md`.
 - Tráfego orgânico leva semanas a meses a crescer depois de indexado; nenhum trabalho de SEO dá, de um dia para o outro, o volume de anúncios pagos.
 - CGNAT: pessoas atrás do mesmo IP e navegador contam como uma visita; quem volta noutro dia conta como novo.
 - O painel lê até 60 000 eventos por período; acima disso, pede um período mais curto (e uma agregação na base passa a valer a pena).
+
+## D-48 — Facturação interna «A facturar», sem ERP (0021)
+
+**Pedido do fundador:** ligar o cartão ERP («onde as oportunidades ganhas seguem para facturação»). Resposta: ainda não há ERP.
+
+### Decisões
+1. **A fila nasce da fase `ganho`.** Uma oportunidade ganha sem factura válida está «por facturar»; não há nada a alimentar à mão.
+2. **Regista-se a factura emitida fora daqui** (n.º, data, valor, moeda, nota) em `facturacao` (0021). Esta consola não emite documentos fiscais nem calcula IVA.
+3. **Número único** entre as facturas válidas; **anular** exige motivo, guarda o registo e devolve a oportunidade à fila; refacturar exige a revisão certa.
+4. O padrão de 0006/0019: escrita só por funções `security definer` com `exigir_papel(admin, comercial)`, revisão, `lock_timeout`, cronologia da oportunidade e auditoria; `leitura` só lê.
+5. **CSV para o contabilista** com o filtro do ecrã, registado na auditoria antes de sair.
+6. Totais **por moeda** (nunca somados entre moedas); «há mais de 7 dias» destaca o dinheiro ganho e ainda não pedido (limite do AEOS).
+7. O cartão ERP do painel passa a «Facturação interna», com ligação à fila; o mapa AEOS liga-a aos blocos e ao painel de Finanças.
+
+### Limites
+- A 0021 é aplicada pelo fundador (linha 33 do `verificar-estado`); até lá, a fila mostra as ganhas mas não regista.
+- Sem cobrança (recebimentos, facturas vencidas) — fica para o passo seguinte, ou para o ERP.

@@ -16,7 +16,7 @@ describe('navegação agrupada do admin', () => {
 
   it('as Propostas ficam na Receita, entre os Diagnósticos e os Contactos', () => {
     const receita = gruposVisiveis(nada).find((g) => g.titulo === 'Receita')!;
-    expect(receita.entradas.map((e) => e.texto)).toEqual(['Pipeline', 'Diagnósticos', 'Propostas', 'Contactos', 'Organizações']);
+    expect(receita.entradas.map((e) => e.texto)).toEqual(['Pipeline', 'Diagnósticos', 'Propostas', 'Facturação', 'Contactos', 'Organizações']);
   });
 
   it('sem módulos nem papel admin, esconde Espaços e Controlo e as flags desligadas', () => {
