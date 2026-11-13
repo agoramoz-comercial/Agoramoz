@@ -9,7 +9,8 @@ ou campo a campo, e descarrega-as em PDF. Decisões: D-44 e D-45.
 | Peça | Estado |
 |---|---|
 | Editor + folhas A4 + PDF pelo browser | Feito (D-44) |
-| Colar o texto de uma proposta → desenho editorial (`lib/propostas/texto.ts`) | Feito, 39 testes |
+| Colar o texto de uma proposta → desenho editorial (`lib/propostas/texto.ts`) | Feito |
+| Carregar o documento (.docx, .pdf, .txt, .md) → desenho editorial (`lib/propostas/ficheiro.ts`, `pdf.ts`) | Feito (D-46) |
 | Guardar na base, com versões, ligadas ao Pipeline (migração 0020) | **Por aplicar pelo fundador** — ver abaixo |
 
 Até a 0020 ser aplicada, a página mostra o editor a funcionar só no separador
@@ -48,6 +49,31 @@ protecção mexida, ok).
 - **PDF**: «Descarregar PDF» abre o diálogo de impressão do browser; em
   «Destino», «Guardar como PDF». A4, uma folha por página. O custo e a margem
   de cada fase nunca vão para o papel.
+
+## Carregar o documento
+
+«Carregar ficheiro» (ou arrastar o ficheiro para o painel) aceita **.docx,
+.pdf com texto, .txt e .md**, até 10 MB. O documento é lido **no browser**,
+não é enviado para lado nenhum; o texto extraído aparece no campo (para
+rever ou corrigir) e passa pelo mesmo leitor do «Colar o texto».
+
+- **.docx** (Word, Google Docs → «Transferir como .docx», LibreOffice):
+  lido sem bibliotecas. Os estilos de título do Word viram títulos de secção,
+  as listas viram listas, as tabelas mantêm as colunas, um parágrafo curto
+  todo a negrito conta como título. Cabeçalhos e rodapés, imagens e texto
+  apagado com controlo de alterações ficam de fora (e é dito).
+- **.pdf**: pelo pdf.js (`pdfjs-dist`, versão fixa), carregado só quando chega
+  um PDF; o worker é servido pelo próprio site. Um PDF não tem estrutura: as
+  linhas são refeitas pela posição, uma letra maior conta como título, os
+  espaços largos como colunas, e uma célula partida em duas linhas volta a
+  uma. Um PDF digitalizado (só imagem) é recusado com a indicação de enviar
+  o .docx. Um cabeçalho de página fica em «Sem lugar nas folhas».
+- **.doc** (Word antigo): recusado, com a indicação de o guardar como .docx.
+
+O resultado de um .docx e do PDF desse mesmo .docx é o mesmo — os testes
+(`lib/propostas/ficheiro.test.ts`) usam os dois, gerados por
+`.qa/propostas-fixtures.py`, e um ZIP-bomba para confirmar que a leitura do
+.docx pára antes de encher a memória.
 
 ## Colar o texto
 
@@ -88,6 +114,7 @@ Reconhece, com ou sem numeração, `#` ou negrito:
 |---|---|
 | Modelo, contas, verificações | `lib/propostas/modelo.ts` |
 | Leitor do texto colado | `lib/propostas/texto.ts` |
+| Ficheiros (.docx, .pdf, .txt, .md) | `lib/propostas/ficheiro.ts`, `lib/propostas/pdf.ts` |
 | Leituras (lista, versões, oportunidades) | `lib/propostas/leitura.ts` |
 | Acções (guardar, estado) | `lib/admin/propostas-actions.ts` |
 | Migração e ficheiro de aplicar | `supabase/migrations/0020_propostas.sql`, `supabase/aplicar-0020.sql` |

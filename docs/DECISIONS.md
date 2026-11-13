@@ -671,3 +671,19 @@ está em `docs/TERRABUILD.md`.
 - **A 0020 é aplicada pelo fundador** (`supabase/aplicar-0020.sql`, linha 32 do `verificar-estado`). Até lá, o editor funciona só no separador.
 - O leitor reconhece os títulos da tabela em `docs/PROPOSTAS.md`; um título com outro nome fica em «Sem lugar nas folhas», à vista.
 - Sem ligação de uma proposta a vários clientes nem modelos de proposta reutilizáveis.
+
+## D-46 — Carregar o documento da proposta (.docx, .pdf, .txt, .md)
+
+**Pedido do fundador:** opção de upload de ficheiros na proposta, para transformar o documento no desenho editorial.
+
+### Decisões
+1. **Lido no browser.** O documento do cliente não vai para o servidor para ser convertido; só o resultado, se a proposta for guardada (0020, com o texto extraído como «texto colado»).
+2. **O mesmo leitor do texto colado** (D-45): o ficheiro vira texto e o texto aparece no campo, para rever. Nada é reescrito; o relatório diz o que se perdeu na conversão.
+3. **.docx sem dependências**: ZIP pelo directório central e `DecompressionStream`, XML de uma estrutura conhecida. Estilos de título → `#`, listas → `-`, tabelas → tabulações. Tecto de 20 MB descomprimidos contra ZIP-bombas; 10 MB por ficheiro.
+4. **.pdf com `pdfjs-dist` 5.7.284** (versão fixa), importado dinamicamente só quando chega um PDF; worker do próprio site (`worker-src 'self'` já permitido). As linhas, títulos e colunas são deduzidos pela posição e pelo tamanho da letra — e o relatório di-lo.
+5. **Provado com documentos reais**: o mesmo .docx e o seu PDF dão a mesma proposta (testes e QA no browser em build de produção, sem erros na consola).
+
+### Limites
+- PDF digitalizado (imagem) não tem texto: é recusado com a indicação de enviar o .docx. Sem OCR.
+- .doc (Word antigo), .odt, .pages e .rtf não são lidos: guardar como .docx.
+- Um PDF muito «desenhado» (colunas de revista, caixas) pode sair com a ordem trocada; o texto fica no campo para corrigir antes de gerar.

@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useRef, useState, useTransition, type CSSProperties, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { ClipboardPaste, Download, Plus, Printer, Save, Trash2, Upload } from 'lucide-react';
+import { ClipboardPaste, Download, FileUp, Plus, Printer, Save, Trash2, Upload } from 'lucide-react';
 import { guardarProposta } from '@/lib/admin/propostas-actions';
+import { ACEITES, ErroFicheiro, textoDoFicheiro } from '@/lib/propostas/ficheiro';
 import { lerTexto, MAX_TEXTO_COLADO, type Relatorio } from '@/lib/propostas/texto';
 import { inputClass } from '@/components/form/Field';
 import { cn } from '@/lib/utils/cn';
@@ -205,24 +206,67 @@ function PainelColar({
   colado,
   mudar,
   gerar,
+  carregar,
+  aLer,
   relatorio,
 }: {
   colado: string;
   mudar: (v: string) => void;
   gerar: () => void;
+  carregar: (f: File) => void;
+  aLer: boolean;
   relatorio: Relatorio | null;
 }) {
+  const entrada = useRef<HTMLInputElement>(null);
+  const [porCima, setPorCima] = useState(false);
   return (
-    <section aria-labelledby="proposta-colar" className={CAIXA}>
+    <section
+      aria-labelledby="proposta-colar"
+      className={cn(CAIXA, porCima && 'outline-2 outline-offset-2 outline-[color:var(--color-signal-600)] outline-dashed')}
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes('Files')) return;
+        e.preventDefault();
+        setPorCima(true);
+      }}
+      onDragLeave={() => setPorCima(false)}
+      onDrop={(e) => {
+        const f = e.dataTransfer.files[0];
+        if (!f) return;
+        e.preventDefault();
+        setPorCima(false);
+        carregar(f);
+      }}
+    >
       <div>
         <h2 id="proposta-colar" className="text-base font-medium">
-          Colar o texto da proposta
+          Carregar ou colar a proposta
         </h2>
         <p className={cn(AJUDA, 'mt-1')}>
-          Cole a proposta inteira (do Word, Google Docs ou e-mail). O leitor reconhece os títulos das secções — Contexto, Objectivos,
-          Solução, Cronograma, Investimento, Opções, Condições, Riscos, Próximos passos — e os dados da capa em linhas «Cliente:», «Data:»,
-          «Validade:». Não reescreve nada: só arruma o texto nas folhas e diz o que não soube onde pôr.
+          Envie o documento (.docx, .pdf, .txt ou .md — pode arrastá-lo para aqui) ou cole o texto. O documento é lido neste computador, não
+          é enviado para lado nenhum. O leitor reconhece os títulos das secções — Contexto, Objectivos, Solução, Cronograma, Investimento,
+          Opções, Condições, Riscos, Próximos passos — e os dados da capa em linhas «Cliente:», «Data:», «Validade:». Não reescreve nada: só
+          arruma o texto nas folhas e diz o que não soube onde pôr.
         </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => entrada.current?.click()} disabled={aLer} className={BOTAO}>
+          <FileUp aria-hidden className="size-4" />
+          {aLer ? 'A ler o ficheiro…' : 'Carregar ficheiro'}
+        </button>
+        <span className={AJUDA}>Word (.docx), PDF com texto, .txt ou .md · até 10 MB</span>
+        <input
+          ref={entrada}
+          type="file"
+          accept={ACEITES}
+          className="sr-only"
+          tabIndex={-1}
+          aria-label="Carregar o documento da proposta"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) carregar(f);
+            e.target.value = '';
+          }}
+        />
       </div>
       <label htmlFor="proposta-texto" className="sr-only">
         Texto da proposta
@@ -460,14 +504,43 @@ export function EditorProposta({ hoje, inicial, base }: { hoje: string; inicial?
     }
   }, [p, carregado, chaveRascunho]);
 
-  function gerar() {
+  /** Do texto (colado ou vindo de um ficheiro) às folhas. Os avisos do ficheiro vão à frente no relatório. */
+  function gerar(texto: string = colado, avisosDoFicheiro: readonly string[] = [], origem?: string): void {
     const vazia = JSON.stringify(p) === JSON.stringify(propostaVazia(p.data));
-    if (!vazia && !window.confirm('Substituir a proposta que está no editor pelo texto colado?')) return;
-    const leitura = lerTexto(colado, hoje);
+    if (!vazia && !window.confirm(`Substituir a proposta que está no editor pelo ${origem ? `conteúdo de «${origem}»` : 'texto colado'}?`))
+      return;
+    const leitura = lerTexto(texto, hoje);
     setP(leitura.proposta);
-    setRelatorio(leitura.relatorio);
+    setRelatorio({ ...leitura.relatorio, avisos: [...avisosDoFicheiro, ...leitura.relatorio.avisos] });
     setUsadoColado(true);
-    setMensagem('Desenho gerado a partir do texto colado. Reveja o relatório e as folhas.');
+    setMensagem(
+      origem
+        ? `Desenho gerado a partir de «${origem}». Reveja o relatório e as folhas.`
+        : 'Desenho gerado a partir do texto colado. Reveja o relatório e as folhas.',
+    );
+  }
+
+  const [aLer, setALer] = useState(false);
+  async function carregar(f: File): Promise<void> {
+    setALer(true);
+    setMensagem(`A ler «${f.name}»…`);
+    try {
+      const { texto, avisos } = await textoDoFicheiro(f);
+      if (texto.trim().length < 20) throw new ErroFicheiro('O ficheiro não tem texto suficiente para uma proposta.');
+      const cortado = texto.slice(0, MAX_TEXTO_COLADO);
+      setColado(cortado);
+      gerar(
+        cortado,
+        texto.length > MAX_TEXTO_COLADO
+          ? [`O documento tinha ${texto.length} caracteres; só os primeiros ${MAX_TEXTO_COLADO} foram lidos.`, ...avisos]
+          : avisos,
+        f.name,
+      );
+    } catch (e) {
+      setMensagem(e instanceof ErroFicheiro ? e.message : 'Não foi possível ler este ficheiro. Abra-o e cole o texto.');
+    } finally {
+      setALer(false);
+    }
   }
 
   // Medir depois de desenhar: uma folha que transborda fica marcada e listada.
@@ -535,7 +608,7 @@ export function EditorProposta({ hoje, inicial, base }: { hoje: string; inicial?
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(22rem,30rem)_1fr]">
       <div className="grid content-start gap-5 print:hidden">
-        <PainelColar colado={colado} mudar={setColado} gerar={gerar} relatorio={relatorio} />
+        <PainelColar colado={colado} mudar={setColado} gerar={() => gerar()} carregar={carregar} aLer={aLer} relatorio={relatorio} />
 
         {base && (
           <PainelGuardar

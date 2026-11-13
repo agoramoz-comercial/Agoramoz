@@ -527,8 +527,11 @@ export function lerTexto(colado: string, hoje: string): Leitura {
   };
   lerMeta(preambulo.linhas, sobra);
 
-  // O título: a primeira linha curta do preâmbulo («Proposta comercial — Portal de pedidos»).
-  const primeira = sobra.findIndex((l) => l.trim());
+  // O título: a linha «Proposta…» do preâmbulo, ou a primeira linha curta. Um
+  // cabeçalho de página vindo de um PDF («Confidencial», o nome da empresa)
+  // fica antes dela — por isso procura-se primeiro a que diz «Proposta».
+  const comProposta = sobra.findIndex((l) => /^proposta\b/i.test(limparTitulo(l.replace(/^\s*#{1,6}\s*/, ''))));
+  const primeira = comProposta >= 0 ? comProposta : sobra.findIndex((l) => l.trim());
   if (primeira >= 0 && !p.titulo) {
     const l = limparTitulo(sobra[primeira]!.replace(/^\s*#{1,6}\s*/, ''));
     if (l.length <= 90 && !/[.!?]$/.test(l)) {

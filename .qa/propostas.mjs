@@ -129,6 +129,31 @@ const axeColar = await new AxeBuilder({ page: pagina }).analyze();
 ok(graves(axeColar).length === 0, `axe colar ${graves(axeColar).map((v) => `${v.id}(${v.nodes.length})`).join(',')}`);
 if (SAIDA) await pagina.screenshot({ path: `${SAIDA}/colar.png` });
 
+// Carregar ficheiros: .docx e .pdf reais (TUDO DE EXEMPLO), lidos no browser.
+for (const [ficheiro, rotulo] of [
+  ['lib/propostas/__fixtures__/proposta-exemplo.docx', 'docx'],
+  ['lib/propostas/__fixtures__/proposta-exemplo.pdf', 'pdf'],
+]) {
+  await pagina.goto(`${BASE}/qa/propostas?vazia=1`);
+  await pagina.evaluate(() => sessionStorage.clear());
+  await pagina.goto(`${BASE}/qa/propostas?vazia=1`);
+  await pagina.waitForSelector('[data-pagina]');
+  await pagina.getByLabel('Carregar o documento da proposta').setInputFiles(ficheiro);
+  await pagina.waitForFunction(() => /Desenho gerado a partir de/.test(document.body.innerText), null, { timeout: 30000 }).catch(() => {});
+  const f = await pagina.locator('[data-proposta-folhas]').innerText();
+  ok(f.includes('Cliente de Exemplo, Lda.') && f.includes('Portal'), `${rotulo}: capa com título e cliente do documento`);
+  ok(f.includes('Levantamento de processos'), `${rotulo}: entregáveis da tabela no plano`);
+  ok(f.includes('1\u202F735\u202F000\u00A0MZN'), `${rotulo}: total pela soma das fases`);
+  const rel = await pagina.locator('section[aria-labelledby="proposta-colar"]').innerText();
+  ok(/Fases e investimento: 2/.test(rel), `${rotulo}: relatório com as fases`);
+  ok((await pagina.getByRole('textbox', { name: 'Texto da proposta' }).inputValue()).includes('Investimento'), `${rotulo}: o texto extraído fica no campo, para rever`);
+}
+if (SAIDA) await pagina.screenshot({ path: `${SAIDA}/carregar-pdf.png` });
+await pagina.goto(`${BASE}/qa/propostas?vazia=1`);
+await pagina.getByLabel('Carregar o documento da proposta').setInputFiles({ name: 'antiga.doc', mimeType: 'application/msword', buffer: Buffer.from('x') });
+await pagina.waitForTimeout(400);
+ok(/guarde como \.docx/.test(await pagina.locator('main').innerText()), 'doc antigo: diz o que fazer');
+
 // Lista das guardadas e painel «Guardar» (sem sessão: o erro de acesso aparece, não parte)
 await pagina.goto(`${BASE}/qa/propostas?vista=lista`);
 const lista = await pagina.locator('main').innerText();
