@@ -12,7 +12,7 @@
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
 -- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News), a 29 para
 -- 0017 (Espaço CEnO), a 30 para 0018 (Gabinete do Fundador), a 31 para 0019
--- (CRM operacional), a 32 para 0020 (Propostas), a 33 para 0021 (Facturação).
+-- (CRM operacional), a 32 para 0020 (Propostas), a 33 para 0021 (Facturação), a 34 para 0022 (Cursos).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -393,5 +393,21 @@ select 33, 'facturacao', 'Facturação interna: a fila «A facturar» (0021)',
                  or has_function_privilege('anon', 'public.anular_facturacao(uuid, integer, text)', 'execute')
                  or to_regclass('public.facturacao_numero_unico') is null
                  then 'ATENCAO - protecção incompleta; correr aplicar-0021.sql de novo'
+            else 'ok' end
+-- 0022: Cursos AGORAMOZ.
+union all
+select 34, 'cursos', 'Cursos: gerados das fontes, verificados, publicados (0022)',
+       case when to_regclass('public.cursos') is null
+                 or to_regprocedure('public.guardar_curso(uuid, integer, jsonb, jsonb)') is null
+                 or to_regprocedure('public.mudar_estado_curso(uuid, integer, text)') is null
+                 then 'EM FALTA - correr aplicar-0022.sql'
+            when not coalesce((select c.relrowsecurity from pg_class c where c.oid = to_regclass('public.cursos')), false)
+                 or has_table_privilege('anon', 'public.cursos', 'select')
+                 or has_table_privilege('authenticated', 'public.cursos', 'insert, update, delete')
+                 or has_function_privilege('anon', 'public.guardar_curso(uuid, integer, jsonb, jsonb)', 'execute')
+                 or has_function_privilege('anon', 'public.mudar_estado_curso(uuid, integer, text)', 'execute')
+                 or has_function_privilege('authenticated', 'public.validar_curso(jsonb, jsonb)', 'execute')
+                 or to_regclass('public.cursos_slug_unico') is null
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0022.sql de novo'
             else 'ok' end
 order by ordem;

@@ -15,6 +15,9 @@ export const RPC = {
   atribuir_oportunidade: ['p_deal_id', 'p_owner'],
   registar_actividade: ['p_deal_id', 'p_tipo', 'p_corpo'],
   registar_exportacao_crm: ['p_lista', 'p_linhas', 'p_filtros'],
+  // 0022 — Cursos.
+  guardar_curso: ['p_id', 'p_revisao', 'p_conteudo', 'p_fontes'],
+  mudar_estado_curso: ['p_id', 'p_revisao', 'p_estado'],
   // 0021 — Facturação interna.
   marcar_facturada: ['p_deal_id', 'p_revisao', 'p_numero', 'p_data', 'p_valor', 'p_moeda', 'p_nota'],
   anular_facturacao: ['p_deal_id', 'p_revisao', 'p_motivo'],

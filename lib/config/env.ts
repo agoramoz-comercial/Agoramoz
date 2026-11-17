@@ -209,6 +209,31 @@ const serverSchema = z.object({
   CIVICO_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
   CIVICO_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(600_000),
 
+  // ── Cursos AGORAMOZ (D-49) ──────────────────────────────────────────────
+  /**
+   * Motor que escreve os cursos. `off` mantém o criador no admin sem gerar
+   * nada (diz o que falta). `zabaedu` chama a função `agoramoz_llm` da app
+   * ZabaEdu (Base44), que só reencaminha o pedido para a IA dela: os pedidos,
+   * a verificação e o ciclo de correcção são daqui (`lib/cursos`).
+   */
+  CURSOS_ENGINE: z.enum(['off', 'zabaedu']).default('off'),
+  /** URL completo da função, p. ex. `https://zaba.base44.app/functions/agoramoz_llm`. */
+  ZABAEDU_FUNCTION_URL: z
+    .string()
+    .url('deve ser o URL completo da função agoramoz_llm')
+    // `http://` só em loopback: é o motor simulado de QA (`.qa/cursos-motor-simulado.mjs`).
+    .refine(
+      (v) => v.startsWith('https://') || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(v),
+      'deve usar https',
+    )
+    .refine((v) => {
+      const u = new URL(v);
+      return !u.username && !u.password && !u.search && !u.hash;
+    }, 'não deve ter credenciais, parâmetros nem fragmento')
+    .optional(),
+  /** Segredo partilhado com a função (cabeçalho `x-agoramoz-chave`); o mesmo valor fica nos segredos do Base44. */
+  ZABAEDU_CHAVE: z.string().min(24, 'deve ter pelo menos 24 caracteres').optional(),
+
   // ── Agendamento (Cal.com) ───────────────────────────────────────────────
   /**
    * `off` — o diagnóstico acaba como sempre, sem ligação de marcação, e o
@@ -315,6 +340,12 @@ const serverSchema = z.object({
       if (!env[nome]) {
         ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando NEWS_ENGINE=lovable' });
       }
+    }
+  })
+  .superRefine((env, ctx) => {
+    if (env.CURSOS_ENGINE !== 'zabaedu') return;
+    for (const nome of ['ZABAEDU_FUNCTION_URL', 'ZABAEDU_CHAVE'] as const) {
+      if (!env[nome]) ctx.addIssue({ code: 'custom', path: [nome], message: 'é obrigatória quando CURSOS_ENGINE=zabaedu' });
     }
   })
   .superRefine((env, ctx) => {
@@ -435,6 +466,9 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       NEWS_RATE_LIMIT_MAX: process.env.NEWS_RATE_LIMIT_MAX,
       NEWS_RATE_LIMIT_WINDOW_MS: process.env.NEWS_RATE_LIMIT_WINDOW_MS,
       CIVICO_ENGINE: process.env.CIVICO_ENGINE,
+      CURSOS_ENGINE: process.env.CURSOS_ENGINE,
+      ZABAEDU_FUNCTION_URL: process.env.ZABAEDU_FUNCTION_URL,
+      ZABAEDU_CHAVE: process.env.ZABAEDU_CHAVE,
       LOVABLE_CIVICO_URL: process.env.LOVABLE_CIVICO_URL,
       CIVICO_PERGUNTA_NO_FIM: process.env.CIVICO_PERGUNTA_NO_FIM,
       CIVICO_RATE_LIMIT_MAX: process.env.CIVICO_RATE_LIMIT_MAX,

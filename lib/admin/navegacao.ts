@@ -45,6 +45,10 @@ const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[
     ],
   },
   {
+    titulo: 'Produtos',
+    entradas: [{ href: '/admin/cursos', texto: 'Cursos', icone: 'cursos' }],
+  },
+  {
     titulo: 'Espaços',
     entradas: [
       { href: '/admin/gabinete', texto: 'Gabinete', icone: 'gabinete', so: 'direcao' },

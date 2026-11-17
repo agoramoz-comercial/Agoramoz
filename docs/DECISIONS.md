@@ -723,3 +723,22 @@ está em `docs/TERRABUILD.md`.
 ### Limites
 - A 0021 é aplicada pelo fundador (linha 33 do `verificar-estado`); até lá, a fila mostra as ganhas mas não regista.
 - Sem cobrança (recebimentos, facturas vencidas) — fica para o passo seguinte, ou para o ERP.
+
+## D-49 — Cursos AGORAMOZ: gerados das fontes, verificados, publicados (0022)
+
+**Pedido do fundador:** usar a IA da app ZabaEdu (Base44) para criar cursos no agoramoz.com; o documento descarregado com qualidade editorial (referência azul/lavanda/preto); uma página «o que vai aprender»; toda a informação vinda de fontes verificadas, com um ciclo que repete até dar certo. Escolhas: fontes carregadas pela AGORAMOZ; a AGORAMOZ cria, o público vê; construir por cima do ZabaEdu.
+
+### Decisões
+1. **O ZabaEdu é só o motor.** Uma função Base44 (`agoramoz_llm`) confere um segredo partilhado e chama o `InvokeLLM` da app com o pedido e o esquema JSON que mandamos. Os pedidos, a verificação e o ciclo ficam em `lib/cursos` — mudam com um deploy nosso.
+2. **O curso nasce só das fontes carregadas**, partidas em passagens numeradas (`F1.3`). Cada resultado, bloco e resposta cita as passagens que o sustentam. O texto das fontes nunca é publicado.
+3. **Verificador determinístico, sem segundo modelo:** passagens existentes e dadas àquela aula; citações literais; números presentes nas passagens; ≥ 50 % das palavras-chave nas passagens (40 % nos resultados). Prova a origem, não a verdade das fontes — e di-lo no documento.
+4. **Ciclo:** até 3 tentativas por peça (o plano, cada aula), cada uma com a lista exacta das falhas da anterior; fica a melhor; o que nunca passa é retirado e contado no relatório publicado.
+5. **Uma peça por pedido ao servidor** (o browser encadeia): nenhum pedido passa do tempo nem do tamanho; cada aula leva só as suas passagens.
+6. **0022 `cursos`**: endereço fixo desde a criação (sufixo se repetido), revisão, publicar só com conteúdo verificado, auditoria sem conteúdo; o público lê pelo servidor só os publicados e nunca a coluna `fontes`.
+7. **Documento A4** com capa, visão geral em números, o que vai aprender, programa, módulos e aulas com etiquetas de fonte, perguntas, respostas, fontes, relatório de verificação e contracapa com os contactos.
+8. Não se afirma em lado nenhum ser «melhor que» outras plataformas: o que se publica é o que se mede (aceites, retiradas, tentativas).
+
+### Limites
+- O motor só liga com a função criada no Base44 e três variáveis na Vercel (docs/CURSOS.md); funções de backend no Base44 pedem o plano Builder.
+- A verificação lexical aceita paráfrases fiéis e recusa ideias novas, mas não apanha uma inversão de sentido com as mesmas palavras; quem publica revê.
+- A 0022 é aplicada pelo fundador (linha 34 do `verificar-estado`); até lá, o criador gera e descarrega, mas não guarda nem publica.

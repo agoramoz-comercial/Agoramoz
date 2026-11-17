@@ -7,6 +7,7 @@ import { caminhoNoIdioma } from '@/lib/i18n/texto';
 import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
 import { jornalLigado, listarPublicados } from '@/lib/news/jornal-servidor';
 import { caminhoArtigo, caminhoDiploma, diplomas, LEI_VERIFICADA_EM } from '@/lib/civico/lei';
+import { cursosPublicados } from '@/lib/cursos/leitura';
 
 /**
  * A data da última alteração de CONTEÚDO de cada página sem data própria no
@@ -139,6 +140,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...ingles.map((e, i) => ({ ...jornal(e), ...hreflang(ROTAS_BILINGUES[i]!, true) })),
     ...artigos,
     ...paginasDaLei(),
+    ...(await paginasDosCursos()),
   ];
 }
 
@@ -170,5 +172,20 @@ function paginasDaLei(): MetadataRoute.Sitemap {
       { url: absolute(caminhoDiploma(d.slug)), lastModified: data, priority: 0.6 },
       ...d.artigos.map((a) => ({ url: absolute(caminhoArtigo(d.slug, a.n)), lastModified: data, priority: 0.4 })),
     ]),
+  ];
+}
+
+/**
+ * Os cursos publicados (D-49), com a data real da última alteração. Sem base,
+ * sem a 0022 ou sem cursos publicados, ficam de fora — incluindo o índice
+ * `/cursos`, que vazio não é página para a pesquisa.
+ */
+async function paginasDosCursos(): Promise<MetadataRoute.Sitemap> {
+  const cursos = await cursosPublicados();
+  if (!cursos.length) return [];
+  const recente = Math.max(...cursos.map((c) => new Date(c.actualizado).getTime()));
+  return [
+    { url: absolute('/cursos'), lastModified: new Date(recente), priority: 0.6 },
+    ...cursos.map((c) => ({ url: absolute(`/cursos/${c.slug}`), lastModified: new Date(c.actualizado), priority: 0.5 })),
   ];
 }

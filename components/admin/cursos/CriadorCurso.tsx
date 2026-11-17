@@ -1,0 +1,489 @@
+'use client';
+
+import { useId, useRef, useState, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { CheckCircle2, CircleDashed, FileUp, Loader2, Printer, Save, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { inputClass } from '@/components/form/Field';
+import { DocumentoCurso } from '@/components/cursos/DocumentoCurso';
+import { cn } from '@/lib/utils/cn';
+import { agrupar } from '@/lib/propostas/modelo';
+import { ACEITES, ErroFicheiro, textoDoFicheiro } from '@/lib/propostas/ficheiro';
+import { criarFonte } from '@/lib/cursos/fontes';
+import { LIMITES, NIVEIS, ROTULO_NIVEL, type Aula, type Curso, type Fonte, type Nivel } from '@/lib/cursos/modelo';
+import { montarCurso, type Peca, type PedidoCurso, type Plano } from '@/lib/cursos/ciclo';
+import { descreverFalhas } from '@/lib/cursos/verificar';
+import type { Resposta } from '@/lib/cursos/gerar';
+
+/**
+ * O criador de cursos (D-49).
+ *
+ * 1. As fontes: ficheiros lidos NESTE computador (o mesmo leitor das
+ *    propostas) ou texto colado, partidos em passagens numeradas.
+ * 2. O pedido: tema, público, nível, duração.
+ * 3. Gerar: o plano, depois cada aula, uma a uma — cada peça passa pelo
+ *    ciclo no servidor (gerar → verificar → corrigir, até 3 vezes) e o
+ *    ecrã mostra o que passou, o que foi retirado e porquê.
+ * 4. O documento: revê-se, descarrega-se em PDF, guarda-se, publica-se.
+ *
+ * As acções chegam por propriedade: no admin são as reais; na
+ * pré-visualização de QA, um motor simulado.
+ */
+
+export interface AccoesCriador {
+  readonly planear: (entrada: unknown) => Promise<Resposta<Plano>>;
+  readonly escreverAula: (entrada: unknown) => Promise<Resposta<Aula>>;
+  readonly guardar?: (entrada: unknown) => Promise<{ ok: true; id: string; slug: string; revisao: number } | { ok: false; erro: string }>;
+}
+
+interface FonteCarregada {
+  readonly nome: string;
+  readonly tipo: Fonte['tipo'];
+  readonly texto: string;
+  readonly avisos: readonly string[];
+}
+
+type EstadoPeca = {
+  readonly rotulo: string;
+  readonly estado: 'espera' | 'a-gerar' | 'ok' | 'parcial' | 'falhou';
+  readonly detalhe?: string;
+};
+
+const ROTULO = 'text-sm font-medium';
+const AJUDA = 'text-xs text-[color:var(--muted)]';
+const CAIXA = 'grid gap-4 border border-[color:var(--border)] bg-[color:var(--surface)] p-4';
+const BOTAO =
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-[--radius-xs] border border-[color:var(--border)] px-3 text-sm hover:bg-[color:var(--surface-raised)] disabled:opacity-50';
+const BOTAO_PRIMARIO =
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-[--radius-xs] bg-[color:var(--color-signal-600)] px-4 text-sm font-medium text-white disabled:opacity-50';
+
+function tipoDe(nome: string): Fonte['tipo'] {
+  const e = nome.toLowerCase().split('.').pop();
+  return e === 'docx' || e === 'pdf' || e === 'txt' || e === 'md' ? e : 'texto';
+}
+
+const inteiro = (n: number) => agrupar(n).replace(/,00$/, '');
+const tamanho = (fs: readonly FonteCarregada[]) => fs.reduce((s, f) => s + f.texto.length, 0);
+
+export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: AccoesCriador; motorLigado: boolean; podeGuardar: boolean }) {
+  const id = useId();
+  const entrada = useRef<HTMLInputElement>(null);
+  const [fontes, setFontes] = useState<FonteCarregada[]>([]);
+  const [colado, setColado] = useState('');
+  const [tituloColado, setTituloColado] = useState('');
+  const [aLer, setALer] = useState(false);
+  const [mensagem, setMensagem] = useState<string | null>(null);
+
+  const [tema, setTema] = useState('');
+  const [publico, setPublico] = useState('');
+  const [nivel, setNivel] = useState<Nivel>('iniciacao');
+  const [minutos, setMinutos] = useState(120);
+
+  const [aGerar, setAGerar] = useState(false);
+  const [pecas, setPecas] = useState<EstadoPeca[]>([]);
+  const [falhasPlano, setFalhasPlano] = useState<string[]>([]);
+  const [curso, setCurso] = useState<Curso | null>(null);
+  const [fontesFinais, setFontesFinais] = useState<Fonte[]>([]);
+  const [guardado, setGuardado] = useState<{ id: string; slug: string; revisao: number } | null>(null);
+  const [aGuardar, setAGuardar] = useState(false);
+  const [escala, setEscala] = useState(0.62);
+
+  const total = tamanho(fontes);
+  const excede = total > LIMITES.caracteresTotal;
+  const podeGerar = motorLigado && !aGerar && fontes.length > 0 && !excede && tema.trim().length >= 3 && publico.trim().length >= 3;
+
+  async function carregar(lista: FileList): Promise<void> {
+    setALer(true);
+    const novas: FonteCarregada[] = [];
+    const erros: string[] = [];
+    for (const f of Array.from(lista)) {
+      if (fontes.length + novas.length >= LIMITES.fontes) {
+        erros.push(`No máximo ${LIMITES.fontes} fontes.`);
+        break;
+      }
+      try {
+        const { texto, avisos } = await textoDoFicheiro(f);
+        if (texto.trim().length < 200) throw new ErroFicheiro(`«${f.name}» tem pouco texto para ser fonte de um curso.`);
+        novas.push({
+          nome: f.name.replace(/\.[a-z0-9]+$/i, ''),
+          tipo: tipoDe(f.name),
+          texto: texto.slice(0, LIMITES.caracteresPorFonte),
+          avisos,
+        });
+      } catch (e) {
+        erros.push(e instanceof ErroFicheiro ? e.message : `Não foi possível ler «${f.name}».`);
+      }
+    }
+    setFontes((x) => [...x, ...novas]);
+    setMensagem(erros.length ? erros.join(' ') : `${novas.length} fonte(s) lida(s) neste computador.`);
+    setALer(false);
+  }
+
+  function juntarColado() {
+    if (colado.trim().length < 200) {
+      setMensagem('Cole pelo menos 200 caracteres de texto.');
+      return;
+    }
+    setFontes((x) => [
+      ...x,
+      {
+        nome: tituloColado.trim() || `Texto colado ${x.length + 1}`,
+        tipo: 'texto',
+        texto: colado.slice(0, LIMITES.caracteresPorFonte),
+        avisos: [],
+      },
+    ]);
+    setColado('');
+    setTituloColado('');
+  }
+
+  const marcar = (i: number, p: EstadoPeca) => setPecas((x) => x.map((y, j) => (j === i ? p : y)));
+
+  async function gerar() {
+    setAGerar(true);
+    setCurso(null);
+    setGuardado(null);
+    setFalhasPlano([]);
+    setMensagem(null);
+    const fs = fontes.map((f, i) => criarFonte(i + 1, f.nome, f.tipo, f.texto));
+    const pedido: PedidoCurso = { tema: tema.trim(), publico: publico.trim(), nivel, minutos };
+    setPecas([{ rotulo: 'Plano do curso', estado: 'a-gerar' }]);
+
+    const rp = await accoes.planear({ pedido, fontes: fs }).catch(() => ({ ok: false as const, erro: 'Ligação interrompida.' }));
+    if (!rp.ok || !rp.peca.valor) {
+      const falhas = rp.ok ? descreverFalhas(rp.peca.falhas) : [];
+      setFalhasPlano(falhas);
+      marcar(0, {
+        rotulo: 'Plano do curso',
+        estado: 'falhou',
+        detalhe: rp.ok ? `Sem plano aceitável em ${rp.peca.tentativas} tentativa(s).` : rp.erro,
+      });
+      setAGerar(false);
+      return;
+    }
+    const plano = rp.peca;
+    const p = plano.valor!;
+    setFalhasPlano(descreverFalhas(plano.falhas));
+    const lista: EstadoPeca[] = [
+      {
+        rotulo: 'Plano do curso',
+        estado: plano.retirados ? 'parcial' : 'ok',
+        detalhe: `${p.modulos.length} módulos · ${plano.tentativas} tentativa(s)${plano.retirados ? ` · ${plano.retirados} resultado(s) retirado(s)` : ''}`,
+      },
+    ];
+    const indices: { modulo: number; aula: number }[] = [];
+    p.modulos.forEach((m, mi) =>
+      m.aulas.forEach((a, ai) => {
+        indices.push({ modulo: mi, aula: ai });
+        lista.push({ rotulo: `${mi + 1}.${ai + 1} ${a.titulo}`, estado: 'espera' });
+      }),
+    );
+    setPecas(lista);
+
+    const porId = new Map(fs.flatMap((f) => f.passagens.map((x) => [x.id, x] as const)));
+    const aulas: { modulo: number; aula: number; peca: Peca<Aula> }[] = [];
+    for (const [k, ix] of indices.entries()) {
+      const a = p.modulos[ix.modulo]!.aulas[ix.aula]!;
+      const rotulo = `${ix.modulo + 1}.${ix.aula + 1} ${a.titulo}`;
+      marcar(k + 1, { rotulo, estado: 'a-gerar' });
+      const passagens = a.passagens.map((x) => porId.get(x)).filter((x): x is NonNullable<typeof x> => Boolean(x));
+      const r = await accoes
+        .escreverAula({ pedido, plano: p, ...ix, passagens })
+        .catch(() => ({ ok: false as const, erro: 'Ligação interrompida.' }));
+      if (!r.ok) {
+        marcar(k + 1, { rotulo, estado: 'falhou', detalhe: r.erro });
+        continue;
+      }
+      aulas.push({ ...ix, peca: r.peca });
+      marcar(k + 1, {
+        rotulo,
+        estado: !r.peca.valor ? 'falhou' : r.peca.retirados ? 'parcial' : 'ok',
+        detalhe: r.peca.valor
+          ? `${r.peca.aceites} aceite(s)${r.peca.retirados ? `, ${r.peca.retirados} retirada(s)` : ''} · ${r.peca.tentativas} tentativa(s)`
+          : `Nada passou a verificação em ${r.peca.tentativas} tentativa(s): ${descreverFalhas(r.peca.falhas).slice(0, 2).join(' ')}`,
+      });
+    }
+
+    const c = montarCurso(pedido, fs, { plano, aulas });
+    setCurso(c);
+    setFontesFinais(fs);
+    setMensagem(
+      c
+        ? 'Curso montado com o que passou a verificação. Reveja o documento.'
+        : 'Nenhuma aula passou a verificação: o curso não foi montado.',
+    );
+    setAGerar(false);
+  }
+
+  async function guardar() {
+    if (!curso || !accoes.guardar) return;
+    setAGuardar(true);
+    const r = await accoes
+      .guardar({ id: guardado?.id ?? null, revisao: guardado?.revisao ?? null, curso, fontes: fontesFinais })
+      .catch(() => ({ ok: false as const, erro: 'Ligação interrompida.' }));
+    setAGuardar(false);
+    if (r.ok) {
+      setGuardado({ id: r.id, slug: r.slug, revisao: r.revisao });
+      setMensagem('Curso guardado como rascunho. Publique-o na página do curso.');
+    } else setMensagem(r.erro);
+  }
+
+  function imprimir() {
+    if (!curso) return;
+    const antes = document.title;
+    document.title = `Curso AGORAMOZ — ${curso.titulo}`;
+    window.addEventListener('afterprint', () => (document.title = antes), { once: true });
+    window.print();
+  }
+
+  return (
+    <div className="grid gap-6">
+      <div className="grid gap-6 print:hidden lg:grid-cols-2">
+        <section className={CAIXA} aria-labelledby={`${id}-fontes`}>
+          <div>
+            <h2 id={`${id}-fontes`} className="text-base font-medium">
+              1. Fontes
+            </h2>
+            <p className={cn(AJUDA, 'mt-1')}>
+              O curso nasce só daqui. Os ficheiros são lidos neste computador e partidos em passagens numeradas (F1.1, F1.2…); cada
+              afirmação do curso vai citar as passagens que a sustentam. Até {LIMITES.fontes} fontes.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => entrada.current?.click()} disabled={aLer || aGerar} className={BOTAO}>
+              <FileUp aria-hidden className="size-4" />
+              {aLer ? 'A ler…' : 'Carregar ficheiros'}
+            </button>
+            <span className={AJUDA}>Word (.docx), PDF com texto, .txt ou .md · até 10 MB cada</span>
+            <input
+              ref={entrada}
+              type="file"
+              multiple
+              accept={ACEITES}
+              className="sr-only"
+              tabIndex={-1}
+              aria-label="Carregar fontes do curso"
+              onChange={(e) => {
+                if (e.target.files?.length) carregar(e.target.files);
+                e.target.value = '';
+              }}
+            />
+          </div>
+          {fontes.length > 0 && (
+            <ul role="list" className="grid gap-2" aria-label="Fontes carregadas">
+              {fontes.map((f, i) => (
+                <li key={i} className="flex items-start justify-between gap-3 border-t border-[color:var(--border)] pt-2 text-sm">
+                  <span>
+                    <span className="font-medium">F{i + 1}</span> · {f.nome}{' '}
+                    <span className={AJUDA}>
+                      ({f.tipo.toUpperCase()} · {inteiro(f.texto.length)} caracteres)
+                    </span>
+                    {f.avisos.length > 0 && <span className={cn(AJUDA, 'block')}>{f.avisos.join(' ')}</span>}
+                  </span>
+                  <button
+                    type="button"
+                    className={cn(BOTAO, 'min-h-9 px-2')}
+                    disabled={aGerar}
+                    onClick={() => setFontes((x) => x.filter((_, j) => j !== i))}
+                    aria-label={`Retirar a fonte ${f.nome}`}
+                  >
+                    <Trash2 aria-hidden className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {excede && (
+            <p role="alert" className="text-sm">
+              As fontes somam {inteiro(total)} caracteres; o máximo é {inteiro(LIMITES.caracteresTotal)}. Retire uma fonte.
+            </p>
+          )}
+          <details className="grid gap-2">
+            <summary className="cursor-pointer text-sm">Colar texto como fonte</summary>
+            <label className={cn(ROTULO, 'mt-2 block')} htmlFor={`${id}-titulo-colado`}>
+              Título da fonte
+            </label>
+            <input
+              id={`${id}-titulo-colado`}
+              value={tituloColado}
+              onChange={(e) => setTituloColado(e.target.value)}
+              maxLength={160}
+              className={inputClass}
+            />
+            <label className={cn(ROTULO, 'mt-2 block')} htmlFor={`${id}-colado`}>
+              Texto
+            </label>
+            <textarea
+              id={`${id}-colado`}
+              value={colado}
+              onChange={(e) => setColado(e.target.value)}
+              rows={6}
+              className={cn(inputClass, 'min-h-0 text-sm')}
+            />
+            <button type="button" onClick={juntarColado} className={cn(BOTAO, 'mt-2 justify-self-start')}>
+              Juntar às fontes
+            </button>
+          </details>
+        </section>
+
+        <section className={CAIXA} aria-labelledby={`${id}-pedido`}>
+          <h2 id={`${id}-pedido`} className="text-base font-medium">
+            2. O curso
+          </h2>
+          <div className="grid gap-1">
+            <label className={ROTULO} htmlFor={`${id}-tema`}>
+              Tema
+            </label>
+            <input
+              id={`${id}-tema`}
+              value={tema}
+              onChange={(e) => setTema(e.target.value)}
+              maxLength={200}
+              className={inputClass}
+              placeholder="Ex.: Gestão de stock num armazém"
+            />
+          </div>
+          <div className="grid gap-1">
+            <label className={ROTULO} htmlFor={`${id}-publico`}>
+              Para quem
+            </label>
+            <input
+              id={`${id}-publico`}
+              value={publico}
+              onChange={(e) => setPublico(e.target.value)}
+              maxLength={300}
+              className={inputClass}
+              placeholder="Ex.: Responsáveis de armazém sem formação prévia"
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-1">
+              <label className={ROTULO} htmlFor={`${id}-nivel`}>
+                Nível
+              </label>
+              <select id={`${id}-nivel`} value={nivel} onChange={(e) => setNivel(e.target.value as Nivel)} className={inputClass}>
+                {NIVEIS.map((n) => (
+                  <option key={n} value={n}>
+                    {ROTULO_NIVEL[n]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-1">
+              <label className={ROTULO} htmlFor={`${id}-minutos`}>
+                Duração aproximada (minutos)
+              </label>
+              <input
+                id={`${id}-minutos`}
+                type="number"
+                min={15}
+                max={1200}
+                step={15}
+                value={minutos}
+                onChange={(e) => setMinutos(Math.min(1200, Math.max(15, Number(e.target.value) || 15)))}
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <button type="button" onClick={gerar} disabled={!podeGerar} className={cn(BOTAO_PRIMARIO, 'justify-self-start')}>
+            {aGerar ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}
+            {aGerar ? 'A gerar e a verificar…' : '3. Gerar e verificar o curso'}
+          </button>
+          {!motorLigado && (
+            <p className={AJUDA} role="note">
+              O motor dos cursos está desligado. Para ligar: criar a função agoramoz_llm no ZabaEdu e definir CURSOS_ENGINE,
+              ZABAEDU_FUNCTION_URL e ZABAEDU_CHAVE na Vercel (docs/CURSOS.md).
+            </p>
+          )}
+          <p className={AJUDA}>
+            Cada peça é gerada pelo motor e verificada aqui: passagens que existem, citações literais, números que estão nas fontes,
+            palavras-chave que as fontes sustentam. O que falha volta ao motor com a razão (até 3 vezes); o que nunca passa é retirado e
+            fica no relatório.
+          </p>
+        </section>
+      </div>
+
+      {mensagem && (
+        <p role="status" className="text-sm print:hidden">
+          {mensagem}
+        </p>
+      )}
+
+      {pecas.length > 0 && (
+        <section className={cn(CAIXA, 'print:hidden')} aria-labelledby={`${id}-progresso`} aria-live="polite">
+          <h2 id={`${id}-progresso`} className="text-base font-medium">
+            Geração e verificação
+          </h2>
+          <ol role="list" className="grid gap-1 text-sm">
+            {pecas.map((x, i) => (
+              <li key={i} className="flex items-start gap-2" data-estado={x.estado}>
+                {x.estado === 'ok' && <CheckCircle2 aria-hidden className="mt-0.5 size-4 shrink-0" />}
+                {x.estado === 'parcial' && <CheckCircle2 aria-hidden className="mt-0.5 size-4 shrink-0 opacity-60" />}
+                {x.estado === 'falhou' && <XCircle aria-hidden className="mt-0.5 size-4 shrink-0" />}
+                {x.estado === 'a-gerar' && <Loader2 aria-hidden className="mt-0.5 size-4 shrink-0 animate-spin" />}
+                {x.estado === 'espera' && <CircleDashed aria-hidden className="mt-0.5 size-4 shrink-0 opacity-50" />}
+                <span>
+                  <span className="sr-only">
+                    {
+                      {
+                        ok: 'Verificada: ',
+                        parcial: 'Verificada com retirados: ',
+                        falhou: 'Falhou: ',
+                        'a-gerar': 'A gerar: ',
+                        espera: 'Em espera: ',
+                      }[x.estado]
+                    }
+                  </span>
+                  {x.rotulo}
+                  {x.detalhe && <span className={cn(AJUDA, 'block')}>{x.detalhe}</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+          {falhasPlano.length > 0 && (
+            <details>
+              <summary className="cursor-pointer text-sm">O que o verificador recusou no plano ({falhasPlano.length})</summary>
+              <ul role="list" className={cn(AJUDA, 'mt-2 grid gap-1')}>
+                {falhasPlano.map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </section>
+      )}
+
+      {curso && (
+        <>
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <button type="button" onClick={imprimir} className={BOTAO_PRIMARIO}>
+              <Printer aria-hidden className="size-4" />
+              Descarregar PDF
+            </button>
+            {podeGuardar && accoes.guardar && (
+              <button type="button" onClick={guardar} disabled={aGuardar} className={BOTAO}>
+                <Save aria-hidden className="size-4" />
+                {aGuardar ? 'A guardar…' : guardado ? 'Guardar outra vez' : 'Guardar como rascunho'}
+              </button>
+            )}
+            {guardado && (
+              <Link href={`/admin/cursos/${guardado.id}`} className="text-sm underline">
+                Abrir o curso guardado (publicar)
+              </Link>
+            )}
+            <label className="ml-auto flex items-center gap-2 text-sm">
+              Zoom
+              <input type="range" min={0.35} max={1} step={0.05} value={escala} onChange={(e) => setEscala(Number(e.target.value))} />
+              <span className="w-10 tabular-nums">{Math.round(escala * 100)}%</span>
+            </label>
+          </div>
+          <p className={cn(AJUDA, 'print:hidden')}>
+            Em «Descarregar PDF», escolha «Guardar como PDF», papel A4, margens «Nenhuma» e com gráficos de fundo.
+          </p>
+          <div className="overflow-x-auto" style={{ '--escala': escala } as CSSProperties}>
+            <DocumentoCurso curso={curso} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

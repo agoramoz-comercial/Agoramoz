@@ -55,6 +55,7 @@ const L = {
   diagnosticos: { href: '/admin/diagnosticos', texto: 'Diagnósticos' },
   propostas: { href: '/admin/propostas', texto: 'Propostas' },
   facturacao: { href: '/admin/facturacao', texto: 'Facturação' },
+  cursos: { href: '/admin/cursos', texto: 'Cursos' },
   contactos: { href: '/admin/contactos', texto: 'Contactos' },
   organizacoes: { href: '/admin/organizacoes', texto: 'Organizações' },
   inqueritos: {
@@ -145,7 +146,7 @@ export const BLOCOS: readonly Bloco[] = [
       'Unidade D: Dados e inteligência',
       'Unidade E: Academia e capacitação',
     ],
-    noAdmin: [],
+    noAdmin: [L.cursos],
     porConstruir: ['Catálogo do portefólio com a regra de admissão de produtos', 'Pricing e packaging'],
   },
   {

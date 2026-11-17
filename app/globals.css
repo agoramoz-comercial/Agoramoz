@@ -754,6 +754,37 @@
   }
 }
 
+/* ===========================================================================
+   Documento do curso (D-49): só as folhas A4 saem no papel. O cabeçalho e o
+   rodapé do site ficam de fora, e os contentores à volta das folhas perdem
+   margens e larguras máximas — a capa e as folhas cheias vão até à borda.
+   =========================================================================== */
+@media print {
+  body:has([data-curso-imprimir]) {
+    background: #fff !important;
+  }
+  body:has([data-curso-imprimir]) main ~ *,
+  body:has([data-curso-imprimir]) :has(~ main) {
+    display: none !important;
+  }
+  body:has([data-curso-imprimir]) .grain::after {
+    display: none;
+  }
+  body:has([data-curso-imprimir]) *:has([data-curso-imprimir]),
+  [data-curso-imprimir] {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    border: 0 !important;
+  }
+}
+
 /* O cursor de escrita da resposta do Cívico, enquanto o motor escreve. */
 @keyframes civico-cursor {
   50% {

@@ -5,8 +5,8 @@ const tudo = { inqueritos: true, news: true, energia: true, direcao: true, admin
 const nada = { inqueritos: false, news: false, energia: false, direcao: false, admin: false };
 
 describe('navegação agrupada do admin', () => {
-  it('com tudo ligado, mostra os cinco grupos do AEOS pela ordem do trabalho', () => {
-    expect(gruposVisiveis(tudo).map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing', 'Espaços', 'Controlo']);
+  it('com tudo ligado, mostra os seis grupos do AEOS pela ordem do trabalho', () => {
+    expect(gruposVisiveis(tudo).map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing', 'Produtos', 'Espaços', 'Controlo']);
   });
 
   it('os Inquéritos e o News continuam no admin, com o mesmo endereço e a mesma regra', () => {
@@ -21,13 +21,17 @@ describe('navegação agrupada do admin', () => {
 
   it('sem módulos nem papel admin, esconde Espaços e Controlo e as flags desligadas', () => {
     const grupos = gruposVisiveis(nada);
-    expect(grupos.map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing']);
+    expect(grupos.map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing', 'Produtos']);
     const hrefs = grupos.flatMap((g) => g.entradas.map((e) => e.href));
     expect(hrefs).not.toContain('/admin/inqueritos');
     expect(hrefs).not.toContain('/admin/news');
     expect(hrefs).not.toContain('/admin/fila');
     expect(hrefs).not.toContain('/admin/equipa');
     expect(hrefs).not.toContain('/admin/auditoria');
+  });
+
+  it('os Cursos ficam nos Produtos (AEOS, bloco 3 — Academia), para toda a equipa', () => {
+    expect(gruposVisiveis(nada).find((g) => g.titulo === 'Produtos')!.entradas.map((e) => e.href)).toEqual(['/admin/cursos']);
   });
 
   it('o Gabinete e o CEnO só aparecem a quem tem o módulo', () => {

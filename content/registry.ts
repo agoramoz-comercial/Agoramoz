@@ -96,6 +96,8 @@ export const RESERVED_TOP_LEVEL_SLUGS = [
   'projetos',
   // AGORAMOZ Cívico (D-43).
   'civico',
+  // Cursos AGORAMOZ (D-49).
+  'cursos',
 ] as const;
 
 /**
