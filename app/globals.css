@@ -767,8 +767,10 @@
   body:has([data-curso-imprimir]) :has(~ main) {
     display: none !important;
   }
-  body:has([data-curso-imprimir]) .grain::after {
-    display: none;
+  body:has([data-curso-imprimir]) .grain::after,
+  /* O anunciador de rotas do Next fica no fim do body: sem isto, imprime uma folha em branco (tamanho Letter) no fim. */
+  body:has([data-curso-imprimir]) next-route-announcer {
+    display: none !important;
   }
   body:has([data-curso-imprimir]) *:has([data-curso-imprimir]),
   [data-curso-imprimir] {

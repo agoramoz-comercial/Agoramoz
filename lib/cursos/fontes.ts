@@ -78,3 +78,24 @@ export function indiceParaPlanear(fontes: readonly Fonte[], tecto = 40_000): str
   }
   return linhas.join('\n');
 }
+
+/**
+ * Os números de um texto em inglês: vírgula nos milhares, ponto decimal
+ * («2,500 km» → 2500, «US$ 6.2 billion» → 6.2, «3.4%» → 3.4).
+ */
+export function numerosIngles(s: string): number[] {
+  return [...s.matchAll(/(?<![\w.,])(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?/g)].map((m) =>
+    Number(`${m[1]!.replace(/,/g, '')}${m[2] ? `.${m[2]}` : ''}`),
+  );
+}
+
+/**
+ * Confere uma tradução: cada número da passagem traduzida tem de existir no
+ * original. Devolve os que faltam (lista vazia = tradução numericamente fiel).
+ */
+export function numerosForaDoOriginal(traducao: string, original: string, numerosPt: (s: string) => { valor: number }[]): number[] {
+  const orig = numerosIngles(original);
+  return numerosPt(traducao)
+    .map((n) => n.valor)
+    .filter((v) => !orig.some((o) => Math.abs(o - v) < 1e-9));
+}

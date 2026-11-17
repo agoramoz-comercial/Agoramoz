@@ -14,9 +14,14 @@ import { z } from 'zod';
  * refazer. O público vê o curso e a lista das fontes (título e tipo).
  */
 
-export const NIVEIS = ['iniciacao', 'intermedio', 'avancado'] as const;
+export const NIVEIS = ['iniciacao', 'intermedio', 'avancado', 'progressivo'] as const;
 export type Nivel = (typeof NIVEIS)[number];
-export const ROTULO_NIVEL: Readonly<Record<Nivel, string>> = { iniciacao: 'Iniciação', intermedio: 'Intermédio', avancado: 'Avançado' };
+export const ROTULO_NIVEL: Readonly<Record<Nivel, string>> = {
+  iniciacao: 'Iniciação',
+  intermedio: 'Intermédio',
+  avancado: 'Avançado',
+  progressivo: 'Do zero ao avançado',
+};
 
 export const LIMITES = {
   fontes: 12,
@@ -46,26 +51,82 @@ export const passagemSchema = z.strictObject({
     .string()
     .min(1)
     .max(LIMITES.passagem * 2),
+  /**
+   * O texto original, quando a fonte é noutra língua: `texto` é a tradução
+   * (é contra ela que o curso se verifica) e `original` fica para auditoria —
+   * um teste confirma que cada número da tradução está no original.
+   */
+  original: z.string().min(1).max(4_000).optional(),
 });
 export type Passagem = z.infer<typeof passagemSchema>;
 
 export const fonteSchema = z.strictObject({
   id: z.string().regex(/^F[1-9]\d?$/),
   titulo: curto,
-  tipo: z.enum(['docx', 'pdf', 'txt', 'md', 'texto']),
+  tipo: z.enum(['docx', 'pdf', 'txt', 'md', 'texto', 'web']),
+  /** Referência pública da fonte (opcional): quem a publicou, quando e onde. */
+  autor: z.string().trim().min(1).max(160).optional(),
+  data: z.string().trim().min(4).max(40).optional(),
+  url: z.string().url().max(400).optional(),
+  lingua: z.enum(['pt', 'en']).optional(),
   passagens: z.array(passagemSchema).min(1).max(2_000),
 });
 export type Fonte = z.infer<typeof fonteSchema>;
 
+/** Um gráfico com valores tirados das fontes: cada valor tem de estar, tal e qual, nas passagens citadas. */
+export const graficoSchema = z.strictObject({
+  titulo: z.string().trim().min(3).max(160),
+  unidade: z.string().trim().min(1).max(60),
+  series: z
+    .array(z.strictObject({ rotulo: z.string().trim().min(1).max(60), valor: z.number().finite() }))
+    .min(2)
+    .max(12),
+});
+export type Grafico = z.infer<typeof graficoSchema>;
+
 export const blocoSchema = z.strictObject({
-  tipo: z.enum(['explicacao', 'exemplo', 'passos', 'citacao']),
+  /**
+   * `grafico`: barras com valores das fontes. `esquema`: um diagrama de fluxo
+   * desenhado a partir de `itens` (cada item é um passo), rotulado como
+   * esquema — não é fotografia nem dado.
+   */
+  tipo: z.enum(['explicacao', 'exemplo', 'passos', 'citacao', 'grafico', 'esquema']),
   texto: texto,
   itens: z.array(z.string().trim().min(1).max(400)).max(10).optional(),
   /** Para `citacao`: as palavras exactas de uma passagem citada. */
   citacao: z.string().trim().min(10).max(600).optional(),
+  grafico: graficoSchema.optional(),
   fontes: ids,
 });
 export type Bloco = z.infer<typeof blocoSchema>;
+
+/**
+ * O exercício prático da aula («aprender fazendo»). Os dados ou vêm das
+ * fontes (e cada número é verificado) ou são de treino, inventados para
+ * praticar — e isso fica escrito no exercício. As contas são verificadas:
+ * cada linha de `contas` («32,0 − 30,9 = 1,1») é calculada outra vez.
+ */
+export const exercicioSchema = z.strictObject({
+  titulo: z.string().trim().min(3).max(160),
+  contexto: z.string().trim().min(10).max(1_200),
+  dados: z
+    .strictObject({
+      origem: z.enum(['fontes', 'treino']),
+      nota: z.string().trim().min(5).max(300),
+      colunas: z.array(z.string().trim().min(1).max(60)).min(2).max(6),
+      linhas: z
+        .array(z.array(z.string().trim().max(80)).min(2).max(6))
+        .min(1)
+        .max(20),
+    })
+    .optional(),
+  passos: z.array(z.string().trim().min(5).max(500)).min(2).max(8),
+  contas: z.array(z.string().trim().min(5).max(200)).max(12).optional(),
+  entregavel: z.string().trim().min(5).max(400),
+  solucao: z.string().trim().min(5).max(1_200),
+  fontes: ids,
+});
+export type Exercicio = z.infer<typeof exercicioSchema>;
 
 export const perguntaSchema = z.strictObject({
   enunciado: z.string().trim().min(5).max(400),
@@ -84,6 +145,7 @@ export const aulaSchema = z.strictObject({
   passagens: z.array(z.string().regex(ID_PASSAGEM)).min(1).max(40),
   blocos: z.array(blocoSchema).max(LIMITES.blocosPorAula),
   perguntas: z.array(perguntaSchema).max(LIMITES.perguntasPorAula),
+  exercicio: exercicioSchema.optional(),
 });
 export type Aula = z.infer<typeof aulaSchema>;
 
@@ -120,7 +182,17 @@ export const cursoSchema = z.strictObject({
   resultados: z.array(resultadoSchema).min(1).max(LIMITES.resultados),
   modulos: z.array(moduloSchema).min(1).max(LIMITES.modulos),
   fontes: z
-    .array(z.strictObject({ id: z.string().regex(/^F[1-9]\d?$/), titulo: curto, tipo: fonteSchema.shape.tipo }))
+    .array(
+      z.strictObject({
+        id: z.string().regex(/^F[1-9]\d?$/),
+        titulo: curto,
+        tipo: fonteSchema.shape.tipo,
+        autor: fonteSchema.shape.autor,
+        data: fonteSchema.shape.data,
+        url: fonteSchema.shape.url,
+        lingua: fonteSchema.shape.lingua,
+      }),
+    )
     .min(1)
     .max(LIMITES.fontes),
   verificacao: verificacaoSchema,
@@ -163,4 +235,18 @@ export function slugDe(titulo: string): string {
     .join('-')
     .slice(0, 80)
     .replace(/-+$/, '');
+}
+
+/** A referência pública de uma fonte: tudo menos o texto das passagens. */
+export function semPassagens(f: Fonte): Omit<Fonte, 'passagens'> {
+  const { id, titulo, tipo, autor, data, url, lingua } = f;
+  return {
+    id,
+    titulo,
+    tipo,
+    ...(autor ? { autor } : {}),
+    ...(data ? { data } : {}),
+    ...(url ? { url } : {}),
+    ...(lingua ? { lingua } : {}),
+  };
 }

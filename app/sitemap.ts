@@ -183,9 +183,11 @@ function paginasDaLei(): MetadataRoute.Sitemap {
 async function paginasDosCursos(): Promise<MetadataRoute.Sitemap> {
   const cursos = await cursosPublicados();
   if (!cursos.length) return [];
-  const recente = Math.max(...cursos.map((c) => new Date(c.actualizado).getTime()));
+  // Datas de calendário, sem hora (como o resto do sitemap).
+  const dia = (iso: string) => new Date(iso.slice(0, 10));
+  const recente = Math.max(...cursos.map((c) => dia(c.actualizado).getTime()));
   return [
     { url: absolute('/cursos'), lastModified: new Date(recente), priority: 0.6 },
-    ...cursos.map((c) => ({ url: absolute(`/cursos/${c.slug}`), lastModified: new Date(c.actualizado), priority: 0.5 })),
+    ...cursos.map((c) => ({ url: absolute(`/cursos/${c.slug}`), lastModified: dia(c.actualizado), priority: 0.5 })),
   ];
 }

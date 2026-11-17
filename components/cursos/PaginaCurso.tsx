@@ -5,6 +5,7 @@ import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { aulasDoCurso, duracao, minutosDoCurso, ROTULO_NIVEL, type Curso } from '@/lib/cursos/modelo';
 import { absolute } from '@/lib/seo/site';
+import { GraficoColunas } from './Visuais';
 
 /**
  * As páginas públicas dos cursos (D-49). Componentes de servidor; cor só
@@ -69,6 +70,12 @@ export function PaginaCurso({ curso: c, slug, trilho }: { curso: Curso; slug: st
   const v = c.verificacao;
   const total = v.aceites + v.retirados;
   const pct = total ? Math.round((v.aceites / total) * 100) : 0;
+  const praticas = c.modulos.flatMap((m, mi) =>
+    m.aulas.flatMap((a, ai) =>
+      a.exercicio ? [{ n: `${mi + 1}.${ai + 1}`, titulo: a.exercicio.titulo, entregavel: a.exercicio.entregavel }] : [],
+    ),
+  );
+  const grafico = c.modulos.flatMap((m) => m.aulas.flatMap((a) => a.blocos)).find((b) => b.tipo === 'grafico');
   return (
     <>
       <JsonLd graph={jsonLd(c, slug) as never} />
@@ -153,6 +160,39 @@ export function PaginaCurso({ curso: c, slug, trilho }: { curso: Curso; slug: st
         </ol>
       </Section>
 
+      {praticas.length > 0 && (
+        <Section surface="tint">
+          <SectionHeading
+            eyebrow="Aprender fazendo"
+            title={`${praticas.length} exercícios práticos`}
+            lead="Cada aula acaba com uma tarefa: dados (das fontes ou de treino, sempre identificados), passos, contas conferidas e um entregável. As soluções vêm no documento."
+          />
+          <ol role="list" className="mt-10 grid gap-px border border-[color:var(--border)] bg-[color:var(--border)] md:grid-cols-2">
+            {praticas.map((p) => (
+              <li key={p.n} className="grid grid-cols-[3.5rem_1fr] gap-3 bg-[color:var(--surface)] p-6">
+                <span className="text-sm tabular-nums text-[color:var(--muted)]">{p.n}</span>
+                <span>
+                  <span className="text-[1.0625rem] leading-snug">{p.titulo}</span>
+                  <span className="mt-1 block text-sm text-[color:var(--muted)]">Entregável: {p.entregavel}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Section>
+      )}
+
+      {grafico?.grafico && (
+        <Section surface="light">
+          <SectionHeading eyebrow="Com dados reais" title={grafico.grafico.titulo} lead={grafico.texto} />
+          <div className="mt-8 max-w-[46rem]">
+            <GraficoColunas g={grafico.grafico} />
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Fontes: {grafico.fontes.join(', ')}. Um de vários gráficos do curso, todos com valores verificados nas fontes.
+            </p>
+          </div>
+        </Section>
+      )}
+
       <Section surface="tint">
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
@@ -161,7 +201,22 @@ export function PaginaCurso({ curso: c, slug, trilho }: { curso: Curso; slug: st
               {c.fontes.map((f) => (
                 <li key={f.id} className="flex gap-3 border-b border-[color:var(--border)] py-2">
                   <span className="tabular-nums text-[color:var(--muted)]">{f.id}</span>
-                  <span>{f.titulo}</span>
+                  <span>
+                    {f.autor ? `${f.autor} — ` : ''}
+                    {f.url ? (
+                      <a href={f.url} target="_blank" rel="noopener" className="underline underline-offset-4">
+                        {f.titulo}
+                      </a>
+                    ) : (
+                      f.titulo
+                    )}
+                    {f.data ? ` (${f.data})` : ''}
+                    {f.lingua === 'en' && (
+                      <span className="block text-xs text-[color:var(--muted)]">
+                        Original em inglês; passagens traduzidas pela AGORAMOZ.
+                      </span>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

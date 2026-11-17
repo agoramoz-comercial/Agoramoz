@@ -445,7 +445,72 @@
   .doc > :last-child {
     break-after: auto;
   }
+  /* Um fio abaixo do A4: arredondamentos não empurram a folha para uma página em branco. */
+  .cheia {
+    height: 296.5mm;
+  }
   :global(body):has(.doc) {
     background: #fff !important;
   }
+}
+
+/* ------------------------------------------------- visuais e prática (D-49) */
+
+.figura {
+  margin-top: 5mm;
+  break-inside: avoid;
+  border-top: 1.4pt solid var(--tinta);
+  padding-top: 3mm;
+}
+.legenda {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  margin-top: 1.5mm;
+  font-size: 6.4pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--mute);
+}
+.exercicio {
+  margin-top: 7mm;
+  background: var(--azul);
+  color: #fff;
+  padding: 6mm 7mm;
+  break-inside: avoid;
+}
+.exercicio .corpo {
+  color: rgba(255, 255, 255, 0.92);
+}
+.exercicio .passos li::before {
+  color: var(--lavanda);
+}
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2mm;
+  font-size: 8pt;
+  font-feature-settings: 'tnum';
+}
+.tabela th,
+.tabela td {
+  text-align: left;
+  padding: 1.4mm 2mm;
+  border-bottom: 0.6pt solid rgba(255, 255, 255, 0.3);
+}
+.tabela th {
+  font-size: 6.4pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lavanda);
+}
+.ligacao {
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }

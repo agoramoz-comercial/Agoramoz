@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import { agrupar } from '@/lib/propostas/modelo';
 import { aulasDoCurso, duracao, minutosDoCurso, ROTULO_NIVEL, type Bloco, type Curso } from '@/lib/cursos/modelo';
 import s from './curso.module.css';
+import { Esquema, ExercicioDoc, GraficoColunas } from './Visuais';
 
 /**
  * O documento do curso (D-49), pronto para «Guardar como PDF».
@@ -34,6 +35,22 @@ function BlocoDoc({ b }: { b: Bloco }) {
       <div className={`${s.bloco} ${s.citacao}`}>
         <blockquote>«{b.citacao}»</blockquote>
         <p className={`${s.corpo} ${s.mt1}`}>{b.texto}</p>
+        <Fontes ids={b.fontes} />
+      </div>
+    );
+  if (b.tipo === 'grafico' && b.grafico)
+    return (
+      <div className={s.bloco}>
+        <p className={s.corpo}>{b.texto}</p>
+        <GraficoColunas g={b.grafico} />
+        <Fontes ids={b.fontes} />
+      </div>
+    );
+  if (b.tipo === 'esquema' && b.itens?.length)
+    return (
+      <div className={s.bloco}>
+        <p className={s.corpo}>{b.texto}</p>
+        <Esquema itens={b.itens} titulo={b.texto.split(/[.:]/)[0]!.slice(0, 60)} />
         <Fontes ids={b.fontes} />
       </div>
     );
@@ -107,17 +124,20 @@ export function DocumentoCurso({ curso, escala }: { curso: Curso; escala?: numbe
           <span className={s.marca}>AGORAMOZ ACADEMIA</span>
           <span className={s.pill}>{ROTULO_NIVEL[curso.nivel]}</span>
         </div>
-        <div className={s.formas} aria-hidden="true">
+        <div className={s.formas} aria-hidden="true" style={{ right: '-62mm', top: '24mm' }}>
           <span style={{ inset: '0 0 auto auto', width: '110mm', height: '110mm', background: 'rgba(255,255,255,.10)' }} />
           <span style={{ left: '10mm', top: '60mm', width: '80mm', height: '80mm', background: 'var(--lavanda)', opacity: 0.9 }} />
           <span style={{ left: '50mm', top: '30mm', width: '46mm', height: '46mm', background: 'var(--tinta)' }} />
         </div>
         <p className={`${s.lab} ${s.mt4}`}>Curso</p>
-        <h1 className={`${s.disp} ${s.mega} ${s.mt2}`} style={{ maxWidth: '150mm', position: 'relative' }}>
+        <h1
+          className={`${s.disp} ${s.mega} ${s.mt2}`}
+          style={{ maxWidth: '118mm', position: 'relative', fontSize: curso.titulo.length > 28 ? '44pt' : undefined }}
+        >
           {curso.titulo}
         </h1>
         {curso.subtitulo && (
-          <p className={`${s.md} ${s.mt3}`} style={{ maxWidth: '120mm', position: 'relative', fontWeight: 400 }}>
+          <p className={`${s.md} ${s.mt3}`} style={{ maxWidth: '105mm', position: 'relative', fontWeight: 400 }}>
             {curso.subtitulo}
           </p>
         )}
@@ -315,6 +335,7 @@ export function DocumentoCurso({ curso, escala }: { curso: Curso; escala?: numbe
                     ))}
                   </div>
                 )}
+                {a.exercicio && <ExercicioDoc e={a.exercicio} rotulo={`Aula ${mi + 1}.${ai + 1} · solução no fim`} />}
               </article>
             ))}
           </section>
@@ -346,6 +367,36 @@ export function DocumentoCurso({ curso, escala }: { curso: Curso; escala?: numbe
             ),
           )}
         </div>
+        {curso.modulos.some((m) => m.aulas.some((a) => a.exercicio)) && (
+          <>
+            <h2 className={`${s.disp} ${s.lg} ${s.mt4}`}>Soluções da prática</h2>
+            <div className={s.mt2}>
+              {curso.modulos.flatMap((m, mi) =>
+                m.aulas.flatMap((a, ai) =>
+                  a.exercicio
+                    ? [
+                        <div key={`e${mi}.${ai}`} className={s.linhaLista}>
+                          <span className={s.idx}>
+                            {mi + 1}.{ai + 1}
+                          </span>
+                          <div>
+                            <p className={s.corpo} style={{ fontWeight: 600 }}>
+                              {a.exercicio.titulo}
+                            </p>
+                            {a.exercicio.contas?.length ? (
+                              <p className={`${s.pequeno} ${s.tnum}`}>Contas: {a.exercicio.contas.join(' · ')}</p>
+                            ) : null}
+                            <p className={s.pequeno}>{a.exercicio.solucao}</p>
+                          </div>
+                          <span />
+                        </div>,
+                      ]
+                    : [],
+                ),
+              )}
+            </div>
+          </>
+        )}
         <h2 className={`${s.disp} ${s.lg} ${s.mt4}`}>Fontes</h2>
         <p className={`${s.pequeno} ${s.mt1}`}>
           Cada etiqueta do curso (por exemplo F1.3) aponta para uma passagem: F1 é a fonte, 3 é a passagem, pela ordem do documento
@@ -357,7 +408,15 @@ export function DocumentoCurso({ curso, escala }: { curso: Curso; escala?: numbe
               <span className={s.tag} style={{ justifySelf: 'start' }}>
                 {f.id}
               </span>
-              <p className={s.corpo}>{f.titulo}</p>
+              <div>
+                <p className={s.corpo}>
+                  {f.autor ? `${f.autor} — ` : ''}
+                  {f.titulo}
+                  {f.data ? ` (${f.data})` : ''}
+                </p>
+                {f.url && <p className={`${s.pequeno} ${s.ligacao}`}>{f.url}</p>}
+                {f.lingua === 'en' && <p className={s.pequeno}>Original em inglês; passagens traduzidas pela AGORAMOZ.</p>}
+              </div>
               <span className={s.idx}>{f.tipo.toUpperCase()}</span>
             </div>
           ))}

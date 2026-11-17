@@ -85,3 +85,28 @@ node .qa/cursos.mjs http://127.0.0.1:3111
 ```
 
 O motor simulado (`lib/cursos/simulado.ts`) copia frases das passagens e erra de propósito na 1.ª tentativa de cada peça (número inventado, citação adulterada, passagem inexistente, frase sem apoio); o QA confirma que o ciclo apanha e corrige tudo e que nada disso chega ao documento. O comportamento da 0022 foi provado num Postgres 16 por `.qa/cursos-comportamento.sql`.
+
+## Cursos escritos no repositório
+
+Um curso também pode ser escrito em `content/cursos/<nome>/` e publicado sem a base de dados. É o caso do primeiro curso, **IA para Transporte e Logística em Moçambique**:
+
+- **Fontes:** `fontes.ts`, 9 documentos públicos. Cada passagem tem o excerto original e a tradução da AGORAMOZ. O curso é verificado contra a tradução. Um teste confirma que cada número da tradução existe no original.
+- **Conteúdo:** `curso.ts`, com 5 módulos, 13 aulas, 13 exercícios, gráficos e esquemas.
+- **Montagem:** `lib/cursos/estaticos.ts` passa tudo pelo mesmo verificador e regista quantas rondas de correcção foram precisas. O teste `lib/cursos/curso-ia-transporte.test.ts` exige zero falhas.
+
+`lib/cursos/leitura.ts` junta estes cursos aos da base de dados (0022). Se um curso da base tiver o mesmo endereço, prevalece o do repositório.
+
+### O que o verificador confere a mais (gráficos e exercícios)
+
+- **Gráficos (`grafico`):** cada valor e cada ano nos rótulos têm de estar nas passagens citadas.
+- **Esquemas (`esquema`):** desenhados a partir dos passos, com o rótulo «Ilustrativo». Os passos são verificados como texto.
+- **Exercícios — dados:** vêm das fontes, e cada número é conferido, ou são «de treino», inventados para praticar, e o exercício di-lo.
+- **Exercícios — contas:** cada linha de `contas` (por exemplo, `32,0 - 30,9 = 1,1`) é recalculada. Os termos só podem vir:
+  - das fontes;
+  - dos dados;
+  - de contas anteriores;
+  - ou ser 100, para converter em percentagem.
+
+  Os números do enunciado e da solução seguem a mesma regra. Um ano-alvo («prever 2026») é tolerado.
+
+O documento para descarregar fica em `app/(documento)/cursos/[slug]/documento`, fora do layout do site. Dentro do layout, o Chrome acrescentava uma folha em branco no fim do PDF.

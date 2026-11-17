@@ -2,9 +2,11 @@ import { z } from 'zod';
 import {
   aulaSchema,
   blocoSchema,
+  exercicioSchema,
   moduloSchema,
   perguntaSchema,
   resultadoSchema,
+  semPassagens,
   slugDe,
   type Aula,
   type Curso,
@@ -77,6 +79,7 @@ function semNulos(x: unknown): unknown {
 const conteudoAulaSchema = z.object({
   blocos: z.array(z.object(blocoSchema.shape)).max(12),
   perguntas: z.array(z.object(perguntaSchema.shape)).max(5).default([]),
+  exercicio: z.object(exercicioSchema.shape).optional(),
 });
 
 /** Resultado de uma peça depois do ciclo. */
@@ -190,9 +193,14 @@ export async function escreverAula(
     const r = conteudoAulaSchema.safeParse(semNulos(bruto));
     if (!r.success) return { valor: null, falhas: formaInvalida('aula', r.error), aceites: 0, retirados: 0 };
     const v = verificarConteudoAula(r.data, { passagens, permitidas });
-    const aceites = v.blocos.length + v.perguntas.length;
+    const aceites = v.blocos.length + v.perguntas.length + (v.exercicio ? 1 : 0);
     if (!v.blocos.length) return { valor: null, falhas: v.falhas, aceites, retirados: v.total - aceites };
-    return { valor: { ...a, blocos: v.blocos, perguntas: v.perguntas }, falhas: v.falhas, aceites, retirados: v.total - aceites };
+    return {
+      valor: { ...a, blocos: v.blocos, perguntas: v.perguntas, ...(v.exercicio ? { exercicio: v.exercicio } : {}) },
+      falhas: v.falhas,
+      aceites,
+      retirados: v.total - aceites,
+    };
   }, max);
 }
 
@@ -251,7 +259,7 @@ export function montarCurso(pedido: PedidoCurso, fontes: readonly Fonte[], rel: 
     prerequisitos: plano.prerequisitos,
     resultados: plano.resultados,
     modulos,
-    fontes: fontes.map((f) => ({ id: f.id, titulo: f.titulo, tipo: f.tipo })),
+    fontes: fontes.map(semPassagens),
     verificacao: { emitidaEm: agora.toISOString(), aceites, retirados, tentativas, notas: notas.slice(0, 60) },
   };
 }

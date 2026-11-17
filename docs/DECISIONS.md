@@ -742,3 +742,10 @@ está em `docs/TERRABUILD.md`.
 - O motor só liga com a função criada no Base44 e três variáveis na Vercel (docs/CURSOS.md); funções de backend no Base44 pedem o plano Builder.
 - A verificação lexical aceita paráfrases fiéis e recusa ideias novas, mas não apanha uma inversão de sentido com as mesmas palavras; quem publica revê.
 - A 0022 é aplicada pelo fundador (linha 34 do `verificar-estado`); até lá, o criador gera e descarrega, mas não guarda nem publica.
+- **Adenda (17/11/2026):**
+  - **Primeiro curso:** «IA para Transporte e Logística em Moçambique», escrito no repositório e publicado sem a base de dados.
+  - **Fontes:** 9 fontes públicas: OCDE, ITF/OCDE, Fórum Económico Mundial, Banco Mundial (2), MPDC, Moçambique/TFA, Hyndman & Athanasopoulos e OR-Tools. As traduções são conferidas número a número.
+  - **Verificação:** o verificador passou a cobrir gráficos, exercícios e contas recalculadas.
+  - **Resultado:** zero falhas em 2 rondas.
+  - **Contradições nas fontes:** o crescimento ferroviário de «17%» publicado pelo MPDC não bate com 9,7 → 11,7, que dá 20,6%. O curso não corrige a fonte: transforma a discrepância num exercício de verificação de dados.
+

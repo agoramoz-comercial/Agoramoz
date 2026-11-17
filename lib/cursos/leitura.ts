@@ -1,5 +1,6 @@
 import { createSessionClient } from '@/lib/auth/client';
 import { dbAdmin } from '@/lib/db/client';
+import { CURSOS_ESTATICOS } from '@/content/cursos';
 import { fonteSchema, lerCurso, type Curso, type Fonte } from './modelo';
 
 /**
@@ -116,8 +117,22 @@ function publico(r: Record<string, unknown>): CursoPublico | null {
   return { slug: String(r.slug), curso, publicadoEm: String(r.publicado_em ?? r.updated_at), actualizado: String(r.updated_at) };
 }
 
-/** Os publicados, mais recentes primeiro. Sem base ou sem a 0022: lista vazia. */
+/** Os cursos escritos no repositório (D-49): publicados sem precisar da base. */
+const estaticos = (): CursoPublico[] =>
+  CURSOS_ESTATICOS.map((c) => ({
+    slug: c.curso.slug,
+    curso: c.curso,
+    publicadoEm: c.publicadoEm,
+    actualizado: c.curso.verificacao.emitidaEm,
+  }));
+
+/** Os publicados, mais recentes primeiro: os do repositório e os da base (0022). */
 export async function cursosPublicados(): Promise<CursoPublico[]> {
+  const fixos = estaticos();
+  return [...fixos, ...(await daBase()).filter((c) => !fixos.some((f) => f.slug === c.slug))];
+}
+
+async function daBase(): Promise<CursoPublico[]> {
   const db = dbAdmin();
   if (!db) return [];
   try {
@@ -136,6 +151,8 @@ export async function cursosPublicados(): Promise<CursoPublico[]> {
 
 export async function cursoPublicado(slug: string): Promise<CursoPublico | null> {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 80) return null;
+  const fixo = estaticos().find((c) => c.slug === slug);
+  if (fixo) return fixo;
   const db = dbAdmin();
   if (!db) return null;
   try {
