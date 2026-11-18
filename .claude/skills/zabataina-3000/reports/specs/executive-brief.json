@@ -91,7 +91,8 @@
             }
           ]
         }
-      ]
+      ],
+      "align": "spread"
     },
     {
       "layout": "standard",
@@ -205,7 +206,8 @@
             }
           ]
         }
-      ]
+      ],
+      "align": "spread"
     },
     {
       "layout": "standard",
@@ -312,7 +314,8 @@
             ]
           ]
         }
-      ]
+      ],
+      "align": "spread"
     },
     {
       "layout": "blue",
@@ -344,7 +347,8 @@
           "label": "Decisão requerida",
           "value": "[Aprovar meta / ajustar meta / aprovar recolha de dados]"
         }
-      ]
+      ],
+      "align": "spread"
     }
   ]
 }

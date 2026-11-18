@@ -87,6 +87,22 @@ if node -e "require('playwright')" >/dev/null 2>&1; then
   for s in executive-brief financial-feasibility plan-180-days commercial-proposal; do
     check "spec → PDF: $s" "python3 $HERE/reports/scripts/doc_builder.py $HERE/reports/specs/$s.json $T/$s.html --pdf $T/$s.pdf && [ -s $T/$s.pdf ]"
   done
+  # v2.1 — layout: índice, fluxo, ritmo e verificador de equilíbrio
+  B="python3 $HERE/reports/scripts/doc_builder.py"
+  cat > $T/v21.json <<'JSON'
+{"meta":{"title":"t"},"pages":[
+ {"layout":"standard","blocks":[{"type":"toc"}]},
+ {"layout":"standard","number":"01","title":"Primeira","question":"Porquê?","align":"spread","blocks":[{"type":"text","text":"a"},{"type":"text","text":"b"}]},
+ {"layout":"standard","number":"02","title":"Segunda","blocks":[{"type":"table","columns":["x","y"],"rows":[["a",{"bar":50,"text":"2"}]]},{"type":"push"},{"type":"text","text":"fim"}]},
+ {"layout":"standard","blocks":[{"type":"text","text":"curta"}]}]}
+JSON
+  check "v2.1 toc lists numbered pages with real page numbers" "$B $T/v21.json $T/v21.html && grep -q '<td class=\"n\">01</td><td><div class=\"t\">Primeira</div><div class=q>Porquê?</div></td><td class=\"p\">02</td>' $T/v21.html && grep -q 'Segunda</div></td><td class=\"p\">03</td>' $T/v21.html"
+  check "v2.1 spread page and push block render"  "grep -q 'flow flow--spread' $T/v21.html && grep -q 'blk-push' $T/v21.html"
+  check "v2.1 bar cell keeps a fixed track"       "grep -q 'class=\"dcell\"><span class=\"dtrack\"><span class=\"dbar\" style=\"width:50.0%\"' $T/v21.html"
+  check "v2.1 rhythm: default spacing by block type" "grep -q 'margin-top:var(--s-4)\"><table' $T/v21.html"
+  check "v2.1 renderer flags an underfilled page"  "node $HERE/reports/scripts/render_pdf.js $T/v21.html $T/v21.pdf 2>&1 | grep -q 'underfilled page(s): 1 .*4 ('"
+  check "v2.1 nofill page is exempt" "python3 -c \"import json;d=json.load(open('$T/v21.json'));d['pages'][3]['nofill']=True;json.dump(d,open('$T/v21b.json','w'))\" && $B $T/v21b.json $T/v21b.html && grep -q '<section data-nofill' $T/v21b.html"
+  check "v2.1 spread and push pages are not flagged" "node $HERE/reports/scripts/render_pdf.js $T/v21.html $T/v21.pdf 2>&1 | grep 'underfilled' | grep -vq ' 2 (\| 3 ('"
 else
   echo "  SKIP  PDF rendering — NOT EXECUTED — TOOL UNAVAILABLE (playwright not found)"
 fi

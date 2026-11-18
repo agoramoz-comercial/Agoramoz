@@ -59,6 +59,34 @@ catch (e) { console.error('Playwright not found. Install it (npm i playwright) o
     return body.scrollHeight > body.clientHeight + 2 ? i + 1 : null;
   }).filter(Boolean));
   if (overflow.length) console.warn('WARNING: content overflows on page(s): ' + overflow.join(', '));
+
+  // v2.1 — Equilíbrio: página com mais de um terço vazio em baixo (capa e páginas com data-nofill à parte).
+  const underfill = await page.evaluate(() => [...document.querySelectorAll('.page')].map((p, i) => {
+    const flow = p.querySelector('.flow');
+    const body = p.querySelector('.page-body');
+    if (!flow || !body || p.hasAttribute('data-nofill')) return null;
+    const blks = [...flow.querySelectorAll(':scope > .blk, :scope > .blk-group')];
+    if (!blks.length) return null;
+    const last = Math.max(...blks.map(b => b.getBoundingClientRect().bottom));
+    const empty = (body.getBoundingClientRect().bottom - last) / body.getBoundingClientRect().height;
+    return empty > 0.33 ? `${i + 1} (${Math.round(empty * 100)}% vazia)` : null;
+  }).filter(Boolean));
+  if (underfill.length) console.warn('WARNING: underfilled page(s): ' + underfill.join(', ') +
+    ' — use "align": "spread", a {"type":"push"} block, or add useful content.');
+
+  // v2.1 — Sobreposição: um cartão cujo conteúdo é mais alto do que ele, ou blocos seguidos que se tocam.
+  const overlap = await page.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('.page').forEach((p, i) => {
+      p.querySelectorAll('.chart-card').forEach(c => { if (c.scrollHeight > c.clientHeight + 2) out.push(`${i + 1} (gráfico «${(c.querySelector('h4') || {}).textContent || ''}» mais alto do que o cartão)`); });
+      const blks = [...p.querySelectorAll('.flow > .blk, .flow > .blk-group')];
+      for (let k = 1; k < blks.length; k++) {
+        if (blks[k].getBoundingClientRect().top < blks[k - 1].getBoundingClientRect().bottom - 1) out.push(`${i + 1} (blocos ${k} e ${k + 1})`);
+      }
+    });
+    return out;
+  });
+  if (overlap.length) console.warn('WARNING: overlapping content on page(s): ' + overlap.join(', '));
   if (errors.length) console.warn('Console warnings/errors:\n - ' + errors.join('\n - '));
   await browser.close();
 })();

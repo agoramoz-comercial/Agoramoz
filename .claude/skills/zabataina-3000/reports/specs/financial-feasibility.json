@@ -153,7 +153,8 @@
             ]
           ]
         }
-      ]
+      ],
+      "align": "spread"
     },
     {
       "layout": "standard",
@@ -212,7 +213,8 @@
             "prefix": "US$ "
           }
         }
-      ]
+      ],
+      "align": "spread"
     }
   ]
 }

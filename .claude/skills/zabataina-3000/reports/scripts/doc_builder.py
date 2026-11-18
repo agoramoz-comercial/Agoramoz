@@ -48,7 +48,8 @@ def cell(c):
         if "spark" in c:
             return f'<span class="spark" data-spark="{esc(json.dumps(c["spark"]))}"></span>'
         if "bar" in c:
-            return f'<span class="dbar" style="width:{max(0, min(100, float(c["bar"])))}%"></span> {esc(c.get("text", ""))}'
+            w = max(0, min(100, float(c["bar"])))
+            return f'<span class="dcell"><span class="dtrack"><span class="dbar" style="width:{w}%"></span></span>{esc(c.get("text", ""))}</span>'
         if "mark" in c:
             return f'<span class="mk-{esc(c["mark"])}"></span>'
     return esc(c)
@@ -204,19 +205,68 @@ def b_dark(b, ctx):
         "".join(render_block(x, ctx) for x in b["items"]) + "</div>"
 
 
+def b_lead(b, ctx):
+    return f'<p class="lead">{esc(b["text"])}</p>'
+
+
+def b_toc(b, ctx):
+    """Índice automático: páginas com `number` e `title` (ou um `heading` numerado), com o n.º de página real."""
+    rows = []
+    for n, pg in ctx.get("toc", []):
+        rows.append(f'<tr><td class="n">{esc(pg["num"])}</td><td><div class="t">{esc(pg["title"])}</div>'
+                    f'{("<div class=q>" + esc(pg["q"]) + "</div>") if pg.get("q") else ""}</td><td class="p">{n:02d}</td></tr>')
+    return '<table class="toc">' + "".join(rows) + "</table>"
+
+
 BLOCKS = {"heading": b_heading, "text": b_text, "bullets": b_bullets, "kpis": b_kpis, "stats": b_stats, "tracks": b_tracks,
           "segments": b_segments, "line-items": b_lineitems, "metrics": b_metrics, "tiles": b_tiles, "hero": b_hero,
           "sig-bars": b_sigbars, "callout": b_callout, "tam": b_tam, "chart": b_chart, "charts": b_charts, "table": b_table,
           "photo": b_photo, "grid": b_grid, "dark": b_dark,
           "rule": lambda b, c: '<hr class="rule rule--ink">', "spacer": lambda b, c: f'<div style="height:{b.get("h", "6mm")}"></div>',
-          "note": lambda b, c: f'<p class="footnote">{esc(b["text"])}</p>'}
+          "note": lambda b, c: f'<p class="footnote">{esc(b["text"])}</p>',
+          "lead": b_lead, "toc": b_toc}
+
+# Ritmo vertical (v2.1): espaço antes de cada tipo de bloco quando o spec não diz `mt`.
+RHYTHM = {"heading": "var(--s-4)", "lead": "var(--s-3)", "text": "var(--s-3)", "bullets": "var(--s-2)", "note": "var(--s-2)",
+          "table": "var(--s-4)", "chart": "var(--s-4)", "charts": "var(--s-4)", "grid": "var(--s-4)", "kpis": "var(--s-5)",
+          "metrics": "var(--s-4)", "callout": "var(--s-5)", "dark": "var(--s-5)", "tracks": "var(--s-4)", "tiles": "var(--s-4)",
+          "stats": "var(--s-3)", "hero": "var(--s-4)", "toc": "var(--s-4)"}
 
 
 def render_block(b, ctx):
+    if b.get("type") == "push":
+        return '<div class="blk-push"></div>'
     fn = BLOCKS.get(b.get("type"))
     if not fn:
         raise ValueError(f"unknown block type: {b.get('type')}")
-    return f'<div class="blk" style="margin-top:{b.get("mt", "5mm")}">{fn(b, ctx)}</div>'
+    return f'<div class="blk" style="margin-top:{b.get("mt", RHYTHM.get(b.get("type"), "var(--s-3)"))}">{fn(b, ctx)}</div>'
+
+
+def is_heading(b):
+    return b.get("type") in ("heading", "lead") or (b.get("type") == "grid" and any(is_heading(x) for x in b.get("items", [])))
+
+
+def render_groups(blocks, ctx):
+    """Página `spread`: o espaço livre vai para entre grupos, e um título fica sempre colado ao bloco que o segue."""
+    groups, cur = [], []
+    for b in blocks:
+        cur.append(b)
+        if not (is_heading(b) or b.get("keep_with_next")):
+            groups.append(cur); cur = []
+    if cur:
+        groups.append(cur)
+    return "".join('<div class="blk-group">' + "".join(render_block(b, ctx) for b in g) + "</div>" for g in groups)
+
+
+def find_numbered_heading(blocks):
+    for b in blocks:
+        if b.get("type") == "heading" and b.get("number"):
+            return b
+        if b.get("type") == "grid":
+            h = find_numbered_heading(b.get("items", []))
+            if h:
+                return h
+    return None
 
 
 # ------------------------------------------------------------------ pages
@@ -248,8 +298,12 @@ def page_html(pg, i, n, meta, ctx):
               f'<span>{left if footer_kind == "blue" else esc(left)}</span><span>{esc(right)}</span></div>')
     year = f'<div class="year">{esc(meta.get("year", ""))}<sup>{esc(meta.get("year_sup", ""))}</sup></div>' if meta.get("year") else "<div></div>"
     brand = f'<div class="brand">{BRAND_SVG}<span>{esc(meta.get("organization", ""))}</span></div>'
-    blocks = "".join(render_block(b, ctx) for b in pg.get("blocks", []))
+    if pg.get("align") == "spread":
+        blocks, flow = render_groups(pg.get("blocks", []), ctx), "flow flow--spread"
+    else:
+        blocks, flow = "".join(render_block(b, ctx) for b in pg.get("blocks", [])), "flow"
     eyebrow = f'<div class="eyebrow">{esc(pg.get("eyebrow", ""))}</div>'
+    lead = f'<p class="lead">{esc(pg["lead"])}</p>' if pg.get("lead") else ""
 
     if layout == "cover":
         kp = b_kpis({"items": pg.get("kpis", [])}, ctx) if pg.get("kpis") else ""
@@ -266,25 +320,49 @@ def page_html(pg, i, n, meta, ctx):
         return (f'<section class="page"><div class="page-body"><div class="bg-grad-h" style="height:64mm;position:relative">'
                 f'<div class="page-top">{brand}{year}</div>'
                 f'{b_photo({"height": "34mm", "src": pg.get("image"), "css": "position:absolute;left:52mm;bottom:0;width:78mm"}, ctx)}</div>'
-                f'<div class="pad" style="padding-top:10mm"><h1 class="display display--m">{num}{esc(pg.get("title", ""))}</h1></div>'
-                f'<div class="pad" style="padding-bottom:8mm">{blocks}</div></div>{footer}</section>')
+                f'<div class="pad" style="padding-top:10mm"><h1 class="display display--m">{num}{esc(pg.get("title", ""))}</h1>{lead}</div>'
+                f'<div class="pad {flow}" style="padding-top:var(--s-4);padding-bottom:8mm">{blocks}</div></div>{footer}</section>')
     if layout == "lilac":
         return (f'<section class="page"><div class="page-body"><div class="bg-lilac" style="padding:18mm var(--pad) 10mm">'
                 f'<h1 class="display display--l">{esc(pg.get("title", ""))}</h1>'
                 f'<p class="body-text" style="max-width:120mm;margin-top:5mm;color:#2a2a35">{esc(pg.get("subtitle", ""))}</p></div>'
-                f'<div class="pad" style="padding-bottom:8mm">{blocks}</div></div>{footer}</section>')
+                f'<div class="pad {flow}" style="padding-bottom:8mm">{blocks}</div></div>{footer}</section>')
     cls = {"blue": "page page--blue", "dark": "page page--ink on-dark"}.get(layout, "page")
-    title = (f'<div class="pad" style="padding-top:6mm"><h2 class="h2">{esc(pg["number"] + " ") if pg.get("number") else ""}{esc(pg["title"])}</h2></div>'
-             if pg.get("title") else "")
+    if pg.get("title"):
+        num = esc(pg["number"]) + ". " if pg.get("number") else ""
+        tag = (f'<h2 class="h2 page-title">{num}{esc(pg["title"])}</h2>' if pg.get("title_size") == "h2"
+               else f'<h1 class="display display--m page-title">{num}{esc(pg["title"])}</h1>')
+        title = f'<div class="pad page-head">{tag}{lead}</div>'
+        pad_top = "var(--s-4)"
+    else:
+        title, pad_top = "", "6mm"
     return (f'<section class="{cls}"><div class="page-top">{eyebrow}{year}</div><div class="page-body">{title}'
-            f'<div class="pad" style="padding-bottom:8mm">{blocks}</div></div>{footer}</section>')
+            f'<div class="pad {flow}" style="padding-top:{pad_top};padding-bottom:8mm">{blocks}</div></div>{footer}</section>')
+
+
+def toc_entries(pages):
+    """(n.º de página, {num, title, q}) para cada página numerada; `"toc": false` exclui uma página."""
+    out = []
+    for i, pg in enumerate(pages, 1):
+        if pg.get("toc") is False or pg.get("layout") == "cover":
+            continue
+        num, title = pg.get("number"), pg.get("title") or pg.get("toc_title")
+        if not (num and title):
+            h = find_numbered_heading(pg.get("blocks", []))
+            if h:
+                num, title = h["number"], h["text"]
+        if num and title and "(cont.)" not in str(title):
+            out.append((i, {"num": num, "title": pg.get("toc_title", title), "q": pg.get("question", "")}))
+    return out
 
 
 def build(spec, out_html, spec_dir=None):
     meta = spec.get("meta", {})
     ctx = {"lang": meta.get("lang", "pt") if meta.get("lang", "pt") in LABELS else "pt", "base": pathlib.Path(spec_dir or ".")}
     pages = split_tables(spec["pages"], spec.get("max_table_rows", 18))
-    body = "".join(page_html(p, i, len(pages), meta, ctx) for i, p in enumerate(pages, 1))
+    ctx["toc"] = toc_entries(pages)
+    body = "".join(page_html(p, i, len(pages), meta, ctx).replace("<section ", "<section data-nofill ", 1 if p.get("nofill") else 0)
+                   for i, p in enumerate(pages, 1))
     out_html = pathlib.Path(out_html).resolve()
     adir = out_html.parent / "z3k-assets"
     if adir.resolve() != ASSETS.resolve():

@@ -22,6 +22,26 @@
 | `dark` | same as standard | Black page; charts switch to the dark palette |
 | `lilac` | `title`, `subtitle`, `blocks` | Lilac top band (insight pages) |
 
+## Layout v2.1 — structure and spacing
+
+Page fields (all layouts except `cover`):
+
+| Field | Effect |
+|---|---|
+| `title` + `number` | Page title as a `display-m` heading ("02. …"). Write the conclusion, not the topic. `"title_size": "h2"` keeps the old small title. |
+| `lead` | Opening paragraph under the title, 11 pt. |
+| `align: "spread"` | Spreads the blocks over the full page height. Free space goes **between groups**; a `heading`/`lead` (or a grid containing one) always stays with the block after it. `"keep_with_next": true` on any block does the same. |
+| `question` | The question this section answers, shown in the automatic table of contents. |
+| `toc: false` · `toc_title` | Leave a page out of the contents · title to use there (for pages whose title is a `hero`). |
+
+New blocks: `{"type":"toc"}` (contents with real page numbers, built from pages with `number` + `title`, or a numbered `heading`, also inside grids), `{"type":"lead","text":…}` and `{"type":"push"}` (flexible space: everything after it goes to the bottom of the page).
+
+**Vertical rhythm.** Without `"mt"`, each block gets the space for its type from the scale `--s-1`…`--s-6` (2.5 / 4 / 6 / 9 / 13 / 18 mm): text 6 mm; headings, tables, charts, grids and metrics 9 mm; KPIs, callouts and dark panels 13 mm. Set `"mt"` only to break the rhythm on purpose.
+
+**Type scale.** Body 8.6 pt / 1.62, tables 8 pt with 2.7 mm cell padding, chart titles 10 pt, footnotes 6.8 pt.
+
+**Renderer checks** (`render_pdf.js`, printed as `WARNING:`): overflow, **underfilled page** (more than a third empty at the bottom: use `spread`, `push` or more content) and **overlap** (a chart taller than its card, or adjacent blocks that touch). A finished document has no warnings. Mark a page that is meant to be sparse with `"nofill": true`.
+
 ## Blocks (`"type"`)
 
 Every block accepts `"mt"` (top margin, default `5mm`).

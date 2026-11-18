@@ -150,7 +150,8 @@
             ]
           ]
         }
-      ]
+      ],
+      "align": "spread"
     },
     {
       "layout": "standard",
@@ -227,7 +228,8 @@
           ],
           "footnote": "M17: todo o KPI tem definição, fórmula, fonte, responsável, frequência, baseline, meta, limite e ação corretiva."
         }
-      ]
+      ],
+      "align": "spread"
     }
   ]
 }

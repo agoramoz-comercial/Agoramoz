@@ -52,7 +52,8 @@
             }
           ]
         }
-      ]
+      ],
+      "align": "spread"
     },
     {
       "layout": "standard",
@@ -116,7 +117,8 @@
           "mt": "8mm",
           "text": "**Próximos passos:** [1. aceitação · 2. reunião de arranque · 3. recolha de dados]\n\n**Garantias e condições:** [apenas o que pode ser cumprido]"
         }
-      ]
+      ],
+      "align": "spread"
     }
   ]
 }

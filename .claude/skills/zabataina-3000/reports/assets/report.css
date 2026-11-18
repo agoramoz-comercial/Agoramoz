@@ -325,3 +325,88 @@ p { margin: 0 0 2.5mm; }
 
 /* ---------- Notes ---------- */
 .footnote { font-size: 5.8pt; color: var(--z-muted); line-height: 1.45; }
+
+/* ======================================================================
+ * v2.1 — Escala tipográfica e ritmo vertical (AGORAMOZ, 2026-11-18)
+ *
+ * A v2.0 compunha o texto corrido a 7 pt e as tabelas a 7,2 pt: legível,
+ * mas pequeno para A4, e as páginas ficavam com a metade de baixo vazia.
+ * Esta camada sobe a escala (texto 8,6 pt, tabelas 8 pt), dá mais ar às
+ * linhas e define um ritmo vertical por tipo de bloco (doc_builder.py).
+ * ==================================================================== */
+:root {
+  --s-1: 2.5mm; --s-2: 4mm; --s-3: 6mm; --s-4: 9mm; --s-5: 13mm; --s-6: 18mm;
+}
+.body-text { font-size: 8.6pt; line-height: 1.62; }
+.body-text p + p { margin-top: 2.4mm; }
+.body-text p { margin: 0; }
+.cols-2 { column-gap: 9mm; }
+.lead { font-size: 11pt; line-height: 1.45; letter-spacing: -.01em; color: var(--z-text); max-width: 150mm; margin: 0; }
+.on-dark .lead, .page--blue .lead, .page--ink .lead { color: rgba(255, 255, 255, .92); }
+.h2 { font-size: 17pt; margin-bottom: 0; }
+.h3 { font-size: 10.5pt; }
+.page-title { margin: 0; }
+.page-title + .lead { margin-top: var(--s-3); }
+.page-head { padding-top: 7mm; padding-bottom: 0; }
+
+.z-table { font-size: 8pt; }
+.z-table caption { font-size: 9.5pt; padding-bottom: 3mm; }
+.z-table th { font-size: 6.4pt; padding: 2.4mm 2.4mm; }
+.z-table td { padding: 2.7mm 2.4mm; line-height: 1.4; }
+.tag { font-size: 5.8pt; line-height: 1.8; }
+.status { font-size: 6.6pt; }
+
+/* Barra dentro de célula: largura fixa, número ao lado, nunca parte. */
+.dcell { display: inline-flex; align-items: center; gap: 2mm; white-space: nowrap; }
+.dcell .dtrack { display: inline-block; width: 16mm; height: 1.8mm; background: rgba(29, 43, 230, .12); border-radius: 1mm; overflow: hidden; }
+.dcell .dbar { display: block; height: 100%; background: var(--z-blue); border-radius: 1mm; }
+
+.kpi-hero b { font-size: 26pt; }
+.kpi-hero span { font-size: 7.4pt; margin-top: 2mm; max-width: 52mm; line-height: 1.35; }
+.kpi-row { gap: 14mm; flex-wrap: wrap; }
+.stat-list .stat { padding: 3mm 0; }
+.stat-list .stat b { font-size: 18pt; }
+.stat-list .stat span { font-size: 7.4pt; text-align: right; max-width: 48mm; }
+.seg .desc { font-size: 7pt; max-width: 46mm; }
+.line-items .li { font-size: 8.4pt; padding: 2.8mm 0; }
+.metric { grid-template-columns: 32mm 1fr; gap: 5mm; padding: 4.6mm 0; }
+.metric .big { font-size: 18pt; }
+.metric .lbl { font-size: 6.6pt; line-height: 1.3; }
+.metric .ttl { font-size: 10pt; margin-bottom: 1.8mm; }
+.tile b { font-size: 20pt; }
+.tile small { font-size: 6.8pt; }
+.tile-heads { font-size: 7pt; }
+.tracks .track { font-size: 8pt; padding: 3mm 0; grid-template-columns: 42mm 1fr 24mm; }
+.callout-card b { font-size: 18pt; line-height: 1.2; }
+.callout-card .top { font-size: 6.8pt; }
+.footnote { font-size: 6.8pt; line-height: 1.5; max-width: 170mm; }
+
+.chart-card { padding: 5mm; }
+.chart-card h4 { font-size: 10pt; }
+.chart-card .sub { font-size: 7pt; margin-top: 1mm; }
+.chart-card .source { font-size: 6.2pt; margin-top: 2mm; }
+
+/* Fluxo da página: os blocos numa coluna que ocupa a altura toda. */
+.flow { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.flow--spread { justify-content: space-between; }
+.flow--spread > .blk-group + .blk-group { margin-top: var(--s-3); }
+.blk-group > .blk:first-child { margin-top: 0 !important; }
+.blk-push { flex: 1; min-height: var(--s-3); }
+
+/* Índice automático. */
+.toc { width: 100%; border-collapse: collapse; }
+.toc td { padding: 3.6mm 2mm; border-bottom: .25mm solid var(--z-rule); font-size: 9pt; vertical-align: baseline; }
+.toc tr:first-child td { border-top: .4mm solid var(--z-ink); }
+.toc .n { width: 14mm; font-weight: 700; color: var(--z-blue); font-variant-numeric: tabular-nums; }
+.toc .t { font-weight: 600; font-size: 11pt; letter-spacing: -.01em; }
+.toc .q { color: var(--z-text-2); font-size: 8pt; }
+.toc .p { width: 14mm; text-align: right; font-variant-numeric: tabular-nums; }
+.on-dark .toc td, .page--blue .toc td { border-bottom-color: rgba(255,255,255,.3); }
+.page--blue .toc .n { color: #fff; }
+.page--blue .toc .q { color: rgba(255,255,255,.75); }
+/* Cartão com altura definida: o gráfico ocupa o que sobra, sem mínimo que o empurre para fora. */
+.chart-card[style*="height"] .chart { min-height: 0; }
+/* Capa: os números ficam numa linha, ao lado da nota. */
+.bg-blue-grad .kpi-row { flex-wrap: nowrap; gap: 10mm; }
+.bg-blue-grad .kpi-hero b { font-size: 22pt; }
+.bg-blue-grad .kpi-hero span { max-width: 38mm; }
