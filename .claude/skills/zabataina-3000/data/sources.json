@@ -1,0 +1,312 @@
+{
+  "source": "Z3000-MASTER v2.0 Part V & XVII",
+  "verified": false,
+  "note": "Registry of sources named in the master prompt. URLs were not re-verified when this file was created; check availability, edition and terms at use time.",
+  "sources": [
+    {
+      "name": "Fortune Global 500",
+      "url": "https://fortune.com/ranking/global500/",
+      "category": "Company intelligence",
+      "default_tier": "E2",
+      "use": "Largest companies by revenue",
+      "rules": [
+        "Record edition year and ranking date",
+        "Record revenue and currency",
+        "Do not confuse revenue with profit or market cap",
+        "Do not claim current without checking edition"
+      ]
+    },
+    {
+      "name": "Y Combinator",
+      "url": "https://www.ycombinator.com/",
+      "category": "Startup intelligence",
+      "default_tier": "E1 (company disclosures) / E3",
+      "use": "Startup directory, patterns, lessons",
+      "rules": [
+        "Use for patterns; a YC company is not proof of success"
+      ]
+    },
+    {
+      "name": "Y Combinator",
+      "url": "https://www.ycombinator.com/companies",
+      "category": "Startup intelligence",
+      "default_tier": "E1 (company disclosures) / E3",
+      "use": "Startup directory, patterns, lessons",
+      "rules": [
+        "Use for patterns; a YC company is not proof of success"
+      ]
+    },
+    {
+      "name": "Y Combinator",
+      "url": "https://www.startupschool.org/",
+      "category": "Startup intelligence",
+      "default_tier": "E1 (company disclosures) / E3",
+      "use": "Startup directory, patterns, lessons",
+      "rules": [
+        "Use for patterns; a YC company is not proof of success"
+      ]
+    },
+    {
+      "name": "Forbes Billionaires",
+      "url": "https://www.forbes.com/billionaires/",
+      "category": "Wealth intelligence",
+      "default_tier": "E2 (estimate)",
+      "use": "Estimated net worth, source of wealth",
+      "rules": [
+        "Preserve retrieval date",
+        "Estimated net worth ≠ liquid wealth or audited cash",
+        "Do not claim completeness without verification"
+      ]
+    },
+    {
+      "name": "Crunchbase",
+      "url": "https://www.crunchbase.com/",
+      "category": "Startup funding",
+      "default_tier": "E2/E3",
+      "use": "Funding rounds, investors, valuations",
+      "rules": [
+        "Distinguish disclosed funding from estimates",
+        "Respect paywalls and terms of use"
+      ]
+    },
+    {
+      "name": "PitchBook",
+      "url": "https://pitchbook.com/",
+      "category": "Startup funding",
+      "default_tier": "E2/E3",
+      "use": "Funding rounds, investors, valuations",
+      "rules": [
+        "Distinguish disclosed funding from estimates",
+        "Respect paywalls and terms of use"
+      ]
+    },
+    {
+      "name": "Dealroom",
+      "url": "https://dealroom.co/",
+      "category": "Startup funding",
+      "default_tier": "E2/E3",
+      "use": "Funding rounds, investors, valuations",
+      "rules": [
+        "Distinguish disclosed funding from estimates",
+        "Respect paywalls and terms of use"
+      ]
+    },
+    {
+      "name": "CB Insights",
+      "url": "https://www.cbinsights.com/",
+      "category": "Startup funding",
+      "default_tier": "E2/E3",
+      "use": "Funding rounds, investors, valuations",
+      "rules": [
+        "Distinguish disclosed funding from estimates",
+        "Respect paywalls and terms of use"
+      ]
+    },
+    {
+      "name": "TechCrunch",
+      "url": "https://techcrunch.com/",
+      "category": "Startup funding",
+      "default_tier": "E2/E3",
+      "use": "Funding rounds, investors, valuations",
+      "rules": [
+        "Distinguish disclosed funding from estimates",
+        "Respect paywalls and terms of use"
+      ]
+    },
+    {
+      "name": "Wellfound",
+      "url": "https://wellfound.com/",
+      "category": "Startup funding",
+      "default_tier": "E2/E3",
+      "use": "Funding rounds, investors, valuations",
+      "rules": [
+        "Distinguish disclosed funding from estimates",
+        "Respect paywalls and terms of use"
+      ]
+    },
+    {
+      "name": "World Bank",
+      "url": "https://data.worldbank.org/",
+      "category": "Economic & trade data",
+      "default_tier": "E1",
+      "use": "GDP, inflation, trade, FDI, employment, debt",
+      "rules": [
+        "Check definitions, period, currency and geography"
+      ]
+    },
+    {
+      "name": "IMF",
+      "url": "https://www.imf.org/en/Data",
+      "category": "Economic & trade data",
+      "default_tier": "E1",
+      "use": "GDP, inflation, trade, FDI, employment, debt",
+      "rules": [
+        "Check definitions, period, currency and geography"
+      ]
+    },
+    {
+      "name": "UNCTAD",
+      "url": "https://unctad.org/statistics",
+      "category": "Economic & trade data",
+      "default_tier": "E1",
+      "use": "GDP, inflation, trade, FDI, employment, debt",
+      "rules": [
+        "Check definitions, period, currency and geography"
+      ]
+    },
+    {
+      "name": "UN Comtrade",
+      "url": "https://comtradeplus.un.org/",
+      "category": "Economic & trade data",
+      "default_tier": "E1",
+      "use": "GDP, inflation, trade, FDI, employment, debt",
+      "rules": [
+        "Check definitions, period, currency and geography"
+      ]
+    },
+    {
+      "name": "WTO",
+      "url": "https://www.wto.org/",
+      "category": "Economic & trade data",
+      "default_tier": "E1",
+      "use": "GDP, inflation, trade, FDI, employment, debt",
+      "rules": [
+        "Check definitions, period, currency and geography"
+      ]
+    },
+    {
+      "name": "OECD Data Explorer",
+      "url": "https://data-explorer.oecd.org/",
+      "category": "Economic & trade data",
+      "default_tier": "E1",
+      "use": "GDP, inflation, trade, FDI, employment, debt",
+      "rules": [
+        "Check definitions, period, currency and geography"
+      ]
+    },
+    {
+      "name": "Trading Economics",
+      "url": "https://tradingeconomics.com/",
+      "category": "Economic & trade data",
+      "default_tier": "E2",
+      "use": "Aggregated indicators",
+      "rules": [
+        "Prefer the underlying official source when it matters"
+      ]
+    },
+    {
+      "name": "Google Scholar",
+      "url": "https://scholar.google.com/",
+      "category": "Academic",
+      "default_tier": "E2 (peer-reviewed) / E3 (preprint, working paper)",
+      "use": "Research evidence",
+      "rules": [
+        "Distinguish peer-reviewed from preprints/working papers"
+      ]
+    },
+    {
+      "name": "Semantic Scholar",
+      "url": "https://www.semanticscholar.org/",
+      "category": "Academic",
+      "default_tier": "E2 (peer-reviewed) / E3 (preprint, working paper)",
+      "use": "Research evidence",
+      "rules": [
+        "Distinguish peer-reviewed from preprints/working papers"
+      ]
+    },
+    {
+      "name": "Crossref",
+      "url": "https://www.crossref.org/",
+      "category": "Academic",
+      "default_tier": "E2 (peer-reviewed) / E3 (preprint, working paper)",
+      "use": "Research evidence",
+      "rules": [
+        "Distinguish peer-reviewed from preprints/working papers"
+      ]
+    },
+    {
+      "name": "OpenAlex",
+      "url": "https://openalex.org/",
+      "category": "Academic",
+      "default_tier": "E2 (peer-reviewed) / E3 (preprint, working paper)",
+      "use": "Research evidence",
+      "rules": [
+        "Distinguish peer-reviewed from preprints/working papers"
+      ]
+    },
+    {
+      "name": "SSRN",
+      "url": "https://www.ssrn.com/",
+      "category": "Academic",
+      "default_tier": "E2 (peer-reviewed) / E3 (preprint, working paper)",
+      "use": "Research evidence",
+      "rules": [
+        "Distinguish peer-reviewed from preprints/working papers"
+      ]
+    },
+    {
+      "name": "NBER",
+      "url": "https://www.nber.org/",
+      "category": "Academic",
+      "default_tier": "E2 (peer-reviewed) / E3 (preprint, working paper)",
+      "use": "Research evidence",
+      "rules": [
+        "Distinguish peer-reviewed from preprints/working papers"
+      ]
+    },
+    {
+      "name": "Awwwards",
+      "url": "https://www.awwwards.com/",
+      "category": "Design & digital experience",
+      "default_tier": "E3",
+      "use": "UX/UI inspiration",
+      "rules": [
+        "Design awards are not evidence of commercial success"
+      ]
+    },
+    {
+      "name": "ECC",
+      "url": "https://github.com/affaan-m/ECC",
+      "category": "Repository registry",
+      "default_tier": "research lead",
+      "use": "Agent architecture, skills, hooks, memory",
+      "rules": [
+        "Apply the §50 audit protocol before adoption",
+        "A GitHub URL is a research lead, not proof of production readiness"
+      ]
+    },
+    {
+      "name": "REA",
+      "url": "https://github.com/morluto/rea",
+      "category": "Repository registry",
+      "default_tier": "research lead",
+      "use": "Reverse engineering, system analysis",
+      "rules": [
+        "Apply the §50 audit protocol before adoption",
+        "A GitHub URL is a research lead, not proof of production readiness"
+      ]
+    },
+    {
+      "name": "CLI-Anything",
+      "url": "https://github.com/HKUDS/CLI-Anything",
+      "category": "Repository registry",
+      "default_tier": "research lead",
+      "use": "CLI integration, tool execution",
+      "rules": [
+        "Apply the §50 audit protocol before adoption",
+        "A GitHub URL is a research lead, not proof of production readiness"
+      ]
+    },
+    {
+      "name": "zlib",
+      "url": "https://github.com/madler/zlib",
+      "category": "Repository registry",
+      "default_tier": "research lead",
+      "use": "Compression library — NOT a BI or agent framework",
+      "rules": [
+        "Apply the §50 audit protocol before adoption",
+        "A GitHub URL is a research lead, not proof of production readiness"
+      ]
+    }
+  ]
+}

@@ -27,7 +27,7 @@
 | Secret-scan hits | 159, all examples/fixtures | 13, all fixtures | 73, all fixtures |
 | Main risk | Global hooks run code on every tool call and edit harness config | Registry installs run with `shell=True` (incl. `curl … \| bash`) and drive real apps via subprocess | Runs analysis tools with host permissions on untrusted binaries; legal constraints |
 | Step 12 (executed) | 11/11 validators pass; `npm test` 10 415 / 10 423 pass | 53 / 66 harness unit suites fully green; 3 358 passed, 41 failed, 17 errors | partial: 2 151 tests before the 1 700 s limit, 1 failed, 57 skipped |
-| Decision | **ADAPT** (selected patterns) | **ISOLATE** | **ISOLATE** |
+| Decision | **ADAPT**: redaction pattern VERIFIED (scoped) | **ISOLATE** | **ISOLATE** |
 
 ## Secret-scan triage (step 10)
 
@@ -52,7 +52,7 @@
 - **Installation:** `install.sh` runs `npm install --ignore-scripts` locally, then copies components into `~/.claude` or other harness config directories. That is a **GLOBAL_CONFIG** change and needs human approval. No postinstall script exists.
 - **Dependencies:** 5 runtime dependencies (ajv, js-yaml, sql.js, zod, @iarna/toml), 13 dev dependencies, node ≥ 18.
 - **Integration assessment:** ECC overlaps heavily with CODEFORGE's agents, skills and hooks. The realistic path is a selective **ADAPT** of specific patterns, such as the secret-redaction hooks and catalogue validators, after their tests have been run in isolation. A wholesale install of global hooks is not recommended.
-- **Decision: ADAPT** (after step 12). Selected patterns only, never the global hook install. Verification is NOT VERIFIED until an adapted pattern is implemented and tested in CODEFORGE.
+- **Decision: ADAPT** (after step 12). Selected patterns only, never the global hook install. The secret-redaction pattern is now adapted and **VERIFIED (scoped)**; see [Next steps](#next-steps-beyond-this-audit). The catalogue validators remain NOT VERIFIED.
 
 ## CLI-Anything — evaluation against §11.2
 
@@ -137,6 +137,15 @@ All runs were made at the audited commits, in this cloud container, with depende
 
 ## Next steps (beyond this audit)
 
-1. **ECC (ADAPT).** Pick one concrete pattern, for example the secret-redaction rules from its hooks. Re-implement it in CODEFORGE with tests, then run `cf.py adopt verify ECC --evidence …`.
+1. **ECC (ADAPT) — done for one pattern.**
+   - What was adapted: the secret-redaction logic of ECC's `sanitizeCommand`, re-implemented in Python as [`scripts/redaction.py`](../scripts/redaction.py), with attribution in [`NOTICE-ECC.md`](../NOTICE-ECC.md).
+   - Where it is used: `cf.redact`, which covers terminal logs, context packages and dashboard diffs, and the Claude Code hook.
+   - What it fixes: the previous rule hid only the `BEGIN` line of a PEM private key, so the key body stayed in logs. It also missed JWTs, `secret=`/`api_key=`/`password=` assignments, `Authorization` headers, `ASIA…` keys and `github_pat_…` tokens.
+   - Evidence:
+     - `tests/test_redaction.py` passes 41/41, mirroring ECC's own cases plus multi-line, prose and JSON cases;
+     - an end-to-end check confirms a real `cf.py run` log hides a PEM body, a JWT and a password;
+     - with the legacy rule restored, that check fails, so it does detect the gap.
+   - Recorded with `cf.py adopt verify ECC --scope "secret-redaction pattern …"`, so the status reads **VERIFIED (scope: …)**. The catalogue validators remain **NOT VERIFIED**.
+   - Engine change: `adopt verify` now requires `--scope`, so a partial adaptation can never read as the whole repository being integrated.
 2. **CLI-Anything (ISOLATE).** Choose the harness a real project needs and run its end-to-end tests in a container with the target application. Commands go through `cf.py run` so the installers are classified and held for approval.
 3. **REA (ISOLATE).** Run the full suite without a time limit, ideally in REA's own CI configuration and with the native addon built, inside a VM. Only then use it as an MCP server, and only for authorized engagements.

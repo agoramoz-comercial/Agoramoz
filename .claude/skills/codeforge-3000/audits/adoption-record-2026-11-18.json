@@ -1,6 +1,6 @@
 {
   "generated": "2026-11-18",
-  "method": "CODEFORGE §11.3 13-step audit recorded with cf.py adopt; step 12 executed after the user added a permission rule",
+  "method": "CODEFORGE §11.3 13-step audit recorded with cf.py adopt; step 12 executed after the user added a permission rule; ECC redaction pattern adapted and verified (scoped)",
   "adoption": {
     "ECC": {
       "source": "https://github.com/affaan-m/ECC",
@@ -130,15 +130,23 @@
         "static 13-step audit 2026-11-18; tests not executed",
         "e",
         "static 13-step audit 2026-11-18; tests not executed",
-        "static audit + step 12: 10415/10423 tests pass"
+        "static audit + step 12: 10415/10423 tests pass",
+        "tests/test_redaction.py 41/41 (ECC parity + multi-line); run_tests.sh 167/167 incl. end-to-end terminal-log check; mutation with legacy redaction detected (164/165)"
       ],
       "integration_requirements": "candidates: secret-redaction hook patterns, catalog validators — not yet adapted",
       "security": "never install global hooks; adapt individual patterns only",
       "agent": "CF05",
-      "verification_status": "NOT VERIFIED",
+      "verification_status": "VERIFIED (scope: secret-redaction pattern (sanitizeCommand → scripts/redaction.py))",
       "created": "2026-11-18T12:59:06",
       "reason": "high test pass rate; selective reuse of patterns",
-      "decided": "2026-11-18T14:24:31"
+      "decided": "2026-11-18T14:24:31",
+      "verified_scope": [
+        {
+          "scope": "secret-redaction pattern (sanitizeCommand → scripts/redaction.py)",
+          "evidence": "tests/test_redaction.py 41/41 (ECC parity + multi-line); run_tests.sh 167/167 incl. end-to-end terminal-log check; mutation with legacy redaction detected (164/165)",
+          "ts": "2026-11-18T14:35:22"
+        }
+      ]
     },
     "CLI-Anything": {
       "source": "https://github.com/HKUDS/CLI-Anything",
@@ -1444,6 +1452,12 @@
       "v": 99,
       "action": "adopt.decide",
       "detail": "REA ISOLATE"
+    },
+    {
+      "ts": "2026-11-18T14:35:22",
+      "v": 100,
+      "action": "adopt.verify",
+      "detail": "ECC scope=secret-redaction pattern (sanitizeCommand → scripts/redaction.py)"
     }
   ]
 }

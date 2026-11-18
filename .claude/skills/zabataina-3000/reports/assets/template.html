@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório — Modelo Editorial ZABATAINA</title>
+<link rel="stylesheet" href="report.css">
+<script src="vendor/echarts.min.js"></script>
+<script src="charts.js"></script>
+<style>
+  /* Page-specific layout only — all tokens and components live in report.css */
+  .gallery { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 5mm; padding: 6mm var(--pad) 7mm; flex: 1; min-height: 0; }
+  .gallery .chart-card .chart { min-height: 0; }
+</style>
+</head>
+<body>
+
+<!-- =============================================================
+     DADOS ILUSTRATIVOS — substitua todos os valores por dados reais
+     do cliente e marque a origem (ver references/components.md).
+     ============================================================= -->
+
+<!-- ============ 01 · CAPA ============ -->
+<section class="page page--blue">
+  <div class="page-body bg-blue-grad">
+    <div class="page-top">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2"><circle cx="20" cy="20" r="17"/><path d="M20 9 L31 29 H9 Z"/><path d="M20 17 L25 26 H15 Z" fill="currentColor"/></svg>
+        <span>Nome da Empresa</span>
+      </div>
+      <div class="year">2026<sup>2027</sup></div>
+    </div>
+    <div class="pad" style="margin-top:30mm">
+      <div class="eyebrow" style="opacity:.8">Relatório Anual · Plano de Crescimento</div>
+      <h1 class="display display--xl" style="margin-top:4mm">Relatório de<br>Desempenho<br>& Estratégia</h1>
+    </div>
+    <div class="photo photo--arch" style="margin:14mm var(--pad) 0; height:92mm; border-radius:0"></div>
+    <div class="pad between" style="margin-top:auto; padding-bottom:9mm">
+      <div class="kpi-row">
+        <div class="kpi-hero"><b>US$ 1,0M</b><span>Meta de receita — 180 dias</span></div>
+        <div class="kpi-hero"><b>4</b><span>Trilhas financeiras</span></div>
+      </div>
+      <div class="body-text" style="max-width:60mm; text-align:right">Documento confidencial preparado para a direção. Dados ilustrativos neste modelo.</div>
+    </div>
+  </div>
+  <div class="page-footer"><span>www.exemplo.com</span><span>contacto@exemplo.com</span></div>
+</section>
+
+<!-- ============ 02 · VISÃO GERAL (página esquerda) ============ -->
+<section class="page">
+  <div class="page-body">
+    <div class="bg-grad-h" style="height:72mm; position:relative">
+      <div class="page-top">
+        <div class="brand"><svg class="brand-mark" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2"><circle cx="20" cy="20" r="17"/><path d="M20 9 L31 29 H9 Z"/></svg><span>Nome da Empresa</span></div>
+        <div class="year">2026<sup>2027</sup></div>
+      </div>
+      <div class="photo photo--arch" style="position:absolute; left:52mm; bottom:-0mm; width:78mm; height:38mm"></div>
+    </div>
+    <div class="pad" style="padding-top:12mm">
+      <h1 class="display">01. Visão<br>Geral da Empresa</h1>
+    </div>
+    <div class="pad grid-1-2" style="margin-top:14mm; gap:10mm">
+      <div class="stat-list">
+        <div class="stat"><b>2014</b><span>Fundação</span></div>
+        <div class="stat"><b>6</b><span>Países</span></div>
+        <div class="stat"><b>148</b><span>Colaboradores</span></div>
+        <div class="stat"><b>1.240</b><span>Clientes ativos</span></div>
+      </div>
+      <div class="body-text cols-2">
+        <p>Resumo executivo da organização: o que vende, a quem, em que mercados e com que modelo de negócio. Escreva primeiro a conclusão e depois os factos que a sustentam.</p>
+        <p>Indique a fase do negócio, a principal restrição ao crescimento e a meta financeira escolhida, separando sempre receita, lucro, caixa e valorização.</p>
+        <p>Cada número deve ter origem identificada — <span class="tag tag--verified">verificado</span> <span class="tag tag--estimate">estimativa</span> — e as lacunas devem ser declaradas.</p>
+      </div>
+    </div>
+    <div class="pad" style="margin-top:auto; padding-bottom:8mm">
+      <hr class="rule rule--ink">
+      <div class="tracks">
+        <div class="track"><span>Trilha A — Receita</span><div class="bar"><i style="--p:62%"></i></div><span class="v">US$ 620K</span></div>
+        <div class="track"><span>Trilha B — Lucro líquido</span><div class="bar"><i style="--p:18%"></i></div><span class="v">US$ 180K</span></div>
+        <div class="track"><span>Trilha C — ARR</span><div class="bar"><i style="--p:41%"></i></div><span class="v">US$ 410K</span></div>
+        <div class="track"><span>Trilha D — Valorização</span><div class="bar"><i style="--p:75%"></i></div><span class="v">US$ 750K</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span>www.exemplo.com</span><span>contacto@exemplo.com</span></div>
+</section>
+
+<!-- ============ 03 · KPIs (página direita, azul) ============ -->
+<section class="page page--blue">
+  <div class="page-body">
+    <div class="pad" style="padding-top:12mm">
+      <div class="kpi-row" style="justify-content:flex-end; gap:16mm">
+        <div class="kpi-hero"><b>US$ 213,5K</b><span>Receita do período</span></div>
+        <div class="kpi-hero"><b>31,6%</b><span>Margem bruta</span></div>
+      </div>
+      <p class="body-text" style="max-width:62mm; margin:6mm 0 0 auto">Destaque as duas métricas que respondem à pergunta da direção. Os números grandes vêm sempre com rótulo e período.</p>
+    </div>
+    <div class="mosaic" style="flex:1; margin-top:12mm; grid-template-rows: 1fr 1fr 1fr">
+      <div class="t5"></div><div class="t2"></div><div class="photo photo--arch photo--duo" style="grid-column:span 1"></div><div class="t1"></div>
+      <div class="t3"></div><div class="t1"></div><div class="t2"></div><div class="t4"></div>
+      <div class="t5"></div><div class="t4"></div>
+      <div class="t2 txt">Coluna de texto curta sobre o mosaico: contexto do número, evidência e implicação para a decisão.</div>
+      <div class="t1 txt">Segunda coluna: riscos, pressupostos ou próxima ação recomendada.</div>
+    </div>
+  </div>
+  <div class="page-footer page-footer--blue"><span>Relatório Anual<br>Plano de Crescimento</span><span>Página 03</span></div>
+</section>
+
+<!-- ============ 04 · CLIENTES (insight) ============ -->
+<section class="page">
+  <div class="page-body">
+    <div class="bg-lilac" style="height:118mm; padding:22mm var(--pad) 0">
+      <h1 class="display display--l">Insight de<br>Clientes</h1>
+      <p class="body-text" style="max-width:110mm; margin-top:6mm; color:#2a2a35">Quem compra, porquê e quanto vale cada segmento. Baseado em entrevistas, dados de CRM e histórico de transações.</p>
+    </div>
+    <div class="split" style="flex:1">
+      <div class="photo photo--arch"></div>
+      <div class="pad" style="padding-top:6mm; padding-left:8mm">
+        <div class="seg-list">
+          <div class="seg"><span class="arr">↗</span><div><div class="name">Segmento<br>PME</div><div class="desc">Maior volume, ciclo de venda curto, ticket médio de US$ 2,4K.</div></div><span class="pct">60%</span></div>
+          <div class="seg"><span class="arr">↗</span><div><div class="name">Segmento<br>Empresarial</div><div class="desc">Contratos anuais, maior margem, decisão com várias partes.</div></div><span class="pct">28%</span></div>
+          <div class="seg"><span class="arr">↗</span><div><div class="name">Segmento<br>Startups</div><div class="desc">Crescimento rápido, maior risco de cancelamento.</div></div><span class="pct">12%</span></div>
+        </div>
+        <p class="footnote" style="margin-top:4mm">% da receita dos últimos 12 meses. Fonte: CRM do cliente <span class="tag tag--verified">verificado</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer"><span>www.exemplo.com</span><span>contacto@exemplo.com</span></div>
+</section>
+
+<!-- ============ 05 · ORÇAMENTO ============ -->
+<section class="page">
+  <div class="page-body pad" style="padding-top:16mm">
+    <div class="grid-2" style="gap:12mm">
+      <div></div>
+      <div class="line-items">
+        <div class="li"><span>Marketing e aquisição</span><span>US$ 40.000</span></div>
+        <div class="li"><span>Equipa comercial</span><span>US$ 55.000</span></div>
+        <div class="li"><span>Tecnologia e automação</span><span>US$ 18.000</span></div>
+        <div class="li li--total"><span>Total do investimento</span><span>US$ 113.000</span></div>
+      </div>
+    </div>
+    <h1 class="display display--l" style="margin-top:16mm">Orçamento de<br>Crescimento</h1>
+    <div style="margin-top:12mm">
+      <div class="metric"><div><div class="big">3,4×</div><div class="lbl">LTV : CAC</div></div><div><div class="ttl">Aquisição rentável antes de escalar</div><p class="body-text">Cada dólar investido em aquisição retorna 3,4 dólares de margem bruta ao longo da vida do cliente. Escalar só canais com retorno do CAC dentro da reserva de caixa.</p></div></div>
+      <div class="metric"><div><div class="big">−12%</div><div class="lbl">Custo de entrega</div></div><div><div class="ttl">Processos padronizados e automação</div><p class="body-text">Redução do custo por unidade entregue através de SOPs e automação de faturação e acompanhamento.</p></div></div>
+      <div class="metric"><div><div class="big">45 dias</div><div class="lbl">Retorno do CAC</div></div><div><div class="ttl">Pagamentos antecipados</div><p class="body-text">Sinal de 40% na adjudicação e faturação por marcos para financiar o crescimento com dinheiro dos clientes.</p></div></div>
+    </div>
+    <div style="margin-top:auto; padding-bottom:8mm">
+      <table class="z-table">
+        <thead><tr><th>Iniciativa</th><th>Responsável</th><th class="num">Investimento</th><th class="num">Impacto (base)</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Reativação de clientes</td><td>Comercial</td><td class="num">US$ 4K</td><td class="num">US$ 60K</td><td><span class="status status--good">Em execução</span></td></tr>
+          <tr><td class="strong">Nova tabela de preços</td><td>Direção</td><td class="num">US$ 0</td><td class="num">US$ 85K</td><td><span class="status status--warn">Aguarda aprovação</span></td></tr>
+          <tr><td class="strong">Canal de parceiros</td><td>Marketing</td><td class="num">US$ 12K</td><td class="num">US$ 120K</td><td><span class="status status--serious">Bloqueado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="page-footer page-footer--blue"><span>Relatório Anual<br>Plano de Crescimento</span><span>Página 05</span></div>
+</section>
+
+<!-- ============ 06 · PAINEL ESCURO + TILES ============ -->
+<section class="page">
+  <div class="page-body">
+    <div class="split" style="height:74mm">
+      <div class="bg-grad-v" style="padding:8mm var(--pad)"><div class="year">2026<sup>2027</sup></div></div>
+      <div class="photo photo--arch"></div>
+    </div>
+    <div class="bg-ink on-dark" style="padding:9mm var(--pad) 8mm">
+      <div class="between">
+        <div><span class="figure-xl">US$ 1,2M</span> <span class="pill" style="margin-left:2mm; vertical-align:middle">+18% vs plano</span></div>
+        <div class="eyebrow" style="text-align:right; opacity:.75; font-weight:500">Receita anualizada<br>(projeção base)</div>
+      </div>
+      <hr class="rule" style="border-top-color:rgba(255,255,255,.3); margin:6mm 0 4mm">
+      <div class="h3">Composição da receita</div>
+    </div>
+    <div class="bg-ink" style="padding:0 var(--pad) 10mm; color:#fff">
+      <div class="tile-heads"><span>Motor principal</span><span>Escala</span><span>Recorrente</span><span>Não essencial</span></div>
+      <div class="tiles">
+        <div class="tile tile--white"><b>45%</b><small>Serviços<br>por projeto</small></div>
+        <div class="tile tile--blue"><b>25%</b><small>Contratos<br>de manutenção</small></div>
+        <div class="tile tile--peri"><b>20%</b><small>Licenças<br>anuais</small></div>
+        <div class="tile tile--lav"><b>10%</b><small>Formação</small></div>
+      </div>
+    </div>
+    <div class="pad grid-2" style="padding-top:8mm; padding-bottom:8mm; flex:1">
+      <div class="chart-card"><h4>Receita mensal — real vs. meta</h4><div class="sub">US$ · últimos 6 meses</div>
+        <div class="chart" data-chart="groupedBars"><script type="application/json">{"data":{"categories":["Jan","Fev","Mar","Abr","Mai","Jun"],"series":[{"name":"Real","values":[82000,91000,88000,104000,118000,126000]},{"name":"Meta","values":[90000,95000,100000,110000,120000,130000]}]},"opts":{"prefix":"US$ "}}</script></div>
+        <div class="source">Fonte: contabilidade do cliente · Dados ilustrativos</div></div>
+      <div class="chart-card"><h4>Mix de receita por linha</h4><div class="sub">% da receita · 12 meses</div>
+        <div class="chart" data-chart="donut"><script type="application/json">{"data":{"items":[{"name":"Projetos","value":45},{"name":"Manutenção","value":25},{"name":"Licenças","value":20},{"name":"Formação","value":10}],"centerValue":"US$ 1,2M","centerLabel":"Receita anual"},"opts":{"suffix":"%","compact":false}}</script></div>
+        <div class="source">Fonte: ERP · Dados ilustrativos</div></div>
+    </div>
+  </div>
+  <div class="page-footer"><span>www.exemplo.com</span><span>contacto@exemplo.com</span></div>
+</section>
+
+<!-- ============ 07 · PREVISÃO + EQUILÍBRIO ============ -->
+<section class="page">
+  <div class="page-body pad" style="padding-top:14mm">
+    <h2 class="h2">4.2 Previsão de Receita<br>(2026–2028)</h2>
+    <div class="sig-bars" style="margin-top:8mm">
+      <div class="sig-bar"><div class="val">US$ 1,3M</div><div class="col" style="--h:52%"><span>2026</span></div></div>
+      <div class="sig-bar"><div class="meta">Crescimento<br>+ 28,8%</div><div class="val">US$ 1,7M</div><div class="col" style="--h:67%"><span>2027</span></div></div>
+      <div class="sig-bar"><div class="meta">Crescimento<br>+ 37,1%</div><div class="val">US$ 2,3M</div><div class="col" style="--h:92%"><span>2028</span></div></div>
+    </div>
+    <h2 class="h2" style="margin-top:12mm">4.3 Análise de Ponto de Equilíbrio</h2>
+    <p class="body-text" style="max-width:120mm">O ponto de equilíbrio indica quantas unidades é preciso vender para cobrir os custos fixos com a margem de contribuição de cada unidade.</p>
+    <div class="grid-2-1" style="margin-top:4mm; align-items:end">
+      <div class="line-items">
+        <div class="li"><span>Custo variável por unidade</span><span>US$ 250</span></div>
+        <div class="li"><span>Preço médio por unidade</span><span>US$ 550</span></div>
+        <div class="li"><span>Custos fixos mensais</span><span>US$ 45.000</span></div>
+        <div class="li li--total"><span>Ponto de equilíbrio</span><span>150 un./mês</span></div>
+      </div>
+      <div class="callout-card"><div class="top"><span>Custo fixo<br>anual</span><span class="ico">↙</span></div><b>US$ 540K</b></div>
+    </div>
+    <div class="chart-card" style="margin-top:8mm; flex:1; margin-bottom:8mm">
+      <h4>Receita vs. custo total por volume mensal</h4><div class="sub">US$ · Preço 550 · Custo variável 250 · Custos fixos 45K</div>
+      <div class="chart" data-chart="breakEven"><script type="application/json">{"data":{"fixed":45000,"variable":250,"price":550,"maxUnits":300},"opts":{"prefix":"US$ "}}</script></div>
+    </div>
+  </div>
+  <div class="page-footer page-footer--blue"><span>Relatório Anual<br>Plano de Crescimento</span><span>Página 07</span></div>
+</section>
+
+<!-- ============ 08 · GALERIA DE GRÁFICOS 1 — Finanças ============ -->
+<section class="page">
+  <div class="page-top" style="padding-bottom:0"><div class="eyebrow">05 · Inteligência financeira</div><div class="year">2026<sup>2027</sup></div></div>
+  <div class="gallery">
+    <div class="chart-card"><h4>Ponte de lucro: do ano anterior ao atual</h4><div class="sub">US$ · cascata</div>
+      <div class="chart" data-chart="waterfall"><script type="application/json">{"data":{"steps":[{"name":"2025","value":420000,"type":"start"},{"name":"Preço","value":85000},{"name":"Volume","value":60000},{"name":"Custos","value":-38000},{"name":"Câmbio","value":-12000},{"name":"2026","type":"total"}]},"opts":{"prefix":"US$ "}}</script></div></div>
+    <div class="chart-card"><h4>Cenários de receita — 180 dias</h4><div class="sub">US$ acumulado · base, intervalo e real</div>
+      <div class="chart" data-chart="scenarioFan"><script type="application/json">{"data":{"x":["M1","M2","M3","M4","M5","M6"],"conservative":[60000,140000,240000,350000,470000,600000],"base":[80000,190000,330000,490000,670000,860000],"ambitious":[95000,230000,410000,620000,860000,1120000],"actual":[78000,201000,null,null,null,null]},"opts":{"prefix":"US$ "}}</script></div></div>
+    <div class="chart-card"><h4>Sensibilidade do lucro anual</h4><div class="sub">Variação de ±20% em cada variável · US$</div>
+      <div class="chart" data-chart="tornado"><script type="application/json">{"data":{"base":300000,"items":[{"name":"Preço","low":190000,"high":410000},{"name":"Taxa de conversão","low":230000,"high":370000},{"name":"Custo variável","low":360000,"high":245000},{"name":"Custos fixos","low":335000,"high":265000}]},"opts":{"prefix":"US$ ","lowLabel":"−20%","highLabel":"+20%"}}</script></div></div>
+    <div class="chart-card"><h4>Estrutura de custos</h4><div class="sub">US$ · 12 meses</div>
+      <div class="chart" data-chart="treemap"><script type="application/json">{"data":{"items":[{"name":"Pessoal","value":420000},{"name":"Subcontratação","value":180000},{"name":"Marketing","value":95000},{"name":"Tecnologia","value":60000},{"name":"Instalações","value":48000},{"name":"Outros","value":30000}]},"opts":{"prefix":"US$ "}}</script></div></div>
+    <div class="chart-card"><h4>Progresso face às metas</h4><div class="sub">% da meta do período</div>
+      <div class="chart" data-chart="bullet"><script type="application/json">{"data":{"items":[{"name":"Receita","actual":620000,"target":1000000,"prefix":"US$ "},{"name":"Margem bruta","actual":31.6,"target":35,"suffix":"%","compact":false},{"name":"Novos clientes","actual":96,"target":80,"compact":false},{"name":"Caixa","actual":210000,"target":250000,"prefix":"US$ "}]},"opts":{}}</script></div></div>
+    <div class="chart-card"><h4>Concentração de receita por cliente</h4><div class="sub">US$ · rótulo = % acumulada · 80% a azul</div>
+      <div class="chart" data-chart="pareto"><script type="application/json">{"data":{"items":[{"name":"C1","value":180000},{"name":"C2","value":140000},{"name":"C3","value":95000},{"name":"C4","value":70000},{"name":"C5","value":52000},{"name":"C6","value":40000},{"name":"C7","value":28000},{"name":"C8","value":20000}]},"opts":{"prefix":"US$ "}}</script></div></div>
+  </div>
+  <div class="page-footer"><span>www.exemplo.com</span><span>Página 08</span></div>
+</section>
+
+<!-- ============ 09 · GALERIA 2 — Mercado, clientes, vendas ============ -->
+<section class="page">
+  <div class="page-top"><div class="eyebrow">06 · Mercado, clientes e vendas</div><div class="year">2026<sup>2027</sup></div></div>
+  <div class="gallery">
+    <div class="chart-card"><h4>Funil comercial do trimestre</h4><div class="sub">Volume e conversão entre etapas</div>
+      <div class="chart" data-chart="funnel"><script type="application/json">{"data":{"stages":[{"name":"Leads","value":2400},{"name":"Qualificados","value":720},{"name":"Propostas","value":260},{"name":"Negociação","value":120},{"name":"Fechados","value":64}]},"opts":{"compact":false}}</script></div></div>
+    <div class="chart-card"><h4>Mapa de posicionamento competitivo</h4><div class="sub">Preço vs. qualidade percebida · bolha = quota</div>
+      <div class="chart" data-chart="bubble"><script type="application/json">{"data":{"xName":"Preço relativo","yName":"Qualidade percebida","series":[{"name":"Nós","points":[[62,78,18,"Nós"]]},{"name":"Concorrentes","points":[[80,70,30,"Líder"],[40,48,22,"Low-cost"],[70,55,12,"Regional"],[52,66,9,"Nicho"]]}]},"opts":{"quadrants":{"x":60,"y":60}}}</script></div></div>
+    <div class="chart-card"><h4>Retenção por coorte de clientes</h4><div class="sub">% de clientes ativos por mês desde a compra</div>
+      <div class="chart" data-chart="heatmap"><script type="application/json">{"data":{"x":["M0","M1","M2","M3","M4","M5"],"y":["Jan","Fev","Mar","Abr","Mai","Jun"],"values":[[0,0,100],[1,0,82],[2,0,74],[3,0,70],[4,0,66],[5,0,63],[0,1,100],[1,1,85],[2,1,77],[3,1,72],[4,1,69],[0,2,100],[1,2,88],[2,2,80],[3,2,76],[0,3,100],[1,3,90],[2,3,83],[0,4,100],[1,4,91],[0,5,100]],"min":60,"max":100},"opts":{"suffix":"%","compact":false}}</script></div></div>
+    <div class="chart-card"><h4>Fluxo de receita: canal → segmento → oferta</h4><div class="sub">US$ · 12 meses</div>
+      <div class="chart" data-chart="sankey"><script type="application/json">{"data":{"nodes":[{"name":"Referências"},{"name":"Prospeção"},{"name":"Digital"},{"name":"PME"},{"name":"Empresarial"},{"name":"Projetos"},{"name":"Manutenção"}],"links":[{"source":"Referências","target":"PME","value":220000},{"source":"Referências","target":"Empresarial","value":120000},{"source":"Prospeção","target":"Empresarial","value":210000},{"source":"Digital","target":"PME","value":170000},{"source":"PME","target":"Projetos","value":260000},{"source":"PME","target":"Manutenção","value":130000},{"source":"Empresarial","target":"Projetos","value":200000},{"source":"Empresarial","target":"Manutenção","value":130000}]},"opts":{"prefix":"US$ "}}</script></div></div>
+    <div class="chart-card"><h4>Composição de receita por segmento</h4><div class="sub">% por linha de oferta</div>
+      <div class="chart" data-chart="stacked100"><script type="application/json">{"data":{"categories":["PME","Empresarial","Startups"],"series":[{"name":"Projetos","values":[260,200,40]},{"name":"Manutenção","values":[130,130,20]},{"name":"Licenças","values":[60,110,30]},{"name":"Formação","values":[30,20,10]}]},"opts":{}}</script></div></div>
+    <div class="chart-card"><h4>Antes e depois da otimização</h4><div class="sub">Taxa de conversão por etapa (%)</div>
+      <div class="chart" data-chart="dumbbell"><script type="application/json">{"data":{"items":[{"name":"Lead → Qualificado","before":22,"after":30},{"name":"Qualificado → Proposta","before":31,"after":36},{"name":"Proposta → Fecho","before":18,"after":25},{"name":"Resposta em 24h","before":54,"after":88}]},"opts":{"suffix":"%","compact":false}}</script></div></div>
+  </div>
+  <div class="page-footer page-footer--blue"><span>Relatório Anual<br>Plano de Crescimento</span><span>Página 09</span></div>
+</section>
+
+<!-- ============ 10 · GALERIA 3 — Estratégia, risco, operações ============ -->
+<section class="page">
+  <div class="page-top"><div class="eyebrow">07 · Estratégia, risco e execução</div><div class="year">2026<sup>2027</sup></div></div>
+  <div class="gallery" style="grid-template-rows: 1.15fr 1fr 1fr">
+    <div class="chart-card" style="grid-column: span 2"><h4>Roteiro de 180 dias com gates de decisão</h4><div class="sub">Fases P1–P4 · G1–G4 = revisões de avançar / ajustar / parar</div>
+      <div class="chart" data-chart="gantt"><script type="application/json">{"data":{"phases":["P1 Fundação","P2 Tração","P3 Aceleração","P4 Consolidação"],"tasks":[{"name":"Diagnóstico e baseline","start":0,"end":14,"phase":"P1 Fundação"},{"name":"Nova oferta e preços","start":7,"end":30,"phase":"P1 Fundação"},{"name":"Prospeção ativa","start":25,"end":75,"phase":"P2 Tração"},{"name":"CRM e automação","start":35,"end":70,"phase":"P2 Tração"},{"name":"Escalar canal vencedor","start":76,"end":135,"phase":"P3 Aceleração"},{"name":"Contratações","start":90,"end":130,"phase":"P3 Aceleração"},{"name":"SOPs e painel KPI","start":136,"end":175,"phase":"P4 Consolidação"}],"gates":[{"name":"G1","day":30},{"name":"G2","day":75},{"name":"G3","day":135},{"name":"G4","day":180}]},"opts":{}}</script></div></div>
+    <div class="chart-card"><h4>Matriz de riscos</h4><div class="sub">Probabilidade × impacto · IDs do registo de riscos</div>
+      <div class="chart" data-chart="riskMatrix"><script type="application/json">{"data":{"risks":[{"id":"R1","p":4,"i":5},{"id":"R2","p":2,"i":4},{"id":"R3","p":3,"i":3},{"id":"R4","p":5,"i":2},{"id":"R5","p":1,"i":5}]},"opts":{}}</script></div></div>
+    <div class="chart-card"><h4>Avaliação de capacidades (0–4)</h4><div class="sub">Atual vs. meta em 180 dias</div>
+      <div class="chart" data-chart="radar"><script type="application/json">{"data":{"indicators":[{"name":"Oferta","max":4},{"name":"Procura","max":4},{"name":"Conversão","max":4},{"name":"Entrega","max":4},{"name":"Retenção","max":4},{"name":"Finanças","max":4},{"name":"Equipa","max":4},{"name":"Sistemas","max":4}],"series":[{"name":"Atual","values":[3,2,1,3,2,1,2,1]},{"name":"Meta","values":[4,3,3,3,3,3,3,3]}]},"opts":{}}</script></div></div>
+    <div class="chart-card"><h4>Evolução de indicadores-chave</h4><div class="sub">Índice base 100 = Janeiro</div>
+      <div class="chart" data-chart="lines"><script type="application/json">{"data":{"x":["Jan","Fev","Mar","Abr","Mai","Jun"],"series":[{"name":"Receita","values":[100,108,112,121,133,141]},{"name":"Clientes","values":[100,104,109,113,118,124]},{"name":"CAC","values":[100,97,95,90,86,84]}]},"opts":{"compact":false}}</script></div></div>
+    <div class="chart-card"><h4>Receita por trimestre</h4><div class="sub">US$ · barras arredondadas (estilo assinatura)</div>
+      <div class="chart" data-chart="bars"><script type="application/json">{"data":{"categories":["T1","T2","T3","T4"],"values":[210000,260000,320000,390000]},"opts":{"prefix":"US$ ","axis":false}}</script></div></div>
+  </div>
+  <div class="page-footer"><span>www.exemplo.com</span><span>Página 10</span></div>
+</section>
+
+<!-- ============ 11 · TABELAS ============ -->
+<section class="page">
+  <div class="page-top"><div class="eyebrow">08 · Tabelas</div><div class="year">2026<sup>2027</sup></div></div>
+  <div class="page-body pad" style="padding-top:8mm">
+    <div class="grid-2" style="gap:8mm">
+      <table class="z-table z-table--fin">
+        <caption>Demonstração de resultados (US$)</caption>
+        <thead><tr><th>Rubrica</th><th class="num">2025</th><th class="num">2026</th><th class="num">Var.</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Receita líquida</td><td class="num">980.000</td><td class="num">1.240.000</td><td class="num">+26,5%</td></tr>
+          <tr class="indent"><td>Custo dos serviços</td><td class="num">(640.000)</td><td class="num">(848.000)</td><td class="num">+32,5%</td></tr>
+          <tr class="subtotal"><td>Lucro bruto</td><td class="num">340.000</td><td class="num">392.000</td><td class="num">+15,3%</td></tr>
+          <tr class="indent"><td>Despesas operacionais</td><td class="num">(240.000)</td><td class="num">(262.000)</td><td class="num">+9,2%</td></tr>
+          <tr class="subtotal"><td>Resultado operacional</td><td class="num">100.000</td><td class="num">130.000</td><td class="num">+30,0%</td></tr>
+          <tr class="indent"><td>Juros e impostos</td><td class="num">(32.000)</td><td class="num">(41.000)</td><td class="num">+28,1%</td></tr>
+          <tr class="total"><td>Lucro líquido</td><td class="num">68.000</td><td class="num">89.000</td><td class="num">+30,9%</td></tr>
+        </tbody>
+      </table>
+      <table class="z-table z-table--blue">
+        <caption>Painel de KPIs — semana 12 de 26</caption>
+        <thead><tr><th>KPI</th><th class="num">Real</th><th class="num">Meta</th><th>Tendência</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Leads</td><td class="num">412</td><td class="num">400</td><td><span class="spark" data-spark="[300,320,350,340,380,412]"></span></td><td><span class="status status--good">OK</span></td></tr>
+          <tr><td class="strong">Conversão</td><td class="num">2,7%</td><td class="num">3,0%</td><td><span class="spark" data-spark="[2.1,2.3,2.4,2.6,2.5,2.7]"></span></td><td><span class="status status--warn">Atenção</span></td></tr>
+          <tr><td class="strong">CAC</td><td class="num">US$ 410</td><td class="num">US$ 450</td><td><span class="spark" data-spark="[520,500,470,450,430,410]"></span></td><td><span class="status status--good">OK</span></td></tr>
+          <tr><td class="strong">Prazo de cobrança</td><td class="num">58 dias</td><td class="num">45 dias</td><td><span class="spark" data-spark="[44,47,50,53,55,58]"></span></td><td><span class="status status--critical">Crítico</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid-2" style="gap:8mm; margin-top:9mm">
+      <table class="z-table">
+        <caption>Comparação competitiva</caption>
+        <thead><tr><th>Atributo</th><th>Nós</th><th>Líder</th><th>Low-cost</th><th>Regional</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Prazo de entrega</td><td class="mk-yes"></td><td class="mk-part"></td><td class="mk-no"></td><td class="mk-part"></td></tr>
+          <tr><td class="strong">Suporte local</td><td class="mk-yes"></td><td class="mk-no"></td><td class="mk-no"></td><td class="mk-yes"></td></tr>
+          <tr><td class="strong">Preço competitivo</td><td class="mk-part"></td><td class="mk-no"></td><td class="mk-yes"></td><td class="mk-part"></td></tr>
+          <tr><td class="strong">Garantia de resultado</td><td class="mk-yes"></td><td class="mk-part"></td><td class="mk-no"></td><td class="mk-no"></td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="5" class="footnote" style="font-weight:400"><span class="mk-legend"><span class="mk-yes">total</span><span class="mk-part">parcial</span><span class="mk-no">não oferece</span></span> — fonte: entrevistas a 12 clientes</td></tr></tfoot>
+      </table>
+      <table class="z-table z-table--zebra">
+        <caption>Retenção por coorte (%)</caption>
+        <thead><tr><th>Coorte</th><th class="num">M1</th><th class="num">M2</th><th class="num">M3</th><th class="num">M6</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Jan</td><td class="num cell-h4">82</td><td class="num cell-h3">74</td><td class="num cell-h3">70</td><td class="num cell-h2">63</td></tr>
+          <tr><td class="strong">Fev</td><td class="num cell-h4">85</td><td class="num cell-h3">77</td><td class="num cell-h3">72</td><td class="num">—</td></tr>
+          <tr><td class="strong">Mar</td><td class="num cell-h5">88</td><td class="num cell-h4">80</td><td class="num cell-h3">76</td><td class="num">—</td></tr>
+          <tr><td class="strong">Abr</td><td class="num cell-h5">90</td><td class="num cell-h4">83</td><td class="num">—</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid-2" style="gap:8mm; margin-top:9mm; align-items:start">
+      <table class="z-table">
+        <caption>Registo de pressupostos</caption>
+        <thead><tr><th>Pressuposto</th><th>Origem</th><th>Validar até</th></tr></thead>
+        <tbody>
+          <tr><td>Taxa de fecho de 25%</td><td><span class="tag tag--verified">verificado</span></td><td>—</td></tr>
+          <tr><td>Ticket médio de US$ 2,4K</td><td><span class="tag tag--blue">cliente</span></td><td>Dia 14</td></tr>
+          <tr><td>CAC do canal parceiros</td><td><span class="tag tag--assumption">pressuposto</span></td><td>Dia 45</td></tr>
+          <tr><td>Tamanho do mercado-alvo</td><td><span class="tag tag--unknown">desconhecido</span></td><td>Dia 21</td></tr>
+        </tbody>
+      </table>
+      <div>
+        <div class="h3">Mercado endereçável (TAM · SAM · SOM)</div>
+        <div class="tam" style="margin-top:3mm">
+          <div class="c c1"><b>US$ 48M</b>TAM</div>
+          <div class="c c2"><b>US$ 12M</b>SAM</div>
+          <div class="c c3"><b>US$ 1,4M</b>SOM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer page-footer--blue"><span>Relatório Anual<br>Plano de Crescimento</span><span>Página 11</span></div>
+</section>
+
+<script>ZChart.autoRender();</script>
+</body>
+</html>

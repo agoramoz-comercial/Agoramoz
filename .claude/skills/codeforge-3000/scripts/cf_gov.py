@@ -128,8 +128,14 @@ def cmd_adopt(a):
             raise Refused("Only ADOPT / ADAPT / INTEGRATE / ISOLATE decisions can be verified")
         if not a.evidence:
             raise Refused("--evidence of the performed and tested integration is required (§11.6)")
-        x["verification_status"] = "VERIFIED"; x["evidence"].append(a.evidence)
-        save(a, r, "adopt.verify", a.name); print(f"{a.name}: integration VERIFIED"); return
+        if not a.scope:
+            raise Refused("--scope required: name exactly what was integrated and tested (a partial adaptation must not read as the whole repository)")
+        planned = x.get("integration_requirements", "")
+        x.setdefault("verified_scope", []).append({"scope": a.scope, "evidence": a.evidence, "ts": now()})
+        x["verification_status"] = "VERIFIED (scope: " + "; ".join(v["scope"] for v in x["verified_scope"]) + ")"
+        x["evidence"].append(a.evidence)
+        save(a, r, "adopt.verify", f"{a.name} scope={a.scope}")
+        print(f"{a.name}: {x['verification_status']}" + (f"\n  planned integration: {planned} — anything outside the verified scope remains NOT VERIFIED" if planned else "")); return
     if a.action == "show":
         print(json.dumps({a.name: x}, indent=2, ensure_ascii=False))
 
@@ -176,7 +182,8 @@ def compute_gates(r, base_dir, evs):
     G.append(("BLOCKED", "no components recorded") if not r["components"] else ("FAILED", f"graph issues {arch}") if arch else ("PASSED", "graph consistent"))
     # 3 implementation
     notimpl = [k for k in inscope if not any(k in c["requirements"] and c["status"] in DONE for c in r["components"].values())]
-    G.append(("FAILED", f"requirements not implemented {notimpl}") if notimpl else ("PASSED", "every in-scope requirement has an implemented component"))
+    G.append(("BLOCKED", "no requirements recorded — nothing to check (a vacuous pass is not a pass)") if not inscope
+             else ("FAILED", f"requirements not implemented {notimpl}") if notimpl else ("PASSED", "every in-scope requirement has an implemented component"))
     # 4 functional
     runs = [e for e in evs if e.get("kind") == "audit_run"]
     if "UNDEFINED_BEHAVIOUR" in kinds:
@@ -220,7 +227,7 @@ def compute_gates(r, base_dir, evs):
     T = r["tests"]
     crit_untested = [k for k, q in inscope.items() if q["critical"] and not any((k in t["targets"] or set(t["targets"]) & {x for x, c in r["components"].items() if k in c["requirements"]}) and t["status"] in ("PASSED", "FAILED") for t in T.values())]
     if not T:
-        G.append(("FAILED", "no tests"))
+        G.append(("BLOCKED", "no tests recorded — register them (`test add … --match`) and import runner results (`test import results.xml`)"))
     elif any(t["status"] == "FAILED" for t in T.values()):
         G.append(("FAILED", f"failing tests {[k for k, t in T.items() if t['status'] == 'FAILED']}"))
     elif crit_untested:
@@ -617,7 +624,7 @@ def register(sp):
     p = sp.add_parser("adopt", help="§11 repository adoption registry"); p.add_argument("action", choices=["seed", "add", "audit", "decide", "verify", "list", "show"])
     p.add_argument("name", nargs="?"); p.add_argument("--source"); p.add_argument("--capabilities"); p.add_argument("--step", type=int); p.add_argument("--status")
     p.add_argument("--evidence"); p.add_argument("--agent"); p.add_argument("--decision"); p.add_argument("--version"); p.add_argument("--license")
-    p.add_argument("--integration"); p.add_argument("--security"); p.add_argument("--reason"); p.set_defaults(f=cmd_adopt)
+    p.add_argument("--integration"); p.add_argument("--security"); p.add_argument("--reason"); p.add_argument("--scope"); p.set_defaults(f=cmd_adopt)
     p = sp.add_parser("benchmark", help="§12 product benchmarking"); p.add_argument("action", choices=["add", "list"]); p.add_argument("product", nargs="?")
     for k in ("capability", "source", "relevance", "benefit", "limitations", "complexity", "recommendation", "observation", "dimensions", "reason"):
         p.add_argument(f"--{k}")

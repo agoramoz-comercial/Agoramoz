@@ -1,0 +1,233 @@
+{
+  "meta": {
+    "title": "Plano de Transformação de 180 Dias",
+    "organization": "[Nome da Empresa]",
+    "doc_label": "ZABATAINA 3000 · Plano 180 Dias (M08)",
+    "year": "2026",
+    "year_sup": "",
+    "website": "[www.empresa.com]",
+    "email": "[contacto@empresa.com]",
+    "lang": "pt"
+  },
+  "pages": [
+    {
+      "layout": "cover",
+      "eyebrow": "ZABATAINA 3000 · M08 Strategy & 180-Day Roadmap",
+      "title": "Plano de Transformação de 180 Dias",
+      "subtitle": "Estratégia, iniciativas, gates de decisão e indicadores",
+      "kpis": [
+        {
+          "value": "4",
+          "label": "Fases (P1–P4)"
+        },
+        {
+          "value": "G1–G4",
+          "label": "Gates de decisão"
+        }
+      ],
+      "note": "DADOS ILUSTRATIVOS — substituir por dados reais e etiquetar a origem"
+    },
+    {
+      "layout": "standard",
+      "eyebrow": "01 · Roteiro",
+      "title": "Roteiro com Gates de Decisão",
+      "number": "01",
+      "blocks": [
+        {
+          "type": "chart",
+          "chart": "gantt",
+          "height": "105mm",
+          "title": "Fases, iniciativas e gates",
+          "sub": "Dias 0–180",
+          "data": {
+            "phases": [
+              "P1 Fundação",
+              "P2 Tração",
+              "P3 Aceleração",
+              "P4 Consolidação"
+            ],
+            "tasks": [
+              {
+                "name": "Diagnóstico e baseline",
+                "start": 0,
+                "end": 14,
+                "phase": "P1 Fundação"
+              },
+              {
+                "name": "Oferta e preços",
+                "start": 7,
+                "end": 30,
+                "phase": "P1 Fundação"
+              },
+              {
+                "name": "Prospeção ativa",
+                "start": 25,
+                "end": 75,
+                "phase": "P2 Tração"
+              },
+              {
+                "name": "CRM e automação",
+                "start": 35,
+                "end": 70,
+                "phase": "P2 Tração"
+              },
+              {
+                "name": "Escalar canal vencedor",
+                "start": 76,
+                "end": 135,
+                "phase": "P3 Aceleração"
+              },
+              {
+                "name": "SOPs e painel KPI",
+                "start": 136,
+                "end": 175,
+                "phase": "P4 Consolidação"
+              }
+            ],
+            "gates": [
+              {
+                "name": "G1",
+                "day": 30
+              },
+              {
+                "name": "G2",
+                "day": 75
+              },
+              {
+                "name": "G3",
+                "day": 135
+              },
+              {
+                "name": "G4",
+                "day": 180
+              }
+            ]
+          }
+        },
+        {
+          "type": "table",
+          "mt": "8mm",
+          "style": "blue",
+          "columns": [
+            "Iniciativa",
+            "Responsável",
+            "Prio",
+            "Z-PRIORITY",
+            "Critério de paragem",
+            "Estado"
+          ],
+          "rows": [
+            [
+              "Reativação de clientes",
+              "Comercial",
+              "P0",
+              "4,4",
+              "< 5 reuniões em 14 dias",
+              {
+                "status": "VERIFIED"
+              }
+            ],
+            [
+              "Nova tabela de preços",
+              "Direção",
+              "P1",
+              "4,1",
+              "Conversão −30%",
+              {
+                "status": "NEEDS_APPROVAL",
+                "text": "NEEDS APPROVAL"
+              }
+            ],
+            [
+              "Canal de parceiros",
+              "Marketing",
+              "P1",
+              "3,6",
+              "CAC > US$ 600",
+              {
+                "status": "READY"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "standard",
+      "eyebrow": "02 · Indicadores",
+      "title": "Indicadores e Metas",
+      "number": "02",
+      "blocks": [
+        {
+          "type": "chart",
+          "chart": "bullet",
+          "height": "80mm",
+          "title": "Progresso face às metas",
+          "sub": "% da meta",
+          "data": {
+            "items": [
+              {
+                "name": "Receita",
+                "actual": 620000,
+                "target": 1000000,
+                "prefix": "US$ "
+              },
+              {
+                "name": "Novos clientes",
+                "actual": 96,
+                "target": 80,
+                "compact": false
+              },
+              {
+                "name": "Caixa",
+                "actual": 210000,
+                "target": 250000,
+                "prefix": "US$ "
+              }
+            ]
+          }
+        },
+        {
+          "type": "table",
+          "mt": "8mm",
+          "columns": [
+            "KPI",
+            "Fórmula",
+            "Fonte",
+            "Responsável",
+            "Frequência",
+            "Baseline",
+            "Meta",
+            "Limite",
+            "Ação corretiva"
+          ],
+          "rows": [
+            [
+              "Receita reconhecida",
+              "Σ faturação reconhecida",
+              "ERP",
+              "CFO",
+              "Semanal",
+              "[ ]",
+              "[ ]",
+              "[ ]",
+              "[ ]"
+            ],
+            [
+              "Taxa de fecho",
+              "Ganhos ÷ (ganhos+perdidos)",
+              "CRM",
+              "Vendas",
+              "Semanal",
+              "[ ]",
+              "[ ]",
+              "[ ]",
+              "[ ]"
+            ]
+          ],
+          "footnote": "M17: todo o KPI tem definição, fórmula, fonte, responsável, frequência, baseline, meta, limite e ação corretiva."
+        }
+      ]
+    }
+  ]
+}

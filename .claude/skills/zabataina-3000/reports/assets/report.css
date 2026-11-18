@@ -1,0 +1,327 @@
+/* =====================================================================
+   ZABATAINA EDITORIAL REPORT — Design System v1.0
+   Editorial A4 style: electric blue · periwinkle · lavender · ink · paper
+   ===================================================================== */
+@import url('fonts.css'); /* bundled Inter Tight (OFL) — works offline */
+
+:root {
+  /* Brand */
+  --z-blue: #1D2BE6;        /* electric blue — primary */
+  --z-blue-deep: #131C9C;   /* deep blue — emphasis on blue */
+  --z-blue-2: #3440EC;      /* mosaic tint */
+  --z-blue-3: #4A55EE;      /* mosaic tint */
+  --z-peri: #7A80DA;        /* periwinkle */
+  --z-lav: #A9ACE3;         /* lavender */
+  --z-lilac: #C8CAEE;       /* lilac background */
+  --z-ink: #0C0C10;         /* black */
+  --z-ink-2: #15151B;       /* raised black (cards on dark) */
+  --z-paper: #F4F4F6;       /* page background */
+  --z-white: #FFFFFF;
+
+  /* Text */
+  --z-text: #0C0C10;
+  --z-text-2: #55555F;
+  --z-muted: #8A8A94;
+  --z-rule: #CFCFD7;
+
+  /* Status (reserved — never used as series colours; always with icon + label) */
+  --z-good: #1E8E4E;
+  --z-warn: #C99400;
+  --z-serious: #DD6B20;
+  --z-critical: #D33A3A;
+
+  /* Gradients */
+  --z-grad-h: linear-gradient(90deg, #B9BBEA 0%, #7A80DA 48%, #1D2BE6 100%);
+  --z-grad-v: linear-gradient(180deg, #C8CAEE 0%, #7A80DA 55%, #1D2BE6 100%);
+  --z-grad-blue: linear-gradient(160deg, #3440EC 0%, #1D2BE6 55%, #131C9C 100%);
+
+  --z-font: 'Inter Tight', 'Inter Display', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --pad: 14mm;
+}
+
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #DCDCE2; }
+body {
+  font-family: var(--z-font);
+  color: var(--z-text);
+  font-size: 8.5pt;
+  line-height: 1.45;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+p { margin: 0 0 2.5mm; }
+
+/* ---------- Page ---------- */
+.page {
+  width: 210mm; height: 297mm;
+  margin: 8mm auto;
+  position: relative; overflow: hidden;
+  background: var(--z-paper);
+  display: flex; flex-direction: column;
+  box-shadow: 0 2mm 8mm rgba(12, 12, 16, .18);
+  break-after: page; page-break-after: always;
+}
+.page--blue { background: var(--z-blue); color: #fff; }
+.page--ink { background: var(--z-ink); color: #fff; }
+.page--lilac { background: var(--z-lilac); }
+@media print {
+  html, body { background: none; }
+  .page { margin: 0; box-shadow: none; }
+}
+.page-body { flex: 1; position: relative; display: flex; flex-direction: column; min-height: 0; }
+.pad { padding-left: var(--pad); padding-right: var(--pad); }
+.pad-y { padding-top: 8mm; padding-bottom: 8mm; }
+.grow { flex: 1; min-height: 0; }
+.stack > * + * { margin-top: 5mm; }
+
+/* ---------- Header strip ---------- */
+.page-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 7mm var(--pad) 0; font-size: 7pt; position: relative; z-index: 2;
+}
+.brand { display: flex; align-items: center; gap: 2.5mm; font-weight: 500; }
+.brand-mark { width: 7mm; height: 7mm; }
+.year { font-weight: 700; font-size: 11pt; letter-spacing: -.01em; }
+.year sup { font-size: 5.5pt; font-weight: 500; margin-left: .6mm; vertical-align: 2.2mm; }
+
+/* ---------- Footer bar ---------- */
+.page-footer {
+  height: 11mm; flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--pad); font-size: 6.5pt; line-height: 1.2;
+  background: var(--z-ink); color: #fff;
+}
+.page-footer--blue { background: var(--z-blue); }
+.page-footer--paper { background: transparent; color: var(--z-text-2); border-top: .25mm solid var(--z-rule); }
+
+/* ---------- Surfaces ---------- */
+.bg-blue { background: var(--z-blue); color: #fff; }
+.bg-blue-grad { background: var(--z-grad-blue); color: #fff; }
+.bg-grad-h { background: var(--z-grad-h); color: #fff; }
+.bg-grad-v { background: var(--z-grad-v); color: #fff; }
+.bg-ink { background: var(--z-ink); color: #fff; }
+.bg-lilac { background: var(--z-lilac); }
+.bg-lav { background: var(--z-lav); }
+.bg-peri { background: var(--z-peri); color: #fff; }
+.bg-paper { background: var(--z-paper); }
+.bg-white { background: #fff; }
+
+/* ---------- Typography ---------- */
+.display { font-size: 40pt; font-weight: 400; letter-spacing: -.04em; line-height: .96; margin: 0; }
+.display--xl { font-size: 56pt; }
+.display--l { font-size: 46pt; }
+.display--m { font-size: 30pt; }
+.display--s { font-size: 22pt; }
+.h2 { font-size: 15pt; font-weight: 400; letter-spacing: -.02em; line-height: 1.1; margin: 0 0 3mm; }
+.h3 { font-size: 9.5pt; font-weight: 600; letter-spacing: -.005em; margin: 0 0 1.5mm; }
+.eyebrow { font-size: 6.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.body-text { font-size: 7pt; line-height: 1.55; color: var(--z-text-2); }
+.on-dark .body-text, .bg-blue .body-text, .bg-blue-grad .body-text, .bg-ink .body-text,
+.page--blue .body-text, .page--ink .body-text { color: rgba(255, 255, 255, .78); }
+.muted { color: var(--z-muted); }
+.figure-xl { font-size: 36pt; font-weight: 800; letter-spacing: -.035em; line-height: 1; }
+.figure-l { font-size: 24pt; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+.figure-m { font-size: 17pt; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+.cols-2 { column-count: 2; column-gap: 5mm; }
+
+/* ---------- Layout helpers ---------- */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 5mm; }
+.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 5mm; }
+.split { display: grid; grid-template-columns: 1fr 1fr; }
+.row { display: flex; gap: 5mm; }
+.between { display: flex; justify-content: space-between; align-items: flex-end; }
+.rule { border: 0; border-top: .25mm solid var(--z-rule); margin: 4mm 0; }
+.rule--ink { border-top-color: var(--z-ink); }
+
+/* ---------- Photo blocks (duotone) ---------- */
+.photo { position: relative; overflow: hidden; background: #1a1a22 center / cover no-repeat; }
+.photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); }
+.photo--duo::after { content: ""; position: absolute; inset: 0; background: var(--z-blue); mix-blend-mode: multiply; opacity: .5; }
+.photo--soft::after { content: ""; position: absolute; inset: 0; background: var(--z-lav); mix-blend-mode: multiply; opacity: .45; }
+/* Placeholder: abstract arch (used only when no real image is supplied) */
+.photo--arch { background: radial-gradient(120% 90% at 50% 100%, #2b2f6e 0%, #121226 55%, #08080d 100%); }
+.photo--arch::before {
+  content: ""; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 42%; height: 82%;
+  border-radius: 50% 50% 0 0 / 34% 34% 0 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22%, rgba(10,10,20,.85) 22% 24%),
+    repeating-linear-gradient(180deg, transparent 0 18%, rgba(10,10,20,.85) 18% 19.5%),
+    linear-gradient(180deg, #e8e9fb 0%, #9ea2e3 60%, #5a60c8 100%);
+  box-shadow: 0 0 0 1.4mm #0b0b14;
+}
+
+/* ---------- Mosaic (blue tiles) ---------- */
+.mosaic { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; }
+.mosaic > * { min-height: 0; }
+.t1 { background: var(--z-blue); } .t2 { background: var(--z-blue-2); }
+.t3 { background: var(--z-blue-3); } .t4 { background: var(--z-blue-deep); }
+.t5 { background: var(--z-grad-v); }
+.mosaic .txt { padding: 4mm; font-size: 6.3pt; line-height: 1.5; color: rgba(255,255,255,.85); }
+
+/* ---------- KPI hero (big numbers) ---------- */
+.kpi-hero b { display: block; font-size: 22pt; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+.kpi-hero span { display: block; margin-top: 1.5mm; font-size: 6.5pt; opacity: .85; }
+.kpi-row { display: flex; gap: 12mm; }
+
+/* ---------- Stat list (2000 / Founded) ---------- */
+.stat-list .stat {
+  display: grid; grid-template-columns: 1fr auto; align-items: baseline;
+  border-bottom: .3mm solid var(--z-ink); padding: 2.2mm 0;
+}
+.stat-list .stat b { font-size: 16pt; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
+.stat-list .stat span { font-size: 6.5pt; color: var(--z-text-2); }
+.on-dark .stat-list .stat { border-bottom-color: rgba(255,255,255,.4); }
+.on-dark .stat-list .stat span { color: rgba(255,255,255,.7); }
+
+/* ---------- Segment list (↗ name … 60%) ---------- */
+.seg-list .seg {
+  display: grid; grid-template-columns: 6mm 1fr auto; align-items: start;
+  border-bottom: .25mm solid var(--z-rule); padding: 3.2mm 0;
+}
+.seg .arr { font-size: 11pt; line-height: 1; }
+.seg .name { font-size: 11.5pt; font-weight: 400; letter-spacing: -.02em; line-height: 1.05; }
+.seg .desc { font-size: 6pt; color: var(--z-text-2); margin-top: 1.2mm; max-width: 38mm; }
+.seg .pct { font-size: 18pt; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+
+/* ---------- Line items (label … value) ---------- */
+.line-items .li {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: .25mm solid var(--z-ink); padding: 2.2mm 0;
+  font-size: 7.5pt; font-weight: 600;
+}
+.line-items .li span:last-child { font-variant-numeric: tabular-nums; }
+.line-items .li--total { border-bottom-width: .5mm; font-weight: 800; }
+
+/* ---------- Metric callout (15 % ROI) ---------- */
+.metric { display: grid; grid-template-columns: 28mm 1fr; gap: 4mm; border-top: .25mm solid var(--z-rule); padding: 3.5mm 0; }
+.metric .big { font-size: 15pt; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+.metric .lbl { font-size: 6pt; font-weight: 600; margin-top: 1mm; }
+.metric .ttl { font-size: 8.5pt; font-weight: 700; line-height: 1.2; margin-bottom: 1.5mm; }
+
+/* ---------- Pill ---------- */
+.pill {
+  display: inline-block; border-radius: 99px; padding: .7mm 3mm;
+  font-size: 6.5pt; font-weight: 600; line-height: 1.3;
+  background: var(--z-blue); color: #fff; border: .3mm solid #8A8FE0;
+}
+.pill--ghost { background: transparent; color: inherit; border-color: currentColor; }
+
+/* ---------- Tiles (45% / 25% / 20% / 10%) ---------- */
+.tiles { display: grid; grid-template-columns: 1.35fr 1fr 1fr .9fr; }
+.tile { padding: 4mm 3.5mm; min-height: 34mm; display: flex; flex-direction: column; justify-content: space-between; }
+.tile b { font-size: 17pt; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+.tile small { font-size: 5.8pt; line-height: 1.35; }
+.tile--white { background: #fff; color: var(--z-ink); }
+.tile--blue { background: var(--z-blue); color: #fff; }
+.tile--peri { background: var(--z-peri); color: #fff; }
+.tile--lav { background: var(--z-lav); color: var(--z-ink); }
+.tile-heads { display: grid; grid-template-columns: 1.35fr 1fr 1fr .9fr; font-size: 6.5pt; padding-bottom: 2mm; }
+
+/* ---------- Signature bars (rounded columns) ---------- */
+.sig-bars { display: flex; align-items: flex-end; gap: 4mm; height: 62mm; }
+.sig-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+.sig-bar .meta { font-size: 5.5pt; color: var(--z-text-2); }
+.sig-bar .val { font-size: 15pt; font-weight: 700; letter-spacing: -.03em; margin: .5mm 0 1.5mm; line-height: 1; }
+.sig-bar .col { height: var(--h, 50%); border-radius: 2.5mm; position: relative; }
+.sig-bar .col span { position: absolute; left: 2.5mm; bottom: 2mm; color: #fff; font-weight: 700; font-size: 9pt; }
+.sig-bar:nth-child(1) .col { background: linear-gradient(180deg, #9EA2E3, #7A80DA); }
+.sig-bar:nth-child(2) .col { background: linear-gradient(180deg, #7A80DA, #5560E0); }
+.sig-bar:nth-child(3) .col { background: linear-gradient(180deg, #3440EC, #1D2BE6); }
+.sig-bar:nth-child(4) .col { background: linear-gradient(180deg, #1D2BE6, #131C9C); }
+.sig-bar:nth-child(5) .col { background: var(--z-ink); }
+
+/* ---------- Callout card ($79M) ---------- */
+.callout-card {
+  background: var(--z-ink); color: #fff; border-radius: 3mm; padding: 3.5mm;
+  min-width: 36mm; outline: .3mm solid var(--z-ink); border: .7mm solid #fff;
+}
+.callout-card .top { display: flex; justify-content: space-between; align-items: flex-start; font-size: 6pt; }
+.callout-card .ico { width: 6mm; height: 6mm; border: .3mm solid #fff; border-radius: 1mm; display: grid; place-items: center; font-size: 8pt; }
+.callout-card b { display: block; font-size: 17pt; font-weight: 700; letter-spacing: -.02em; margin-top: 3mm; }
+
+/* ---------- Track progress (Track A–D) ---------- */
+.tracks .track { display: grid; grid-template-columns: 30mm 1fr 22mm; gap: 3mm; align-items: center; padding: 2.2mm 0; border-bottom: .25mm solid var(--z-rule); font-size: 7pt; }
+.tracks .bar { height: 3mm; background: #E1E1EA; border-radius: 99px; overflow: hidden; }
+.tracks .bar i { display: block; height: 100%; width: var(--p, 0%); background: var(--z-blue); border-radius: 99px; }
+.tracks .v { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- TAM / SAM / SOM ---------- */
+.tam { position: relative; width: 62mm; height: 62mm; margin: 0 auto; }
+.tam .c { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-radius: 50%; display: flex; flex-direction: column; align-items: center; padding-top: 3mm; font-size: 6pt; text-align: center; }
+.tam .c b { font-size: 10pt; font-weight: 700; }
+.tam .c1 { width: 100%; height: 100%; background: var(--z-lilac); }
+.tam .c2 { width: 66%; height: 66%; background: var(--z-peri); color: #fff; }
+.tam .c3 { width: 34%; height: 34%; background: var(--z-blue); color: #fff; padding-top: 2.2mm; }
+
+/* ---------- Chart cards ---------- */
+.chart-card { background: #fff; border-radius: 2mm; padding: 4mm; display: flex; flex-direction: column; min-height: 0; }
+.chart-card h4 { font-size: 8.5pt; font-weight: 600; margin: 0; letter-spacing: -.01em; line-height: 1.25; }
+.chart-card .sub { font-size: 6.3pt; color: var(--z-muted); margin-top: .8mm; }
+.chart-card .chart { flex: 1; min-height: 52mm; margin-top: 2mm; }
+.chart-card .source { font-size: 5.5pt; color: var(--z-muted); margin-top: 1.5mm; }
+.on-dark .chart-card, .chart-card.on-dark { background: var(--z-ink-2); color: #fff; }
+.chart { width: 100%; height: 100%; min-height: 50mm; }
+
+/* ---------- Evidence tags (ZABATAINA labels) ---------- */
+.tag { display: inline-block; font-size: 5.3pt; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: .25mm solid currentColor; border-radius: 99px; padding: 0 1.6mm; line-height: 1.7; vertical-align: middle; }
+.tag--verified { color: var(--z-good); }
+.tag--estimate, .tag--assumption { color: var(--z-warn); }
+.tag--unknown { color: var(--z-muted); }
+.tag--blue { color: var(--z-blue); }
+
+/* ---------- Tables ---------- */
+.z-table { width: 100%; border-collapse: collapse; font-size: 7.2pt; font-variant-numeric: tabular-nums; }
+.z-table caption { caption-side: top; text-align: left; font-size: 8.5pt; font-weight: 600; padding-bottom: 2mm; }
+.z-table th { text-align: left; font-size: 6pt; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--z-text-2); padding: 1.8mm 2mm; border-bottom: .4mm solid var(--z-ink); }
+.z-table td { padding: 1.9mm 2mm; border-bottom: .25mm solid var(--z-rule); vertical-align: middle; }
+.z-table .num, .z-table th.num { text-align: right; white-space: nowrap; }
+.z-table .strong { font-weight: 700; }
+.z-table .neg { color: var(--z-text); }
+.z-table tfoot td { font-weight: 700; border-top: .4mm solid var(--z-ink); border-bottom: 0; }
+/* Blue header */
+.z-table--blue thead th { background: var(--z-blue); color: #fff; border-bottom: 0; }
+.z-table--blue thead th:first-child { border-radius: 1.5mm 0 0 0; }
+.z-table--blue thead th:last-child { border-radius: 0 1.5mm 0 0; }
+/* Zebra */
+.z-table--zebra tbody tr:nth-child(even) td { background: rgba(29, 43, 230, .045); }
+/* Financial statement */
+.z-table--fin .indent td:first-child { padding-left: 6mm; color: var(--z-text-2); }
+.z-table--fin .subtotal td { font-weight: 700; border-top: .3mm solid var(--z-ink); }
+.z-table--fin .total td { background: var(--z-ink); color: #fff; font-weight: 800; border-bottom: 0; }
+.z-table--fin .highlight td { background: var(--z-lilac); font-weight: 700; }
+/* Compact line-item */
+.z-table--lines td { border-bottom-color: var(--z-ink); font-weight: 600; }
+.z-table--lines th { display: none; }
+/* On dark */
+.on-dark .z-table td, .z-table--dark td { border-bottom-color: rgba(255,255,255,.18); color: #fff; }
+.on-dark .z-table th, .z-table--dark th { color: rgba(255,255,255,.7); border-bottom-color: #fff; }
+/* Heat cells */
+.z-table td.cell-h1 { background: #E6E7F8 !important; } .z-table td.cell-h2 { background: #C8CAEE !important; }
+.z-table td.cell-h3 { background: #9EA2E3 !important; }
+.z-table td.cell-h4 { background: #5560E0 !important; color: #fff; } .z-table td.cell-h5 { background: #1D2BE6 !important; color: #fff; }
+/* Comparison marks */
+.mk-yes::before, .mk-part::before, .mk-no::before { content: ""; display: inline-block; width: 2.6mm; height: 2.6mm; border-radius: 50%; vertical-align: middle; box-sizing: border-box; }
+.mk-yes::before { background: var(--z-blue); }
+.mk-part::before { background: linear-gradient(90deg, var(--z-blue) 50%, transparent 50%); border: .3mm solid var(--z-blue); }
+.mk-no::before { border: .3mm solid var(--z-muted); }
+.mk-legend { display: inline-flex; gap: 3mm; align-items: center; }
+.mk-legend span { display: inline-flex; gap: 1mm; align-items: center; }
+/* Status (icon + label, never colour alone) */
+.status { display: inline-flex; align-items: center; gap: 1.2mm; font-size: 6.3pt; font-weight: 700; white-space: nowrap; }
+.status::before { display: inline-grid; place-items: center; width: 3.2mm; height: 3.2mm; border-radius: 50%; color: #fff; font-size: 5pt; }
+.status--good::before { content: "✓"; background: var(--z-good); }
+.status--warn::before { content: "!"; background: var(--z-warn); }
+.status--serious::before { content: "▲"; background: var(--z-serious); font-size: 4pt; }
+.status--critical::before { content: "✕"; background: var(--z-critical); }
+/* Sparkline cell */
+.spark { display: inline-block; width: 22mm; height: 6mm; vertical-align: middle; }
+/* Inline data bar */
+.dbar { display: inline-block; height: 2.2mm; background: var(--z-blue); border-radius: 0 1mm 1mm 0; vertical-align: middle; }
+
+/* ---------- Notes ---------- */
+.footnote { font-size: 5.8pt; color: var(--z-muted); line-height: 1.45; }

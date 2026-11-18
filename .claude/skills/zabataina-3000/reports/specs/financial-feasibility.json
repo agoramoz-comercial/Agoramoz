@@ -1,0 +1,218 @@
+{
+  "meta": {
+    "title": "Avaliação de Viabilidade Financeira",
+    "organization": "[Nome da Empresa]",
+    "doc_label": "ZABATAINA 3000 · Viabilidade Financeira (M06)",
+    "year": "2026",
+    "year_sup": "",
+    "website": "[www.empresa.com]",
+    "email": "[contacto@empresa.com]",
+    "lang": "pt"
+  },
+  "pages": [
+    {
+      "layout": "cover",
+      "eyebrow": "ZABATAINA 3000 · M06 Financial Feasibility",
+      "title": "Viabilidade Financeira",
+      "subtitle": "Economia por cliente, cenários, sensibilidade e ponto de equilíbrio",
+      "kpis": [
+        {
+          "value": "[3,4×]",
+          "label": "LTV : CAC"
+        },
+        {
+          "value": "[45 dias]",
+          "label": "Retorno do CAC"
+        }
+      ],
+      "note": "DADOS ILUSTRATIVOS — substituir por dados reais e etiquetar a origem"
+    },
+    {
+      "layout": "standard",
+      "eyebrow": "01 · Cenários",
+      "title": "Cenários de Receita — 180 dias",
+      "number": "01",
+      "blocks": [
+        {
+          "type": "text",
+          "text": "Receita = leads × qualificação × fecho × preço. Gerado com `finance.py scenarios --json` (chave `chart_scenarioFan`). Condição de invalidação: qualquer variável abaixo do valor conservador durante 2 semanas → nova previsão."
+        },
+        {
+          "type": "charts",
+          "cols": 2,
+          "mt": "6mm",
+          "items": [
+            {
+              "chart": "scenarioFan",
+              "title": "Receita acumulada por cenário",
+              "sub": "US$ · ilustrativo",
+              "data": {
+                "x": [
+                  "M1",
+                  "M2",
+                  "M3",
+                  "M4",
+                  "M5",
+                  "M6"
+                ],
+                "conservative": [
+                  40500,
+                  81000,
+                  121500,
+                  162000,
+                  202500,
+                  243000
+                ],
+                "base": [
+                  96000,
+                  192000,
+                  288000,
+                  384000,
+                  480000,
+                  576000
+                ],
+                "ambitious": [
+                  187500,
+                  375000,
+                  562500,
+                  750000,
+                  937500,
+                  1125000
+                ]
+              },
+              "opts": {
+                "prefix": "US$ "
+              }
+            },
+            {
+              "chart": "tornado",
+              "title": "Sensibilidade do total a ±20%",
+              "sub": "US$ · ilustrativo",
+              "data": {
+                "base": 576000,
+                "items": [
+                  {
+                    "name": "Preço",
+                    "low": 460800,
+                    "high": 691200
+                  },
+                  {
+                    "name": "Leads",
+                    "low": 460800,
+                    "high": 691200
+                  },
+                  {
+                    "name": "Fecho",
+                    "low": 460800,
+                    "high": 691200
+                  }
+                ]
+              },
+              "opts": {
+                "prefix": "US$ ",
+                "lowLabel": "−20%",
+                "highLabel": "+20%"
+              }
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "mt": "8mm",
+          "style": "fin",
+          "columns": [
+            "Cenário",
+            {
+              "label": "Receita/mês",
+              "num": true
+            },
+            {
+              "label": "Total 6 meses",
+              "num": true
+            },
+            "Pressupostos"
+          ],
+          "rows": [
+            [
+              "Conservador",
+              "US$ 40.500",
+              "US$ 243.000",
+              "300 leads · 10% · 15% · US$ 9.000"
+            ],
+            [
+              "Base",
+              "US$ 96.000",
+              "US$ 576.000",
+              "400 leads · 12% · 20% · US$ 10.000"
+            ],
+            [
+              "Otimista",
+              "US$ 187.500",
+              "US$ 1.125.000",
+              "500 leads · 15% · 25% · US$ 10.000"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "standard",
+      "eyebrow": "02 · Economia por cliente",
+      "title": "Economia por Cliente e Ponto de Equilíbrio",
+      "number": "02",
+      "blocks": [
+        {
+          "type": "grid",
+          "cols": "2-1",
+          "align": "end",
+          "items": [
+            {
+              "type": "line-items",
+              "items": [
+                {
+                  "label": "Preço médio",
+                  "value": "US$ 550"
+                },
+                {
+                  "label": "Custo variável por unidade",
+                  "value": "US$ 250"
+                },
+                {
+                  "label": "Custos fixos mensais",
+                  "value": "US$ 45.000"
+                },
+                {
+                  "label": "Ponto de equilíbrio",
+                  "value": "150 un./mês",
+                  "total": true
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "label": "Custo fixo anual",
+              "value": "US$ 540K"
+            }
+          ]
+        },
+        {
+          "type": "chart",
+          "chart": "breakEven",
+          "mt": "8mm",
+          "height": "95mm",
+          "title": "Receita vs. custo total",
+          "sub": "US$ por volume mensal",
+          "data": {
+            "fixed": 45000,
+            "variable": 250,
+            "price": 550,
+            "maxUnits": 300
+          },
+          "opts": {
+            "prefix": "US$ "
+          }
+        }
+      ]
+    }
+  ]
+}

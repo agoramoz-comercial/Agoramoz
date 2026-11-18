@@ -93,6 +93,8 @@ refused "destructive command held for approval" "$CF run -- git push --force"
 check "approval request visible"                "$CF status | grep -q 'Pending approvals: 1'"
 refused "approve without name refused"          "$CF approve AP-001"
 check "secret redacted in terminal log"         "$CF run -- cat .env; ! grep -q 'sk-liveA1b2' $APP/.codeforge/runs/*.log && grep -q REDACTED $APP/.codeforge/runs/*.log"
+check "redaction unit cases (ECC parity + multi-line, 41)" "python3 '$HERE/tests/test_redaction.py'"
+check "terminal log hides PEM body, JWT and password (ECC-adapted)" "python3 -c \"import base64;h=base64.urlsafe_b64encode(b'{\\\"alg\\\":\\\"HS256\\\"}').decode().rstrip('=');print('-----BEGIN '+'PRIVATE KEY-----');print('QkVHSU5GQUtFS0VZQk9EWQ'*3);print('-----END '+'PRIVATE KEY-----');print('jwt='+h+'.eyJzdWIiOiJ4In0.c2ln');print('password=hunter2-fake')\" > $T/leak.txt && $CF run -- cat $T/leak.txt >/dev/null; L=\$(ls -t $APP/.codeforge/runs/*.log | head -1); ! grep -q 'QkVHSU5GQUtFS0VZQk9EWQ' \$L && ! grep -q 'eyJzdWIiOiJ4In0' \$L && ! grep -q hunter2-fake \$L && grep -q REDACTED-SECRET \$L"
 refused "usage event must name provider/model"  "$CF event usage --data '{\"input_tokens\":10}'"
 check "provider-reported usage recorded"        "$CF event usage --data '{\"provider\":\"Anthropic\",\"model\":\"claude-sonnet-5-5\",\"input_tokens\":1200,\"output_tokens\":300}'"
 check "security finding blocks release"         "$CF security add 'Secret committed in .env' --severity HIGH --location .env && $CF report | grep -q 'open critical/high security'"
@@ -140,6 +142,8 @@ check "MONITOR decision with version/licence/evidence" "$CF adopt decide REA --d
 check "13 steps recorded with step 12 SKIPPED" "for s in 1 2 3 4 5 6 7 8 9 10 11 13; do $CF adopt audit ECC --step \$s --status DONE --evidence 'inspected' --agent CF05 || exit 1; done && $CF adopt audit ECC --step 12 --status SKIPPED --evidence 'execution not authorized' --agent CF05"
 refused "ADOPT refused when the functional test (step 12) was not executed" "$CF adopt decide ECC --decision ADOPT --version v1 --license MIT --evidence e --agent CF05"
 check "ISOLATE allowed without step 12"         "$CF adopt decide ECC --decision ISOLATE --version v1 --license MIT --evidence e --agent CF05"
+refused "verify needs an explicit scope"       "$CF adopt verify ECC --evidence 'tests pass'"
+check "verify records the scope, not the whole repo" "$CF adopt verify ECC --scope 'redaction pattern' --evidence 'tests pass' | grep -q 'VERIFIED (scope: redaction pattern)'"
 refused "verify refused for a non-adopted repo" "$CF adopt verify REA --evidence x"
 refused "benchmark needs all §12.5 fields"      "$CF benchmark add 'Cursor' --capability 'agent mode'"
 check "benchmark observed capability"           "$CF benchmark add 'Cursor' --capability 'agent mode' --source https://docs.cursor.com --relevance high --benefit 'multi-file edits' --limitations 'closed source' --complexity medium --recommendation 'compare loop UX' --observation observed && $CF benchmark list | grep -q Cursor"
@@ -166,6 +170,20 @@ check "git: init fixture repository"            "git -C $APP init -q && git -C $
 refused "git preflight needs a rollback strategy" "$CF git preflight --task T-005"
 check "git preflight records scope + impact"    "$CF git preflight --task T-005 --rollback 'git restore app/page.tsx' | grep -q 'Rollback'"
 check "git review flags exposed secret in changes" "echo 'k=sk-'\$(python3 -c 'print(\"Z\"*24)') > $APP/leak.txt; ! $CF git review && $CF git review | grep -q 'Exposed secrets in changed files: [1-9]'; rm -f $APP/leak.txt"
+
+echo "== Empty record and pattern-linked JUnit import"
+E="$T/empty"; mkdir -p "$E"; CE="python3 $S/cf.py --dir $E"
+check "empty record: no gate PASSED or FAILED" "$CE init --name Empty --objective x >/dev/null && ! $CE gates | grep -E '^\| G0[1-9]' | grep -qE '\| (PASSED|FAILED) \|'"
+python3 -c "
+import sys
+c=[]
+for area,n,fl in (('tests/site',900,0),('tests/admin',600,2),('tests/courses',383,0)):
+    c+=['<testcase classname=\"%s/s%d.test.ts\" name=\"c%d\" time=\"0.01\">%s</testcase>'%(area,i%40,i,'<failure message=\"boom\">t</failure>' if i<fl else '') for i in range(n)]
+open('$E/results.xml','w').write('<testsuites><testsuite>'+''.join(c)+'</testsuite></testsuites>')"
+check "pattern-linked test aggregates many runner cases" "$CE req add Site --area SITE --critical --acceptance ok >/dev/null && $CE req add Admin --area ADM --critical --acceptance ok >/dev/null && $CE test add 'site suite' --targets REQ-SITE-001 --match 'tests/site/*' --id TST-S >/dev/null && $CE test add 'admin suite' --targets REQ-ADM-001 --match 'tests/admin/*' --id TST-A >/dev/null && $CE test import $E/results.xml | grep -q 'TST-S: PASSED (900 cases'"
+check "one failing case makes the grouped test FAILED" "python3 -c \"import json;d=json.load(open('$E/.codeforge/record.json'));t=d['tests']['TST-A'];assert t['status']=='FAILED' and t['runs'][-1]['failed']==2 and t['runs'][-1]['cases']==600\""
+check "G8 reports the real failing suite"       "$CE gates | grep 'G08' | grep -q \"failing tests \['TST-A'\]\""
+refused "pattern with no cases leaves the test unexecuted" "$CE test add 'pay' --targets REQ-SITE-001 --match 'tests/pay/*' --id TST-P >/dev/null; $CE test import $E/results.xml >/dev/null; python3 -c \"import json;d=json.load(open('$E/.codeforge/record.json'));assert d['tests']['TST-P']['status']!='DESIGNED'\""
 
 echo "== /CODEFORGE interface (§25), environment classes (§13.4), routing modes (§17), context (§18.3), factory (§15–16)"
 CFX="python3 $S/codeforge.py --dir $APP"

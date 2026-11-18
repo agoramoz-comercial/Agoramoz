@@ -24,10 +24,10 @@
         "license": "MIT",
         "steps": "13/13 DONE (step 12 executed)",
         "decision": "ADAPT",
-        "integrated": false,
+        "integrated": "partial: scripts/redaction.py (see NOTICE-ECC.md)",
         "report": "audits/REPOSITORY-AUDIT-2026-11-18.md",
         "step12": "step 12: 11/11 validators pass; npm test 10415/10423 pass (8 environmental failures)",
-        "verification": "NOT VERIFIED"
+        "verification": "VERIFIED (scope: secret-redaction pattern → scripts/redaction.py); catalog validators NOT VERIFIED"
       }
     },
     {

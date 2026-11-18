@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "title": "Proposta Comercial",
+    "organization": "[Nome da Empresa]",
+    "doc_label": "ZABATAINA 3000 · Proposta Comercial",
+    "year": "2026",
+    "year_sup": "",
+    "website": "[www.empresa.com]",
+    "email": "[contacto@empresa.com]",
+    "lang": "pt"
+  },
+  "pages": [
+    {
+      "layout": "cover",
+      "eyebrow": "Proposta comercial",
+      "title": "[Título orientado ao resultado do cliente]",
+      "subtitle": "Preparada para [Cliente] · válida até [data]",
+      "kpis": [
+        {
+          "value": "[US$ X]",
+          "label": "Investimento"
+        },
+        {
+          "value": "[N semanas]",
+          "label": "Prazo"
+        }
+      ],
+      "note": "Nunca inventar testemunhos, certificações ou resultados (§27)."
+    },
+    {
+      "layout": "lilac",
+      "title": "Situação e Objetivos",
+      "subtitle": "[Situação do cliente nas palavras dele]",
+      "blocks": [
+        {
+          "type": "segments",
+          "items": [
+            {
+              "name": "Problema",
+              "desc": "[custo da inação, quantificado]",
+              "value": "[US$]"
+            },
+            {
+              "name": "Resultado",
+              "desc": "[resultado mensurável]",
+              "value": "[%]"
+            },
+            {
+              "name": "Prazo",
+              "desc": "[marcos]",
+              "value": "[sem.]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "standard",
+      "eyebrow": "Âmbito e investimento",
+      "title": "Âmbito, Investimento e Próximos Passos",
+      "blocks": [
+        {
+          "type": "table",
+          "style": "blue",
+          "columns": [
+            "Fase",
+            "Entregáveis",
+            "Prazo",
+            {
+              "label": "Investimento",
+              "num": true
+            }
+          ],
+          "rows": [
+            [
+              "1 — Diagnóstico",
+              "[...]",
+              "[2 sem.]",
+              "[US$]"
+            ],
+            [
+              "2 — Implementação",
+              "[...]",
+              "[6 sem.]",
+              "[US$]"
+            ],
+            [
+              "3 — Otimização",
+              "[...]",
+              "[4 sem.]",
+              "[US$]"
+            ]
+          ]
+        },
+        {
+          "type": "line-items",
+          "mt": "8mm",
+          "items": [
+            {
+              "label": "Sinal na adjudicação (40%)",
+              "value": "[US$]"
+            },
+            {
+              "label": "Marcos intermédios",
+              "value": "[US$]"
+            },
+            {
+              "label": "Total",
+              "value": "[US$]",
+              "total": true
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "mt": "8mm",
+          "text": "**Próximos passos:** [1. aceitação · 2. reunião de arranque · 3. recolha de dados]\n\n**Garantias e condições:** [apenas o que pode ser cumprido]"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,350 @@
+{
+  "meta": {
+    "title": "Executive Intelligence Brief",
+    "organization": "[Nome da Empresa]",
+    "doc_label": "ZABATAINA 3000 · Executive Intelligence Brief",
+    "year": "2026",
+    "year_sup": "",
+    "website": "[www.empresa.com]",
+    "email": "[contacto@empresa.com]",
+    "lang": "pt"
+  },
+  "pages": [
+    {
+      "layout": "cover",
+      "eyebrow": "ZABATAINA 3000 · M01 Executive Intelligence Brief",
+      "title": "Executive Intelligence Brief",
+      "subtitle": "[Organização] — diagnóstico inicial, viabilidade das metas e decisão requerida",
+      "kpis": [
+        {
+          "value": "[Fase 0–7]",
+          "label": "Fase do negócio"
+        },
+        {
+          "value": "[A–D]",
+          "label": "Trilha financeira principal"
+        }
+      ],
+      "note": "DADOS ILUSTRATIVOS — substituir por dados reais e etiquetar a origem"
+    },
+    {
+      "layout": "section",
+      "number": "01",
+      "title": "Contexto Institucional",
+      "blocks": [
+        {
+          "type": "grid",
+          "cols": "1-2",
+          "gap": "10mm",
+          "items": [
+            {
+              "type": "stats",
+              "items": [
+                {
+                  "value": "[ano]",
+                  "label": "Fundação"
+                },
+                {
+                  "value": "[n]",
+                  "label": "Países"
+                },
+                {
+                  "value": "[n]",
+                  "label": "Colaboradores"
+                },
+                {
+                  "value": "[n]",
+                  "label": "Clientes ativos"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "columns": 2,
+              "text": "**Organização:** [nome, setor, mercado, estrutura legal]\n\n**Missão:** [o que a organização entrega e a quem]\n\n**Objetivo principal (180 dias):** [definição de sucesso do decisor]\n\n**Restrições:** [caixa, tempo, legal, pessoas]\n\nCada número deve ter origem etiquetada: [VERIFIED] [CLIENT] [ESTIMATE] [ASSUMPTION] [UNKNOWN]."
+            }
+          ]
+        },
+        {
+          "type": "tracks",
+          "mt": "10mm",
+          "items": [
+            {
+              "label": "Trilha A — Receita",
+              "pct": 18,
+              "value": "[US$ 180K / 1M]"
+            },
+            {
+              "label": "Trilha B — Lucro líquido",
+              "pct": 5,
+              "value": "[US$ 50K / 1M]"
+            },
+            {
+              "label": "Trilha C — ARR",
+              "pct": 0,
+              "value": "[US$ 0 / 1M]"
+            },
+            {
+              "label": "Trilha D — Valor da empresa",
+              "pct": 40,
+              "value": "[US$ 400K / 1M]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "standard",
+      "eyebrow": "02 · Objetivos e viabilidade",
+      "title": "Objetivos e Avaliação de Viabilidade",
+      "number": "02",
+      "blocks": [
+        {
+          "type": "table",
+          "style": "blue",
+          "columns": [
+            "Trilha",
+            "Meta",
+            "Baseline",
+            "Requisito (engenharia reversa)",
+            "Veredicto"
+          ],
+          "rows": [
+            [
+              "A — Receita",
+              "US$ 1.000.000",
+              "[US$ 180K]",
+              "[100 vendas · 500 oportunidades · 5.000 leads]",
+              {
+                "status": "warn",
+                "text": "HIGH RISK"
+              }
+            ],
+            [
+              "B — Lucro líquido",
+              "US$ 1.000.000",
+              "[US$ 50K]",
+              "[receita necessária ≈ US$ 3,6M]",
+              {
+                "status": "critical",
+                "text": "NOT CURRENTLY FEASIBLE"
+              }
+            ],
+            [
+              "C — ARR",
+              "US$ 1.000.000",
+              "[US$ 0]",
+              "[≈ 30 novos clientes/mês a US$ 500]",
+              {
+                "status": "serious",
+                "text": "HIGH RISK"
+              }
+            ],
+            [
+              "D — Valor da empresa",
+              "US$ 1.000.000",
+              "[estimativa]",
+              "[EBITDA × múltiplo citado]",
+              {
+                "status": "good",
+                "text": "ACHIEVABLE WITH CHANGES"
+              }
+            ]
+          ],
+          "footnote": "Calculado com scripts/finance.py (reverse · netprofit · arr · valuation). Veredictos: ACHIEVABLE · ACHIEVABLE WITH CHANGES · HIGH RISK · NOT CURRENTLY FEASIBLE · INSUFFICIENT EVIDENCE."
+        },
+        {
+          "type": "charts",
+          "cols": 2,
+          "mt": "8mm",
+          "items": [
+            {
+              "chart": "funnel",
+              "title": "Funil necessário para a Trilha A",
+              "sub": "Engenharia reversa (ilustrativo)",
+              "data": {
+                "stages": [
+                  {
+                    "name": "Leads",
+                    "value": 5000
+                  },
+                  {
+                    "name": "Oportunidades",
+                    "value": 500
+                  },
+                  {
+                    "name": "Vendas",
+                    "value": 100
+                  }
+                ]
+              },
+              "opts": {
+                "compact": false
+              }
+            },
+            {
+              "chart": "bars",
+              "title": "Receita necessária por trilha",
+              "sub": "US$ · ilustrativo",
+              "data": {
+                "categories": [
+                  "Receita (A)",
+                  "Lucro → receita (B)",
+                  "ARR (C)"
+                ],
+                "values": [
+                  1000000,
+                  3633333,
+                  1000000
+                ]
+              },
+              "opts": {
+                "prefix": "US$ ",
+                "uniform": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "standard",
+      "eyebrow": "03 · Riscos e módulos",
+      "title": "Classificação de Risco e Módulos Ativos",
+      "number": "03",
+      "blocks": [
+        {
+          "type": "grid",
+          "cols": "2",
+          "items": [
+            {
+              "type": "chart",
+              "chart": "riskMatrix",
+              "title": "Matriz de riscos",
+              "sub": "Probabilidade × impacto",
+              "height": "82mm",
+              "data": {
+                "risks": [
+                  {
+                    "id": "R1",
+                    "p": 4,
+                    "i": 5
+                  },
+                  {
+                    "id": "R2",
+                    "p": 3,
+                    "i": 3
+                  },
+                  {
+                    "id": "R3",
+                    "p": 2,
+                    "i": 4
+                  }
+                ]
+              }
+            },
+            {
+              "type": "table",
+              "caption": "Riscos principais",
+              "columns": [
+                "ID",
+                "Risco",
+                "Nível"
+              ],
+              "rows": [
+                [
+                  "R1",
+                  "[Caixa < 60 dias]",
+                  {
+                    "status": "critical",
+                    "text": "CRITICAL"
+                  }
+                ],
+                [
+                  "R2",
+                  "[Dependência de um cliente]",
+                  {
+                    "status": "warn",
+                    "text": "MODERATE"
+                  }
+                ],
+                [
+                  "R3",
+                  "[Licença em falta]",
+                  {
+                    "status": "serious",
+                    "text": "HIGH"
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "mt": "8mm",
+          "caption": "Módulos e agentes ativados",
+          "columns": [
+            "Módulo",
+            "Porquê",
+            "Agente"
+          ],
+          "rows": [
+            [
+              "M03 Diagnóstico",
+              "Baseline incompleto",
+              "AG-03"
+            ],
+            [
+              "M06 Finanças",
+              "Viabilidade das trilhas",
+              "AG-07"
+            ],
+            [
+              "M04 Mercado",
+              "SOM a validar",
+              "AG-05"
+            ],
+            [
+              "Red Team",
+              "Desafiar pressupostos",
+              "AG-22"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "blue",
+      "eyebrow": "04 · Decisão requerida",
+      "title": "Diagnóstico e Decisão Requerida",
+      "number": "04",
+      "blocks": [
+        {
+          "type": "kpis",
+          "items": [
+            {
+              "value": "[Gargalo]",
+              "label": "Restrição principal (M02 §008)"
+            },
+            {
+              "value": "[3]",
+              "label": "Oportunidades prioritárias (Z-PRIORITY ≥ 4)"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "mt": "8mm",
+          "text": "**Diagnóstico inicial:** [conclusão em 2–3 frases]\n\n**Prioridade recomendada:** [iniciativa, porquê, impacto esperado]\n\n**Lacunas críticas:** [o que falta e como afeta a análise]"
+        },
+        {
+          "type": "callout",
+          "mt": "10mm",
+          "label": "Decisão requerida",
+          "value": "[Aprovar meta / ajustar meta / aprovar recolha de dados]"
+        }
+      ]
+    }
+  ]
+}

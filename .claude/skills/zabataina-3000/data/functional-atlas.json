@@ -1,0 +1,3259 @@
+{
+  "source": "Z3000-MASTER v2.0 §23",
+  "note": "Internal functional atlas, not an official universal classification. Fields left empty are completed per organization with `atlas.py fill` (evidence-based, never invented).",
+  "domains": [
+    {
+      "domain_id": "EFA-001",
+      "department": "Executive Leadership",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-002",
+      "department": "Corporate Strategy",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-003",
+      "department": "Corporate Development",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-004",
+      "department": "Business Intelligence",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-005",
+      "department": "Market Intelligence",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-006",
+      "department": "Competitive Intelligence",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-007",
+      "department": "Business Architecture",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-008",
+      "department": "Business Transformation",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-009",
+      "department": "Innovation Management",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-010",
+      "department": "Strategic Planning",
+      "group": "Strategy & Leadership",
+      "applicable_modules": [
+        "M01",
+        "M02",
+        "M04",
+        "M08"
+      ],
+      "example_kpis": [
+        "Strategic objectives on track",
+        "Decision cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-011",
+      "department": "Finance",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-012",
+      "department": "Accounting",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-013",
+      "department": "Financial Planning and Analysis",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-014",
+      "department": "Treasury",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-015",
+      "department": "Tax",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-016",
+      "department": "Audit",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-017",
+      "department": "Investor Relations",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-018",
+      "department": "Capital Management",
+      "group": "Finance & Capital",
+      "applicable_modules": [
+        "M06",
+        "M15"
+      ],
+      "example_kpis": [
+        "Forecast accuracy",
+        "Cash runway",
+        "Days sales outstanding"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-019",
+      "department": "Procurement",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-020",
+      "department": "Strategic Sourcing",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-021",
+      "department": "Supply Chain",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-022",
+      "department": "Logistics",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-023",
+      "department": "Warehousing",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-024",
+      "department": "Inventory Management",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-025",
+      "department": "Manufacturing",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-026",
+      "department": "Production Planning",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-027",
+      "department": "Quality Management",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-028",
+      "department": "Maintenance",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-029",
+      "department": "Facilities Management",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-030",
+      "department": "Health and Safety",
+      "group": "Operations & Supply",
+      "applicable_modules": [
+        "M12"
+      ],
+      "example_kpis": [
+        "On-time delivery",
+        "Capacity utilisation",
+        "Cost per unit"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-031",
+      "department": "Legal",
+      "group": "Legal, Risk & Security",
+      "applicable_modules": [
+        "M16"
+      ],
+      "example_kpis": [
+        "Open critical risks",
+        "Compliance findings",
+        "Security incidents"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-032",
+      "department": "Compliance",
+      "group": "Legal, Risk & Security",
+      "applicable_modules": [
+        "M16"
+      ],
+      "example_kpis": [
+        "Open critical risks",
+        "Compliance findings",
+        "Security incidents"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-033",
+      "department": "Corporate Governance",
+      "group": "Legal, Risk & Security",
+      "applicable_modules": [
+        "M16"
+      ],
+      "example_kpis": [
+        "Open critical risks",
+        "Compliance findings",
+        "Security incidents"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-034",
+      "department": "Enterprise Risk Management",
+      "group": "Legal, Risk & Security",
+      "applicable_modules": [
+        "M16"
+      ],
+      "example_kpis": [
+        "Open critical risks",
+        "Compliance findings",
+        "Security incidents"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-035",
+      "department": "Cybersecurity",
+      "group": "Legal, Risk & Security",
+      "applicable_modules": [
+        "M16"
+      ],
+      "example_kpis": [
+        "Open critical risks",
+        "Compliance findings",
+        "Security incidents"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-036",
+      "department": "Information Security",
+      "group": "Legal, Risk & Security",
+      "applicable_modules": [
+        "M16"
+      ],
+      "example_kpis": [
+        "Open critical risks",
+        "Compliance findings",
+        "Security incidents"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-037",
+      "department": "Data Protection",
+      "group": "Legal, Risk & Security",
+      "applicable_modules": [
+        "M16"
+      ],
+      "example_kpis": [
+        "Open critical risks",
+        "Compliance findings",
+        "Security incidents"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-038",
+      "department": "Human Resources",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-039",
+      "department": "Talent Acquisition",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-040",
+      "department": "Learning and Development",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-041",
+      "department": "Compensation and Benefits",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-042",
+      "department": "Performance Management",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-043",
+      "department": "Workforce Planning",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-044",
+      "department": "Organizational Development",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-045",
+      "department": "Leadership Development",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-046",
+      "department": "Internal Communications",
+      "group": "People & Organization",
+      "applicable_modules": [
+        "M14"
+      ],
+      "example_kpis": [
+        "Time to hire",
+        "Retention of key staff",
+        "Training completion"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-047",
+      "department": "Marketing",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-048",
+      "department": "Brand Management",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-049",
+      "department": "Product Marketing",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-050",
+      "department": "Digital Marketing",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-051",
+      "department": "Content Marketing",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-052",
+      "department": "Search Engine Optimization",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-053",
+      "department": "Paid Media",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-054",
+      "department": "Public Relations",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-055",
+      "department": "Corporate Communications",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-056",
+      "department": "Social Media",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-057",
+      "department": "Growth Marketing",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-058",
+      "department": "Demand Generation",
+      "group": "Marketing & Communications",
+      "applicable_modules": [
+        "M09"
+      ],
+      "example_kpis": [
+        "Qualified leads",
+        "Cost per lead",
+        "Brand awareness"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-059",
+      "department": "Revenue Operations",
+      "group": "Sales & Revenue",
+      "applicable_modules": [
+        "M10"
+      ],
+      "example_kpis": [
+        "Win rate",
+        "Pipeline coverage",
+        "Sales cycle"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-060",
+      "department": "Sales",
+      "group": "Sales & Revenue",
+      "applicable_modules": [
+        "M10"
+      ],
+      "example_kpis": [
+        "Win rate",
+        "Pipeline coverage",
+        "Sales cycle"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-061",
+      "department": "Business Development",
+      "group": "Sales & Revenue",
+      "applicable_modules": [
+        "M10"
+      ],
+      "example_kpis": [
+        "Win rate",
+        "Pipeline coverage",
+        "Sales cycle"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-062",
+      "department": "Partnerships",
+      "group": "Sales & Revenue",
+      "applicable_modules": [
+        "M10"
+      ],
+      "example_kpis": [
+        "Win rate",
+        "Pipeline coverage",
+        "Sales cycle"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-063",
+      "department": "Account Management",
+      "group": "Sales & Revenue",
+      "applicable_modules": [
+        "M10"
+      ],
+      "example_kpis": [
+        "Win rate",
+        "Pipeline coverage",
+        "Sales cycle"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-064",
+      "department": "Sales Enablement",
+      "group": "Sales & Revenue",
+      "applicable_modules": [
+        "M10"
+      ],
+      "example_kpis": [
+        "Win rate",
+        "Pipeline coverage",
+        "Sales cycle"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-065",
+      "department": "Sales Operations",
+      "group": "Sales & Revenue",
+      "applicable_modules": [
+        "M10"
+      ],
+      "example_kpis": [
+        "Win rate",
+        "Pipeline coverage",
+        "Sales cycle"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-066",
+      "department": "Customer Success",
+      "group": "Customer",
+      "applicable_modules": [
+        "M11",
+        "M05"
+      ],
+      "example_kpis": [
+        "Churn",
+        "NPS",
+        "Time to first value"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-067",
+      "department": "Customer Support",
+      "group": "Customer",
+      "applicable_modules": [
+        "M11",
+        "M05"
+      ],
+      "example_kpis": [
+        "Churn",
+        "NPS",
+        "Time to first value"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-068",
+      "department": "Customer Experience",
+      "group": "Customer",
+      "applicable_modules": [
+        "M11",
+        "M05"
+      ],
+      "example_kpis": [
+        "Churn",
+        "NPS",
+        "Time to first value"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-069",
+      "department": "Customer Research",
+      "group": "Customer",
+      "applicable_modules": [
+        "M11",
+        "M05"
+      ],
+      "example_kpis": [
+        "Churn",
+        "NPS",
+        "Time to first value"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-070",
+      "department": "Product Management",
+      "group": "Product",
+      "applicable_modules": [
+        "M05",
+        "M07",
+        "M18"
+      ],
+      "example_kpis": [
+        "Feature adoption",
+        "Time to market"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-071",
+      "department": "Product Design",
+      "group": "Product",
+      "applicable_modules": [
+        "M05",
+        "M07",
+        "M18"
+      ],
+      "example_kpis": [
+        "Feature adoption",
+        "Time to market"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-072",
+      "department": "UX Research",
+      "group": "Product",
+      "applicable_modules": [
+        "M05",
+        "M07",
+        "M18"
+      ],
+      "example_kpis": [
+        "Feature adoption",
+        "Time to market"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-073",
+      "department": "UI Design",
+      "group": "Product",
+      "applicable_modules": [
+        "M05",
+        "M07",
+        "M18"
+      ],
+      "example_kpis": [
+        "Feature adoption",
+        "Time to market"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-074",
+      "department": "Product Development",
+      "group": "Product",
+      "applicable_modules": [
+        "M05",
+        "M07",
+        "M18"
+      ],
+      "example_kpis": [
+        "Feature adoption",
+        "Time to market"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-075",
+      "department": "Software Engineering",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-076",
+      "department": "Quality Engineering",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-077",
+      "department": "DevOps",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-078",
+      "department": "Site Reliability Engineering",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-079",
+      "department": "Cloud Infrastructure",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-080",
+      "department": "Enterprise Architecture",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-081",
+      "department": "Data Engineering",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-082",
+      "department": "Data Science",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-083",
+      "department": "Business Analytics",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-084",
+      "department": "Artificial Intelligence",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-085",
+      "department": "Machine Learning",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-086",
+      "department": "Automation Engineering",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-087",
+      "department": "Integration Engineering",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-088",
+      "department": "IT Service Management",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-089",
+      "department": "Technical Support",
+      "group": "Technology & Data",
+      "applicable_modules": [
+        "M13"
+      ],
+      "example_kpis": [
+        "Uptime",
+        "Deployment frequency",
+        "Automation hours saved"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-090",
+      "department": "Project Management",
+      "group": "Delivery & Excellence",
+      "applicable_modules": [
+        "M08",
+        "M12",
+        "M17",
+        "M18"
+      ],
+      "example_kpis": [
+        "Milestones on time",
+        "Process cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-091",
+      "department": "Programme Management",
+      "group": "Delivery & Excellence",
+      "applicable_modules": [
+        "M08",
+        "M12",
+        "M17",
+        "M18"
+      ],
+      "example_kpis": [
+        "Milestones on time",
+        "Process cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-092",
+      "department": "Portfolio Management",
+      "group": "Delivery & Excellence",
+      "applicable_modules": [
+        "M08",
+        "M12",
+        "M17",
+        "M18"
+      ],
+      "example_kpis": [
+        "Milestones on time",
+        "Process cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-093",
+      "department": "Process Excellence",
+      "group": "Delivery & Excellence",
+      "applicable_modules": [
+        "M08",
+        "M12",
+        "M17",
+        "M18"
+      ],
+      "example_kpis": [
+        "Milestones on time",
+        "Process cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-094",
+      "department": "Continuous Improvement",
+      "group": "Delivery & Excellence",
+      "applicable_modules": [
+        "M08",
+        "M12",
+        "M17",
+        "M18"
+      ],
+      "example_kpis": [
+        "Milestones on time",
+        "Process cycle time"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-095",
+      "department": "Research and Development",
+      "group": "Growth, Sustainability & Resilience",
+      "applicable_modules": [
+        "M16",
+        "M19",
+        "M08"
+      ],
+      "example_kpis": [
+        "Initiatives launched",
+        "Continuity test pass rate"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-096",
+      "department": "Corporate Sustainability",
+      "group": "Growth, Sustainability & Resilience",
+      "applicable_modules": [
+        "M16",
+        "M19",
+        "M08"
+      ],
+      "example_kpis": [
+        "Initiatives launched",
+        "Continuity test pass rate"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-097",
+      "department": "Environmental Management",
+      "group": "Growth, Sustainability & Resilience",
+      "applicable_modules": [
+        "M16",
+        "M19",
+        "M08"
+      ],
+      "example_kpis": [
+        "Initiatives launched",
+        "Continuity test pass rate"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-098",
+      "department": "Government Relations",
+      "group": "Growth, Sustainability & Resilience",
+      "applicable_modules": [
+        "M16",
+        "M19",
+        "M08"
+      ],
+      "example_kpis": [
+        "Initiatives launched",
+        "Continuity test pass rate"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-099",
+      "department": "International Expansion",
+      "group": "Growth, Sustainability & Resilience",
+      "applicable_modules": [
+        "M16",
+        "M19",
+        "M08"
+      ],
+      "example_kpis": [
+        "Initiatives launched",
+        "Continuity test pass rate"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    },
+    {
+      "domain_id": "EFA-100",
+      "department": "Business Continuity",
+      "group": "Growth, Sustainability & Resilience",
+      "applicable_modules": [
+        "M16",
+        "M19",
+        "M08"
+      ],
+      "example_kpis": [
+        "Initiatives launched",
+        "Continuity test pass rate"
+      ],
+      "purpose": "",
+      "responsibilities": [],
+      "processes": [],
+      "leadership_roles": [],
+      "operational_positions": [],
+      "seniority_levels": [
+        "Executive",
+        "Head/Director",
+        "Manager",
+        "Specialist",
+        "Analyst/Associate"
+      ],
+      "required_competencies": [],
+      "tools": [],
+      "inputs": [],
+      "outputs": [],
+      "reporting_relationships": "",
+      "interfaces": [],
+      "relevant_risks": []
+    }
+  ]
+}

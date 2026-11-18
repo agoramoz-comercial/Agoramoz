@@ -1,0 +1,111 @@
+{
+  "source": "Z3000-MASTER v2.0 §24",
+  "rule": "Frameworks are not interchangeable; select by size, industry, maturity, risk, delivery complexity, regulation, team capability and culture — and explain why.",
+  "frameworks": [
+    {
+      "id": "OKR",
+      "name": "Objectives and Key Results",
+      "use_when": "Aligning teams on a few ambitious outcomes per quarter",
+      "fits": "Any size; needs basic measurement",
+      "avoid_when": "Team cannot measure outcomes yet; used as task list"
+    },
+    {
+      "id": "KPI",
+      "name": "KPI Management",
+      "use_when": "Running operations against defined indicators (M17)",
+      "fits": "All",
+      "avoid_when": "KPIs without owners or decisions"
+    },
+    {
+      "id": "BSC",
+      "name": "Balanced Scorecard",
+      "use_when": "Mid/large organizations balancing financial, customer, process, learning goals",
+      "fits": "Mid-market+",
+      "avoid_when": "Very small teams — too heavy"
+    },
+    {
+      "id": "EOS",
+      "name": "Entrepreneurial Operating System",
+      "use_when": "Founder-led SMEs (10–250 people) needing rhythm and accountability",
+      "fits": "SMEs",
+      "avoid_when": "Large regulated enterprises"
+    },
+    {
+      "id": "LEAN",
+      "name": "Lean Management",
+      "use_when": "Reducing waste and lead time in repeatable processes",
+      "fits": "All with repeatable work",
+      "avoid_when": "One-off creative/R&D work"
+    },
+    {
+      "id": "6S",
+      "name": "Six Sigma",
+      "use_when": "Reducing variation/defects where data volume allows statistics",
+      "fits": "Manufacturing, services at scale",
+      "avoid_when": "Low-volume processes, no data"
+    },
+    {
+      "id": "AGILE",
+      "name": "Agile",
+      "use_when": "Uncertain requirements, iterative delivery",
+      "fits": "Product/tech teams",
+      "avoid_when": "Fixed-scope regulated contracts without adaptation"
+    },
+    {
+      "id": "SCRUM",
+      "name": "Scrum",
+      "use_when": "Cross-functional product teams in sprints",
+      "fits": "Teams of 3–9",
+      "avoid_when": "Ops/support work with constant interruptions"
+    },
+    {
+      "id": "KANBAN",
+      "name": "Kanban",
+      "use_when": "Continuous flow work (support, ops, marketing)",
+      "fits": "All",
+      "avoid_when": "Work needing fixed timeboxes for stakeholders"
+    },
+    {
+      "id": "PRINCE2",
+      "name": "PRINCE2",
+      "use_when": "Governed projects with clear stages, often public sector/UK/EU",
+      "fits": "Mid-large projects",
+      "avoid_when": "Small fast experiments"
+    },
+    {
+      "id": "PMBOK",
+      "name": "PMI / PMBOK",
+      "use_when": "Formal project management, predictive or hybrid",
+      "fits": "Mid-large projects",
+      "avoid_when": "Tiny teams — overhead"
+    },
+    {
+      "id": "TOC",
+      "name": "Theory of Constraints",
+      "use_when": "Finding and relieving the single binding constraint (M02 §008)",
+      "fits": "All",
+      "avoid_when": "When multiple unrelated problems need parallel fixes"
+    },
+    {
+      "id": "HOSHIN",
+      "name": "Hoshin Kanri",
+      "use_when": "Cascading multi-year strategy into annual objectives",
+      "fits": "Large organizations",
+      "avoid_when": "Early-stage startups"
+    },
+    {
+      "id": "BPM",
+      "name": "Business Process Management",
+      "use_when": "Modelling, automating and governing end-to-end processes",
+      "fits": "Mid-large, process-heavy",
+      "avoid_when": "Processes still undefined"
+    },
+    {
+      "id": "ISO",
+      "name": "ISO management systems",
+      "use_when": "Certification/compliance needs (9001 quality, 27001 security, 14001 environment…)",
+      "fits": "Where customers/regulators require",
+      "avoid_when": "No certification need — use lighter controls"
+    }
+  ]
+}

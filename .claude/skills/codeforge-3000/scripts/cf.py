@@ -12,7 +12,7 @@ Every refusal names the rule enforced. Run `cf.py <command> -h`.
   init · req · comp · test · link · node · graph (check|impact|trace|export) · task (loop) · run · event
   approve · security · checkpoint · resume · status · report
 """
-import argparse, datetime as dt, hashlib, json, os, pathlib, re, shlex, subprocess, sys, tempfile, time
+import argparse, datetime as dt, fnmatch, hashlib, json, os, pathlib, re, shlex, subprocess, sys, tempfile, time
 import xml.etree.ElementTree as ET
 
 if __name__ == "__main__":          # one module identity for extensions that `import cf` (shared Refused class, shared state)
@@ -284,10 +284,11 @@ def cmd_test(a):
         tid = a.id or nid(r["tests"], "TST")
         st0 = "WRITTEN" if (a.command or a.file) else "DESIGNED"          # §21.7 designed ≠ written ≠ executed
         r["tests"][tid] = {"name": a.name, "layer": a.layer, "targets": targets, "command": a.command or "", "file": a.file or "",
-                           "status": st0, "evidence": "", "runs": [], "created": now()}
+                           "match": csv(a.match), "status": st0, "evidence": "", "runs": [], "created": now()}
         for t in targets:
             r["edges"].append({"from": tid, "rel": "tests", "to": t})
-        save(a, r, "test.add", tid); print(f"{tid} [{a.layer}] → {', '.join(targets)} ({st0} — not executed)"); return
+        save(a, r, "test.add", tid)
+        print(f"{tid} [{a.layer}] → {', '.join(targets)} ({st0} — not executed)" + (f" · groups runner cases matching {csv(a.match)}" if a.match else "")); return
     if a.action == "write":
         t = r["tests"].get(a.name)
         if not t:
@@ -332,15 +333,42 @@ def cmd_test(a):
     if a.action == "import":
         f = pathlib.Path(a.name)
         root = ET.parse(f).getroot()
-        cases = root.iter("testcase")
+        cases = list(root.iter("testcase"))
         upd, unk = 0, []
-        for c in cases:
+        grouped = {k for k, t in r["tests"].items() if t.get("match")}
+        used = set()
+        for k in sorted(grouped):                       # pattern-linked tests aggregate many runner cases (any failure → FAILED)
+            t = r["tests"][k]
+            hits = []
+            for i, c in enumerate(cases):
+                keys = [c.get("classname", ""), c.get("name", ""), c.get("file", ""), f"{c.get('classname', '')}::{c.get('name', '')}"]
+                if any(fnmatch.fnmatch(x, pat) for pat in t["match"] for x in keys if x):
+                    hits.append(c); used.add(i)
+            if not hits:
+                print(f"  {k}: pattern {t['match']} matched no test case — status unchanged")
+                continue
+            nf = sum(1 for c in hits if c.find("failure") is not None or c.find("error") is not None)
+            ns = sum(1 for c in hits if c.find("skipped") is not None)
+            npass = len(hits) - nf - ns
+            st = "FAILED" if nf else "PASSED" if npass else "SKIPPED"
+            secs = round(sum(float(c.get("time") or 0) for c in hits), 2)
+            firstf = next((c for c in hits if c.find("failure") is not None or c.find("error") is not None), None)
+            el = (firstf.find("failure") if firstf is not None and firstf.find("failure") is not None else firstf.find("error")) if firstf is not None else None
+            detail = (f"{firstf.get('classname', '')}::{firstf.get('name', '')}: " + ((el.get("message") or "") + " " + (el.text or ""))[:300]) if el is not None else ""
+            ev = f"{f}: {len(hits)} cases — {npass} passed, {nf} failed, {ns} skipped"
+            t["status"] = st; t["evidence"] = ev
+            t["runs"].append({"ts": now(), "status": st, "evidence": ev, "seconds": secs, "detail": detail, "cases": len(hits), "failed": nf, "skipped": ns})
+            emit(a, "test", test=k, status=st, evidence=ev, seconds=secs, detail=detail); upd += 1
+            print(f"  {k}: {st} ({len(hits)} cases: {npass} passed, {nf} failed, {ns} skipped)")
+        for i, c in enumerate(cases):
+            if i in used:
+                continue
             name = c.get("name", ""); cls = c.get("classname", "")
             st = "FAILED" if (c.find("failure") is not None or c.find("error") is not None) else "SKIPPED" if c.find("skipped") is not None else "PASSED"
             secs = float(c.get("time") or 0)
             fail_el = c.find("failure") if c.find("failure") is not None else c.find("error")
             detail = ((fail_el.get("message") or "") + " " + (fail_el.text or ""))[:400] if fail_el is not None else ""
-            hit = [k for k, t in r["tests"].items() if k in name or k in cls or t["name"] == name]
+            hit = [k for k, t in r["tests"].items() if k not in grouped and (k in name or k in cls or t["name"] == name)]
             if not hit:
                 unk.append(name); continue
             for k in hit:
@@ -348,7 +376,8 @@ def cmd_test(a):
                 r["tests"][k]["runs"].append({"ts": now(), "status": st, "evidence": str(f), "seconds": secs, "detail": detail}); upd += 1
                 emit(a, "test", test=k, status=st, evidence=str(f), seconds=secs, detail=detail)
         save(a, r, "test.import", f"{f} ({upd} updated)")
-        print(f"Imported {f}: {upd} linked results updated" + (f"; {len(unk)} unlinked test cases ignored (link them: put the TST id in the test name)" if unk else ""))
+        print(f"Imported {f}: {len(cases)} test cases · {upd} registry tests updated" + (f"; {len(unk)} unlinked cases ignored — link them with "
+              "`test add NAME --targets REQ --match 'tests/admin/*'` or put the TST id in the case name" if unk else ""))
 
 
 # ------------------------------------------------------------------ graph (Part VII)
@@ -731,8 +760,18 @@ def run_capture(a, command, reason):
 SECRET_RX = re.compile(r"(AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_\-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|xox[abpr]-[A-Za-z0-9\-]{10,}|AIza[0-9A-Za-z_\-]{35}|-----BEGIN [A-Z ]*PRIVATE KEY-----)")
 
 
+try:                                                     # M17 redaction adapted from ECC (scripts/redaction.py, NOTICE-ECC.md)
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    from redaction import redact as _redact
+except ImportError:                                      # pragma: no cover — the legacy pattern still protects logs
+    _redact = None
+
+
 def redact(s):
-    return SECRET_RX.sub("[REDACTED-SECRET]", s)          # M17: never expose secrets in logs
+    """Never expose secrets in logs, context packages or diffs (M17): PEM blocks, JWTs, assignments, tokens."""
+    if _redact is not None:
+        return _redact(s)
+    return SECRET_RX.sub("[REDACTED-SECRET]", s)
 
 
 CMD_RULES = [   # (category, regex, risk) — first match wins (§3.8, §13.5, §21.10)
@@ -972,7 +1011,8 @@ def main(argv=None):
     p.set_defaults(f=cmd_comp)
     p = sp.add_parser("test"); p.add_argument("action", choices=["add", "write", "result", "run", "import"]); p.add_argument("name")
     p.add_argument("status", nargs="?"); p.add_argument("--targets"); p.add_argument("--layer", default="unit"); p.add_argument("--command")
-    p.add_argument("--file"); p.add_argument("--evidence"); p.add_argument("--id"); p.set_defaults(f=cmd_test)
+    p.add_argument("--file"); p.add_argument("--evidence"); p.add_argument("--id")
+    p.add_argument("--match", help="comma-separated glob(s) over JUnit classname/name/file: one registry test aggregates all matching cases"); p.set_defaults(f=cmd_test)
     p = sp.add_parser("node"); p.add_argument("id"); p.add_argument("--type", required=True); p.add_argument("--name", default="")
     p.add_argument("--critical", action="store_true"); p.set_defaults(f=cmd_node)
     p = sp.add_parser("link"); p.add_argument("src"); p.add_argument("rel"); p.add_argument("dst"); p.set_defaults(f=cmd_link)
