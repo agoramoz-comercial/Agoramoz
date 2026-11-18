@@ -749,3 +749,11 @@ está em `docs/TERRABUILD.md`.
   - **Resultado:** zero falhas em 2 rondas.
   - **Contradições nas fontes:** o crescimento ferroviário de «17%» publicado pelo MPDC não bate com 9,7 → 11,7, que dá 20,6%. O curso não corrige a fonte: transforma a discrepância num exercício de verificação de dados.
 
+## D-50 — Website v2: estrutura «Conversa», identidade «Editorial», sete efeitos de movimento
+
+- **Decisão do fundador (18/11/2026):** recriar o site público com a estrutura da direcção C (pergunta no topo, escolha de setor, WhatsApp primeiro, três passos) e as cores e a letra da direcção A (azul #1D2BE6, lavanda, tinta, papel; Inter Tight). Efeitos escolhidos no laboratório de movimento: 01 títulos por linhas, 02 números que contam, 03 fluxo desenhado com o scroll, 05 cartões empilhados, 06 arco que se abre, 08 botão magnético, 10 transição entre páginas.
+- **Fora:** cena 3D, scroll horizontal fixo, faixa infinita e scroll suave.
+- **Porquê:** o diagnóstico M03 aponta a primeira venda como restrição; a C encurta o caminho até uma conversa e a A dá coerência com as propostas e relatórios A4.
+- **Como:** camada de tokens própria do site público (a consola não muda), GSAP 3.15 já instalado, movimento reduzido respeitado. Plano e requisitos em `.wie-x/`.
+- **Produção:** só depois de o fundador aprovar a pré-visualização.
+
