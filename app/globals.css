@@ -183,6 +183,120 @@
   --chrome-c: #9ea0a8; /* 7,58:1 sobre tinta-950 — AA */
 }
 
+/* ===========================================================================
+   Website v2 (D-50) — identidade «Editorial»: azul, lavanda, tinta e papel.
+
+   Só vale dentro de `[data-v2]`, que a casca do site público escreve. A
+   consola, o QA, os documentos e os inquéritos ficam exactamente como estavam.
+
+   Em vez de reescrever componentes, religam-se as primitivas que eles já leem:
+   o vermelho do CTA passa a azul, os pretos e o giz passam à tinta e ao papel
+   da direcção A, os cinzentos passam a tons que mantêm o contraste.
+
+   Rácios CALCULADOS (WCAG 2.1) contra as superfícies v2:
+     tinta #0C0C10 / papel #F4F4F6 ........ 17,77:1
+     mute  #4A4B57 / papel ................. 7,85:1
+     azul  #1D2BE6 / papel ................. 7,53:1   (texto de destaque)
+     branco / azul ......................... 8,27:1   (CTA)
+     tinta / lavanda #C8CAEE ............... 12,21:1
+     #2E3050 / lavanda ..................... 7,94:1   (secundário em lavanda)
+     azul-escuro #121A9E / lavanda ......... 7,88:1   (destaque em lavanda)
+     lilás #A9ACE3 / tinta ................. 9,01:1   (secundário no escuro)
+     lavanda / tinta ....................... 12,21:1  (destaque no escuro)
+     #E3E5FF / azul ........................ 6,66:1   (secundário no azul)
+   Azul sobre tinta dá 2,36:1 — por isso, no escuro, o destaque é lilás.
+   =========================================================================== */
+
+[data-v2] {
+  --v2-azul: #1d2be6;
+  --v2-azul-escuro: #121a9e;
+  --v2-lavanda: #c8caee;
+  --v2-lilas: #a9ace3;
+  --v2-tinta: #0c0c10;
+  --v2-papel: #f4f4f6;
+  --v2-mute: #4a4b57;
+
+  --color-ink-950: var(--v2-tinta);
+  --color-ink-900: #15161d;
+  --color-ink-850: #1c1d26;
+  --color-ink-800: #23242f;
+  --color-ink-700: #2e3050;
+  --color-chalk: var(--v2-papel);
+  --color-chalk-2: #ffffff;
+  --color-chalk-3: #dcdde6;
+  --color-steel-600: var(--v2-mute);
+  --color-steel-400: var(--v2-lilas);
+  --color-steel-200: var(--v2-lavanda);
+  --color-signal-700: var(--v2-azul-escuro);
+  --color-signal-600: var(--v2-azul);
+  --color-signal-500: #8e93f0; /* 7,05:1 sobre tinta — destaque no escuro */
+
+  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-techno: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --tracking-techno: 0.08em;
+}
+
+[data-v2] [data-surface='light'] {
+  --accent: var(--v2-azul);
+  --signal: var(--v2-azul);
+}
+
+[data-v2] [data-surface='tint'] {
+  --surface: var(--v2-lavanda);
+  --surface-raised: #ffffff;
+  --muted: #2e3050;
+  --border: color-mix(in oklab, var(--v2-tinta) 18%, transparent);
+  --accent: var(--v2-azul-escuro);
+  --signal: var(--v2-azul-escuro);
+}
+
+[data-v2] [data-surface='dark'],
+[data-v2] [data-surface='deep'] {
+  --accent: var(--v2-lavanda);
+  --signal: #8e93f0;
+}
+
+/* Faixa azul: só existe no v2. O CTA nesta superfície usa a variante `claro`. */
+[data-v2] [data-surface='azul'] {
+  --surface: var(--v2-azul);
+  --surface-raised: #2a37ec;
+  --on-surface: #ffffff;
+  --muted: #e3e5ff;
+  --border: color-mix(in oklab, #ffffff 30%, transparent);
+  --hairline: color-mix(in oklab, #ffffff 34%, transparent);
+  --accent: #ffffff;
+  --signal: #ffffff;
+  --ok: #ffffff;
+  --motif: color-mix(in oklab, #ffffff 26%, transparent);
+  --chrome-a: #ffffff;
+  --chrome-b: #e3e5ff;
+  --chrome-c: #c8caee;
+}
+
+body:has([data-v2]) {
+  background-color: var(--v2-papel, #f4f4f6);
+  color: #0c0c10;
+}
+
+[data-v2] :focus-visible {
+  box-shadow:
+    0 0 0 2px var(--surface, #f4f4f6),
+    0 0 0 4px var(--v2-azul);
+}
+
+[data-v2] [data-surface='dark'] :focus-visible,
+[data-v2] [data-surface='deep'] :focus-visible,
+[data-v2] [data-surface='azul'] :focus-visible {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px #ffffff;
+}
+
+[data-v2] ::selection {
+  background: var(--v2-azul);
+  color: #fff;
+}
+
 @layer base {
   *,
   *::before,

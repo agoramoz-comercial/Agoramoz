@@ -58,9 +58,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt" className={`${archivo.variable} ${inter.variable} ${chakra.variable}`}>
       <head>
-        {/* Sem JS, nada do que o GSAP revelaria fica escondido. */}
+        {/* Sem JS, nada do que o GSAP revelaria fica escondido — incluindo os títulos divididos por linhas. */}
         <noscript>
-          <style>{`[data-animate]{visibility:visible!important;opacity:1!important;transform:none!important}`}</style>
+          <style>{`[data-animate],[data-split]{visibility:visible!important;opacity:1!important;transform:none!important}`}</style>
         </noscript>
       </head>
       <body>{children}</body>

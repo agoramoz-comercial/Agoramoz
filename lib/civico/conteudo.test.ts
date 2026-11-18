@@ -73,6 +73,7 @@ describe('a página no site', () => {
     expect(urls).toContain('/civico');
     // Só em português: não há par inglês a apontar para um 404.
     expect(urls).not.toContain('/en/civico');
-    expect(NAV.primary.map((i) => i.href)).toContain('/civico');
+    // Website v2 (D-50): fora da barra, na gaveta e no rodapé.
+    expect(NAV.secundaria.map((i) => i.href)).toContain('/civico');
   });
 });

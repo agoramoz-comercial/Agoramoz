@@ -17,8 +17,11 @@ import { registerMotionEffects, registerReducedMotionEffects } from '@/lib/motio
  * página continuam nativos. O custo aceite é escrever o parallax à mão.
  *
  * Em `prefers-reduced-motion: reduce` o Lenis nunca chega a ser criado.
+ *
+ * `suave={false}` (website v2, D-50) deixa o scroll nativo: o efeito ficou fora
+ * da escolha do fundador. O resto do sistema (efeitos, movimento reduzido) corre igual.
  */
-export function MotionProvider({ children }: { children: React.ReactNode }) {
+export function MotionProvider({ children, suave = true }: { children: React.ReactNode; suave?: boolean }) {
   const lenisRef = useRef<Lenis | null>(null);
 
   useGSAP(() => {
@@ -42,6 +45,11 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     mm.add('(prefers-reduced-motion: no-preference)', () => {
       registerMotionEffects();
 
+      if (!suave) {
+        void document.fonts?.ready.then(() => ScrollTrigger.refresh());
+        return;
+      }
+
       const lenis = new Lenis({ duration: 1.05, smoothWheel: true });
       lenisRef.current = lenis;
 
@@ -62,7 +70,7 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => mm.revert();
-  }, []);
+  }, [suave]);
 
   return <>{children}</>;
 }

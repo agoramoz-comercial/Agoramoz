@@ -67,7 +67,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
 
   return (
     <header
-      data-surface="deep"
+      data-surface="light"
       className="sticky top-0 z-50 border-b border-[color:var(--hairline)] bg-[color:var(--surface)]/90 text-[color:var(--on-surface)] backdrop-blur-xl"
       onMouseLeave={() => setMenu(null)}
     >
@@ -97,29 +97,11 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
               key={item.href}
               href={item.href}
               aria-current={pathname === item.href ? 'page' : undefined}
-              className={cn(
-                'rule-label min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]',
-                !('desde' in item) && 'inline-flex',
-                'desde' in item && item.desde === 'xl' && 'hidden xl:inline-flex',
-                'desde' in item && item.desde === '2xl' && 'hidden 2xl:inline-flex',
-              )}
+              className="rule-label inline-flex min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
             >
               {item.label}
-              {'selo' in item ? (
-                <>
-                  <span aria-hidden className="ml-1.5 inline-block size-1.5 bg-[color:var(--color-energy-500)]" />
-                  <span className="sr-only"> ({item.selo})</span>
-                </>
-              ) : null}
             </Link>
           ))}
-          <Link
-            href={news.href}
-            aria-current={pathname === news.href ? 'page' : undefined}
-            className="rule-label inline-flex min-h-11 items-center whitespace-nowrap px-2 xl:px-3 text-[color:var(--muted)] transition-colors hover:text-[color:var(--on-surface)] aria-[current=page]:text-[color:var(--on-surface)]"
-          >
-            {t(CHROME.news, idioma)}
-          </Link>
           {idioma === 'en' && (
             <Link
               href={globalHref}
@@ -234,7 +216,7 @@ export function SiteHeader({ idioma = 'pt' }: { idioma?: Idioma }) {
                     >
                       {t(CHROME.news, idioma)}
                     </Link>
-                    {NAV.primary.map((item) => (
+                    {[...NAV.primary, ...NAV.secundaria].map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}

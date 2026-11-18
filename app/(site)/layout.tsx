@@ -1,4 +1,5 @@
 import { SiteChrome } from '@/components/layout/SiteChrome';
+import { interTight } from '@/lib/fonts/site';
 
 /**
  * Layout do site público. O grupo `(site)` não aparece no URL: `/sobre`
@@ -6,5 +7,5 @@ import { SiteChrome } from '@/components/layout/SiteChrome';
  * do que não tem — hoje, `/admin`.
  */
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
-  return <SiteChrome idioma="pt">{children}</SiteChrome>;
+  return <SiteChrome idioma="pt" fonte={interTight.variable}>{children}</SiteChrome>;
 }

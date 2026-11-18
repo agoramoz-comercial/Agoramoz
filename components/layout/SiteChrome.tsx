@@ -1,8 +1,6 @@
 import { MotionProvider } from '@/components/motion/MotionProvider';
 import { ScrollProgress } from '@/components/motion/ScrollProgress';
-import { CustomCursor } from '@/components/motion/CustomCursor';
 import { PageTransition } from '@/components/motion/PageTransition';
-import { SectionIndex } from '@/components/layout/SectionIndex';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { TopBar } from '@/components/layout/TopBar';
@@ -38,20 +36,32 @@ import type { Idioma } from '@/content/types';
  * `not-found`/`global-error` da raiz e obriga a recarregar a página a cada
  * troca. O WCAG 3.1.2 (idioma das partes) é cumprido aqui, e o hreflang diz
  * aos motores de busca o que cada URL é.
+ *
+ * Website v2 (D-50): `data-v2` liga a identidade «Editorial» (tokens em
+ * `globals.css`) e `fonte` traz a Inter Tight do layout. Saem o cursor
+ * próprio, o índice lateral, o grão e o scroll suave: eram da linguagem escura
+ * anterior, e o scroll suave ficou fora da escolha de movimento.
  */
-export function SiteChrome({ children, idioma }: { children: React.ReactNode; idioma: Idioma }) {
+export function SiteChrome({
+  children,
+  idioma,
+  fonte,
+}: {
+  children: React.ReactNode;
+  idioma: Idioma;
+  /** Classe da variável CSS da fonte v2 (`--font-inter-tight`). */
+  fonte?: string;
+}) {
   return (
-    <div className="grain" lang={idioma === 'en' ? 'en' : undefined}>
+    <div data-v2 className={fonte} lang={idioma === 'en' ? 'en' : undefined}>
       <SkipLink idioma={idioma} />
       <SiteJsonLd />
       <AttributionBoot />
       <MedicaoPaginas />
       <OutboundTracker />
-      <MotionProvider>
+      <MotionProvider suave={false}>
         <ScrollProgress />
         <PageTransition />
-        <CustomCursor />
-        <SectionIndex />
         <TopBar idioma={idioma} />
         <SiteHeader idioma={idioma} />
         <main id="conteudo">{children}</main>

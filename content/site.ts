@@ -128,29 +128,24 @@ export const CTA = { primary: CTA_PRIMARY, secondary: CTA_SECONDARY } as const;
  * está publicado.
  */
 export const NAV = {
+  /**
+   * Website v2 (D-50): a barra fica curta. Ao lado dos menus «Soluções» e
+   * «Setores», só três destinos: como trabalhamos, os cursos e quem somos. O que
+   * saiu da barra (contactos, demonstração de projetos, Cívico) continua na gaveta
+   * e no rodapé, que leem `primary` e `secundaria` juntos.
+   */
   primary: [
     { href: '/como-trabalhamos', label: 'Como trabalhamos' },
-    /**
-     * Demonstração (D-41). Só na barra a partir de `xl`: entre 1024 e 1279 px não cabe sem mudar o
-     * desenho do cabeçalho. Na barra, o selo é um quadrado na cor do selo de demonstração (o nome
-     * acessível diz «(demo)»); na gaveta e no rodapé, `NAV_TEXTO` escreve «Projetos (demo)».
-     */
-    { href: '/projetos', label: 'Projetos', selo: 'demo', desde: 'xl' },
+    { href: '/cursos', label: 'Cursos' },
     { href: '/sobre', label: 'Sobre' },
-    { href: '/contactos', label: 'Contactos' },
-    /**
-     * AGORAMOZ Cívico (D-43). Na barra só a partir de `2xl` (1536 px). Medido: a
-     * 1280 px a barra transbordava 52 px, e só cabe com folga a partir de ~1430 px
-     * de largura útil — com a barra de deslocamento do Windows, isso é mais do que
-     * um ecrã de 1440. Abaixo disso fica na gaveta (telemóvel e tablet) e no rodapé.
-     */
-    { href: '/civico', label: 'Cívico', desde: '2xl' },
   ],
-  /**
-   * Só no rodapé: o cabeçalho já tem o mega-menu «Setores» (por país) e uma
-   * entrada a mais mudava-lhe a forma — o design não muda.
-   */
+  /** Gaveta e rodapé. A ordem é a do rodapé. */
   secundaria: [
+    { href: '/contactos', label: 'Contactos' },
+    /** Demonstração (D-41): o selo «(demo)» vem de `NAV_TEXTO`. */
+    { href: '/projetos', label: 'Projetos (demo)' },
+    /** AGORAMOZ Cívico (D-43). */
+    { href: '/civico', label: 'Cívico' },
     { href: '/setores', label: 'Setores' },
     { href: '/seguranca-qualidade', label: 'Segurança e qualidade' },
     { href: '/faq', label: 'Perguntas frequentes' },

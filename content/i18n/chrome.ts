@@ -75,10 +75,11 @@ export const CHROME = {
 
 /** As páginas institucionais, que por agora só existem em português. */
 export const NAV_TEXTO: Record<
-  '/como-trabalhamos' | '/projetos' | '/setores' | '/sobre' | '/contactos' | '/civico' | '/seguranca-qualidade' | '/faq',
+  '/como-trabalhamos' | '/cursos' | '/projetos' | '/setores' | '/sobre' | '/contactos' | '/civico' | '/seguranca-qualidade' | '/faq',
   Texto
 > = {
   '/como-trabalhamos': { pt: 'Como trabalhamos', en: 'How we work' },
+  '/cursos': { pt: 'Cursos', en: 'Courses' },
   '/projetos': { pt: 'Projetos (demo)', en: 'Projects (demo)' },
   '/setores': { pt: 'Setores', en: 'Sectors' },
   '/seguranca-qualidade': { pt: 'Segurança e qualidade', en: 'Security and quality' },

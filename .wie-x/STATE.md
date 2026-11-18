@@ -40,3 +40,15 @@ One clear next step.
 | Date | Checkpoint (Module 10.3) | Summary | Next action |
 |---|---|---|---|
 | 2026-11-18 | Initialisation | `.wie-x/` created | Intake & requirements |
+
+## 2026-11-18 · PH-1 Fundação — DONE
+
+- Tokens v2 em `[data-v2]` (globals.css), só no site público; superfície `azul` e botão `claro`.
+- Inter Tight via `next/font` nos layouts `(site)` e `(en)` (`lib/fonts/site.ts`).
+- Casca: sem cursor próprio, índice lateral, grão e scroll suave (Lenis desligado, `suave={false}`).
+- Navegação (A-02): barra com Soluções, Setores, Como trabalhamos, Cursos, Sobre; o resto na gaveta e no rodapé.
+- Movimento: `CountUp` (02), `ScrubLine` (03), `CardStack` (05), `ArchReveal` (06); `SplitHeading` (01), `MagneticButton` (08) e `PageTransition` azul (10) reaproveitados. Lógica pura em `lib/motion/v2.ts` com 12 testes.
+- Correcção: títulos `[data-split]` visíveis sem JavaScript (`<noscript>` no layout raiz).
+- ESLint deixa de analisar `.claude/`, `.codeforge/` e `.wie-x/` (código das skills, não do site).
+- Verificação: 1894 testes OK · typecheck OK · lint 0 erros · axe 0 violações em 6 rotas × 2 larguras (TESTED AND PASSED).
+- Próximo: PH-2, página inicial com a estrutura C.

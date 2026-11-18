@@ -1,4 +1,5 @@
 import { SiteChrome } from '@/components/layout/SiteChrome';
+import { interTight } from '@/lib/fonts/site';
 
 /**
  * Layout das páginas em inglês. O grupo `(en)` não aparece no URL; o segmento
@@ -7,5 +8,5 @@ import { SiteChrome } from '@/components/layout/SiteChrome';
  * nada aqui lê cabeçalhos nem cookies.
  */
 export default function EnLayout({ children }: { children: React.ReactNode }) {
-  return <SiteChrome idioma="en">{children}</SiteChrome>;
+  return <SiteChrome idioma="en" fonte={interTight.variable}>{children}</SiteChrome>;
 }
