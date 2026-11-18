@@ -31,3 +31,6 @@ next-env.d.ts
 # Codeforge: o registo (record.json) vai para o git; a actividade de cada sessão não.
 .codeforge/events.jsonl
 .codeforge/logs/
+
+# caches Python das skills
+__pycache__/
