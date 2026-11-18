@@ -27,3 +27,7 @@ next-env.d.ts
 # Saída intermédia do pipeline Blender (os activos finais vão para public/terrabuild)
 .qa/blender/saida/
 .qa/blender/__pycache__/
+
+# Codeforge: o registo (record.json) vai para o git; a actividade de cada sessão não.
+.codeforge/events.jsonl
+.codeforge/logs/

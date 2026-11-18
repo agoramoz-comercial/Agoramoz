@@ -9,5 +9,18 @@
   },
   "enabledPlugins": {
     "ecc@ecc": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"$CLAUDE_PROJECT_DIR/.claude/skills/codeforge-3000/scripts/hooks/claude_code_hook.py\""
+          }
+        ]
+      }
+    ]
   }
 }

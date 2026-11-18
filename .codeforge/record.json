@@ -1,0 +1,35 @@
+{
+  "project": {
+    "id": "CF-AGORAMOZ",
+    "name": "AGORAMOZ",
+    "objective": "Website e consola AGORAMOZ (agoramoz.com): site público, admin AEOS, cursos verificados",
+    "type": "web",
+    "complexity": "high",
+    "created": "2026-11-18T15:28:05",
+    "preview_url": "",
+    "git_base": "c3dfe939a4c56474bcdb46cf68e999f2ef146938"
+  },
+  "version": 1,
+  "updated": "2026-11-18T15:28:05",
+  "requirements": {},
+  "components": {},
+  "tests": {},
+  "nodes": {},
+  "edges": [],
+  "tasks": {},
+  "approvals": [],
+  "pending_approvals": [],
+  "security": [],
+  "decisions": [],
+  "checkpoints": [],
+  "usage": [],
+  "history": [
+    {
+      "ts": "2026-11-18T15:28:05",
+      "v": 1,
+      "action": "init",
+      "detail": "AGORAMOZ"
+    }
+  ],
+  "integrity": "7a30e9dd3dec537c2fed1bfa74df3d89d09a939fd31c6326bc726d9934efbb9b"
+}
