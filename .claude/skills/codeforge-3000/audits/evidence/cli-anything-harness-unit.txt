@@ -1,0 +1,66 @@
+3MF | 1 error in 0.92s
+QGIS | 13 errors in 0.16s
+adguardhome | 25 passed in 0.13s
+anygen | 40 passed in 0.13s
+audacity | 107 passed in 0.18s
+blender | 165 passed in 0.23s
+browser | 33 passed in 1.55s
+calibre | 41 passed in 0.29s
+cc-switch | 1 error in 0.12s
+chromadb | 38 passed in 0.15s
+cloudanalyzer | 7 passed in 0.04s
+cloudcompare | 1 failed, 48 passed in 1.17s
+comfyui | 63 passed in 0.34s
+dify-workflow | 8 passed in 0.03s
+drawio | 120 passed in 0.07s
+eez-studio | 10 passed in 0.08s
+eth2-quickstart | 18 passed in 0.13s
+exa | 1 error in 0.11s
+firefly-iii | 41 passed in 0.16s
+freecad | 88 passed in 0.24s
+gimp | 71 passed in 0.17s
+godot | 28 passed in 0.12s
+inkscape | 154 passed in 0.24s
+intelwatch | 3 passed in 0.03s
+iterm2 | 20 failed, 87 passed in 1.09s
+joplin | 107 passed in 0.31s
+jumpserver | ============================== 61 passed in 0.15s ==============================
+kdenlive | 111 passed in 0.12s
+krita | 2 failed, 34 passed in 2.87s
+libreoffice | 107 passed in 0.16s
+live2d | 20 passed in 0.10s
+lldb | 49 passed in 0.20s
+macrocli | 49 passed in 0.16s
+mailchimp | 1 error in 0.09s
+mermaid | 5 passed in 0.03s
+minimax | 19 passed in 0.11s
+mubu | 35 passed in 0.07s
+musescore | 39 passed in 0.06s
+n8n | 58 passed in 0.20s
+notebooklm | 14 passed in 0.03s
+novita | 6 passed in 0.06s
+nsight-graphics | 2 failed, 44 passed in 0.28s
+nslogger | 99 passed in 0.14s
+obs-studio | 116 passed in 0.11s
+obsidian | 52 passed in 0.12s
+ollama | 88 passed in 0.20s
+openrefine | 81 passed in 0.24s
+openscreen | 81 passed in 0.14s
+pm2 | 28 passed in 0.06s
+renderdoc | 48 passed in 0.18s
+rms | 85 passed in 0.27s
+safari | 16 passed in 0.50s
+sbox | 157 passed in 0.67s
+seaclip | 25 passed in 0.12s
+shotcut | 1 failed, 224 passed in 7.83s
+siyuan | 14 passed in 0.09s
+slay_the_spire_ii | 9 passed in 0.02s
+tigris | 43 passed in 0.11s
+unimol_tools | 4 passed in 0.03s
+unrealinsights | 2 failed, 66 passed, 2 skipped in 0.39s
+videocaptioner | 7 failed, 14 passed in 0.33s
+wavetone | 24 passed in 0.26s
+web-yu-pri | 15 passed in 0.09s
+wiremock | 51 passed in 0.13s
+zoom | 28 passed in 0.25s
+zotero | 6 failed, 37 passed in 5.27s

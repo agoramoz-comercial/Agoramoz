@@ -1,0 +1,87 @@
+{
+  "source": "CODEFORGE Master Prompt §11.2 — mandatory repository research targets",
+  "note": "Registered for audit. NOT audited, NOT adopted and NOT integrated until the §11.3 protocol is executed and recorded (§11.6, §28.9).",
+  "targets": [
+    {
+      "name": "ECC",
+      "full_name": "ECC — Everything Claude Code",
+      "source": "https://github.com/affaan-m/ECC",
+      "evaluate": [
+        "Agent architecture and orchestration",
+        "Skills and reusable operational instructions",
+        "Hooks and lifecycle automation",
+        "Context management and memory mechanisms",
+        "Development workflows",
+        "Security mechanisms",
+        "Testing and quality procedures",
+        "Configuration and extensibility",
+        "Compatibility with different LLM providers and environments",
+        "License, maintenance, dependencies and installation requirements"
+      ],
+      "audit": {
+        "date": "2026-11-18",
+        "commit": "3f14a103a8694e51c1df9a806217a6d0b5f7a6f7",
+        "license": "MIT",
+        "steps": "13/13 DONE (step 12 executed)",
+        "decision": "ADAPT",
+        "integrated": false,
+        "report": "audits/REPOSITORY-AUDIT-2026-11-18.md",
+        "step12": "step 12: 11/11 validators pass; npm test 10415/10423 pass (8 environmental failures)",
+        "verification": "NOT VERIFIED"
+      }
+    },
+    {
+      "name": "CLI-Anything",
+      "full_name": "CLI-Anything",
+      "source": "https://github.com/HKUDS/CLI-Anything",
+      "evaluate": [
+        "CLI generation and application interaction",
+        "Software tool integration",
+        "Automation capabilities",
+        "Command execution architecture",
+        "Application interoperability",
+        "Reliability and error handling",
+        "Installation and environment requirements",
+        "Security implications",
+        "License, maintenance and compatibility"
+      ],
+      "audit": {
+        "date": "2026-11-18",
+        "commit": "34f519533bc175d2fe287ab8316b0dd99bb9cc43",
+        "license": "Apache-2.0",
+        "steps": "13/13 DONE (step 12 executed)",
+        "decision": "ISOLATE",
+        "integrated": false,
+        "report": "audits/REPOSITORY-AUDIT-2026-11-18.md",
+        "step12": "step 12: 66 harness unit suites, 53 fully green; 3358 passed, 41 failed, 17 errors (optional modules missing)",
+        "verification": "NOT VERIFIED"
+      }
+    },
+    {
+      "name": "REA",
+      "full_name": "REA — Reverse Engineering Agent",
+      "source": "https://github.com/morluto/rea",
+      "evaluate": [
+        "Repository and software inspection",
+        "Reverse engineering capabilities",
+        "Technical analysis workflows",
+        "Architecture discovery",
+        "Dependency and component analysis",
+        "Integration possibilities",
+        "Limitations and security considerations",
+        "License, maintenance and compatibility"
+      ],
+      "audit": {
+        "date": "2026-11-18",
+        "commit": "b21db3f3293bcfaffa6793be2f09b1aaf35dcc69",
+        "license": "MIT (+ GPL/LGPL third-party components)",
+        "steps": "13/13 DONE (step 12 executed)",
+        "decision": "ISOLATE",
+        "integrated": false,
+        "report": "audits/REPOSITORY-AUDIT-2026-11-18.md",
+        "step12": "step 12 partial: 2151 tests run before the 1700 s limit, 1 failed, 57 skipped; suite not completed",
+        "verification": "NOT VERIFIED"
+      }
+    }
+  ]
+}

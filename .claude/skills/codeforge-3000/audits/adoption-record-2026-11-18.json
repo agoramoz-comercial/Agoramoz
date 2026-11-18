@@ -1,0 +1,1449 @@
+{
+  "generated": "2026-11-18",
+  "method": "CODEFORGE §11.3 13-step audit recorded with cf.py adopt; step 12 executed after the user added a permission rule",
+  "adoption": {
+    "ECC": {
+      "source": "https://github.com/affaan-m/ECC",
+      "mandatory": true,
+      "capabilities": [
+        "Agent architecture and orchestration",
+        "Skills and reusable operational instructions",
+        "Hooks and lifecycle automation",
+        "Context management and memory mechanisms",
+        "Development workflows",
+        "Security mechanisms",
+        "Testing and quality procedures",
+        "Configuration and extensibility",
+        "Compatibility with different LLM providers and environments",
+        "License, maintenance, dependencies and installation requirements"
+      ],
+      "audit": [
+        {
+          "step": 1,
+          "name": "Confirm the repository identity and official source",
+          "status": "DONE",
+          "evidence": "origin https://github.com/affaan-m/ecc (redirect of affaan-m/ECC); shallow clone HEAD 3f14a103a869 (2026-11-17); package ecc-universal 2.2.3",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 2,
+          "name": "Inspect README and documentation",
+          "status": "DONE",
+          "evidence": "README (install paths per harness, low-context/no-hooks path, uninstall), SECURITY.md (supported 2.x/1.10.x, private advisory reporting), TROUBLESHOOTING, CONTRIBUTING read",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 3,
+          "name": "Inspect directory and file structure",
+          "status": "DONE",
+          "evidence": "4878 files: agents 72, skills 659, commands 98, rules 122, hooks 9, contexts 3, manifests 11, ecc2 (Rust) 21, plugins, mcp-configs, docs in 17 languages",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 4,
+          "name": "Examine source code and architecture",
+          "status": "DONE",
+          "evidence": "repo_scan: JavaScript 1096, Python 188, Rust 17; hooks/hooks.json registers 28 handlers (PreToolUse 10, Stop 8, SessionStart 2, UserPromptSubmit 2, PostToolUse 2, PostToolUseFailure 2, PreCompact 1, SessionEnd 1) executing node scripts via child_process; ecc2 Rust crate",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 5,
+          "name": "Identify dependencies and external services",
+          "status": "DONE",
+          "evidence": "runtime deps 5 (@iarna/toml, ajv, js-yaml, sql.js, zod), devDeps 13; node>=18; optional Python skill scripts; no network calls found in hook scripts except doc links",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 6,
+          "name": "Inspect installation and configuration procedures",
+          "status": "DONE",
+          "evidence": "install.sh (42 lines) runs npm install --ignore-scripts locally; installs agents/skills/rules/hooks into ~/.claude or other harness config dirs (GLOBAL_CONFIG change); no postinstall script",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 7,
+          "name": "Inspect license and usage restrictions",
+          "status": "DONE",
+          "evidence": "LICENSE: MIT, Copyright (c) 2026 Affaan Mustafa",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 8,
+          "name": "Review maintenance activity and compatibility",
+          "status": "DONE",
+          "evidence": "last commit 2026-11-17 (merge PR #3969); VERSION 2.2.3; SECURITY.md lists supported lines; CI matrix ubuntu/windows/macos, node 18/20/22. Shallow clone: long-term history not inspected",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 9,
+          "name": "Examine available tests and CI workflows",
+          "status": "DONE",
+          "evidence": "508 *.test.js files + Python tests; workflows ci, release, npmscan, SLSA provenance (generator-generic-ossf-slsa3-publish), maintenance; npm test runs 12 validators + tests/run-all.js. Inspected, NOT executed",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 10,
+          "name": "Identify security concerns",
+          "status": "DONE",
+          "evidence": "secret_scan: 159 hits, all in skills/docs examples and tests (redaction fixtures; AKIA…LE = AWS documented example; PEM markers are headers with synthetic bodies, 0 real PEM bodies). Risk: global hooks run code on every tool call and edit harness config — needs approval (GLOBAL_CONFIG) and review of each hook",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 11,
+          "name": "Evaluate integration effort",
+          "status": "DONE",
+          "evidence": "High overlap with CODEFORGE skills/agents; integration = selective ADAPT of patterns (secret-redaction hooks, catalog validators), not wholesale install. Effort medium; must not install global hooks into this session",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        },
+        {
+          "step": 12,
+          "name": "Test relevant functionality in an isolated environment where feasible",
+          "status": "DONE",
+          "evidence": "executed with local deps (npm ci --ignore-scripts): 11/11 CI validators pass; npm test 10415/10423 pass, 8 environmental failures (ssh-keygen, shallow clone, container process cleanup, observe fixture); ~/.claude unchanged",
+          "ts": "2026-11-18T14:24:30",
+          "agent": "CF16"
+        },
+        {
+          "step": 13,
+          "name": "Document evidence and limitations",
+          "status": "DONE",
+          "evidence": "Evidence and limits in codeforge-3000/audits/REPOSITORY-AUDIT-2026-11-18.md",
+          "ts": "2026-11-18T12:59:06",
+          "agent": "CF05"
+        }
+      ],
+      "decision": "ADAPT",
+      "version": "3f14a103a8694e51c1df9a806217a6d0b5f7a6f7",
+      "license": "MIT",
+      "evidence": [
+        "static 13-step audit 2026-11-18; tests not executed",
+        "e",
+        "static 13-step audit 2026-11-18; tests not executed",
+        "static audit + step 12: 10415/10423 tests pass"
+      ],
+      "integration_requirements": "candidates: secret-redaction hook patterns, catalog validators — not yet adapted",
+      "security": "never install global hooks; adapt individual patterns only",
+      "agent": "CF05",
+      "verification_status": "NOT VERIFIED",
+      "created": "2026-11-18T12:59:06",
+      "reason": "high test pass rate; selective reuse of patterns",
+      "decided": "2026-11-18T14:24:31"
+    },
+    "CLI-Anything": {
+      "source": "https://github.com/HKUDS/CLI-Anything",
+      "mandatory": true,
+      "capabilities": [
+        "CLI generation and application interaction",
+        "Software tool integration",
+        "Automation capabilities",
+        "Command execution architecture",
+        "Application interoperability",
+        "Reliability and error handling",
+        "Installation and environment requirements",
+        "Security implications",
+        "License, maintenance and compatibility"
+      ],
+      "audit": [
+        {
+          "step": 1,
+          "name": "Confirm the repository identity and official source",
+          "status": "DONE",
+          "evidence": "origin https://github.com/HKUDS/cli-anything; shallow clone HEAD 34f519533bc1 (2026-09-22, merge PR #481)",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 2,
+          "name": "Inspect README and documentation",
+          "status": "DONE",
+          "evidence": "README (CLI-Hub, 7-phase generation methodology, per-agent install), SECURITY.md threat model (subprocess args, Script-Fu injection, XML/SVG, path traversal, credential files 0o600), HARNESS.md, CONTRIBUTING read",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 3,
+          "name": "Inspect directory and file structure",
+          "status": "DONE",
+          "evidence": "1872 files; 83 top-level dirs, 69 */agent-harness packages (gimp, blender, freecad, inkscape, audacity, drawio, godot, QGIS…), cli-hub, cli-anything-plugin (Claude Code), codex-skill, cursor-plugin",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 4,
+          "name": "Examine source code and architecture",
+          "status": "DONE",
+          "evidence": "Python 1267 files; each harness is a click CLI + backend that drives real software via subprocess (370 subprocess call sites); REPL skin; cli-hub registry/installer",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 5,
+          "name": "Identify dependencies and external services",
+          "status": "DONE",
+          "evidence": "per harness: python>=3.10, click>=8, prompt-toolkit>=3; requires the target desktop application installed (GIMP, Blender…); some harnesses call external APIs (novita, minimax, exa)",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 6,
+          "name": "Inspect installation and configuration procedures",
+          "status": "DONE",
+          "evidence": "pip install cli-anything-hub then cli-hub install <name>; plugin copied into Claude Code plugins dir; global skills folder install",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 7,
+          "name": "Inspect license and usage restrictions",
+          "status": "DONE",
+          "evidence": "LICENSE: Apache License 2.0",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 8,
+          "name": "Review maintenance activity and compatibility",
+          "status": "DONE",
+          "evidence": "last commit 2026-09-22 (~2 months before audit); many contributors' harnesses; shallow clone: release cadence not inspected",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 9,
+          "name": "Examine available tests and CI workflows",
+          "status": "DONE",
+          "evidence": "164 test_*.py (unit + full e2e per harness, e2e need the real apps); workflows check-root-skills (py3.10), check-codex-skill, check-cursor-plugin (ubuntu+windows), publish-cli-hub, pr-labeler-tests. Inspected, NOT executed",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 10,
+          "name": "Identify security concerns",
+          "status": "DONE",
+          "evidence": "secret_scan: 13 hits, all test fixtures except nslogger/core/listener.py:68 (credential-name assignment, not a key). Risk: cli-hub/cli_hub/installer.py runs registry install commands with shell=True incl. 'curl … | bash' — trust rests on the registry; agents construct subprocess args from untrusted input (documented threat model)",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 11,
+          "name": "Evaluate integration effort",
+          "status": "DONE",
+          "evidence": "CODEFORGE has no app-automation layer; a harness could be used per project through cf.py run (commands classified/held). Effort: per-app; requires app installed",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 12,
+          "name": "Test relevant functionality in an isolated environment where feasible",
+          "status": "DONE",
+          "evidence": "pytest of all 66 harness test_core.py: 53 fully green, 3358 passed, 41 failed, 17 errors (optional modules not installed); drawio 120/120. e2e tests needing real apps not run",
+          "ts": "2026-11-18T14:24:31",
+          "agent": "CF16"
+        },
+        {
+          "step": 13,
+          "name": "Document evidence and limitations",
+          "status": "DONE",
+          "evidence": "Evidence and limits in codeforge-3000/audits/REPOSITORY-AUDIT-2026-11-18.md",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        }
+      ],
+      "decision": "ISOLATE",
+      "version": "34f519533bc175d2fe287ab8316b0dd99bb9cc43",
+      "license": "Apache-2.0",
+      "evidence": [
+        "static 13-step audit 2026-11-18; harnesses not executed",
+        "static audit + step 12: 53/66 harnesses green"
+      ],
+      "integration_requirements": "per project, one harness at a time",
+      "security": "cli-hub shell=True installs; run per harness in a container through cf.py run",
+      "agent": "CF05",
+      "verification_status": "NOT VERIFIED",
+      "created": "2026-11-18T12:59:06",
+      "reason": "useful app automation; quality varies per harness",
+      "decided": "2026-11-18T14:24:31"
+    },
+    "REA": {
+      "source": "https://github.com/morluto/rea",
+      "mandatory": true,
+      "capabilities": [
+        "Repository and software inspection",
+        "Reverse engineering capabilities",
+        "Technical analysis workflows",
+        "Architecture discovery",
+        "Dependency and component analysis",
+        "Integration possibilities",
+        "Limitations and security considerations",
+        "License, maintenance and compatibility"
+      ],
+      "audit": [
+        {
+          "step": 1,
+          "name": "Confirm the repository identity and official source",
+          "status": "DONE",
+          "evidence": "origin https://github.com/morluto/rea; shallow clone HEAD b21db3f3293b (2026-11-18); npm package rea-agents 6.9.0; mcp.json pins npx -y rea-agents@6.9.0",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 2,
+          "name": "Inspect README and documentation",
+          "status": "DONE",
+          "evidence": "README (MCP for reverse engineering of binaries/apps/runtime; showcases), DISCLAIMER (lawful use only; no DRM/anti-cheat/auth bypass), SECURITY.md (runs with host permissions, not a sandbox; target data untrusted), THIRD_PARTY_NOTICES read",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 3,
+          "name": "Inspect directory and file structure",
+          "status": "DONE",
+          "evidence": "9215 files: src/ (adb, android, apktool, browser, dotnet, electron, frida, firmware, flutter, evm, cutter…), bridge/ (Python: lldb, pwndbg, pwntools, mitmproxy), native/ (C/C++ addon), tests/, website/, docs/",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 4,
+          "name": "Examine source code and architecture",
+          "status": "DONE",
+          "evidence": "TypeScript 6987 files; one MCP server + CLI sharing application workflows; providers wrap external tools (Ghidra, Frida, LLDB, Cutter, apktool, mitmproxy); entry src/main.ts",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 5,
+          "name": "Identify dependencies and external services",
+          "status": "DONE",
+          "evidence": "42 runtime deps (incl. @modelcontextprotocol/server 2.3.1, node-pty), 28 devDeps; node ^22.23.4 || ^24.22.1 || >=26.12.1; optional external tools obtained separately (Ghidra not bundled)",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 6,
+          "name": "Inspect installation and configuration procedures",
+          "status": "DONE",
+          "evidence": "install.sh (187 lines) resolves the latest GitHub release via curl and npm-installs rea-agents globally or into ~/.local; or npx; MCP registration in agent config",
+          "ts": "2026-11-18T12:59:07",
+          "agent": "CF05"
+        },
+        {
+          "step": 7,
+          "name": "Inspect license and usage restrictions",
+          "status": "DONE",
+          "evidence": "LICENSE: MIT (c) 2026 morluto. Third-party: Windows addon statically links GCC runtime (GPL-3.0 + runtime exception), optional Frida (LGPL-2.0 + wxWindows exception), GDB GPL-3.0, Unicorn GPL-2.0 used as separately obtained tools — redistribution must preserve notices",
+          "ts": "2026-11-18T12:59:08",
+          "agent": "CF05"
+        },
+        {
+          "step": 8,
+          "name": "Review maintenance activity and compatibility",
+          "status": "DONE",
+          "evidence": "last commit 2026-11-18 (PR #12015), release-please, CHANGELOG; very active. Shallow clone: long-term history not inspected",
+          "ts": "2026-11-18T12:59:08",
+          "agent": "CF05"
+        },
+        {
+          "step": 9,
+          "name": "Examine available tests and CI workflows",
+          "status": "DONE",
+          "evidence": "vitest suites incl. mutation testing (stryker), conformance tests, Python bridge tests; workflows ci, ci-full-pr, codeql, mutation, pr-readiness. Inspected, NOT executed",
+          "ts": "2026-11-18T12:59:08",
+          "agent": "CF05"
+        },
+        {
+          "step": 10,
+          "name": "Identify security concerns",
+          "status": "DONE",
+          "evidence": "secret_scan: 73 hits, all in test files (release-exposure scanner fixtures: AKIA…XX placeholders, synthetic PEM headers, sample JWTs; 0 real PEM bodies). Risk: executes analysis tools with host permissions on untrusted binaries — must run in an isolated VM/container; legal restrictions per jurisdiction/licence",
+          "ts": "2026-11-18T12:59:08",
+          "agent": "CF05"
+        },
+        {
+          "step": 11,
+          "name": "Evaluate integration effort",
+          "status": "DONE",
+          "evidence": "Overlaps CODEFORGE repo_scan only for source; REA adds binary/runtime analysis. Integration = optional MCP server in an isolated environment, per authorized engagement. Effort medium-high (toolchain)",
+          "ts": "2026-11-18T12:59:08",
+          "agent": "CF05"
+        },
+        {
+          "step": 12,
+          "name": "Test relevant functionality in an isolated environment where feasible",
+          "status": "DONE",
+          "evidence": "npm test (local deps, scripts ignored, native addon not built): partial — timed out at 1700 s after 2151 tests, 1 failed, 57 skipped; full suite not completed",
+          "ts": "2026-11-18T14:24:31",
+          "agent": "CF16"
+        },
+        {
+          "step": 13,
+          "name": "Document evidence and limitations",
+          "status": "DONE",
+          "evidence": "Evidence and limits in codeforge-3000/audits/REPOSITORY-AUDIT-2026-11-18.md",
+          "ts": "2026-11-18T12:59:08",
+          "agent": "CF05"
+        }
+      ],
+      "decision": "ISOLATE",
+      "version": "b21db3f3293bcfaffa6793be2f09b1aaf35dcc69",
+      "license": "MIT (+ GPL/LGPL third-party components)",
+      "evidence": [
+        "static 13-step audit 2026-11-18; not executed",
+        "static audit + partial step 12: 2151 tests, 1 failure"
+      ],
+      "integration_requirements": "optional MCP server in an isolated environment",
+      "security": "host permissions on untrusted binaries — VM/container only, authorized engagements",
+      "agent": "CF05",
+      "verification_status": "NOT VERIFIED",
+      "created": "2026-11-18T12:59:06",
+      "reason": "powerful, high-privilege; full suite not completed",
+      "decided": "2026-11-18T14:24:31"
+    }
+  },
+  "tests": {
+    "TST-CLI-DRAWIO": {
+      "name": "CLI-Anything drawio harness unit tests",
+      "layer": "unit",
+      "targets": [
+        "REQ-CLI-001"
+      ],
+      "command": "",
+      "file": "",
+      "status": "PASSED",
+      "evidence": "python3 -m pytest drawio test_core.py @34f5195: 120 passed in 0.16s",
+      "runs": [
+        {
+          "ts": "2026-11-18T13:55:33",
+          "status": "PASSED",
+          "evidence": "python3 -m pytest drawio test_core.py @34f5195: 120 passed in 0.16s"
+        }
+      ],
+      "created": "2026-11-18T13:55:33"
+    },
+    "TST-CLI-ALL": {
+      "name": "CLI-Anything all harness unit tests (66 test_core.py)",
+      "layer": "unit",
+      "targets": [
+        "REQ-CLI-001"
+      ],
+      "command": "",
+      "file": "",
+      "status": "FAILED",
+      "evidence": "evidence/cli-core.txt: 66 harnesses, 53 fully green; 3358 passed, 41 failed, 17 errors, 2 skipped; errors = missing optional modules (trimesh, iterm2…) not installed",
+      "runs": [
+        {
+          "ts": "2026-11-18T13:55:33",
+          "status": "FAILED",
+          "evidence": "evidence/cli-core.txt: 66 harnesses, 53 fully green; 3358 passed, 41 failed, 17 errors, 2 skipped; errors = missing optional modules (trimesh, iterm2…) not installed"
+        }
+      ],
+      "created": "2026-11-18T13:55:33"
+    },
+    "TST-ECC-VAL": {
+      "name": "ECC CI validators (11)",
+      "layer": "integration",
+      "targets": [
+        "REQ-ECC-001"
+      ],
+      "command": "",
+      "file": "",
+      "status": "PASSED",
+      "evidence": "11/11 rc=0 @3f14a10: agents 72, commands 98, rules 122, skills 845, hooks 28 matchers, 49 install modules; host-compat 421 warnings",
+      "runs": [
+        {
+          "ts": "2026-11-18T13:55:33",
+          "status": "PASSED",
+          "evidence": "11/11 rc=0 @3f14a10: agents 72, commands 98, rules 122, skills 845, hooks 28 matchers, 49 install modules; host-compat 421 warnings"
+        }
+      ],
+      "created": "2026-11-18T13:55:33"
+    },
+    "TST-ECC-FULL": {
+      "name": "ECC full suite (npm test)",
+      "layer": "integration",
+      "targets": [
+        "REQ-ECC-001"
+      ],
+      "command": "",
+      "file": "",
+      "status": "FAILED",
+      "evidence": "evidence/ecc-npmtest.log @3f14a10: 10423 tests, 10415 passed, 8 failed (6/508 files). Failures environmental: ssh-keygen missing (3), shallow clone git show (3), container process cleanup (1), observe.sh fixture (1). ~/.claude unchanged except Claude Code's own .last-cleanup",
+      "runs": [
+        {
+          "ts": "2026-11-18T13:55:59",
+          "status": "FAILED",
+          "evidence": "evidence/ecc-npmtest.log @3f14a10: 10423 tests, 10415 passed, 8 failed (6/508 files). Failures environmental: ssh-keygen missing (3), shallow clone git show (3), container process cleanup (1), observe.sh fixture (1). ~/.claude unchanged except Claude Code's own .last-cleanup"
+        }
+      ],
+      "created": "2026-11-18T13:55:59"
+    },
+    "TST-REA-FULL": {
+      "name": "REA full suite (npm test, 1700 s limit)",
+      "layer": "integration",
+      "targets": [
+        "REQ-REA-001"
+      ],
+      "command": "",
+      "file": "",
+      "status": "FAILED",
+      "evidence": "evidence/rea-npmtest.log @b21db3f: timed out at 1700 s (rc 124) before summary; 377 test files run, 2151 tests, 1 failed (jsonLinesCli: non-record SQLite selections), 57 skipped. Partial run",
+      "runs": [
+        {
+          "ts": "2026-11-18T14:24:09",
+          "status": "FAILED",
+          "evidence": "evidence/rea-npmtest.log @b21db3f: timed out at 1700 s (rc 124) before summary; 377 test files run, 2151 tests, 1 failed (jsonLinesCli: non-record SQLite selections), 57 skipped. Partial run"
+        }
+      ],
+      "created": "2026-11-18T14:24:09"
+    }
+  },
+  "tasks": {
+    "T-001": {
+      "title": "Step 12 isolated test: ECC",
+      "description": "",
+      "objective": "execute the project's own tests in isolation",
+      "initial_state": "static audit done, step 12 SKIPPED",
+      "inputs": [],
+      "expected": "pass/fail counts with logs",
+      "acceptance": [
+        "tests executed",
+        "results recorded"
+      ],
+      "requirements": [
+        "REQ-ECC-001"
+      ],
+      "components": [],
+      "deps": [],
+      "agent": "CF16",
+      "model": "",
+      "resources": "",
+      "risk": "HIGH",
+      "budget": 3,
+      "execution_budget": "",
+      "attempts": 1,
+      "stage": "REPAIR",
+      "status": "DEFERRED",
+      "stop": "attempt budget exhausted → BLOCKED",
+      "approval_required": false,
+      "approval": null,
+      "next_action": "smallest safe correction, then TEST and REGRESSION (§20.5)",
+      "evidence": [],
+      "failures": [
+        {
+          "ts": "2026-11-18T14:24:17",
+          "attempt": 1,
+          "cause": "ENVIRONMENT_FAILURE",
+          "detail": "expected all ECC tests to pass; actual 10415/10423 — 8 failures from missing ssh-keygen, shallow clone, container process cleanup, observe fixture",
+          "strategy": "record as environmental",
+          "log": ""
+        }
+      ],
+      "handoffs": [],
+      "reviews": [],
+      "log": [
+        {
+          "ts": "2026-11-18T13:10:08",
+          "status": "CREATED",
+          "stage": "PLAN"
+        },
+        {
+          "ts": "2026-11-18T13:10:08",
+          "status_from": "CREATED",
+          "status": "VALIDATED",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T13:10:08",
+          "status_from": "VALIDATED",
+          "status": "READY",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T13:10:34",
+          "status_from": "READY",
+          "status": "BLOCKED",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:09",
+          "status_from": "BLOCKED",
+          "status": "VALIDATED",
+          "stage": "PLAN",
+          "note": "re-planned: permission rule added by the user; run the project's own tests with local deps (npm ci --ignore-scripts) and record results"
+        },
+        {
+          "ts": "2026-11-18T14:24:09",
+          "status_from": "VALIDATED",
+          "status": "READY",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "status_from": "READY",
+          "status": "IN_PROGRESS",
+          "stage": "BUILD",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "BUILD",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "INSPECT",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "TEST",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:17",
+          "stage": "REGRESSION",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:17",
+          "stage": "REPAIR",
+          "cause": "ENVIRONMENT_FAILURE"
+        },
+        {
+          "ts": "2026-11-18T14:24:18",
+          "status_from": "IN_PROGRESS",
+          "status": "DEFERRED",
+          "stage": "REPAIR",
+          "note": "step 12 executed and recorded; remaining failures are environmental/third-party and fixing them is outside this audit"
+        }
+      ],
+      "blocker": "execution of third-party code denied by the session permission classifier (3 attempts on ECC; none on CLI/REA)"
+    },
+    "T-002": {
+      "title": "Step 12 isolated test: CLI",
+      "description": "",
+      "objective": "execute the project's own tests in isolation",
+      "initial_state": "static audit done, step 12 SKIPPED",
+      "inputs": [],
+      "expected": "pass/fail counts with logs",
+      "acceptance": [
+        "tests executed",
+        "results recorded"
+      ],
+      "requirements": [
+        "REQ-CLI-001"
+      ],
+      "components": [],
+      "deps": [],
+      "agent": "CF16",
+      "model": "",
+      "resources": "",
+      "risk": "HIGH",
+      "budget": 3,
+      "execution_budget": "",
+      "attempts": 1,
+      "stage": "REPAIR",
+      "status": "DEFERRED",
+      "stop": "attempt budget exhausted → BLOCKED",
+      "approval_required": false,
+      "approval": null,
+      "next_action": "smallest safe correction, then TEST and REGRESSION (§20.5)",
+      "evidence": [],
+      "failures": [
+        {
+          "ts": "2026-11-18T14:24:18",
+          "attempt": 1,
+          "cause": "DEPENDENCY_FAILURE",
+          "detail": "expected harness tests to pass; actual 53/66 harnesses green — errors from optional modules not installed (trimesh, iterm2…)",
+          "strategy": "record as missing optional deps",
+          "log": ""
+        }
+      ],
+      "handoffs": [],
+      "reviews": [],
+      "log": [
+        {
+          "ts": "2026-11-18T13:10:08",
+          "status": "CREATED",
+          "stage": "PLAN"
+        },
+        {
+          "ts": "2026-11-18T13:10:09",
+          "status_from": "CREATED",
+          "status": "VALIDATED",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T13:10:09",
+          "status_from": "VALIDATED",
+          "status": "READY",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T13:10:34",
+          "status_from": "READY",
+          "status": "BLOCKED",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "status_from": "BLOCKED",
+          "status": "VALIDATED",
+          "stage": "PLAN",
+          "note": "re-planned: permission rule added by the user; run the project's own tests with local deps (npm ci --ignore-scripts) and record results"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "status_from": "VALIDATED",
+          "status": "READY",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "status_from": "READY",
+          "status": "IN_PROGRESS",
+          "stage": "BUILD",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "BUILD",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "INSPECT",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "TEST",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:18",
+          "stage": "REPAIR",
+          "cause": "DEPENDENCY_FAILURE"
+        },
+        {
+          "ts": "2026-11-18T14:24:18",
+          "status_from": "IN_PROGRESS",
+          "status": "DEFERRED",
+          "stage": "REPAIR",
+          "note": "step 12 executed and recorded; remaining failures are environmental/third-party and fixing them is outside this audit"
+        }
+      ],
+      "blocker": "execution of third-party code denied by the session permission classifier (3 attempts on ECC; none on CLI/REA)"
+    },
+    "T-003": {
+      "title": "Step 12 isolated test: REA",
+      "description": "",
+      "objective": "execute the project's own tests in isolation",
+      "initial_state": "static audit done, step 12 SKIPPED",
+      "inputs": [],
+      "expected": "pass/fail counts with logs",
+      "acceptance": [
+        "tests executed",
+        "results recorded"
+      ],
+      "requirements": [
+        "REQ-REA-001"
+      ],
+      "components": [],
+      "deps": [],
+      "agent": "CF16",
+      "model": "",
+      "resources": "",
+      "risk": "HIGH",
+      "budget": 3,
+      "execution_budget": "",
+      "attempts": 1,
+      "stage": "REPAIR",
+      "status": "DEFERRED",
+      "stop": "attempt budget exhausted → BLOCKED",
+      "approval_required": false,
+      "approval": null,
+      "next_action": "smallest safe correction, then TEST and REGRESSION (§20.5)",
+      "evidence": [],
+      "failures": [
+        {
+          "ts": "2026-11-18T14:24:18",
+          "attempt": 1,
+          "cause": "ENVIRONMENT_FAILURE",
+          "detail": "expected full REA suite; actual timed out at 1700 s after 2151 tests, 1 failure (jsonLinesCli)",
+          "strategy": "record partial run",
+          "log": ""
+        }
+      ],
+      "handoffs": [],
+      "reviews": [],
+      "log": [
+        {
+          "ts": "2026-11-18T13:10:08",
+          "status": "CREATED",
+          "stage": "PLAN"
+        },
+        {
+          "ts": "2026-11-18T13:10:09",
+          "status_from": "CREATED",
+          "status": "VALIDATED",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T13:10:09",
+          "status_from": "VALIDATED",
+          "status": "READY",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T13:10:34",
+          "status_from": "READY",
+          "status": "BLOCKED",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "status_from": "BLOCKED",
+          "status": "VALIDATED",
+          "stage": "PLAN",
+          "note": "re-planned: permission rule added by the user; run the project's own tests with local deps (npm ci --ignore-scripts) and record results"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "status_from": "VALIDATED",
+          "status": "READY",
+          "stage": "PLAN",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "status_from": "READY",
+          "status": "IN_PROGRESS",
+          "stage": "BUILD",
+          "note": ""
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "BUILD",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "INSPECT",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:10",
+          "stage": "TEST",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "ts": "2026-11-18T14:24:18",
+          "stage": "REPAIR",
+          "cause": "ENVIRONMENT_FAILURE"
+        },
+        {
+          "ts": "2026-11-18T14:24:18",
+          "status_from": "IN_PROGRESS",
+          "status": "DEFERRED",
+          "stage": "REPAIR",
+          "note": "step 12 executed and recorded; remaining failures are environmental/third-party and fixing them is outside this audit"
+        }
+      ],
+      "blocker": "execution of third-party code denied by the session permission classifier (3 attempts on ECC; none on CLI/REA)"
+    }
+  },
+  "history": [
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 2,
+      "action": "adopt.seed",
+      "detail": "ECC,CLI-Anything,REA"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 3,
+      "action": "adopt.audit",
+      "detail": "ECC step 1 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 4,
+      "action": "adopt.audit",
+      "detail": "ECC step 2 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 5,
+      "action": "adopt.audit",
+      "detail": "ECC step 3 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 6,
+      "action": "adopt.audit",
+      "detail": "ECC step 4 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 7,
+      "action": "adopt.audit",
+      "detail": "ECC step 5 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 8,
+      "action": "adopt.audit",
+      "detail": "ECC step 6 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 9,
+      "action": "adopt.audit",
+      "detail": "ECC step 7 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 10,
+      "action": "adopt.audit",
+      "detail": "ECC step 8 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 11,
+      "action": "adopt.audit",
+      "detail": "ECC step 9 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 12,
+      "action": "adopt.audit",
+      "detail": "ECC step 10 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 13,
+      "action": "adopt.audit",
+      "detail": "ECC step 11 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 14,
+      "action": "adopt.audit",
+      "detail": "ECC step 12 SKIPPED"
+    },
+    {
+      "ts": "2026-11-18T12:59:06",
+      "v": 15,
+      "action": "adopt.audit",
+      "detail": "ECC step 13 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 16,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 1 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 17,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 2 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 18,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 3 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 19,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 4 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 20,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 5 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 21,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 6 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 22,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 7 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 23,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 8 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 24,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 9 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 25,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 10 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 26,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 11 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 27,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 12 SKIPPED"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 28,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 13 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 29,
+      "action": "adopt.audit",
+      "detail": "REA step 1 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 30,
+      "action": "adopt.audit",
+      "detail": "REA step 2 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 31,
+      "action": "adopt.audit",
+      "detail": "REA step 3 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 32,
+      "action": "adopt.audit",
+      "detail": "REA step 4 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 33,
+      "action": "adopt.audit",
+      "detail": "REA step 5 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:07",
+      "v": 34,
+      "action": "adopt.audit",
+      "detail": "REA step 6 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:08",
+      "v": 35,
+      "action": "adopt.audit",
+      "detail": "REA step 7 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:08",
+      "v": 36,
+      "action": "adopt.audit",
+      "detail": "REA step 8 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:08",
+      "v": 37,
+      "action": "adopt.audit",
+      "detail": "REA step 9 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:08",
+      "v": 38,
+      "action": "adopt.audit",
+      "detail": "REA step 10 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:08",
+      "v": 39,
+      "action": "adopt.audit",
+      "detail": "REA step 11 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:08",
+      "v": 40,
+      "action": "adopt.audit",
+      "detail": "REA step 12 SKIPPED"
+    },
+    {
+      "ts": "2026-11-18T12:59:08",
+      "v": 41,
+      "action": "adopt.audit",
+      "detail": "REA step 13 DONE"
+    },
+    {
+      "ts": "2026-11-18T12:59:20",
+      "v": 42,
+      "action": "adopt.decide",
+      "detail": "ECC MONITOR"
+    },
+    {
+      "ts": "2026-11-18T12:59:20",
+      "v": 43,
+      "action": "adopt.decide",
+      "detail": "CLI-Anything MONITOR"
+    },
+    {
+      "ts": "2026-11-18T12:59:20",
+      "v": 44,
+      "action": "adopt.decide",
+      "detail": "REA MONITOR"
+    },
+    {
+      "ts": "2026-11-18T12:59:20",
+      "v": 45,
+      "action": "adopt.decide",
+      "detail": "ECC ADOPT"
+    },
+    {
+      "ts": "2026-11-18T12:59:36",
+      "v": 46,
+      "action": "adopt.decide",
+      "detail": "ECC MONITOR"
+    },
+    {
+      "ts": "2026-11-18T13:10:08",
+      "v": 50,
+      "action": "task.add",
+      "detail": "T-001"
+    },
+    {
+      "ts": "2026-11-18T13:10:08",
+      "v": 51,
+      "action": "task.add",
+      "detail": "T-002"
+    },
+    {
+      "ts": "2026-11-18T13:10:08",
+      "v": 52,
+      "action": "task.add",
+      "detail": "T-003"
+    },
+    {
+      "ts": "2026-11-18T13:10:08",
+      "v": 53,
+      "action": "task.validate",
+      "detail": "T-001"
+    },
+    {
+      "ts": "2026-11-18T13:10:08",
+      "v": 54,
+      "action": "task.ready",
+      "detail": "T-001"
+    },
+    {
+      "ts": "2026-11-18T13:10:09",
+      "v": 55,
+      "action": "task.validate",
+      "detail": "T-002"
+    },
+    {
+      "ts": "2026-11-18T13:10:09",
+      "v": 56,
+      "action": "task.ready",
+      "detail": "T-002"
+    },
+    {
+      "ts": "2026-11-18T13:10:09",
+      "v": 57,
+      "action": "task.validate",
+      "detail": "T-003"
+    },
+    {
+      "ts": "2026-11-18T13:10:09",
+      "v": 58,
+      "action": "task.ready",
+      "detail": "T-003"
+    },
+    {
+      "ts": "2026-11-18T13:10:34",
+      "v": 59,
+      "action": "task.block",
+      "detail": "T-001"
+    },
+    {
+      "ts": "2026-11-18T13:10:34",
+      "v": 60,
+      "action": "task.block",
+      "detail": "T-002"
+    },
+    {
+      "ts": "2026-11-18T13:10:34",
+      "v": 61,
+      "action": "task.block",
+      "detail": "T-003"
+    },
+    {
+      "ts": "2026-11-18T13:55:33",
+      "v": 62,
+      "action": "test.add",
+      "detail": "TST-CLI-DRAWIO"
+    },
+    {
+      "ts": "2026-11-18T13:55:33",
+      "v": 63,
+      "action": "test.result",
+      "detail": "TST-CLI-DRAWIO PASSED"
+    },
+    {
+      "ts": "2026-11-18T13:55:33",
+      "v": 64,
+      "action": "test.add",
+      "detail": "TST-CLI-ALL"
+    },
+    {
+      "ts": "2026-11-18T13:55:33",
+      "v": 65,
+      "action": "test.result",
+      "detail": "TST-CLI-ALL FAILED"
+    },
+    {
+      "ts": "2026-11-18T13:55:33",
+      "v": 66,
+      "action": "test.add",
+      "detail": "TST-ECC-VAL"
+    },
+    {
+      "ts": "2026-11-18T13:55:33",
+      "v": 67,
+      "action": "test.result",
+      "detail": "TST-ECC-VAL PASSED"
+    },
+    {
+      "ts": "2026-11-18T13:55:59",
+      "v": 68,
+      "action": "test.add",
+      "detail": "TST-ECC-FULL"
+    },
+    {
+      "ts": "2026-11-18T13:55:59",
+      "v": 69,
+      "action": "test.result",
+      "detail": "TST-ECC-FULL FAILED"
+    },
+    {
+      "ts": "2026-11-18T14:24:09",
+      "v": 70,
+      "action": "test.add",
+      "detail": "TST-REA-FULL"
+    },
+    {
+      "ts": "2026-11-18T14:24:09",
+      "v": 71,
+      "action": "test.result",
+      "detail": "TST-REA-FULL FAILED"
+    },
+    {
+      "ts": "2026-11-18T14:24:09",
+      "v": 72,
+      "action": "task.unblock",
+      "detail": "T-001"
+    },
+    {
+      "ts": "2026-11-18T14:24:09",
+      "v": 73,
+      "action": "task.ready",
+      "detail": "T-001"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 74,
+      "action": "task.advance",
+      "detail": "T-001 → BUILD"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 75,
+      "action": "task.advance",
+      "detail": "T-001 → INSPECT"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 76,
+      "action": "task.advance",
+      "detail": "T-001 → TEST"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 77,
+      "action": "task.unblock",
+      "detail": "T-002"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 78,
+      "action": "task.ready",
+      "detail": "T-002"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 79,
+      "action": "task.advance",
+      "detail": "T-002 → BUILD"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 80,
+      "action": "task.advance",
+      "detail": "T-002 → INSPECT"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 81,
+      "action": "task.advance",
+      "detail": "T-002 → TEST"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 82,
+      "action": "task.unblock",
+      "detail": "T-003"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 83,
+      "action": "task.ready",
+      "detail": "T-003"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 84,
+      "action": "task.advance",
+      "detail": "T-003 → BUILD"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 85,
+      "action": "task.advance",
+      "detail": "T-003 → INSPECT"
+    },
+    {
+      "ts": "2026-11-18T14:24:10",
+      "v": 86,
+      "action": "task.advance",
+      "detail": "T-003 → TEST"
+    },
+    {
+      "ts": "2026-11-18T14:24:17",
+      "v": 87,
+      "action": "task.advance",
+      "detail": "T-001 → REGRESSION"
+    },
+    {
+      "ts": "2026-11-18T14:24:17",
+      "v": 88,
+      "action": "task.fail",
+      "detail": "T-001 cause=ENVIRONMENT_FAILURE"
+    },
+    {
+      "ts": "2026-11-18T14:24:18",
+      "v": 89,
+      "action": "task.fail",
+      "detail": "T-002 cause=DEPENDENCY_FAILURE"
+    },
+    {
+      "ts": "2026-11-18T14:24:18",
+      "v": 90,
+      "action": "task.fail",
+      "detail": "T-003 cause=ENVIRONMENT_FAILURE"
+    },
+    {
+      "ts": "2026-11-18T14:24:18",
+      "v": 91,
+      "action": "task.defer",
+      "detail": "T-001"
+    },
+    {
+      "ts": "2026-11-18T14:24:18",
+      "v": 92,
+      "action": "task.defer",
+      "detail": "T-002"
+    },
+    {
+      "ts": "2026-11-18T14:24:18",
+      "v": 93,
+      "action": "task.defer",
+      "detail": "T-003"
+    },
+    {
+      "ts": "2026-11-18T14:24:30",
+      "v": 94,
+      "action": "adopt.audit",
+      "detail": "ECC step 12 DONE"
+    },
+    {
+      "ts": "2026-11-18T14:24:31",
+      "v": 95,
+      "action": "adopt.audit",
+      "detail": "CLI-Anything step 12 DONE"
+    },
+    {
+      "ts": "2026-11-18T14:24:31",
+      "v": 96,
+      "action": "adopt.audit",
+      "detail": "REA step 12 DONE"
+    },
+    {
+      "ts": "2026-11-18T14:24:31",
+      "v": 97,
+      "action": "adopt.decide",
+      "detail": "ECC ADAPT"
+    },
+    {
+      "ts": "2026-11-18T14:24:31",
+      "v": 98,
+      "action": "adopt.decide",
+      "detail": "CLI-Anything ISOLATE"
+    },
+    {
+      "ts": "2026-11-18T14:24:31",
+      "v": 99,
+      "action": "adopt.decide",
+      "detail": "REA ISOLATE"
+    }
+  ]
+}

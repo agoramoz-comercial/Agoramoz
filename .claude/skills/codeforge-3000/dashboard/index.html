@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODEFORGE 3000 — Centro de Observação</title>
+<script src="/vendor/echarts.min.js"></script>
+<style>
+  :root {
+    --blue:#1D2BE6; --blue-deep:#131C9C; --peri:#7A80DA; --lav:#A9ACE3; --lilac:#C8CAEE;
+    --ink:#0C0C10; --ink2:#15151B; --paper:#F4F4F6; --white:#fff; --text2:#55555F; --muted:#8A8A94; --rule:#DADAE2;
+    --good:#1E8E4E; --warn:#C99400; --serious:#DD6B20; --critical:#D33A3A;
+    --font:'Inter Tight','Inter','Helvetica Neue',Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:13px/1.45 var(--font)}
+  header{background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .brand{font-weight:700;letter-spacing:-.01em;font-size:15px} .brand span{color:var(--lav);font-weight:500}
+  .kpi{display:flex;flex-direction:column} .kpi b{font-size:20px;letter-spacing:-.02em} .kpi small{color:#B9B9C4;font-size:11px}
+  .live{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:#B9B9C4}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)} .dot.on{background:var(--good);box-shadow:0 0 0 3px rgba(30,142,78,.25)}
+  .bar{background:var(--blue);color:#fff;padding:8px 20px;font-size:12px;display:flex;gap:18px;flex-wrap:wrap}
+  .bar b{font-weight:600}
+  main{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;padding:16px 20px 40px}
+  .card{background:#fff;border-radius:10px;padding:14px 16px;min-width:0;display:flex;flex-direction:column}
+  .card h2{margin:0 0 2px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .card h2 .tag{font-size:10px;font-weight:700;color:var(--blue);border:1px solid var(--blue);border-radius:99px;padding:0 7px}
+  .card .sub{color:var(--muted);font-size:11px;margin-bottom:8px}
+  .c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+  @media(max-width:1100px){.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
+  .list{overflow:auto;max-height:290px;border-top:1px solid var(--rule)}
+  .row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:6px 2px;border-bottom:1px solid var(--rule);align-items:start}
+  .row.click{cursor:pointer} .row.click:hover{background:rgba(29,43,230,.04)}
+  .ts{color:var(--muted);font:11px var(--mono);white-space:nowrap}
+  .mono{font:11.5px var(--mono);word-break:break-all}
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;border-radius:99px;padding:1px 8px;white-space:nowrap;border:1px solid currentColor}
+  .chip.good{color:var(--good)} .chip.warn{color:var(--warn)} .chip.serious{color:var(--serious)} .chip.critical{color:var(--critical)} .chip.neutral{color:var(--text2)} .chip.blue{color:var(--blue)}
+  .chip.good::before{content:"✓"} .chip.critical::before{content:"✕"} .chip.serious::before{content:"▲"} .chip.warn::before{content:"!"}
+  .counts{display:flex;gap:10px;margin:6px 0 10px;flex-wrap:wrap}
+  .count{flex:1;min-width:84px;border-radius:8px;padding:8px 10px;background:var(--paper)} .count b{display:block;font-size:20px;letter-spacing:-.02em} .count small{color:var(--text2);font-size:11px}
+  #graph{height:360px} pre{margin:0;white-space:pre-wrap;font:11.5px/1.5 var(--mono);background:var(--ink);color:#E8E8F0;padding:10px;border-radius:8px;max-height:340px;overflow:auto}
+  iframe{width:100%;height:320px;border:1px solid var(--rule);border-radius:8px;background:var(--paper)}
+  input,button{font:inherit} input{border:1px solid var(--rule);border-radius:6px;padding:5px 8px}
+  button{border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600} .btn{background:var(--blue);color:#fff} .btn.ghost{background:var(--paper);color:var(--ink)}
+  .empty{color:var(--muted);padding:10px 2px;font-size:12px}
+  .src{font-size:11.5px;color:var(--text2)} .src li{margin:2px 0}
+  table{width:100%;border-collapse:collapse;font-size:12px} th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);border-bottom:1.5px solid var(--ink);padding:5px 4px} td{border-bottom:1px solid var(--rule);padding:5px 4px;vertical-align:top}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .stage{display:flex;gap:3px;margin-top:3px}.stage i{flex:1;height:5px;border-radius:3px;background:#E4E4EC}.stage i.on{background:var(--blue)}.stage i.cur{background:var(--ink)}
+  dialog{border:0;border-radius:12px;max-width:min(1000px,92vw);width:92vw;padding:16px} dialog::backdrop{background:rgba(12,12,16,.55)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">ZABATAINA CODEFORGE 3000 <span>· Centro de Observação (LEOC)</span></div>
+  <div class="kpi"><b id="k-proj">—</b><small id="k-ver">sem registo</small></div>
+  <div class="kpi"><b id="k-req">—</b><small>requisitos verificados</small></div>
+  <div class="kpi"><b id="k-tests">—</b><small>testes aprovados</small></div>
+  <div class="kpi"><b id="k-tasks">—</b><small>ciclos verificados</small></div>
+  <div class="kpi"><b id="k-appr">—</b><small>aprovações pendentes</small></div>
+  <div class="live"><span class="dot" id="live-dot"></span><span id="live-txt">a ligar…</span></div>
+</header>
+<div class="bar" id="sources"></div>
+<div class="bar" id="gates" style="background:var(--ink2)"></div>
+<main>
+  <section class="card c7"><h2><span class="tag">A</span>Atividade ao vivo</h2><div class="sub">Eventos reais registados (agente · tarefa · ferramenta · operação · estado)</div><div class="list" id="activity"></div></section>
+  <section class="card c5"><h2><span class="tag">E</span>Monitor de testes</h2><div class="sub">Testes não executados nunca contam como aprovados</div><div class="counts" id="test-counts"></div><div class="list" id="tests"></div></section>
+
+  <section class="card c7"><h2><span class="tag">F</span>Grafo de arquitetura</h2><div class="sub">Requisitos, componentes, serviços, dados e testes do registo — clique num nó para ver os detalhes</div><div id="graph"></div></section>
+  <section class="card c5"><h2><span class="tag">H</span>Central de aprovações</h2><div class="sub">Ações destrutivas, externas ou de produção à espera de autorização humana</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px"><input id="approver" placeholder="O seu nome (obrigatório)" style="flex:1"></div><div class="list" id="approvals"></div>
+    <h2 style="margin-top:12px">Ciclos de engenharia</h2><div class="sub">PLAN → BUILD → INSPECT → TEST → (REPAIR) → REGRESSION → VERIFY → RECORD</div><div class="list" id="tasks"></div></section>
+
+  <section class="card c6"><h2><span class="tag">B</span>Inspetor de alterações de ficheiros</h2><div class="sub">git status — clique para ver o diff</div><div class="list" id="files"></div></section>
+  <section class="card c6"><h2><span class="tag">C</span>Monitor de terminal</h2><div class="sub">Comandos executados com <code>cf.py run</code> e o resultado real</div><div class="list" id="terminal"></div></section>
+
+  <section class="card c6"><h2><span class="tag">G</span>Monitor de erros</h2><div class="sub">Falhas de comandos, testes, auditorias funcionais e integridade do grafo</div><div class="list" id="errors"></div></section>
+  <section class="card c6"><h2><span class="tag">D</span>Pré-visualização da aplicação</h2><div class="sub" id="preview-sub">Mostra a aplicação apenas se um servidor estiver a correr nesse URL</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px"><input id="preview-url" placeholder="http://127.0.0.1:3000" style="flex:1"><button class="btn" onclick="setPreview()">Abrir</button></div><iframe id="preview" title="Pré-visualização"></iframe></section>
+
+  <section class="card c5"><h2><span class="tag">I</span>Tokens e custos</h2><div class="sub">Apenas valores reportados pelo fornecedor (eventos <code>usage</code>)</div><div id="usage"></div></section>
+  <section class="card c7"><h2><span class="tag">J</span>Histórico do projeto</h2><div class="sub">Alterações ao registo, pontos de controlo e commits</div><div class="list" id="history"></div></section>
+
+  <section class="card c12"><h2>Fontes de observação</h2><ul class="src" id="src-list"></ul></section>
+</main>
+<dialog id="dlg"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b id="dlg-title"></b><button class="btn ghost" onclick="dlg.close()">Fechar</button></div><pre id="dlg-body"></pre></dialog>
+<script>
+const TOKEN = "__CF_TOKEN__";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const STATUS = {PASSED:"good",VERIFIED:"good",APPROVED:"good",RELEASED:"good",OPEN:"blue",FAILED:"critical",BLOCKED:"serious",
+  NOT_EXECUTED:"neutral",SKIPPED:"warn",TESTED:"blue",IMPLEMENTED:"blue",GENERATED:"neutral","NOT IMPLEMENTED":"serious",PENDING:"warn",
+  CRITICAL:"critical",HIGH:"serious",MEDIUM:"warn",LOW:"neutral",RESOLVED:"good"};
+const chip = s => `<span class="chip ${STATUS[s]||"neutral"}">${esc(String(s).replace(/_/g," "))}</span>`;
+const LOOP = ["PLAN","BUILD","INSPECT","TEST","REPAIR","REGRESSION","VERIFY","RECORD"];
+let S = {}, chart;
+
+function render(st){
+  S = st;
+  const p = st.project;
+  $("k-proj").textContent = p ? p.name : "—";
+  $("k-ver").textContent = p ? `${p.id} · registo v${p.version}` : "sem registo (.codeforge)";
+  const reqs = st.requirements||[], tests = st.tests||[], tasks = st.tasks||[];
+  $("k-req").textContent = reqs.length ? `${reqs.filter(r=>["VERIFIED","APPROVED","RELEASED"].includes(r.status)).length}/${reqs.length}` : "—";
+  $("k-tests").textContent = tests.length ? `${tests.filter(t=>t.status==="PASSED").length}/${tests.length}` : "—";
+  $("k-tasks").textContent = tasks.length ? `${tasks.filter(t=>t.status==="VERIFIED").length}/${tasks.length}` : "—";
+  $("k-appr").textContent = (st.pending_approvals||[]).length;
+  $("sources").innerHTML = Object.entries(st.sources||{}).slice(0,3).map(([k,v])=>`<span><b>${esc(k)}</b>: ${esc(v)}</span>`).join("") +
+    ((st.release_blockers||[]).length ? `<span><b>release</b>: bloqueado — ${esc(st.release_blockers.join("; "))}</span>` : (p?`<span><b>release</b>: sem bloqueios</span>`:""));
+  $("src-list").innerHTML = Object.entries(st.sources||{}).map(([k,v])=>`<li><b>${esc(k)}</b> — ${esc(v)}</li>`).join("");
+  const ev = (st.events||[]).slice().reverse();
+  // A activity
+  $("activity").innerHTML = ev.filter(e=>!["audit"].includes(e.kind)).slice(0,120).map(e=>`<div class="row"><span class="ts">${esc((e.ts||"").slice(11))}</span>
+    <div><b>${esc(e.kind)}</b> ${esc(e.action||e.message||e.command||e.test||"")} <span style="color:var(--muted)">${esc(e.detail||"")}</span>
+    <div class="mono" style="color:var(--text2)">${[e.agent&&"agente "+e.agent,e.task&&"tarefa "+e.task,e.tool&&"ferramenta "+e.tool].filter(Boolean).map(esc).join(" · ")}</div></div>
+    <span>${e.status?chip(e.status):(e.exit!==undefined?chip(e.exit===0?"PASSED":"FAILED"):"")}</span></div>`).join("") || `<div class="empty">Ainda sem eventos. Use <code>cf.py run</code>, <code>cf.py event</code> ou qualquer comando do motor.</div>`;
+  // E tests
+  const running = new Set(st.tests_running||[]);
+  const tc = {DESCOBERTOS:tests.length,"A CORRER":running.size,PASSED:0,FAILED:0,SKIPPED:0,BLOCKED:0,"NÃO EXECUTADOS":0};
+  tests.forEach(t=>{ if(["DESIGNED","WRITTEN","NOT_EXECUTED"].includes(t.status)) tc["NÃO EXECUTADOS"]++; else tc[t.status]=(tc[t.status]||0)+1; });
+  $("test-counts").innerHTML = Object.entries(tc).map(([k,v])=>`<div class="count"><b>${v}</b><small>${["DESCOBERTOS","A CORRER","NÃO EXECUTADOS"].includes(k)?`<span class="chip neutral">${k}</span>`:chip(k)}</small></div>`).join("");
+  $("tests").innerHTML = tests.map(t=>`<div class="row"><span class="mono">${esc(t.id)}</span><div>${esc(t.name)} <span style="color:var(--muted)">[${esc(t.layer)}] → ${esc(t.targets.join(", "))}${t.seconds!=null?` · ${t.seconds}s`:""}${t.runs?` · ${t.runs} execuç${t.runs>1?"ões":"ão"}`:""}</span>
+    ${t.evidence?`<div class="mono" style="color:var(--text2)">${esc(t.evidence)}</div>`:""}${t.status==="FAILED"&&t.detail?`<div class="mono" style="color:var(--critical)">${esc(t.detail.slice(-300))}</div>`:""}</div>${running.has(t.id)?'<span class="chip blue">A CORRER</span>':chip(t.status)}</div>`).join("") || `<div class="empty">Sem testes registados.</div>`;
+  $("gates").innerHTML = (st.gates||[]).map((g,i)=>`<span title="${esc(g.basis)}"><b>G${i+1}</b> ${esc(g.name.replace(" Integrity",""))}: ${chip(g.status)}</span>`).join("") || "<span>Critérios de qualidade indisponíveis</span>";
+  // H approvals + loops
+  $("approvals").innerHTML = (st.pending_approvals||[]).map(a=>`<div class="row"><span class="mono">${esc(a.id)}</span><div class="mono">${esc(a.action)}<div style="color:var(--muted);font-family:var(--font)">${a.category?`<b>${esc(a.category)}</b> · risco: ${esc(a.risk||"")} · âmbito: ${esc(a.scope||"")} · `:""}${esc(a.reason||"")} · pedido ${esc(a.requested)}</div></div>
+    <div style="display:flex;gap:4px"><button class="btn" onclick="approve('${esc(a.id)}',false)">Aprovar</button><button class="btn ghost" onclick="approve('${esc(a.id)}',true)">Rejeitar</button></div></div>`).join("") || `<div class="empty">Nenhuma ação à espera de aprovação.</div>`;
+  $("tasks").innerHTML = tasks.map(t=>{const i=LOOP.indexOf(t.stage);return `<div class="row"><span class="mono">${esc(t.id)}</span><div>${esc(t.title)}
+    <div class="stage">${LOOP.map((s,j)=>`<i class="${j<i?"on":j===i?"cur":""}" title="${s}"></i>`).join("")}</div>
+    <div style="color:var(--muted);font-size:11px">${esc(t.stage)} · tentativa ${t.attempts}/${t.budget}${t.model?" · "+esc(t.model):""}${t.blocker?" · "+esc(t.blocker):""}</div></div>${chip(t.status)}</div>`}).join("") || `<div class="empty">Sem ciclos.</div>`;
+  // B files
+  $("files").innerHTML = (st.git_status||[]).map(f=>`<div class="row click" onclick="showDiff('${esc(f.path)}')"><span class="mono">${esc(f.code)}</span><span class="mono">${esc(f.path)}</span>${f.code.includes("?")?'<span class="chip blue">novo</span>':f.code.includes("D")?'<span class="chip serious">apagado</span>':'<span class="chip warn">modificado</span>'}</div>`).join("")
+    || `<div class="empty">${st.git_status?"Sem alterações por confirmar.":"Alterações de ficheiros não observáveis (não é um repositório git)."}</div>`;
+  // C terminal
+  $("terminal").innerHTML = ev.filter(e=>e.kind==="terminal.end").slice(0,60).map(e=>`<div class="row click" onclick="showLog('${esc(e.log)}')"><span class="ts">${esc((e.ts||"").slice(11))}</span>
+    <div class="mono">$ ${esc(e.command)}<div style="color:var(--muted)">${e.seconds}s · ${esc(e.log)}</div></div>${chip(e.exit===0?"PASSED":"FAILED")}</div>`).join("") || `<div class="empty">Nenhum comando registado.</div>`;
+  // G errors
+  const errs = ev.filter(e=>e.kind==="error"||e.kind==="audit"||(e.kind==="test"&&e.status==="FAILED")).slice(0,80).map(e=>`<div class="row"><span class="ts">${esc((e.ts||"").slice(11))}</span>
+    <div><b>${esc(e.rule||e.source||e.kind)}</b> <span class="mono">${esc(e.file?e.file+":"+e.line:(e.command||e.test||""))}</span><div class="mono" style="color:var(--text2)">${esc((e.snippet||e.message||e.evidence||"").slice(0,300))}</div></div>${chip(e.severity||"FAILED")}</div>`);
+  const integ = (st.integrity||[]).map(i=>`<div class="row"><span class="ts">grafo</span><div><b>${esc(i.rule)}</b><div class="mono" style="color:var(--text2)">${esc(i.message)}</div></div>${chip(["ORPHAN_REQUIREMENT","NO_VERIFICATION_PATH","UNDEFINED_BEHAVIOUR","BROKEN_RELATIONSHIP"].includes(i.rule)?"HIGH":"MEDIUM")}</div>`);
+  const findings = (st.security||[]).map(f=>`<div class="row"><span class="ts">${esc(f.id)}</span><div><b>${esc(f.title)}</b> <span class="mono">${esc(f.location||"")}</span><div style="color:var(--text2);font-size:11px">resolução: ${esc(f.status)}${f.evidence?" — "+esc(f.evidence):""}</div></div>${chip(f.status==="RESOLVED"?"RESOLVED":f.severity)}</div>`)
+    .concat((st.redteam||[]).map(f=>`<div class="row"><span class="ts">${esc(f.id)}</span><div><b>Red Team · ${esc(f.area)}</b> <span class="mono">${esc(f.component)}</span><div style="color:var(--text2);font-size:11px">${esc(f.impact)} · resolução: ${esc(f.status)} · reteste: ${esc(f.retest)}${f.exception?" · exceção autorizada por "+esc(f.exception.by):""}</div></div>${chip(f.status==="RESOLVED"?"RESOLVED":f.severity)}</div>`));
+  $("errors").innerHTML = findings.concat(errs, integ).join("") || `<div class="empty">Sem erros registados.</div>`;
+  // D preview
+  if (p && p.preview_url && !$("preview").src) { $("preview-url").value = p.preview_url; }
+  // I usage
+  const U = st.usage||{};
+  $("usage").innerHTML = Object.keys(U).length ? `<table><tr><th>Fornecedor/modelo</th><th class="num">Chamadas</th><th class="num">Entrada</th><th class="num">Saída</th><th class="num">Cache</th><th class="num">Custo</th></tr>` +
+    Object.entries(U).map(([k,u])=>`<tr><td>${esc(k)}</td><td class="num">${u.calls}</td><td class="num">${u.input_tokens.toLocaleString("pt-PT")}</td><td class="num">${u.output_tokens.toLocaleString("pt-PT")}</td><td class="num">${u.cached_tokens.toLocaleString("pt-PT")}</td><td class="num">${u.cost_reported?u.cost.toFixed(4):"não reportado"}</td></tr>`).join("") + `</table>`
+    : `<div class="empty">Sem dados de uso reportados. Registe-os com <code>cf.py event usage --data '{"provider":…,"model":…,"input_tokens":…,"output_tokens":…}'</code>. Nada é estimado aqui.</div>`;
+  // J history
+  const hist = (st.history||[]).slice().reverse().map(h=>`<div class="row"><span class="ts">${esc(h.ts.slice(5,16).replace("T"," "))}</span><div><b>v${h.v}</b> ${esc(h.action)} <span style="color:var(--text2)">${esc(h.detail)}</span></div><span></span></div>`);
+  const cps = (st.checkpoints||[]).slice().reverse().map(c=>`<div class="row"><span class="ts">${esc(c.ts.slice(5,16).replace("T"," "))}</span><div><b>Ponto de controlo ${esc(c.id)}</b> · git ${esc(c.git_head)} · ${c.unverified_changes.length} alterações não verificadas</div><span class="chip blue">checkpoint</span></div>`);
+  const commits = (st.commits||[]).map(c=>`<div class="row"><span class="ts">${esc((c.date||"").slice(5,16))}</span><div><span class="mono">${esc(c.hash)}</span> ${esc(c.subject)} <span style="color:var(--muted)">— ${esc(c.author)}</span></div><span class="chip blue">commit</span></div>`);
+  const decs = (st.decisions||[]).slice().reverse().map(d=>`<div class="row"><span class="ts">${esc((d.ts||"").slice(5,16).replace("T"," "))}</span><div><b>Decisão ${esc(d.id)}</b> ${esc(d.decision)}<div style="color:var(--text2);font-size:11px">${esc(d.rationale)}${d.by?" — "+esc(d.by):""}</div></div><span class="chip blue">decisão</span></div>`);
+  const tres = ev.filter(e=>e.kind==="test").slice(0,15).map(e=>`<div class="row"><span class="ts">${esc((e.ts||"").slice(5,16).replace("T"," "))}</span><div>Resultado de teste <span class="mono">${esc(e.test)}</span></div>${chip(e.status)}</div>`);
+  $("history").innerHTML = decs.concat(cps, tres, hist.slice(0,40), commits).join("") || `<div class="empty">Sem histórico.</div>`;
+  drawGraph(st.graph);
+}
+
+const CAT = [{name:"Requisito",color:"#1D2BE6"},{name:"Componente UI",color:"#2E9AD6"},{name:"Serviço / API",color:"#5B2FB0"},{name:"Dados",color:"#C58F2C"},{name:"Teste",color:"#8A8FE0"},{name:"Outro",color:"#55555F"}];
+const UI = new Set(["button","form","link","input","menu","toggle","page","screen","modal","gesture","command"]);
+function cat(t){ if(t==="requirement")return 0; if(UI.has(t))return 1; if(["api","service","job","integration","agent"].includes(t))return 2; if(t==="db")return 3; if(t==="test")return 4; return 5; }
+function drawGraph(g){
+  if(!g){ $("graph").innerHTML = `<div class="empty">Sem grafo (registo indisponível).</div>`; chart=null; return; }
+  if(!chart) chart = echarts.init($("graph"), null, {renderer:"svg"});
+  const bad = s => ["FAILED","BLOCKED","NOT IMPLEMENTED","NOT_EXECUTED"].includes(s);
+  chart.setOption({animation:false, tooltip:{formatter:p=>p.dataType==="edge"?`${esc(p.data.source)} — ${esc(p.data.rel)} → ${esc(p.data.target)}`:`<b>${esc(p.data.id)}</b> ${esc(p.data.label)}<br>${esc(p.data.type)} · ${esc(p.data.status||"")}`},
+    legend:{data:CAT.map(c=>c.name),bottom:0,textStyle:{fontSize:11}},
+    series:[{type:"graph",layout:"force",roam:true,draggable:true,force:{repulsion:220,edgeLength:[60,120]},categories:CAT.map(c=>({name:c.name,itemStyle:{color:c.color}})),
+      label:{show:true,position:"right",fontSize:10,formatter:p=>p.data.id},edgeSymbol:["none","arrow"],edgeSymbolSize:6,
+      lineStyle:{color:"#B9BBD8",width:1.2,curveness:.08},
+      data:g.nodes.map(n=>({...n,name:n.id,category:cat(n.type),symbolSize:n.type==="requirement"?16:12,itemStyle:{borderColor:bad(n.status)?"#D33A3A":"#fff",borderWidth:bad(n.status)?2.5:1.5}})),
+      links:g.edges.map(e=>({source:e.from,target:e.to,rel:e.rel}))}]}, true);
+  chart.off("click"); chart.on("click", p=>{ if(p.dataType==="node"){ $("dlg-title").textContent=p.data.id; $("dlg-body").textContent=JSON.stringify(p.data,null,2); dlg.showModal(); }});
+}
+async function showDiff(path){ const r = await fetch("/api/diff?path="+encodeURIComponent(path)).then(r=>r.json()); $("dlg-title").textContent="Diff — "+path; $("dlg-body").textContent=r.diff||r.error||"(sem diff)"; dlg.showModal(); }
+async function showLog(path){ const r = await fetch("/api/log?path="+encodeURIComponent(path)).then(r=>r.json()); $("dlg-title").textContent="Terminal — "+path; $("dlg-body").textContent=r.log||r.error; dlg.showModal(); }
+async function approve(id,reject){
+  const by = $("approver").value.trim(); if(!by){ alert("Indique o seu nome: as aprovações são ações humanas registadas (§3.8)."); return; }
+  if(!confirm(`${reject?"Rejeitar":"Aprovar"} ${id} em nome de ${by}? Esta aprovação cobre apenas esta ação.`)) return;
+  const r = await fetch("/api/approve",{method:"POST",headers:{"Content-Type":"application/json","X-CodeForge-Token":TOKEN},body:JSON.stringify({id,by,reject})}).then(r=>r.json());
+  if(r.error) alert(r.error); else poll();
+}
+function setPreview(){ const u=$("preview-url").value.trim(); if(u){ $("preview").src=u; $("preview-sub").textContent="A mostrar "+u+" — se ficar vazio, nenhum servidor está a responder nesse endereço."; } }
+async function poll(){ try{ render(await fetch("/api/state").then(r=>r.json())); }catch(e){} }
+function connect(){
+  const es = new EventSource("/events");
+  es.addEventListener("state", e=>{ $("live-dot").classList.add("on"); $("live-txt").textContent="ao vivo · "+new Date().toLocaleTimeString("pt-PT"); render(JSON.parse(e.data)); });
+  es.onerror = ()=>{ $("live-dot").classList.remove("on"); $("live-txt").textContent="desligado — a tentar novamente"; };
+}
+window.addEventListener("resize",()=>chart&&chart.resize());
+poll(); connect();
+</script>
+</body>
+</html>

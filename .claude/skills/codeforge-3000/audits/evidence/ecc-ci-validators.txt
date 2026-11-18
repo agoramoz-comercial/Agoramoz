@@ -1,0 +1,11 @@
+check-unicode-safety: Unicode safety check passed.
+validate-agents: Validated 72 agent files
+validate-commands: Validated 98 command files
+validate-rules: Validated 122 rule files
+validate-skills: Validated 845 skill directories
+validate-skill-host-compat: Validated host compatibility for 327 skill directories (421 warnings)
+validate-hooks: Validated 28 hook matchers
+check-hooks-schema-keys: Checked 2 hooks config(s): all keys within the documented loader sets
+validate-install-manifests: Validated 49 install modules, 96 install components, and 7 profiles
+validate-context-profiles: Context profiles valid: 327 skills, 40 profile/target projections, triggers 42/326. Native certification: unobserved.
+validate-no-personal-paths: Validated: no personal absolute paths in shipped docs/skills/commands

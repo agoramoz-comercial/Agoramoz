@@ -1,0 +1,18 @@
+{
+  "source": "CODEFORGE Master Prompt §11.5 and §13.2",
+  "verified": false,
+  "note": "Official documentation entry points named in the master prompt. Not re-verified at creation; check availability and current content before relying on them (§13.2).",
+  "ecosystem": [
+    {"name": "MCP Registry", "url": "https://registry.modelcontextprotocol.io/"},
+    {"name": "Model Context Protocol documentation", "url": "https://modelcontextprotocol.io/"},
+    {"name": "GitHub", "url": "https://github.com/"}, {"name": "GitLab", "url": "https://gitlab.com/"},
+    {"name": "VS Code Marketplace", "url": "https://marketplace.visualstudio.com/"}
+  ],
+  "environments": [
+    {"name": "VS Code", "url": "https://code.visualstudio.com/docs"}, {"name": "Cursor", "url": "https://docs.cursor.com/"},
+    {"name": "Claude Code", "url": "https://docs.anthropic.com/en/docs/claude-code/overview"}, {"name": "Google Antigravity", "url": "https://antigravity.google/"},
+    {"name": "Android Studio", "url": "https://developer.android.com/studio"}, {"name": "Flutter", "url": "https://docs.flutter.dev/"},
+    {"name": "Xcode", "url": "https://developer.apple.com/xcode/"}, {"name": "Figma", "url": "https://www.figma.com/developers/"},
+    {"name": "Blender", "url": "https://docs.blender.org/"}
+  ]
+}

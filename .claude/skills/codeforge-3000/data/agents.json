@@ -1,0 +1,186 @@
+{
+  "source": "CODEFORGE Master Prompt §15.5 — reference organization",
+  "note": "Reference roles only. An agent's title does not establish competence (§15.4): each must pass practical tests before it is VERIFIED (factory.py).",
+  "agents": [
+    {
+      "id": "CF01",
+      "role": "Master Software Orchestrator",
+      "primary_responsibility": "Coordination and execution governance",
+      "mission": "Coordination and execution governance",
+      "technical_specialization": "Coordination and execution governance",
+      "suggested_tools": "cf.py status/next/gates; model_router.py",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF02",
+      "role": "Environment Engineer",
+      "primary_responsibility": "Development environment and tooling",
+      "mission": "Development environment and tooling",
+      "technical_specialization": "Development environment and tooling",
+      "suggested_tools": "env_probe.py",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF03",
+      "role": "Repository Intelligence Engineer",
+      "primary_responsibility": "Repository inspection and reverse engineering",
+      "mission": "Repository inspection and reverse engineering",
+      "technical_specialization": "Repository inspection and reverse engineering",
+      "suggested_tools": "repo_scan.py; cf.py adopt",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF04",
+      "role": "Documentation Researcher",
+      "primary_responsibility": "Technical research and documentation",
+      "mission": "Technical research and documentation",
+      "technical_specialization": "Technical research and documentation",
+      "suggested_tools": "agent research tools; data/sources.json",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF05",
+      "role": "Requirements Analyst",
+      "primary_responsibility": "Requirements and acceptance criteria",
+      "mission": "Requirements and acceptance criteria",
+      "technical_specialization": "Requirements and acceptance criteria",
+      "suggested_tools": "cf.py req; graph trace",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF06",
+      "role": "System Architect",
+      "primary_responsibility": "System and solution architecture",
+      "mission": "System and solution architecture",
+      "technical_specialization": "System and solution architecture",
+      "suggested_tools": "cf.py comp/node/link; graph impact",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF07",
+      "role": "Database Architect",
+      "primary_responsibility": "Data models and database engineering",
+      "mission": "Data models and database engineering",
+      "technical_specialization": "Data models and database engineering",
+      "suggested_tools": "cf.py node db; connect test --kind db",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF08",
+      "role": "API & Integration Engineer",
+      "primary_responsibility": "APIs, connectors and integrations",
+      "mission": "APIs, connectors and integrations",
+      "technical_specialization": "APIs, connectors and integrations",
+      "suggested_tools": "cf.py connect; comp contract --api",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF09",
+      "role": "UX Researcher",
+      "primary_responsibility": "User research and interaction requirements",
+      "mission": "User research and interaction requirements",
+      "technical_specialization": "User research and interaction requirements",
+      "suggested_tools": "benchmark",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF10",
+      "role": "UI & Design System Engineer",
+      "primary_responsibility": "Design systems and UI architecture",
+      "mission": "Design systems and UI architecture",
+      "technical_specialization": "Design systems and UI architecture",
+      "suggested_tools": "design tokens; flow_audit.py",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF11",
+      "role": "Frontend Engineer",
+      "primary_responsibility": "Frontend implementation",
+      "mission": "Frontend implementation",
+      "technical_specialization": "Frontend implementation",
+      "suggested_tools": "cf.py run; test run",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF12",
+      "role": "Backend Engineer",
+      "primary_responsibility": "Backend and application services",
+      "mission": "Backend and application services",
+      "technical_specialization": "Backend and application services",
+      "suggested_tools": "cf.py run; test run",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF13",
+      "role": "Mobile Engineer",
+      "primary_responsibility": "Android, iOS and cross-platform engineering",
+      "mission": "Android, iOS and cross-platform engineering",
+      "technical_specialization": "Android, iOS and cross-platform engineering",
+      "suggested_tools": "env_probe.py (adb/xcrun)",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF14",
+      "role": "Desktop & Device Engineer",
+      "primary_responsibility": "Desktop and device applications",
+      "mission": "Desktop and device applications",
+      "technical_specialization": "Desktop and device applications",
+      "suggested_tools": "env_probe.py",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF15",
+      "role": "3D & Spatial Engineer",
+      "primary_responsibility": "3D, AR, VR and spatial applications",
+      "mission": "3D, AR, VR and spatial applications",
+      "technical_specialization": "3D, AR, VR and spatial applications",
+      "suggested_tools": "env_probe.py",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF16",
+      "role": "AI & Agent Engineer",
+      "primary_responsibility": "LLM and agentic system engineering",
+      "mission": "LLM and agentic system engineering",
+      "technical_specialization": "LLM and agentic system engineering",
+      "suggested_tools": "model_router.py; context_pack.py",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF17",
+      "role": "ULFM Logic Engineer",
+      "primary_responsibility": "Functional logic and flow mapping",
+      "mission": "Functional logic and flow mapping",
+      "technical_specialization": "Functional logic and flow mapping",
+      "suggested_tools": "cf.py comp contract; flow_audit.py; coverage",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF18",
+      "role": "QA & Automation Engineer",
+      "primary_responsibility": "Testing and quality assurance",
+      "mission": "Testing and quality assurance",
+      "technical_specialization": "Testing and quality assurance",
+      "suggested_tools": "cf.py test; gates",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF19",
+      "role": "Security & Performance Engineer",
+      "primary_responsibility": "Security, performance and reliability",
+      "mission": "Security, performance and reliability",
+      "technical_specialization": "Security, performance and reliability",
+      "suggested_tools": "secret_scan.py; cf.py security",
+      "status": "DRAFT"
+    },
+    {
+      "id": "CF20",
+      "role": "Red Team & Release Engineer",
+      "primary_responsibility": "Adversarial review and release governance",
+      "mission": "Adversarial review and release governance",
+      "technical_specialization": "Adversarial review and release governance",
+      "suggested_tools": "cf.py redteam; gates; final",
+      "status": "DRAFT"
+    }
+  ]
+}

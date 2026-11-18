@@ -1,0 +1,76 @@
+  ✗ release signs and verifies the annotated pin-only tag
+    Error: spawnSync ssh-keygen ENOENT
+  ✗ release blocks tagging when a commit hook changes source
+    Error: spawnSync ssh-keygen ENOENT
+  ✗ release stops without a tag when signing fails
+    Error: spawnSync ssh-keygen ENOENT
+✗ ci/grok-pin.test.js exited with status 1
+ECC_TEST_FILE {"file":"ci/grok-pin.test.js","phase":"serial","attemptedAt":"2026-11-18T13:43:39.435Z","completedAt":"2026-11-18T13:43:40.949Z","durationMs":1513.8240010000009,"exitCode":1,"signal":null,"error":"exited with status 1","outcome":"failed"}
+  ✗ observe.sh falls back to legacy output fields when tool_response is null
+    Error: ENOENT: no such file or directory, open '/tmp/hooks-test-hfqTn8/.local/share/ecc-homunculus/observations.jsonl'
+✗ hooks/hooks.test.js exited with status 1
+ECC_TEST_FILE {"file":"hooks/hooks.test.js","phase":"serial","attemptedAt":"2026-11-18T13:45:41.179Z","completedAt":"2026-11-18T13:45:54.811Z","durationMs":13632.186423000006,"exitCode":1,"signal":null,"error":"exited with status 1","outcome":"failed"}
+  ✗ grok marketplace plugin source is a Git URL of the whole repo, not ./
+    Error: Command failed: git show 4dc322a288af0acfd76018ed51bf5bfe76eb5d2a:scripts/lib/grok-harness-adapter.js
+✗ plugin-manifest.test.js exited with status 1
+ECC_TEST_FILE {"file":"plugin-manifest.test.js","phase":"serial","attemptedAt":"2026-11-18T13:50:31.545Z","completedAt":"2026-11-18T13:50:31.668Z","durationMs":122.55330600001616,"exitCode":1,"signal":null,"error":"exited with status 1","outcome":"failed"}
+  ✗ plans Grok through the canonical request with a local pinned fixture
+    Error: Error: Non-Git Grok source is unverifiable without matching registry URL/commit evidence
+✗ scripts/install-apply.test.js exited with status 1
+ECC_TEST_FILE {"file":"scripts/install-apply.test.js","phase":"serial","attemptedAt":"2026-11-18T13:51:48.299Z","completedAt":"2026-11-18T13:52:23.855Z","durationMs":35555.35652800003,"exitCode":1,"signal":null,"error":"exited with status 1","outcome":"failed"}
+  ✗ leader exit cannot hide an owned descendant retaining captured pipes
+    Error: owned fixture process 25568 survived cleanup
+✗ scripts/install-sh.test.js exited with status 1
+ECC_TEST_FILE {"file":"scripts/install-sh.test.js","phase":"serial","attemptedAt":"2026-11-18T13:52:26.868Z","completedAt":"2026-11-18T13:52:29.832Z","durationMs":2964.1780390000204,"exitCode":1,"signal":null,"error":"exited with status 1","outcome":"failed"}
+  FAIL grok: preserve user files through preview, install, reinstall and uninstall: Error: Non-Git Grok source is unverifiable without matching registry URL/commit evidence
+✗ scripts/ownership-guard.test.js exited with status 1
+ECC_TEST_FILE {"file":"scripts/ownership-guard.test.js","phase":"serial","attemptedAt":"2026-11-18T13:52:56.225Z","completedAt":"2026-11-18T13:52:57.470Z","durationMs":1245.0389639999485,"exitCode":1,"signal":null,"error":"exited with status 1","outcome":"failed"}
+║  Failed:         8  ✗                                    ║
+║  ✗ ci/grok-pin.test.js                                   ║
+║  ✗ hooks/hooks.test.js                                   ║
+║  ✗ plugin-manifest.test.js                               ║
+║  ✗ scripts/install-apply.test.js                         ║
+║  ✗ scripts/install-sh.test.js                            ║
+║  ✗ scripts/ownership-guard.test.js                       ║
+
+--- last lines ---
+  duration_ms: 0.97268
+  type: 'test'
+  ...
+# Subtest: Localized data survives JSON serialization
+ok 6 - Localized data survives JSON serialization
+  ---
+  duration_ms: 0.580906
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8.952252
+Passed: 6, Failed: 0
+
+ECC_TEST_FILE {"file":"skills/yoruba-localization.test.js","phase":"serial","attemptedAt":"2026-11-18T13:55:35.903Z","completedAt":"2026-11-18T13:55:35.968Z","durationMs":65.33135000010952,"exitCode":0,"signal":null,"error":null,"outcome":"passed"}
+ECC_TEST_COMPLETE {"counts":{"planned":508,"attempted":508,"completed":508,"passed":502,"failed":6},"integrity":{"ok":true,"errors":[]}}
+
+╔══════════════════════════════════════════════════════════╗
+║                     Final Results                        ║
+╠══════════════════════════════════════════════════════════╣
+║  Total Tests: 10423                                      ║
+║  Passed:      10415  ✓                                   ║
+║  Failed:         8  ✗                                    ║
+║  Files: 502 passed, 6 failed                             ║
+╠══════════════════════════════════════════════════════════╣
+║  ✗ ci/grok-pin.test.js                                   ║
+║  ✗ hooks/hooks.test.js                                   ║
+║  ✗ plugin-manifest.test.js                               ║
+║  ✗ scripts/install-apply.test.js                         ║
+║  ✗ scripts/install-sh.test.js                            ║
+║  ✗ scripts/ownership-guard.test.js                       ║
+╚══════════════════════════════════════════════════════════╝
+
+Passed: 10415, Failed: 8
