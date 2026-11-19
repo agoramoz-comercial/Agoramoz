@@ -67,3 +67,10 @@ One clear next step.
   - build de produção OK; LCP móvel (CPU ×4, 1,6 Mbps) 1,08–1,12 s igual ao actual; desktop 120–136 ms (actual 644–688); CLS 0 (actual 0,002); JS −27 KB móvel, −57 KB desktop face ao `main` (REQ-013);
   - 1894 testes, typecheck, lint 0 erros.
 - Próximo: PH-3, páginas interiores.
+
+## 2026-11-19 · Mudança D-51 — cores do logótipo e mosaico
+
+- Pedido do fundador: linguagem do site de referência, cores do logótipo. Estudado com Firecrawl; código, arte e conteúdo originais (sem cópia).
+- Novo: `NavLateral` (barra vertical à direita / barra de topo em blocos / menu em ecrã inteiro), `Circulos` (arte de círculos), página inicial em mosaico.
+- Verificação (TESTED AND PASSED): 1894 testes; typecheck; lint 0 erros; axe 0 violações em 8 rotas × 2 larguras; menu (abrir, foco, Escape, navegar) nas duas larguras; efeitos e movimento reduzido; build; LCP móvel 0,67–0,69 s, desktop 0,36–0,38 s; CLS ≤ 0,006; JS 232 KB; altura 39,2%.
+- Pendente: PH-3, páginas interiores no novo design.

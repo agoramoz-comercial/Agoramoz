@@ -1,10 +1,8 @@
 import { MotionProvider } from '@/components/motion/MotionProvider';
 import { ScrollProgress } from '@/components/motion/ScrollProgress';
 import { PageTransition } from '@/components/motion/PageTransition';
-import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
-import { TopBar } from '@/components/layout/TopBar';
-import { MobileCtaBar } from '@/components/layout/MobileCtaBar';
+import { NavLateral } from '@/components/layout/NavLateral';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { AttributionBoot } from '@/components/analytics/AttributionBoot';
 import { MedicaoPaginas } from '@/components/analytics/MedicaoPaginas';
@@ -41,6 +39,10 @@ import type { Idioma } from '@/content/types';
  * `globals.css`); a letra é a Archivo do layout raiz. Saem o cursor
  * próprio, o índice lateral, o grão e o scroll suave: eram da linguagem escura
  * anterior, e o scroll suave ficou fora da escolha de movimento.
+ *
+ * D-51: o cabeçalho, a faixa de topo e a barra fixa do telemóvel dão lugar à
+ * `NavLateral` (barra vertical à direita no computador, barra de topo em blocos
+ * no telemóvel). O conteúdo reserva os 4rem da barra no computador.
  */
 export function SiteChrome({ children, idioma }: { children: React.ReactNode; idioma: Idioma }) {
   return (
@@ -53,11 +55,11 @@ export function SiteChrome({ children, idioma }: { children: React.ReactNode; id
       <MotionProvider suave={false}>
         <ScrollProgress />
         <PageTransition />
-        <TopBar idioma={idioma} />
-        <SiteHeader idioma={idioma} />
-        <main id="conteudo">{children}</main>
-        <SiteFooter idioma={idioma} />
-        <MobileCtaBar idioma={idioma} />
+        <NavLateral idioma={idioma} />
+        <div className="lg:pr-16">
+          <main id="conteudo">{children}</main>
+          <SiteFooter idioma={idioma} />
+        </div>
       </MotionProvider>
     </div>
   );

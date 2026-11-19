@@ -757,3 +757,11 @@ está em `docs/TERRABUILD.md`.
 - **Como:** camada de tokens própria do site público (a consola não muda), GSAP 3.15 já instalado, movimento reduzido respeitado. Plano e requisitos em `.wie-x/`.
 - **Produção:** só depois de o fundador aprovar a pré-visualização.
 
+## D-51 — Website v2 revisto: cores do logótipo e composição em mosaico
+
+- **Pedido do fundador (19/11/2026):** mudar o design a 100%, na linguagem do site de referência c2mtl.koki-kiko.com, com as cores do logótipo. Substitui a identidade «Editorial» de D-50; a estrutura de conteúdo «Conversa» e os efeitos 01, 02, 03, 05, 06, 08 e 10 mantêm-se.
+- **Limite:** a referência é obra do estúdio Koki-Kiko para a C2 Montréal. Foi estudada (Firecrawl: capturas, estrutura, navegação); não se copiou código, imagens, textos nem a composição exacta. A linguagem foi reconstruída com código, arte e conteúdo da AGORAMOZ.
+- **O que se adoptou:** blocos de cantos vivos em mosaico; tipografia neo-grotesca (Archivo) gigante a atravessar blocos; arte de círculos sobrepostos gerada nas cores do logótipo (`components/v2/Circulos.tsx`) no lugar de fotografias; navegação vertical fixa à direita no computador e barra de topo em três blocos no telemóvel (`NavLateral`); manifesto centrado; cartões desencontrados; números empilhados; final em mosaico.
+- **Cores:** verde #00BE64, amarelo #FFD21F, vermelho #FF3300 (logótipo), preto #0A0A0B, papel #EDEDEB; CTA vermelho-escuro #D42A00 com branco (5,08:1). Texto sobre verde, amarelo e vermelho é sempre preto.
+- **Saem:** cabeçalho, faixa de topo e barra fixa do telemóvel (o menu em ecrã inteiro junta soluções, páginas, mercados, idiomas e canais); Inter Tight.
+- **Medido:** página inicial 39,2% da altura anterior; LCP móvel 0,67–0,69 s, desktop 0,36–0,38 s; JS 232 KB (antes 444); axe 0 violações em 8 rotas × 2 larguras.

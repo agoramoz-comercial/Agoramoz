@@ -27,7 +27,7 @@
 | ID | Requirement | Type | Priority | Acceptance criteria | Source | Status |
 |---|---|---|---|---|---|---|
 | REQ-001 | Página inicial com a estrutura C | Mandatory | High | Ordem: cabeçalho curto → topo com pergunta + escolha de setor → como funciona (3 passos) → problemas → diagnóstico → sistema → curso → quem somos → chamada final; altura ≤ 40% da actual a 1440 px | Utilizador | Open |
-| REQ-002 | Identidade da direcção A em todo o site público | Mandatory | High | Paleta azul #1D2BE6 / lavanda / tinta / papel e Inter Tight em `(site)` e `(en)`; consola, QA e documento intactos | Utilizador | Open |
+| REQ-002 | Cores do logótipo e composição em mosaico em todo o site público (D-51, substitui a direcção A) | Mandatory | High | Verde, amarelo, vermelho, preto e papel; Archivo; navegação lateral; consola, QA e documento intactos | Utilizador | Open |
 | REQ-003 | Efeito 01: títulos revelados por linhas | Mandatory | High | SplitText com máscara nos títulos de secção; texto legível sem JS | Utilizador | Open |
 | REQ-004 | Efeito 02: números que contam | Mandatory | Medium | Só números reais (10, 6, 7); valor final no HTML | Utilizador | Open |
 | REQ-005 | Efeito 03: fluxo desenhado com o scroll | Mandatory | Medium | Linha com `scrub` e passos que acendem; reversível | Utilizador | Open |

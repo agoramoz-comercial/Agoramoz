@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils/cn';
  * com movimento reduzido, e o scroll continua nativo. O GSAP só acrescenta a
  * profundidade: o cartão coberto encolhe e escurece um pouco, ligado ao scroll.
  * O `top` de cada cartão vem do componente que o usa (deixa espaço ao cabeçalho).
+ * D-51: só abaixo de 1024px. No computador os cartões ficam numa grelha
+ * desencontrada, sem pilha.
  */
 export function CardStack({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -22,7 +24,7 @@ export function CardStack({ children, className }: { children: React.ReactNode; 
       if (!raiz) return;
       const cartoes = Array.from(raiz.querySelectorAll<HTMLElement>('[data-cartao]'));
       const mm = gsap.matchMedia();
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
+      mm.add('(max-width: 1023px) and (prefers-reduced-motion: no-preference)', () => {
         const tweens = cartoes.slice(0, -1).map((c, i) =>
           gsap.to(c, {
             scale: escalaCoberta(i, cartoes.length),
