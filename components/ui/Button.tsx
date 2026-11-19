@@ -24,8 +24,8 @@ const button = cva(
     variants: {
       variant: {
         signal: 'bg-[color:var(--color-signal-600)] text-white hover:bg-[color:var(--color-signal-700)]',
-        /** Sobre a faixa azul do v2 (D-50): fundo branco, texto azul — 8,27:1. */
-        claro: 'bg-white text-[color:var(--v2-azul,#1d2be6)] hover:bg-[color:var(--v2-lavanda,#c8caee)]',
+        /** Sobre as superfícies de cor do v2 (D-51): fundo branco, texto preto — 19,8:1. */
+        claro: 'bg-white text-[color:var(--v2-preto,#0a0a0b)] hover:bg-[color:var(--v2-amarelo,#ffd21f)]',
         solid: 'bg-[color:var(--on-surface)] text-[color:var(--surface)] hover:opacity-90',
         outline:
           'border border-[color:var(--border)] text-[color:var(--on-surface)] hover:border-[color:var(--on-surface)]',

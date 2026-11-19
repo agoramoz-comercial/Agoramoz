@@ -37,23 +37,14 @@ import type { Idioma } from '@/content/types';
  * troca. O WCAG 3.1.2 (idioma das partes) é cumprido aqui, e o hreflang diz
  * aos motores de busca o que cada URL é.
  *
- * Website v2 (D-50): `data-v2` liga a identidade «Editorial» (tokens em
- * `globals.css`) e `fonte` traz a Inter Tight do layout. Saem o cursor
+ * Website v2 (D-50, D-51): `data-v2` liga as cores do logótipo (tokens em
+ * `globals.css`); a letra é a Archivo do layout raiz. Saem o cursor
  * próprio, o índice lateral, o grão e o scroll suave: eram da linguagem escura
  * anterior, e o scroll suave ficou fora da escolha de movimento.
  */
-export function SiteChrome({
-  children,
-  idioma,
-  fonte,
-}: {
-  children: React.ReactNode;
-  idioma: Idioma;
-  /** Classe da variável CSS da fonte v2 (`--font-inter-tight`). */
-  fonte?: string;
-}) {
+export function SiteChrome({ children, idioma }: { children: React.ReactNode; idioma: Idioma }) {
   return (
-    <div data-v2 className={fonte} lang={idioma === 'en' ? 'en' : undefined}>
+    <div data-v2 lang={idioma === 'en' ? 'en' : undefined}>
       <SkipLink idioma={idioma} />
       <SiteJsonLd />
       <AttributionBoot />

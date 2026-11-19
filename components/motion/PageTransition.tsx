@@ -74,7 +74,7 @@ export function PageTransition() {
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[90]">
       <div
         ref={panel}
-        className="absolute inset-0 origin-bottom scale-y-0 bg-[color:var(--v2-azul,var(--color-ink-950))]"
+        className="absolute inset-0 origin-bottom scale-y-0 bg-[color:var(--v2-vermelho,var(--color-ink-950))]"
       />
       {/* Fio de crómio no bordo do painel: é o que faz a transição parecer
           metal a deslizar em vez de uma cortina preta. */}

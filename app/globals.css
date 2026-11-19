@@ -184,119 +184,116 @@
 }
 
 /* ===========================================================================
-   Website v2 (D-50) — identidade «Editorial»: azul, lavanda, tinta e papel.
+   Website v2 (D-50, revisto em D-51) — as cores do logótipo AGORAMOZ.
 
-   Só vale dentro de `[data-v2]`, que a casca do site público escreve. A
-   consola, o QA, os documentos e os inquéritos ficam exactamente como estavam.
+   Verde, amarelo e vermelho do logótipo, sobre preto e papel. A composição é
+   editorial em mosaico: blocos de cor, gradientes do logótipo, maiúsculas
+   grandes. Só vale dentro de `[data-v2]`, que a casca do site público escreve;
+   a consola, o QA, os documentos e os inquéritos ficam como estavam.
 
-   Em vez de reescrever componentes, religam-se as primitivas que eles já leem:
-   o vermelho do CTA passa a azul, os pretos e o giz passam à tinta e ao papel
-   da direcção A, os cinzentos passam a tons que mantêm o contraste.
-
-   Rácios CALCULADOS (WCAG 2.1) contra as superfícies v2:
-     tinta #0C0C10 / papel #F4F4F6 ........ 17,77:1
-     mute  #4A4B57 / papel ................. 7,85:1
-     azul  #1D2BE6 / papel ................. 7,53:1   (texto de destaque)
-     branco / azul ......................... 8,27:1   (CTA)
-     tinta / lavanda #C8CAEE ............... 12,21:1
-     #2E3050 / lavanda ..................... 7,94:1   (secundário em lavanda)
-     azul-escuro #121A9E / lavanda ......... 7,88:1   (destaque em lavanda)
-     lilás #A9ACE3 / tinta ................. 9,01:1   (secundário no escuro)
-     lavanda / tinta ....................... 12,21:1  (destaque no escuro)
-     #E3E5FF / azul ........................ 6,66:1   (secundário no azul)
-   Azul sobre tinta dá 2,36:1 — por isso, no escuro, o destaque é lilás.
+   Rácios CALCULADOS (WCAG 2.1):
+     preto #0A0A0B / papel #EDEDEB ......... 16,88:1
+     mute #55555C / papel .................. 6,31:1
+     preto / verde #00BE64 ................. 8,06:1
+     preto / amarelo #FFD21F ............... 13,66:1
+     preto / vermelho #FF3300 .............. 5,40:1
+     branco / vermelho-escuro #D42A00 ...... 5,08:1   (CTA)
+     amarelo / preto ....................... 13,66:1  (destaque no escuro)
+   Branco sobre verde (2,46:1) e sobre amarelo (1,45:1) falha: nessas
+   superfícies o texto é sempre preto. Texto colorido sobre o papel só em
+   tamanhos de título; o texto corrido é preto ou cinzento.
    =========================================================================== */
 
 [data-v2] {
-  --v2-azul: #1d2be6;
-  --v2-azul-escuro: #121a9e;
-  --v2-lavanda: #c8caee;
-  --v2-lilas: #a9ace3;
-  --v2-tinta: #0c0c10;
-  --v2-papel: #f4f4f6;
-  --v2-mute: #4a4b57;
+  --v2-preto: #0a0a0b;
+  --v2-papel: #ededeb;
+  --v2-branco: #ffffff;
+  --v2-verde: #00be64;
+  --v2-amarelo: #ffd21f;
+  --v2-vermelho: #ff3300;
+  --v2-vermelho-escuro: #d42a00;
+  --v2-mute: #55555c;
+  --v2-nascer: linear-gradient(135deg, #ff3300 0%, #ff7a12 45%, #ffd21f 100%);
+  --v2-campo: linear-gradient(135deg, #00be64 0%, #7fd14a 50%, #ffd21f 100%);
 
-  --color-ink-950: var(--v2-tinta);
-  --color-ink-900: #15161d;
-  --color-ink-850: #1c1d26;
-  --color-ink-800: #23242f;
-  --color-ink-700: #2e3050;
+  --color-ink-950: var(--v2-preto);
   --color-chalk: var(--v2-papel);
   --color-chalk-2: #ffffff;
-  --color-chalk-3: #dcdde6;
+  --color-chalk-3: #d6d6d3;
   --color-steel-600: var(--v2-mute);
-  --color-steel-400: var(--v2-lilas);
-  --color-steel-200: var(--v2-lavanda);
-  --color-signal-700: var(--v2-azul-escuro);
-  --color-signal-600: var(--v2-azul);
-  --color-signal-500: #8e93f0; /* 7,05:1 sobre tinta — destaque no escuro */
+  --color-steel-200: var(--v2-amarelo);
+  --color-signal-700: #b02300;
+  --color-signal-600: var(--v2-vermelho-escuro);
+  --color-signal-500: var(--v2-amarelo); /* destaque no escuro: 13,66:1 */
 
-  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-techno: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-techno: var(--font-archivo), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --tracking-techno: 0.08em;
-  /* Secções mais compactas: a página inicial v2 cabe em ≤ 40% da altura anterior (REQ-001). */
-  --space-section-tight: clamp(3rem, 2rem + 3.4vw, 5.25rem);
+  /* Secções compactas: a página inicial v2 cabe em ≤ 40% da altura anterior (REQ-001). */
+  --space-section-tight: clamp(3rem, 2rem + 3vw, 4.75rem);
 }
 
 [data-v2] [data-surface='light'] {
-  --accent: var(--v2-azul);
-  --signal: var(--v2-azul);
-}
-
-[data-v2] [data-surface='tint'] {
-  --surface: var(--v2-lavanda);
-  --surface-raised: #ffffff;
-  --muted: #2e3050;
-  --border: color-mix(in oklab, var(--v2-tinta) 18%, transparent);
-  --accent: var(--v2-azul-escuro);
-  --signal: var(--v2-azul-escuro);
+  --accent: var(--v2-preto);
+  --signal: var(--v2-vermelho-escuro);
 }
 
 [data-v2] [data-surface='dark'],
 [data-v2] [data-surface='deep'] {
-  --accent: var(--v2-lavanda);
-  --signal: #8e93f0;
+  --accent: var(--v2-amarelo);
+  --signal: var(--v2-amarelo);
 }
 
-/* Faixa azul: só existe no v2. O CTA nesta superfície usa a variante `claro`. */
-[data-v2] [data-surface='azul'] {
-  --surface: var(--v2-azul);
-  --surface-raised: #2a37ec;
-  --on-surface: #ffffff;
-  --muted: #e3e5ff;
-  --border: color-mix(in oklab, #ffffff 30%, transparent);
-  --hairline: color-mix(in oklab, #ffffff 34%, transparent);
-  --accent: #ffffff;
-  --signal: #ffffff;
-  --ok: #ffffff;
-  --motif: color-mix(in oklab, #ffffff 26%, transparent);
-  --chrome-a: #ffffff;
-  --chrome-b: #e3e5ff;
-  --chrome-c: #c8caee;
+/* As três cores do logótipo como superfícies. Texto sempre preto. */
+[data-v2] [data-surface='verde'],
+[data-v2] [data-surface='amarelo'],
+[data-v2] [data-surface='vermelho'] {
+  --on-surface: var(--v2-preto);
+  --muted: #1c1c1f;
+  --surface-raised: #ffffff;
+  --border: color-mix(in oklab, var(--v2-preto) 22%, transparent);
+  --hairline: color-mix(in oklab, var(--v2-preto) 26%, transparent);
+  --accent: var(--v2-preto);
+  --signal: var(--v2-preto);
+  --ok: var(--v2-preto);
+  --motif: color-mix(in oklab, var(--v2-preto) 18%, transparent);
+  --chrome-a: #0a0a0b;
+  --chrome-b: #2a2a2e;
+  --chrome-c: #3c3c42;
+}
+[data-v2] [data-surface='verde'] { --surface: var(--v2-verde); }
+[data-v2] [data-surface='amarelo'] { --surface: var(--v2-amarelo); }
+[data-v2] [data-surface='vermelho'] { --surface: var(--v2-vermelho); }
+
+/* Gradientes do logótipo e trama de pontos (meio-tom), para blocos sem fotografia. */
+[data-v2] .v2-nascer { background-image: var(--v2-nascer); }
+[data-v2] .v2-campo { background-image: var(--v2-campo); }
+[data-v2] .v2-pontos {
+  background-image: radial-gradient(circle at center, rgb(10 10 11 / 0.32) 1.2px, transparent 1.6px);
+  background-size: 10px 10px;
 }
 
 body:has([data-v2]) {
-  background-color: var(--v2-papel, #f4f4f6);
-  color: #0c0c10;
+  background-color: var(--v2-papel, #ededeb);
+  color: #0a0a0b;
 }
 
 [data-v2] :focus-visible {
   box-shadow:
-    0 0 0 2px var(--surface, #f4f4f6),
-    0 0 0 4px var(--v2-azul);
+    0 0 0 2px var(--surface, #ededeb),
+    0 0 0 4px var(--v2-preto);
 }
 
 [data-v2] [data-surface='dark'] :focus-visible,
-[data-v2] [data-surface='deep'] :focus-visible,
-[data-v2] [data-surface='azul'] :focus-visible {
+[data-v2] [data-surface='deep'] :focus-visible {
   box-shadow:
     0 0 0 2px var(--surface),
-    0 0 0 4px #ffffff;
+    0 0 0 4px var(--v2-amarelo);
 }
 
 [data-v2] ::selection {
-  background: var(--v2-azul);
-  color: #fff;
+  background: var(--v2-amarelo);
+  color: #0a0a0b;
 }
 
 @layer base {

@@ -8,11 +8,12 @@ import { cn } from '@/lib/utils/cn';
 /**
  * Efeito 06 (D-50): o arco da identidade AGORAMOZ abre-se até ocupar a secção.
  *
- * A forma é um fundo azul por trás do conteúdo. Servido aberto (secção inteira
- * azul): sem JS e com movimento reduzido, a secção está completa e legível. Com
+ * A forma é o meio-disco do logótipo, no gradiente vermelho → amarelo, por trás
+ * do conteúdo. Servido aberto (secção inteira em cor): sem JS e com movimento reduzido, a secção está completa e legível. Com
  * movimento normal, o arco começa fechado e abre com o scroll.
  *
- * O texto é branco: fora do arco cairia sobre o papel e não se leria. Por isso
+ * O texto é preto sobre a cor (5,4:1 no vermelho); fora do arco, sobre o papel,
+ * leria-se, mas a composição partia-se. Por isso
  * o conteúdo fica numa coluna central que cabe no arco fechado (64% da largura,
  * abaixo do topo) e o efeito só corre a partir de 1024px. Medido a 768px, as
  * pontas do título caíam fora da curva do arco; abaixo de 1024px a secção aparece já aberta.
@@ -48,9 +49,9 @@ export function ArchReveal({ children, className }: { children: React.ReactNode;
   );
 
   return (
-    <div ref={ref} data-surface="azul" className={cn('relative isolate overflow-hidden text-[color:var(--on-surface)]', className)}>
-      <div aria-hidden data-arco className="absolute inset-0 -z-10 bg-[color:var(--surface)]" />
-      <div className="mx-auto w-full px-6 pb-[clamp(3rem,6vw,5.5rem)] pt-[clamp(4.5rem,11vw,9.5rem)] md:w-[60%] md:px-0">{children}</div>
+    <div ref={ref} data-surface="vermelho" className={cn('relative isolate overflow-hidden text-[color:var(--on-surface)]', className)}>
+      <div aria-hidden data-arco className="v2-nascer absolute inset-0 -z-10 bg-[color:var(--surface)]" />
+      <div className="mx-auto w-full px-6 pb-[clamp(3rem,5vw,4.5rem)] pt-[clamp(4rem,9vw,7.5rem)] md:w-[60%] md:px-0">{children}</div>
     </div>
   );
 }

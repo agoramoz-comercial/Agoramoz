@@ -2,8 +2,8 @@ import { cn } from '@/lib/utils/cn';
 import { Container } from './Container';
 import { ContourField } from './ContourField';
 
-/** `azul` só tem tokens dentro do site v2 (`[data-v2]`, D-50). */
-export type Surface = 'light' | 'tint' | 'dark' | 'deep' | 'azul';
+/** `verde`, `amarelo` e `vermelho` (as cores do logótipo) só têm tokens dentro do site v2 (`[data-v2]`, D-51). */
+export type Surface = 'light' | 'tint' | 'dark' | 'deep' | 'verde' | 'amarelo' | 'vermelho';
 
 type SectionProps = {
   /** Religa os tokens semânticos. Os filhos nunca precisam de variantes dark:. */

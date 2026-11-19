@@ -263,6 +263,8 @@ export const INICIO_V2 = {
     entregaveis: { pt: 'entregáveis no diagnóstico', en: 'deliverables in the diagnostic' },
     fases: { pt: 'fases, cada uma aprovada antes da seguinte', en: 'stages, each approved before the next' },
     capacidades: { pt: 'capacidades, um só sistema', en: 'capabilities, one system' },
+    mercados: { pt: 'mercados: Moçambique, Portugal e Brasil', en: 'markets: Mozambique, Portugal and Brazil' },
+    rotulo: { pt: 'A AGORAMOZ em números', en: 'AGORAMOZ in numbers' },
   },
   recebe: { pt: 'O que recebe', en: 'What you receive' },
   regra: {
