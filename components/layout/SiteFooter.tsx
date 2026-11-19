@@ -41,13 +41,13 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
   return (
     <footer data-surface="deep" className="bg-[color:var(--surface)] text-[color:var(--on-surface)]">
       <div
-        className="mx-auto w-full py-20"
+        className="mx-auto w-full py-14 lg:py-16"
         style={{ maxWidth: 'var(--container-max)', paddingInline: 'var(--container-gutter)' }}
       >
         {/* Quatro colunas a partir de 768px davam ~180px a cada uma, e a coluna
             Mercados leva listas de setores aninhadas: ilegível em tablet.
             Duas colunas em md, quatro só quando há largura para elas. */}
-        <div className="rule grid gap-x-10 gap-y-12 pt-10 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        <div className="rule grid gap-x-10 gap-y-12 pt-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1.6fr]">
           <div>
             <Logo href={null} />
             <p className="mt-4 max-w-xs text-sm text-[color:var(--muted)]">{t(CHROME.tagline, idioma)}.</p>
@@ -91,7 +91,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                     href={s.href}
                     hrefLang={s.soPortugues ? 'pt' : undefined}
                     aria-current={current(s.href)}
-                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                    className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                   >
                     {s.label}
                     {s.soPortugues && <SoPortugues idioma={idioma} />}
@@ -112,7 +112,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                     href={`/${code}`}
                     hrefLang={pt}
                     aria-current={current(`/${code}`)}
-                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                    className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                   >
                     {t(NOME_PAIS[code], idioma)}
                     <SoPortugues idioma={idioma} />
@@ -146,7 +146,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                 <Link
                   href={globalHref}
                   aria-current={current(globalHref)}
-                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                 >
                   {t(CHROME.globalN, idioma).replace('{n}', String(GLOBAL_CODES.length))}
                 </Link>
@@ -158,14 +158,14 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
             <h2 className="rule-label text-[color:var(--muted)]">
               {t(CHROME.empresa, idioma)}
             </h2>
-            <ul className="mt-2">
+            <ul className="mt-2 lg:columns-2 lg:gap-x-8">
               {[...NAV.primary, ...NAV.secundaria].map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     hrefLang={pt}
                     aria-current={current(item.href)}
-                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                    className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                   >
                     {t(NAV_TEXTO[item.href], idioma)}
                     <SoPortugues idioma={idioma} />
@@ -183,7 +183,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                 <Link
                   href={news.href}
                   aria-current={current(news.href)}
-                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                 >
                   {t(CHROME.news, idioma)}
                 </Link>
@@ -194,7 +194,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                   <Link
                     href="/perfil"
                     aria-current={current('/perfil')}
-                    className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                    className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                   >
                     {t(CHROME.perfilResumo, idioma)}
                   </Link>
@@ -205,7 +205,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                   href={diagnostico.href}
                   hrefLang={diagnostico.soPortugues ? 'pt' : undefined}
                   aria-current={current(diagnostico.href)}
-                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                 >
                   {t(CHROME.solicitarDiagnostico, idioma)}
                   {diagnostico.soPortugues && <SoPortugues idioma={idioma} />}
@@ -216,7 +216,7 @@ export function SiteFooter({ idioma = 'pt' }: { idioma?: Idioma }) {
                   href="/privacidade"
                   hrefLang={pt}
                   aria-current={current('/privacidade')}
-                  className="flex min-h-11 items-center text-sm transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
+                  className="flex min-h-11 items-center text-sm lg:min-h-8 transition-colors hover:text-[color:var(--accent)] aria-[current=page]:text-[color:var(--accent)]"
                 >
                   {t(CHROME.privacidade, idioma)}
                   <SoPortugues idioma={idioma} />

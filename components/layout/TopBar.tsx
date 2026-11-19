@@ -30,7 +30,7 @@ export function TopBar({ idioma = 'pt' }: { idioma?: Idioma }) {
   const outro = destinoNoOutroIdioma(pathname, idioma);
 
   return (
-    <div data-surface="deep" className="bg-[color:var(--surface)] text-[color:var(--on-surface)]">
+    <div data-surface="light" className="border-b border-[color:var(--hairline)] bg-[color:var(--surface)] text-[color:var(--on-surface)]">
       <div
         className="mx-auto flex w-full flex-wrap items-center justify-between gap-x-6 gap-y-1.5 py-3"
         style={{

@@ -234,6 +234,8 @@
   --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-techno: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --tracking-techno: 0.08em;
+  /* Secções mais compactas: a página inicial v2 cabe em ≤ 40% da altura anterior (REQ-001). */
+  --space-section-tight: clamp(3rem, 2rem + 3.4vw, 5.25rem);
 }
 
 [data-v2] [data-surface='light'] {

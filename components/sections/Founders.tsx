@@ -53,10 +53,10 @@ const RETRATOS: Record<ChaveRetrato, StaticImageData> = { gerson, sheinaz };
  */
 const TAMANHOS = '(min-width: 1024px) 34rem, (min-width: 768px) 44vw, 92vw';
 
-export function Founders({ idioma = 'pt' }: { idioma?: Idioma }) {
+export function Founders({ idioma = 'pt', className = 'mt-16' }: { idioma?: Idioma; className?: string }) {
   const { corpo } = conteudoDoInicio(idioma).fundadores;
   return (
-    <Reveal className="mt-16">
+    <Reveal className={className}>
       <ul className="grid gap-8 md:grid-cols-2 lg:gap-10">
         {FOUNDERS.people.map((p, i) => (
           <li key={p.name} data-animate>

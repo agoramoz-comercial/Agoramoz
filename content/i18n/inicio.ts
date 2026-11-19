@@ -202,3 +202,93 @@ export function conteudoDoInicio(idioma: Idioma) {
     faq: HOME_FAQ,
   };
 }
+
+/**
+ * Website v2 (D-50): os textos novos da página inicial com a estrutura «Conversa».
+ *
+ * Só o que não existia. Problemas, fluxo, entregáveis, fases, soluções e
+ * fundadores continuam a vir das fontes de sempre (`content/site.ts`,
+ * `content/en/home.ts`, `content/i18n/diagnostico.ts`), e os números da página
+ * são contados a partir delas — nunca escritos à mão.
+ */
+export const INICIO_V2 = {
+  selo: { pt: 'Para empresas em Moçambique, Portugal e Brasil', en: 'For companies in Mozambique, Portugal and Brazil' },
+  titulo: {
+    pt: 'A sua empresa perde tempo com papel, mensagens soltas e folhas de cálculo?',
+    en: 'Is your company losing time to paperwork, scattered messages and spreadsheets?',
+  },
+  marca: { pt: `${SITE.tagline}.`, en: 'From fragmented process to a system that works.' },
+  lead: {
+    pt: 'Mostramos onde está o problema e o que vale a pena mudar, antes de gastar dinheiro em tecnologia.',
+    en: 'We show where the problem is and what is worth changing, before you spend money on technology.',
+  },
+  whatsapp: { pt: 'Conversar no WhatsApp', en: 'Chat on WhatsApp' },
+  pedido: { pt: 'Preencher o pedido', en: 'Fill in the request' },
+  setor: { pt: 'Em que setor trabalha?', en: 'Which sector do you work in?' },
+  setorNota: {
+    pt: 'Setores em Moçambique. Portugal, Brasil e mercados globais na página de setores.',
+    en: 'Sectors in Mozambique. Portugal, Brazil and global markets on the sectors page.',
+  },
+  todosSetores: { pt: 'Todos os setores e mercados', en: 'All sectors and markets' },
+
+  passos: {
+    eyebrow: { pt: 'Como funciona', en: 'How it works' },
+    titulo: { pt: 'Como funciona, em três passos.', en: 'How it works, in three steps.' },
+    itens: [
+      {
+        titulo: { pt: 'Uma conversa', en: 'A conversation' },
+        texto: {
+          pt: 'Conta-nos o que está a atrasar a operação. Percebemos se podemos ajudar.',
+          en: 'Tell us what is slowing your operations down. We work out whether we can help.',
+        },
+      },
+      {
+        titulo: { pt: 'O diagnóstico', en: 'The diagnostic' },
+        texto: {
+          pt: 'Mapeamos o processo e entregamos uma recomendação escrita, com riscos, opções e estimativa. Pode concluir que não vale a pena investir.',
+          en: 'We map the process and deliver a written recommendation, with risks, options and an estimate. It may conclude that investing is not worth it.',
+        },
+      },
+      {
+        titulo: { pt: 'A mudança, por fases', en: 'The change, in stages' },
+        texto: {
+          pt: 'Se fizer sentido, começamos pequeno: um piloto, depois a implementação. Aprova cada fase antes da seguinte.',
+          en: 'If it makes sense, we start small: a pilot, then the implementation. You approve each stage before the next.',
+        },
+      },
+    ],
+  },
+
+  numeros: {
+    entregaveis: { pt: 'entregáveis no diagnóstico', en: 'deliverables in the diagnostic' },
+    fases: { pt: 'fases, cada uma aprovada antes da seguinte', en: 'stages, each approved before the next' },
+    capacidades: { pt: 'capacidades, um só sistema', en: 'capabilities, one system' },
+  },
+  recebe: { pt: 'O que recebe', en: 'What you receive' },
+  regra: {
+    pt: 'O diagnóstico pode concluir que não deve investir. Essa recomendação também é um resultado.',
+    en: 'The diagnostic may conclude that you should not invest. That recommendation is also a result.',
+  },
+  pedirDiagnostico: { pt: 'Pedir o diagnóstico', en: 'Request the diagnostic' },
+  verSolucoes: { pt: 'Ver as sete soluções', en: 'See the seven solutions' },
+
+  curso: {
+    eyebrow: { pt: 'Curso publicado', en: 'Published course' },
+    texto: {
+      pt: 'Do zero ao avançado, com exercícios práticos. Cada afirmação está ligada à sua fonte.',
+      en: 'From zero to advanced, with practical exercises. Every claim is linked to its source.',
+    },
+    ver: { pt: 'Ver o curso', en: 'See the course' },
+    documento: { pt: 'Versão para imprimir', en: 'Printable version' },
+  },
+
+  quem: {
+    eyebrow: { pt: 'Quem somos', en: 'Who we are' },
+    titulo: { pt: 'Somos uma empresa recente, e dizemo-lo.', en: 'We are a young company, and we say so.' },
+  },
+
+  final: {
+    titulo: { pt: 'Conte-nos o que está a atrasar a sua operação.', en: 'Tell us what is slowing your operations down.' },
+    email: { pt: 'Ou escreva para', en: 'Or write to' },
+  },
+} as const;

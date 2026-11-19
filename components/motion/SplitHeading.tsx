@@ -48,7 +48,12 @@ export function SplitHeading({
        * para 2,48 s. Abaixo de 1024px o efeito passa a fade simples: o mesmo
        * vocabulário, sem o custo — e o mercado principal é mobile.
        */
-      mm.add('(prefers-reduced-motion: reduce), (max-width: 1023px)', () => {
+      // Movimento reduzido: visível de imediato, sem desvanecer (REQ-010, D-50).
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set(el, { autoAlpha: 1 });
+      });
+
+      mm.add('(max-width: 1023px) and (prefers-reduced-motion: no-preference)', () => {
         if (trigger === 'load') {
           gsap.fromTo(el, { autoAlpha: 0 }, { autoAlpha: 1, duration: DUR.sm, delay });
         } else {
