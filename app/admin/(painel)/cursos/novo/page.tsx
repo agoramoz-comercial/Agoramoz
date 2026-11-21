@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { AdminHeading } from '@/components/admin/primitives';
 import { CriadorCurso } from '@/components/admin/cursos/CriadorCurso';
-import { escreverAulaCurso, guardarCurso, planearCurso } from '@/lib/admin/cursos-actions';
+import { escreverAulaCurso, guardarCurso, planearCurso, sugerirTemaCurso } from '@/lib/admin/cursos-actions';
 import { requireRole } from '@/lib/auth/session';
 import { motorCursosLigado } from '@/lib/cursos/motor';
 
@@ -26,7 +26,7 @@ export default async function NovoCursoPage() {
         />
       </div>
       <CriadorCurso
-        accoes={{ planear: planearCurso, escreverAula: escreverAulaCurso, guardar: guardarCurso }}
+        accoes={{ sugerirTema: sugerirTemaCurso, planear: planearCurso, escreverAula: escreverAulaCurso, guardar: guardarCurso }}
         motorLigado={motorCursosLigado()}
         podeGuardar
       />

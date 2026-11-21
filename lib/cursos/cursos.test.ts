@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { cursoSchema, duracao, minutosDoCurso, slugDe } from './modelo';
 import { criarFonte, indicePassagens, indiceParaPlanear, partirEmPassagens } from './fontes';
 import { normalizar, numeros, suporte, verificarBloco, verificarPergunta, verificarResultado, descreverFalhas } from './verificar';
-import { escreverAula, montarCurso, planear, type Motor, type PedidoCurso } from './ciclo';
+import { escreverAula, montarCurso, planear, sugerirTema, type Motor, type PedidoCurso } from './ciclo';
+import { promptAula, promptPlano, promptTema } from './prompts';
+import { gerarTema } from './gerar';
 
 // Texto de exemplo escrito para os testes (não é uma fonte real).
 const TEXTO = `# Gestão de stock
@@ -23,7 +25,10 @@ Em 2024 a empresa reduziu as quebras para 1 250 unidades por ano.`;
 const fonte = { ...criarFonte(1, 'Manual de armazém (exemplo)', 'texto', TEXTO), passagens: partirEmPassagens(TEXTO, 'F1', 200) };
 const fontes = [fonte];
 const passagens = indicePassagens(fontes);
-const pedido: PedidoCurso = { tema: 'Gestão de stock', publico: 'Responsáveis de armazém', nivel: 'iniciacao', minutos: 60 };
+const pedido: PedidoCurso = {
+  titulo: 'Gestão de stock no armazém',
+  tema: 'Contar, receber e arrumar o stock.',
+  publico: 'Responsáveis de armazém', nivel: 'iniciacao', minutos: 60 };
 
 describe('fontes em passagens', () => {
   it('numera e não perde texto', () => {
@@ -308,5 +313,71 @@ describe('ponta a ponta com o motor simulado', async () => {
     expect(cursoSchema.safeParse(c).success).toBe(true);
     expect(c.verificacao.retirados).toBe(0);
     expect(c.verificacao.tentativas).toBe(2 + 2 * aulas.length);
+    // O motor propôs outro título na 1.ª tentativa: fica o da equipa.
+    expect(c.titulo).toBe(pedido.titulo);
+    expect(c.slug).toBe('gestao-de-stock-no-armazem');
+  });
+
+  it('tema: a IA escreve-o do título e das fontes; o número inventado é apanhado', async () => {
+    const t = await sugerirTema(motor, { titulo: pedido.titulo, publico: '', nivel: 'iniciacao', minutos: 60 }, fs);
+    expect(t.tentativas).toBe(2);
+    expect(t.falhas).toEqual([]);
+    expect(t.valor).toContain('«Gestão de stock no armazém»');
+    expect(t.valor).not.toMatch(/1987|4 321/);
+  });
+});
+
+describe('título e tema', () => {
+  const semTema = { titulo: pedido.titulo, publico: pedido.publico, nivel: pedido.nivel, minutos: pedido.minutos };
+
+  it('o título fixo e o tema vão nos pedidos ao motor', () => {
+    expect(promptTema(semTema, fontes, [])).toContain(`- Título do curso: ${pedido.titulo}`);
+    const pp = promptPlano(pedido, fontes, []);
+    expect(pp).toContain(`- Título do curso (fixo, escolhido pela equipa): ${pedido.titulo}`);
+    expect(pp).toContain(`- Tema: ${pedido.tema}`);
+    expect(pp).toMatch(/fica de fora/);
+    const plano = { ...planoBom, titulo: 'Outro título qualquer' };
+    const pa = promptAula({ pedido, plano, modulo: 0, aula: 0 }, plano.modulos[0]!.aulas[0]!, [], []);
+    expect(pa).toContain(`«${pedido.titulo}»`);
+    expect(pa).not.toContain('Outro título qualquer');
+    expect(pa).toContain(`Tema do curso: ${pedido.tema}`);
+  });
+
+  it('o plano fica com o título do pedido, mesmo que o motor escreva outro', async () => {
+    const motor: Motor = async () => ({ ...planoBom, titulo: 'Título inventado pelo motor' });
+    const p = await planear(motor, pedido, fontes, 1);
+    expect(p.valor!.titulo).toBe(pedido.titulo);
+  });
+
+  it('tema: número fora das fontes é recusado até ao fim; forma inválida não rebenta', async () => {
+    const mau: Motor = async () => ({ tema: 'Um curso sobre stock que cobre 4 321 armazéns em todo o país.' });
+    const t = await sugerirTema(mau, semTema, fontes);
+    expect(t.valor).toBeNull();
+    expect(t.tentativas).toBe(3);
+    expect(t.falhas[0]).toMatchObject({ onde: 'tema', motivo: 'numero_sem_fonte' });
+    const vazio = await sugerirTema(async () => ({ tema: '' }), semTema, fontes, 1);
+    expect(vazio.valor).toBeNull();
+  });
+
+  it('tema: números das fontes e estrutura até 10 passam', async () => {
+    const bom: Motor = async () => ({ tema: 'Os 3 passos do inventário e o limite de 2% de diferença no stock do armazém.' });
+    const t = await sugerirTema(bom, semTema, fontes, 1);
+    expect(t.valor).toMatch(/2%/);
+  });
+
+  it('gerarTema valida a entrada: sem título não chama o motor', async () => {
+    let chamado = false;
+    const m: Motor = async () => {
+      chamado = true;
+      return {};
+    };
+    const r = await gerarTema(m, { pedido: { ...semTema, titulo: 'x' }, fontes });
+    expect(r.ok).toBe(false);
+    expect(chamado).toBe(false);
+    const ok = await gerarTema(async () => ({ tema: 'Contar e arrumar o stock do armazém, com o método FIFO.' }), {
+      pedido: { ...semTema, publico: '' },
+      fontes,
+    });
+    expect(ok.ok && ok.peca.valor).toBeTruthy();
   });
 });

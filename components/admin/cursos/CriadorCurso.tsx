@@ -19,7 +19,9 @@ import type { Resposta } from '@/lib/cursos/gerar';
  *
  * 1. As fontes: ficheiros lidos NESTE computador (o mesmo leitor das
  *    propostas) ou texto colado, partidos em passagens numeradas.
- * 2. O pedido: tema, público, nível, duração.
+ * 2. O pedido: o título (fixo: o curso alinha-se por ele), público, nível,
+ *    duração e o tema, que a IA escreve a partir do título e das fontes
+ *    (pode rever-se antes de gerar).
  * 3. Gerar: o plano, depois cada aula, uma a uma — cada peça passa pelo
  *    ciclo no servidor (gerar → verificar → corrigir, até 3 vezes) e o
  *    ecrã mostra o que passou, o que foi retirado e porquê.
@@ -30,6 +32,7 @@ import type { Resposta } from '@/lib/cursos/gerar';
  */
 
 export interface AccoesCriador {
+  readonly sugerirTema: (entrada: unknown) => Promise<Resposta<string>>;
   readonly planear: (entrada: unknown) => Promise<Resposta<Plano>>;
   readonly escreverAula: (entrada: unknown) => Promise<Resposta<Aula>>;
   readonly guardar?: (entrada: unknown) => Promise<{ ok: true; id: string; slug: string; revisao: number } | { ok: false; erro: string }>;
@@ -73,7 +76,10 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
   const [aLer, setALer] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
 
+  const [titulo, setTitulo] = useState('');
   const [tema, setTema] = useState('');
+  const [aTema, setATema] = useState(false);
+  const [notaTema, setNotaTema] = useState<string | null>(null);
   const [publico, setPublico] = useState('');
   const [nivel, setNivel] = useState<Nivel>('iniciacao');
   const [minutos, setMinutos] = useState(120);
@@ -89,7 +95,34 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
 
   const total = tamanho(fontes);
   const excede = total > LIMITES.caracteresTotal;
-  const podeGerar = motorLigado && !aGerar && fontes.length > 0 && !excede && tema.trim().length >= 3 && publico.trim().length >= 3;
+  const ocupado = aGerar || aTema;
+  const podeSugerir = motorLigado && !ocupado && fontes.length > 0 && !excede && titulo.trim().length >= 3;
+  const podeGerar = podeSugerir && publico.trim().length >= 3;
+
+  /** A IA escreve o tema a partir do título e das fontes. Devolve o tema, ou null (com a razão no ecrã). */
+  async function pedirTema(fs: Fonte[]): Promise<string | null> {
+    setATema(true);
+    setNotaTema(null);
+    const r = await accoes
+      .sugerirTema({ pedido: { titulo: titulo.trim(), publico: publico.trim(), nivel, minutos }, fontes: fs })
+      .catch(() => ({ ok: false as const, erro: 'Ligação interrompida.' }));
+    setATema(false);
+    if (!r.ok) {
+      setNotaTema(r.erro);
+      return null;
+    }
+    if (!r.peca.valor) {
+      setNotaTema(
+        `A IA não propôs um tema aceitável em ${r.peca.tentativas} tentativa(s): ${descreverFalhas(r.peca.falhas).slice(0, 2).join(' ')} Escreva-o à mão.`,
+      );
+      return null;
+    }
+    setTema(r.peca.valor);
+    setNotaTema(`Tema gerado pela IA a partir do título e das fontes (${r.peca.tentativas} tentativa(s)). Pode editá-lo antes de gerar.`);
+    return r.peca.valor;
+  }
+
+  const fontesDoPedido = () => fontes.map((f, i) => criarFonte(i + 1, f.nome, f.tipo, f.texto));
 
   async function carregar(lista: FileList): Promise<void> {
     setALer(true);
@@ -144,8 +177,20 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
     setGuardado(null);
     setFalhasPlano([]);
     setMensagem(null);
-    const fs = fontes.map((f, i) => criarFonte(i + 1, f.nome, f.tipo, f.texto));
-    const pedido: PedidoCurso = { tema: tema.trim(), publico: publico.trim(), nivel, minutos };
+    const fs = fontesDoPedido();
+    // Sem tema, a IA escreve-o primeiro a partir do título.
+    let temaFinal = tema.trim();
+    if (temaFinal.length < 3) {
+      setPecas([{ rotulo: 'Tema do curso', estado: 'a-gerar' }]);
+      const t = await pedirTema(fs);
+      if (!t) {
+        setPecas([{ rotulo: 'Tema do curso', estado: 'falhou', detalhe: 'Sem tema, o curso não foi gerado.' }]);
+        setAGerar(false);
+        return;
+      }
+      temaFinal = t;
+    }
+    const pedido: PedidoCurso = { titulo: titulo.trim(), tema: temaFinal, publico: publico.trim(), nivel, minutos };
     setPecas([{ rotulo: 'Plano do curso', estado: 'a-gerar' }]);
 
     const rp = await accoes.planear({ pedido, fontes: fs }).catch(() => ({ ok: false as const, erro: 'Ligação interrompida.' }));
@@ -249,7 +294,7 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => entrada.current?.click()} disabled={aLer || aGerar} className={BOTAO}>
+            <button type="button" onClick={() => entrada.current?.click()} disabled={aLer || ocupado} className={BOTAO}>
               <FileUp aria-hidden className="size-4" />
               {aLer ? 'A ler…' : 'Carregar ficheiros'}
             </button>
@@ -282,7 +327,7 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
                   <button
                     type="button"
                     className={cn(BOTAO, 'min-h-9 px-2')}
-                    disabled={aGerar}
+                    disabled={ocupado}
                     onClick={() => setFontes((x) => x.filter((_, j) => j !== i))}
                     aria-label={`Retirar a fonte ${f.nome}`}
                   >
@@ -330,17 +375,22 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             2. O curso
           </h2>
           <div className="grid gap-1">
-            <label className={ROTULO} htmlFor={`${id}-tema`}>
-              Tema
+            <label className={ROTULO} htmlFor={`${id}-titulo`}>
+              Título do curso
             </label>
             <input
-              id={`${id}-tema`}
-              value={tema}
-              onChange={(e) => setTema(e.target.value)}
-              maxLength={200}
+              id={`${id}-titulo`}
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              maxLength={LIMITES.curto}
               className={inputClass}
               placeholder="Ex.: Gestão de stock num armazém"
+              aria-describedby={`${id}-titulo-ajuda`}
             />
+            <p id={`${id}-titulo-ajuda`} className={AJUDA}>
+              Fica tal e qual no curso. O tema, os resultados, os módulos e as aulas alinham-se por ele; o que as fontes têm e não serve o
+              título fica de fora.
+            </p>
           </div>
           <div className="grid gap-1">
             <label className={ROTULO} htmlFor={`${id}-publico`}>
@@ -383,6 +433,31 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
                 className={inputClass}
               />
             </div>
+          </div>
+          <div className="grid gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className={ROTULO} htmlFor={`${id}-tema`}>
+                Tema (gerado pela IA)
+              </label>
+              <button type="button" onClick={() => pedirTema(fontesDoPedido())} disabled={!podeSugerir} className={cn(BOTAO, 'min-h-9')}>
+                {aTema ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}
+                {aTema ? 'A gerar o tema…' : tema.trim() ? 'Gerar outro tema' : 'Gerar o tema com IA'}
+              </button>
+            </div>
+            <textarea
+              id={`${id}-tema`}
+              value={tema}
+              onChange={(e) => setTema(e.target.value)}
+              maxLength={LIMITES.tema}
+              rows={4}
+              disabled={aTema}
+              className={cn(inputClass, 'min-h-0 text-sm')}
+              placeholder="A IA escreve-o a partir do título e das fontes. Se ficar vazio, é gerado ao carregar em «Gerar e verificar»."
+              aria-describedby={`${id}-tema-ajuda`}
+            />
+            <p id={`${id}-tema-ajuda`} className={AJUDA} aria-live="polite">
+              {notaTema ?? 'O que o curso trata para cumprir o título, só com o que as fontes cobrem. Orienta o plano; não é publicado.'}
+            </p>
           </div>
           <button type="button" onClick={gerar} disabled={!podeGerar} className={cn(BOTAO_PRIMARIO, 'justify-self-start')}>
             {aGerar ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}

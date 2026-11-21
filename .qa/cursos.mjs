@@ -46,8 +46,15 @@ await p.goto(`${BASE}/qa/cursos`);
 await p.locator('input[type=file]').setInputFiles(ficheiro);
 await p.getByText('1 fonte(s) lida(s) neste computador.').waitFor();
 ok(/F1 · manual-exemplo/.test(await p.locator('ul[aria-label="Fontes carregadas"]').innerText()), 'fonte lida no browser e numerada F1');
-ok(await p.getByRole('button', { name: /Gerar e verificar/ }).isDisabled(), 'gerar fica desligado sem tema e público');
-await p.getByLabel('Tema').fill('Gestão de stock no armazém');
+ok(await p.getByRole('button', { name: /Gerar e verificar/ }).isDisabled(), 'gerar fica desligado sem título e público');
+ok(await p.getByRole('button', { name: 'Gerar o tema com IA' }).isDisabled(), 'tema com IA fica desligado sem título');
+await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
+await p.getByRole('button', { name: 'Gerar o tema com IA' }).click();
+await p.getByText(/Tema gerado pela IA a partir do título/).waitFor({ timeout: 30_000 });
+const temaGerado = await p.getByLabel('Tema (gerado pela IA)').inputValue();
+ok(/«Gestão de stock no armazém»/.test(temaGerado), 'a IA escreveu o tema a partir do título');
+ok(!/1987|4 321/.test(temaGerado), 'o número inventado no tema foi apanhado');
+ok(/2 tentativa\(s\)/.test(await p.getByText(/Tema gerado pela IA/).innerText()), 'o tema precisou de 2 tentativas');
 await p.getByLabel('Para quem').fill('Responsáveis de armazém (exemplo)');
 const axe0 = await new AxeBuilder({ page: p }).analyze();
 ok(
@@ -65,6 +72,7 @@ ok((await p.locator('[data-estado="falhou"]').count()) === 0, 'nenhuma peça fal
 ok(await p.getByRole('button', { name: 'Descarregar PDF' }).isVisible(), 'descarregar PDF disponível');
 const doc = await p.locator('[data-curso-documento]').innerText();
 ok(/AGORAMOZ ACADEMIA/.test(doc) && /Gestão de stock no armazém/.test(doc), 'documento com capa e título');
+ok(!/edição alargada/.test(doc), 'o título é o da equipa, não o que o motor propôs');
 ok(!/4 321|1987|75%/.test(doc), 'o que o verificador recusou não chegou ao documento');
 ok(/F1\.\d/.test(doc), 'blocos com etiquetas de fonte');
 if (SAIDA) await p.screenshot({ path: `${SAIDA}/cursos-criador.png`, fullPage: false });

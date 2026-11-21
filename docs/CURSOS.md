@@ -15,15 +15,16 @@ Cursos escritos **só a partir das fontes que a AGORAMOZ carrega**, com cada afi
 ## Como funciona
 
 1. **Fontes.** Ficheiros (.docx, .pdf com texto, .txt, .md) lidos no browser, ou texto colado. Cada fonte é partida em passagens de até ~1 200 caracteres, numeradas `F<fonte>.<passagem>`.
-2. **Plano.** O motor recebe o índice das passagens e devolve resultados de aprendizagem, módulos e aulas, cada aula com as passagens que lhe cabem.
-3. **Aulas.** Uma de cada vez, só com as suas passagens: blocos (explicação, exemplo, passos, citação) e perguntas de escolha múltipla, tudo com `fontes`.
-4. **Verificação** (`verificar.ts`), em cada peça:
+2. **Título e tema.** A equipa escreve o **título**, que fica tal e qual no curso (e dá o endereço). A IA escreve o **tema** a partir do título e do índice das fontes: 2 a 4 frases sobre o que o curso trata para cumprir o título, só com o que as fontes cobrem («Gerar o tema com IA», ou automático ao gerar o curso se o campo estiver vazio). O tema pode ser revisto, não é publicado e passa pelo ciclo: um número que não esteja nas fontes é recusado e pedido outra vez.
+3. **Plano.** O motor recebe o título (fixo), o tema e o índice das passagens e devolve resultados de aprendizagem, módulos e aulas, cada aula com as passagens que lhe cabem. O pedido manda deixar de fora o que as fontes têm e não serve o título; se o motor devolver outro título, fica o da equipa.
+4. **Aulas.** Uma de cada vez, com o título e o tema no pedido, só com as suas passagens: blocos (explicação, exemplo, passos, citação) e perguntas de escolha múltipla, tudo com `fontes`.
+5. **Verificação** (`verificar.ts`), em cada peça:
    - as passagens citadas existem e foram dadas àquela aula;
    - uma citação aparece palavra a palavra numa passagem (sem contar acentos, maiúsculas e pontuação);
    - cada número escrito está nas passagens citadas (inteiros 0–10 sem `%` contam como estrutura);
    - ≥ 50 % das palavras-chave (radicais) do texto estão nas passagens citadas (40 % nos resultados).
-5. **Ciclo** (`ciclo.ts`): o que falha volta ao motor com a razão exacta, até 3 tentativas; fica a melhor; o que nunca passa é retirado e contado no relatório.
-6. **Documento e publicação.** O curso montado descarrega-se em PDF; guardado (0022), publica-se em `/cursos/<endereço>`.
+6. **Ciclo** (`ciclo.ts`): o que falha volta ao motor com a razão exacta, até 3 tentativas; fica a melhor; o que nunca passa é retirado e contado no relatório.
+7. **Documento e publicação.** O curso montado descarrega-se em PDF; guardado (0022), publica-se em `/cursos/<endereço>`.
 
 O que a verificação **prova**: que o curso vem das fontes. O que **não prova**: que as fontes estão certas, ou que uma frase com as mesmas palavras não inverteu o sentido. Quem publica revê o documento.
 

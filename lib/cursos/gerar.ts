@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { fonteSchema, LIMITES, NIVEIS, passagemSchema, type Fonte } from './modelo';
-import { escreverAula, planear, planoSchema, type Motor, type Peca, type Plano } from './ciclo';
+import { escreverAula, planear, planoSchema, sugerirTema, type Motor, type Peca, type Plano } from './ciclo';
 import type { Aula } from './modelo';
 import { ErroMotor } from './motor';
 
@@ -14,18 +14,27 @@ import { ErroMotor } from './motor';
  */
 
 export const pedidoSchema = z.strictObject({
-  tema: z.string().trim().min(3).max(200),
+  titulo: z.string().trim().min(3).max(LIMITES.curto),
+  tema: z.string().trim().min(3).max(LIMITES.tema),
   publico: z.string().trim().min(3).max(300),
   nivel: z.enum(NIVEIS),
   minutos: z.number().int().min(15).max(1_200),
 });
 
-export const entradaPlanoSchema = z
-  .strictObject({ pedido: pedidoSchema, fontes: z.array(fonteSchema).min(1).max(LIMITES.fontes) })
+/** Para o tema: tudo menos o tema; o público pode ainda estar por escrever. */
+export const pedidoTemaSchema = pedidoSchema.omit({ tema: true }).extend({ publico: z.string().trim().max(300) });
+
+const fontesSchema = z
+  .array(fonteSchema)
+  .min(1)
+  .max(LIMITES.fontes)
   .refine(
-    (e) => e.fontes.reduce((s, f) => s + f.passagens.reduce((a, p) => a + p.texto.length, 0), 0) <= LIMITES.caracteresTotal,
+    (fs) => fs.reduce((s, f) => s + f.passagens.reduce((a, p) => a + p.texto.length, 0), 0) <= LIMITES.caracteresTotal,
     'As fontes são grandes de mais.',
   );
+
+export const entradaTemaSchema = z.strictObject({ pedido: pedidoTemaSchema, fontes: fontesSchema });
+export const entradaPlanoSchema = z.strictObject({ pedido: pedidoSchema, fontes: fontesSchema });
 
 export const entradaAulaSchema = z.strictObject({
   pedido: pedidoSchema,
@@ -43,12 +52,23 @@ export const entradaAulaSchema = z.strictObject({
   passagens: z.array(passagemSchema).min(1).max(40),
 });
 
+export type EntradaTema = z.input<typeof entradaTemaSchema>;
 export type EntradaPlano = z.input<typeof entradaPlanoSchema>;
 export type EntradaAula = z.input<typeof entradaAulaSchema>;
 
 export type Resposta<T> = { readonly ok: true; readonly peca: Peca<T> } | { readonly ok: false; readonly erro: string };
 
 const erroDe = (e: unknown) => (e instanceof ErroMotor ? e.message : 'Não foi possível gerar agora. Tente de novo.');
+
+export async function gerarTema(motor: Motor, entrada: unknown): Promise<Resposta<string>> {
+  const e = entradaTemaSchema.safeParse(entrada);
+  if (!e.success) return { ok: false, erro: e.error.issues[0]?.message ?? 'Pedido inválido.' };
+  try {
+    return { ok: true, peca: await sugerirTema(motor, e.data.pedido, e.data.fontes) };
+  } catch (x) {
+    return { ok: false, erro: erroDe(x) };
+  }
+}
 
 export async function gerarPlano(motor: Motor, entrada: unknown): Promise<Resposta<Plano>> {
   const e = entradaPlanoSchema.safeParse(entrada);

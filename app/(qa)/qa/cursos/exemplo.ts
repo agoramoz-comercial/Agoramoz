@@ -28,7 +28,8 @@ A contagem cíclica verifica todas as semanas uma parte do armazém, escolhida p
 O relatório mensal de stock mostra as entradas, as saídas, as quebras e o valor imobilizado, e é enviado à direcção financeira.`;
 
 export const PEDIDO_EXEMPLO: PedidoCurso = {
-  tema: 'Gestão de stock no armazém',
+  titulo: 'Gestão de stock no armazém',
+  tema: 'Como contar, receber, arrumar e reportar o stock de um armazém, do inventário periódico ao relatório mensal.',
   publico: 'Responsáveis de armazém sem formação prévia (exemplo)',
   nivel: 'iniciacao',
   minutos: 120,

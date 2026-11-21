@@ -105,6 +105,14 @@ export function numeros(s: string): { valor: number; pct: boolean; bruto: string
 
 const tolerado = (n: { valor: number; pct: boolean }) => !n.pct && Number.isInteger(n.valor) && n.valor <= 10;
 
+/** Os números de `texto` (fora os tolerados) que não aparecem em `fonte`. */
+export function numerosForaDasFontes(texto: string, fonte: string): string[] {
+  const nf = numeros(fonte);
+  return numeros(texto)
+    .filter((n) => !tolerado(n) && !nf.some((x) => x.valor === n.valor))
+    .map((n) => n.bruto);
+}
+
 /* ---------------------------------------------------------------- verificar */
 
 export interface Contexto {

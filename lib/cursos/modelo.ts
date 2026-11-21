@@ -36,6 +36,8 @@ export const LIMITES = {
   resultados: 10,
   texto: 2_000,
   curto: 160,
+  /** O tema do curso (gerado pela IA a partir do título): orienta o plano, não é publicado. */
+  tema: 600,
 } as const;
 
 /** `F1.3`: fonte 1, passagem 3. */
