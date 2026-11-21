@@ -47,6 +47,7 @@ await p.locator('input[type=file]').setInputFiles(ficheiro);
 await p.getByText('1 fonte(s) lida(s) neste computador.').waitFor();
 ok(/F1 · manual-exemplo/.test(await p.locator('ul[aria-label="Fontes carregadas"]').innerText()), 'fonte lida no browser e numerada F1');
 ok(await p.getByRole('button', { name: /Gerar e verificar/ }).isDisabled(), 'gerar fica desligado sem título e público');
+ok(/falta: o título do curso; «Para quem»/.test(await p.locator('[data-falta]').innerText()), 'o ecrã diz o que falta para gerar');
 ok(await p.getByRole('button', { name: 'Gerar o tema com IA' }).isDisabled(), 'tema com IA fica desligado sem título');
 await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
 await p.getByRole('button', { name: 'Gerar o tema com IA' }).click();

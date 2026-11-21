@@ -150,6 +150,14 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
   }
   const podeSugerir = motorLigado && !ocupado && fontes.length > 0 && !excede && titulo.trim().length >= 3;
   const podeGerar = podeSugerir && publico.trim().length >= 3;
+  /** Porque é que «Gerar» está desligado, em linguagem de quem usa o ecrã. */
+  const falta = [
+    !motorLigado && 'o motor dos cursos ligado',
+    fontes.length === 0 && 'pelo menos uma fonte em «1. Fontes» (ficheiro, texto colado ou trazida pela IA)',
+    excede && 'fontes mais pequenas (retire uma)',
+    titulo.trim().length < 3 && 'o título do curso',
+    publico.trim().length < 3 && '«Para quem»',
+  ].filter((x): x is string => Boolean(x));
 
   /** A IA escreve o tema a partir do título e das fontes. Devolve o tema, ou null (com a razão no ecrã). */
   async function pedirTema(fs: Fonte[]): Promise<string | null> {
@@ -562,6 +570,11 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             {aGerar ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}
             {aGerar ? 'A gerar e a verificar…' : '3. Gerar e verificar o curso'}
           </button>
+          {!ocupado && falta.length > 0 && (
+            <p className="text-sm" data-falta>
+              Para gerar, falta: {falta.join('; ')}.
+            </p>
+          )}
           {!motorLigado && (
             <p className={AJUDA} role="note">
               O motor dos cursos está desligado. Para ligar: criar a função agoramoz_llm no ZabaEdu e definir CURSOS_ENGINE,
