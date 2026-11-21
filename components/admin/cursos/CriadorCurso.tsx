@@ -89,6 +89,8 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
   const [fontes, setFontes] = useState<FonteCarregada[]>([]);
   const [colado, setColado] = useState('');
   const [tituloColado, setTituloColado] = useState('');
+  /** O texto da caixa veio da IA: a fonte entra marcada como tal, mesmo depois de editada. */
+  const [coladoDaIA, setColadoDaIA] = useState(false);
   const [aLer, setALer] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
 
@@ -131,6 +133,14 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
       setMensagem(r.erro);
       return;
     }
+    if (tipo === 'texto') {
+      const f = r.fontes[0]!;
+      setTituloColado(f.titulo);
+      setColado(f.texto.slice(0, LIMITES.caracteresPorFonte));
+      setColadoDaIA(true);
+      setMensagem('A IA escreveu o texto na caixa «Colar texto como fonte». Reveja-o, edite o que quiser e carregue em «Juntar às fontes».');
+      return;
+    }
     const livres = LIMITES.fontes - fontes.length;
     const novas: FonteCarregada[] = r.fontes.slice(0, livres).map((f) => ({
       nome: f.titulo,
@@ -142,11 +152,7 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
     }));
     setFontes((x) => [...x, ...novas]);
     setRecusadasIA([...r.recusadas]);
-    setMensagem(
-      tipo === 'pesquisa'
-        ? `${novas.length} fonte(s) encontrada(s) pela IA, com o link confirmado. Reveja o texto de cada uma e retire o que não servir.`
-        : 'Texto-base escrito pela IA. Entra marcado como «escrito pela IA, sem origem verificável», também no curso publicado.',
-    );
+    setMensagem(`${novas.length} fonte(s) encontrada(s) pela IA, com o link confirmado. Reveja o texto de cada uma e retire o que não servir.`);
   }
   const podeSugerir = motorLigado && !ocupado && fontes.length > 0 && !excede && titulo.trim().length >= 3;
   const podeGerar = podeSugerir && publico.trim().length >= 3;
@@ -224,10 +230,12 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
         tipo: 'texto',
         texto: colado.slice(0, LIMITES.caracteresPorFonte),
         avisos: [],
+        ...(coladoDaIA ? { origem: 'ia-texto' as const } : {}),
       },
     ]);
     setColado('');
     setTituloColado('');
+    setColadoDaIA(false);
   }
 
   const marcar = (i: number, p: EstadoPeca) => setPecas((x) => x.map((y, j) => (j === i ? p : y)));
@@ -421,15 +429,11 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
                 {aFontesIA === 'pesquisa' ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Globe aria-hidden className="size-4" />}
                 {aFontesIA === 'pesquisa' ? 'A pesquisar…' : 'Pesquisar fontes na internet'}
               </button>
-              <button type="button" onClick={() => pedirFontesIA('texto')} disabled={!podeFontesIA} className={BOTAO}>
-                {aFontesIA === 'texto' ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <PenLine aria-hidden className="size-4" />}
-                {aFontesIA === 'texto' ? 'A escrever…' : 'Escrever texto-base com IA'}
-              </button>
             </div>
             <p className={AJUDA}>
               {titulo.trim().length < 3
                 ? 'Escreva primeiro o título do curso (em 2.): é por ele que a IA procura e escreve.'
-                : 'A pesquisa traz páginas da internet com o link, confirmado daqui; o conteúdo confirma-se no link. O texto-base é escrito pela IA e fica marcado como tal, também no curso publicado.'}
+                : 'A pesquisa traz páginas da internet com o link, confirmado daqui; o conteúdo confirma-se no link. Para um texto escrito pela IA, use «Colar texto como fonte».'}
             </p>
             {recusadasIA.length > 0 && (
               <details>
@@ -449,8 +453,24 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
               As fontes somam {inteiro(total)} caracteres; o máximo é {inteiro(LIMITES.caracteresTotal)}. Retire uma fonte.
             </p>
           )}
-          <details className="grid gap-2">
-            <summary className="cursor-pointer text-sm">Colar texto como fonte</summary>
+          <details className="grid gap-2" open={coladoDaIA || undefined}>
+            <summary className="cursor-pointer text-sm">Colar texto como fonte (ou pedir à IA que o escreva)</summary>
+            <div className="mt-2 grid gap-1">
+              <button
+                type="button"
+                onClick={() => pedirFontesIA('texto')}
+                disabled={!podeFontesIA}
+                className={cn(BOTAO, 'justify-self-start')}
+              >
+                {aFontesIA === 'texto' ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <PenLine aria-hidden className="size-4" />}
+                {aFontesIA === 'texto' ? 'A IA está a escrever…' : colado.trim() && coladoDaIA ? 'Escrever outro texto com IA' : 'Escrever o texto com IA'}
+              </button>
+              <p className={AJUDA}>
+                {titulo.trim().length < 3
+                  ? 'Escreva primeiro o título do curso (em 2.): é sobre ele que a IA escreve.'
+                  : 'A IA escreve sobre o título do curso. Reveja e edite antes de juntar: a fonte fica marcada «Escrita pela IA, sem origem verificável», também no curso publicado.'}
+              </p>
+            </div>
             <label className={cn(ROTULO, 'mt-2 block')} htmlFor={`${id}-titulo-colado`}>
               Título da fonte
             </label>
@@ -467,11 +487,21 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             <textarea
               id={`${id}-colado`}
               value={colado}
-              onChange={(e) => setColado(e.target.value)}
-              rows={6}
+              onChange={(e) => {
+                setColado(e.target.value);
+                if (!e.target.value.trim()) setColadoDaIA(false);
+              }}
+              rows={coladoDaIA ? 14 : 6}
+              disabled={aFontesIA === 'texto'}
+              aria-describedby={coladoDaIA ? `${id}-colado-ia` : undefined}
               className={cn(inputClass, 'min-h-0 text-sm')}
             />
-            <button type="button" onClick={juntarColado} className={cn(BOTAO, 'mt-2 justify-self-start')}>
+            {coladoDaIA && (
+              <p id={`${id}-colado-ia`} className={cn(AJUDA, 'font-medium text-[color:var(--on-surface)]')}>
+                Texto escrito pela IA. Ao juntar, fica marcado «Escrita pela IA, sem origem verificável», mesmo que o edite.
+              </p>
+            )}
+            <button type="button" onClick={juntarColado} disabled={aFontesIA === 'texto'} className={cn(BOTAO, 'mt-2 justify-self-start')}>
               Juntar às fontes
             </button>
           </details>
