@@ -7,7 +7,16 @@ import { requireRole } from '@/lib/auth/session';
 import { createSessionClient } from '@/lib/auth/client';
 import { log } from '@/lib/log/logger';
 import { cursoSchema, fonteSchema, LIMITES } from '@/lib/cursos/modelo';
-import { gerarAula, gerarPlano, gerarTema, type Resposta } from '@/lib/cursos/gerar';
+import {
+  gerarAula,
+  gerarFontesPesquisa,
+  gerarFonteTextoBase,
+  gerarPlano,
+  gerarTema,
+  type Resposta,
+  type RespostaFontes,
+} from '@/lib/cursos/gerar';
+import { confirmarLigacao } from '@/lib/cursos/fontes-ia';
 import { criarMotor, ErroMotor } from '@/lib/cursos/motor';
 import type { Plano } from '@/lib/cursos/ciclo';
 import type { Aula } from '@/lib/cursos/modelo';
@@ -31,6 +40,24 @@ function motorOuErro() {
   } catch (e) {
     return { erro: e instanceof ErroMotor ? e.message : 'Motor indisponível.' };
   }
+}
+
+export async function pesquisarFontesCurso(entrada: unknown): Promise<RespostaFontes> {
+  await requireRole(PAPEIS);
+  const m = motorOuErro();
+  if (!m.motor) return { ok: false, erro: m.erro! };
+  const r = await gerarFontesPesquisa(m.motor, entrada, confirmarLigacao());
+  log.info('admin.accao', { outcome: r.ok ? 'accepted' : 'failed', reason: 'curso_pesquisar_fontes' });
+  return r;
+}
+
+export async function textoBaseCurso(entrada: unknown): Promise<RespostaFontes> {
+  await requireRole(PAPEIS);
+  const m = motorOuErro();
+  if (!m.motor) return { ok: false, erro: m.erro! };
+  const r = await gerarFonteTextoBase(m.motor, entrada);
+  log.info('admin.accao', { outcome: r.ok ? 'accepted' : 'failed', reason: 'curso_texto_base' });
+  return r;
 }
 
 export async function sugerirTemaCurso(entrada: unknown): Promise<Resposta<string>> {

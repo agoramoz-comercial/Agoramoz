@@ -71,9 +71,28 @@ export const fonteSchema = z.strictObject({
   data: z.string().trim().min(4).max(40).optional(),
   url: z.string().url().max(400).optional(),
   lingua: z.enum(['pt', 'en']).optional(),
+  /**
+   * Quando a fonte veio da IA: `ia-pesquisa` (encontrada na internet, com o
+   * link; o link foi confirmado, o conteúdo não) ou `ia-texto` (escrita pela
+   * IA, sem origem). Sem `origem`, a fonte foi carregada pela equipa.
+   * Fica sempre visível no curso publicado.
+   */
+  origem: z.enum(['ia-pesquisa', 'ia-texto']).optional(),
   passagens: z.array(passagemSchema).min(1).max(2_000),
 });
 export type Fonte = z.infer<typeof fonteSchema>;
+export type OrigemFonte = NonNullable<Fonte['origem']>;
+
+export const ROTULO_ORIGEM: Readonly<Record<OrigemFonte, string>> = {
+  'ia-pesquisa': 'Encontrada pela IA na internet. Confirme o conteúdo no link.',
+  'ia-texto': 'Escrita pela IA, sem origem verificável.',
+};
+
+/** O aviso que acompanha um curso com fontes escritas pela IA. */
+export const AVISO_FONTE_IA =
+  'Parte das fontes deste curso foi escrita pela IA, sem origem verificável. A verificação prova que o curso segue as fontes, não que essas fontes estão certas.';
+
+export const temFonteIA = (fontes: readonly { origem?: OrigemFonte }[]) => fontes.some((f) => f.origem === 'ia-texto');
 
 /** Um gráfico com valores tirados das fontes: cada valor tem de estar, tal e qual, nas passagens citadas. */
 export const graficoSchema = z.strictObject({
@@ -193,6 +212,7 @@ export const cursoSchema = z.strictObject({
         data: fonteSchema.shape.data,
         url: fonteSchema.shape.url,
         lingua: fonteSchema.shape.lingua,
+        origem: fonteSchema.shape.origem,
       }),
     )
     .min(1)
@@ -241,7 +261,7 @@ export function slugDe(titulo: string): string {
 
 /** A referência pública de uma fonte: tudo menos o texto das passagens. */
 export function semPassagens(f: Fonte): Omit<Fonte, 'passagens'> {
-  const { id, titulo, tipo, autor, data, url, lingua } = f;
+  const { id, titulo, tipo, autor, data, url, lingua, origem } = f;
   return {
     id,
     titulo,
@@ -250,5 +270,6 @@ export function semPassagens(f: Fonte): Omit<Fonte, 'passagens'> {
     ...(data ? { data } : {}),
     ...(url ? { url } : {}),
     ...(lingua ? { lingua } : {}),
+    ...(origem ? { origem } : {}),
   };
 }

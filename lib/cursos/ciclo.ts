@@ -32,7 +32,7 @@ import { promptAula, promptPlano, promptTema, SCHEMA_AULA, SCHEMA_PLANO, SCHEMA_
 
 export const MAX_TENTATIVAS = 3;
 
-export type Tarefa = 'sugerir_tema' | 'planear' | 'escrever_aula';
+export type Tarefa = 'pesquisar_fontes' | 'escrever_fonte' | 'sugerir_tema' | 'planear' | 'escrever_aula';
 export type Motor = (pedido: { tarefa: Tarefa; prompt: string; schema: object }) => Promise<unknown>;
 
 export interface PedidoCurso {

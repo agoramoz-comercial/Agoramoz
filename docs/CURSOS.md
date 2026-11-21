@@ -14,7 +14,12 @@ Cursos escritos **só a partir das fontes que a AGORAMOZ carrega**, com cada afi
 
 ## Como funciona
 
-1. **Fontes.** Ficheiros (.docx, .pdf com texto, .txt, .md) lidos no browser, ou texto colado. Cada fonte é partida em passagens de até ~1 200 caracteres, numeradas `F<fonte>.<passagem>`.
+1. **Fontes.** Ficheiros (.docx, .pdf com texto, .txt, .md) lidos no browser, texto colado, ou pela IA (`lib/cursos/fontes-ia.ts`), a partir do título:
+   - **«Pesquisar fontes na internet»** (`origem: ia-pesquisa`): o motor pesquisa e devolve, por página, título, link e o que lá está. Só se aceita uma resposta que a função do ZabaEdu marque com `internet: true`: sem isso os links podiam vir de memória, inventados, e o botão diz que a função tem de ser actualizada. Cada link é confirmado pelo servidor (https público, sem IP nem nomes internos; 404/410 ou sem resposta = recusado). O conteúdo não é confirmado: o curso diz «Confirme o conteúdo no link».
+   - **«Escrever texto-base com IA»** (`origem: ia-texto`): o motor escreve do que sabe, com ordem de não inventar números, nomes, estudos ou leis. Entra marcado «Escrita pela IA, sem origem verificável».
+   - A origem vai com a fonte para o curso guardado e aparece no admin, na página pública e no PDF. Com uma fonte `ia-texto`, o relatório de verificação acrescenta que a verificação prova que o curso segue as fontes, não que elas estão certas.
+
+   Cada fonte é partida em passagens de até ~1 200 caracteres, numeradas `F<fonte>.<passagem>`.
 2. **Título e tema.** A equipa escreve o **título**, que fica tal e qual no curso (e dá o endereço). A IA escreve o **tema** a partir do título e do índice das fontes: 2 a 4 frases sobre o que o curso trata para cumprir o título, só com o que as fontes cobrem («Gerar o tema com IA», ou automático ao gerar o curso se o campo estiver vazio). O tema pode ser revisto, não é publicado e passa pelo ciclo: um número que não esteja nas fontes é recusado e pedido outra vez.
 3. **Plano.** O motor recebe o título (fixo), o tema e o índice das passagens e devolve resultados de aprendizagem, módulos e aulas, cada aula com as passagens que lhe cabem. O pedido manda deixar de fora o que as fontes têm e não serve o título; se o motor devolver outro título, fica o da equipa.
 4. **Aulas.** Uma de cada vez, com o título e o tema no pedido, só com as suas passagens: blocos (explicação, exemplo, passos, citação) e perguntas de escolha múltipla, tudo com `fontes`.
@@ -47,13 +52,20 @@ Deno.serve(async (req) => {
   if (!esperado || req.headers.get('x-agoramoz-chave') !== esperado) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const { prompt, schema } = await req.json();
+  const { tarefa, prompt, schema } = await req.json();
   if (typeof prompt !== 'string' || !prompt || prompt.length > 200000 || typeof schema !== 'object') {
     return Response.json({ error: 'Bad request' }, { status: 400 });
   }
+  // Só a pesquisa de fontes vai à internet; a resposta diz que foi, para o
+  // agoramoz.com saber que os links não são de memória.
+  const internet = tarefa === 'pesquisar_fontes';
   const base44 = createClientFromRequest(req);
-  const resultado = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt, response_json_schema: schema });
-  return Response.json(resultado);
+  const resultado = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    prompt,
+    response_json_schema: schema,
+    add_context_from_internet: internet,
+  });
+  return Response.json(internet ? { internet: true, resultado } : resultado);
 });
 ```
 

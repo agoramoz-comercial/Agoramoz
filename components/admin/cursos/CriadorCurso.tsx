@@ -2,23 +2,35 @@
 
 import { useId, useRef, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, CircleDashed, FileUp, Loader2, Printer, Save, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, CircleDashed, FileUp, Globe, Loader2, PenLine, Printer, Save, Sparkles, Trash2, XCircle } from 'lucide-react';
 import { inputClass } from '@/components/form/Field';
 import { DocumentoCurso } from '@/components/cursos/DocumentoCurso';
 import { cn } from '@/lib/utils/cn';
 import { agrupar } from '@/lib/propostas/modelo';
 import { ACEITES, ErroFicheiro, textoDoFicheiro } from '@/lib/propostas/ficheiro';
 import { criarFonte } from '@/lib/cursos/fontes';
-import { LIMITES, NIVEIS, ROTULO_NIVEL, type Aula, type Curso, type Fonte, type Nivel } from '@/lib/cursos/modelo';
+import {
+  LIMITES,
+  NIVEIS,
+  ROTULO_NIVEL,
+  ROTULO_ORIGEM,
+  type Aula,
+  type Curso,
+  type Fonte,
+  type Nivel,
+  type OrigemFonte,
+} from '@/lib/cursos/modelo';
 import { montarCurso, type Peca, type PedidoCurso, type Plano } from '@/lib/cursos/ciclo';
 import { descreverFalhas } from '@/lib/cursos/verificar';
-import type { Resposta } from '@/lib/cursos/gerar';
+import type { Resposta, RespostaFontes } from '@/lib/cursos/gerar';
 
 /**
  * O criador de cursos (D-49).
  *
  * 1. As fontes: ficheiros lidos NESTE computador (o mesmo leitor das
- *    propostas) ou texto colado, partidos em passagens numeradas.
+ *    propostas), texto colado, ou pela IA — pesquisa na internet (com o
+ *    link confirmado) ou texto-base escrito por ela, sempre marcado como
+ *    tal. Tudo partido em passagens numeradas.
  * 2. O pedido: o título (fixo: o curso alinha-se por ele), público, nível,
  *    duração e o tema, que a IA escreve a partir do título e das fontes
  *    (pode rever-se antes de gerar).
@@ -32,6 +44,8 @@ import type { Resposta } from '@/lib/cursos/gerar';
  */
 
 export interface AccoesCriador {
+  readonly pesquisarFontes: (entrada: unknown) => Promise<RespostaFontes>;
+  readonly textoBase: (entrada: unknown) => Promise<RespostaFontes>;
   readonly sugerirTema: (entrada: unknown) => Promise<Resposta<string>>;
   readonly planear: (entrada: unknown) => Promise<Resposta<Plano>>;
   readonly escreverAula: (entrada: unknown) => Promise<Resposta<Aula>>;
@@ -43,6 +57,8 @@ interface FonteCarregada {
   readonly tipo: Fonte['tipo'];
   readonly texto: string;
   readonly avisos: readonly string[];
+  readonly url?: string;
+  readonly origem?: OrigemFonte;
 }
 
 type EstadoPeca = {
@@ -79,6 +95,8 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
   const [titulo, setTitulo] = useState('');
   const [tema, setTema] = useState('');
   const [aTema, setATema] = useState(false);
+  const [aFontesIA, setAFontesIA] = useState<'pesquisa' | 'texto' | null>(null);
+  const [recusadasIA, setRecusadasIA] = useState<string[]>([]);
   const [notaTema, setNotaTema] = useState<string | null>(null);
   const [publico, setPublico] = useState('');
   const [nivel, setNivel] = useState<Nivel>('iniciacao');
@@ -95,7 +113,41 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
 
   const total = tamanho(fontes);
   const excede = total > LIMITES.caracteresTotal;
-  const ocupado = aGerar || aTema;
+  const ocupado = aGerar || aTema || aFontesIA !== null;
+  const podeFontesIA = motorLigado && !ocupado && titulo.trim().length >= 3 && fontes.length < LIMITES.fontes;
+
+  /** A IA pesquisa fontes na internet ou escreve um texto-base, a partir do título (e do tema, se já houver). */
+  async function pedirFontesIA(tipo: 'pesquisa' | 'texto') {
+    setAFontesIA(tipo);
+    setRecusadasIA([]);
+    setMensagem(tipo === 'pesquisa' ? 'A IA está a pesquisar na internet e a confirmar os links…' : 'A IA está a escrever o texto-base…');
+    const entrada = { titulo: titulo.trim(), tema: tema.trim(), publico: publico.trim(), nivel };
+    const r = await (tipo === 'pesquisa' ? accoes.pesquisarFontes(entrada) : accoes.textoBase(entrada)).catch(() => ({
+      ok: false as const,
+      erro: 'Ligação interrompida.',
+    }));
+    setAFontesIA(null);
+    if (!r.ok) {
+      setMensagem(r.erro);
+      return;
+    }
+    const livres = LIMITES.fontes - fontes.length;
+    const novas: FonteCarregada[] = r.fontes.slice(0, livres).map((f) => ({
+      nome: f.titulo,
+      tipo: f.origem === 'ia-pesquisa' ? 'web' : 'texto',
+      texto: f.texto.slice(0, LIMITES.caracteresPorFonte),
+      avisos: [],
+      ...(f.url ? { url: f.url } : {}),
+      origem: f.origem,
+    }));
+    setFontes((x) => [...x, ...novas]);
+    setRecusadasIA([...r.recusadas]);
+    setMensagem(
+      tipo === 'pesquisa'
+        ? `${novas.length} fonte(s) encontrada(s) pela IA, com o link confirmado. Reveja o texto de cada uma e retire o que não servir.`
+        : 'Texto-base escrito pela IA. Entra marcado como «escrito pela IA, sem origem verificável», também no curso publicado.',
+    );
+  }
   const podeSugerir = motorLigado && !ocupado && fontes.length > 0 && !excede && titulo.trim().length >= 3;
   const podeGerar = podeSugerir && publico.trim().length >= 3;
 
@@ -122,7 +174,8 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
     return r.peca.valor;
   }
 
-  const fontesDoPedido = () => fontes.map((f, i) => criarFonte(i + 1, f.nome, f.tipo, f.texto));
+  const fontesDoPedido = () =>
+    fontes.map((f, i) => criarFonte(i + 1, f.nome, f.tipo, f.texto, { ...(f.url ? { url: f.url } : {}), ...(f.origem ? { origem: f.origem } : {}) }));
 
   async function carregar(lista: FileList): Promise<void> {
     setALer(true);
@@ -317,12 +370,28 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             <ul role="list" className="grid gap-2" aria-label="Fontes carregadas">
               {fontes.map((f, i) => (
                 <li key={i} className="flex items-start justify-between gap-3 border-t border-[color:var(--border)] pt-2 text-sm">
-                  <span>
+                  <span className="min-w-0">
                     <span className="font-medium">F{i + 1}</span> · {f.nome}{' '}
                     <span className={AJUDA}>
                       ({f.tipo.toUpperCase()} · {inteiro(f.texto.length)} caracteres)
                     </span>
+                    {f.origem && (
+                      <span className={cn(AJUDA, 'block font-medium text-[color:var(--on-surface)]')} data-origem={f.origem}>
+                        {ROTULO_ORIGEM[f.origem]}
+                      </span>
+                    )}
+                    {f.url && (
+                      <a href={f.url} target="_blank" rel="noopener noreferrer" className={cn(AJUDA, 'block break-all underline')}>
+                        {f.url}
+                      </a>
+                    )}
                     {f.avisos.length > 0 && <span className={cn(AJUDA, 'block')}>{f.avisos.join(' ')}</span>}
+                    {f.origem && (
+                      <details className="mt-1">
+                        <summary className={cn(AJUDA, 'cursor-pointer')}>Ver o texto</summary>
+                        <p className="mt-1 max-h-48 overflow-y-auto whitespace-pre-line text-xs">{f.texto}</p>
+                      </details>
+                    )}
                   </span>
                   <button
                     type="button"
@@ -337,6 +406,36 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
               ))}
             </ul>
           )}
+          <div className="grid gap-2 border-t border-[color:var(--border)] pt-3">
+            <p className={ROTULO}>Ou deixe a IA trazer as fontes</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => pedirFontesIA('pesquisa')} disabled={!podeFontesIA} className={BOTAO}>
+                {aFontesIA === 'pesquisa' ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Globe aria-hidden className="size-4" />}
+                {aFontesIA === 'pesquisa' ? 'A pesquisar…' : 'Pesquisar fontes na internet'}
+              </button>
+              <button type="button" onClick={() => pedirFontesIA('texto')} disabled={!podeFontesIA} className={BOTAO}>
+                {aFontesIA === 'texto' ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <PenLine aria-hidden className="size-4" />}
+                {aFontesIA === 'texto' ? 'A escrever…' : 'Escrever texto-base com IA'}
+              </button>
+            </div>
+            <p className={AJUDA}>
+              {titulo.trim().length < 3
+                ? 'Escreva primeiro o título do curso (em 2.): é por ele que a IA procura e escreve.'
+                : 'A pesquisa traz páginas da internet com o link, confirmado daqui; o conteúdo confirma-se no link. O texto-base é escrito pela IA e fica marcado como tal, também no curso publicado.'}
+            </p>
+            {recusadasIA.length > 0 && (
+              <details>
+                <summary className={cn(AJUDA, 'cursor-pointer')}>O que a pesquisa trouxe e não entrou ({recusadasIA.length})</summary>
+                <ul role="list" className={cn(AJUDA, 'mt-1 grid gap-1')}>
+                  {recusadasIA.map((x, i) => (
+                    <li key={i} className="break-all">
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
           {excede && (
             <p role="alert" className="text-sm">
               As fontes somam {inteiro(total)} caracteres; o máximo é {inteiro(LIMITES.caracteresTotal)}. Retire uma fonte.

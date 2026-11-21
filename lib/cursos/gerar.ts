@@ -3,6 +3,14 @@ import { fonteSchema, LIMITES, NIVEIS, passagemSchema, type Fonte } from './mode
 import { escreverAula, planear, planoSchema, sugerirTema, type Motor, type Peca, type Plano } from './ciclo';
 import type { Aula } from './modelo';
 import { ErroMotor } from './motor';
+import {
+  ErroFontesIA,
+  escreverTextoBase,
+  pedidoFontesSchema,
+  pesquisarFontes,
+  type Confirmar,
+  type FonteIA,
+} from './fontes-ia';
 
 /**
  * A ponte entre o criador (browser) e o ciclo (servidor), D-49.
@@ -58,7 +66,8 @@ export type EntradaAula = z.input<typeof entradaAulaSchema>;
 
 export type Resposta<T> = { readonly ok: true; readonly peca: Peca<T> } | { readonly ok: false; readonly erro: string };
 
-const erroDe = (e: unknown) => (e instanceof ErroMotor ? e.message : 'Não foi possível gerar agora. Tente de novo.');
+const erroDe = (e: unknown) =>
+  e instanceof ErroMotor || e instanceof ErroFontesIA ? e.message : 'Não foi possível gerar agora. Tente de novo.';
 
 export async function gerarTema(motor: Motor, entrada: unknown): Promise<Resposta<string>> {
   const e = entradaTemaSchema.safeParse(entrada);
@@ -99,6 +108,31 @@ export async function gerarAula(motor: Motor, entrada: unknown): Promise<Respost
   if (!plano.modulos[modulo]?.aulas[aula]) return { ok: false, erro: 'Essa aula não existe no plano.' };
   try {
     return { ok: true, peca: await escreverAula(motor, { pedido, plano, modulo, aula }, fontesDasPassagens(passagens)) };
+  } catch (x) {
+    return { ok: false, erro: erroDe(x) };
+  }
+}
+
+export type RespostaFontes =
+  | { readonly ok: true; readonly fontes: readonly FonteIA[]; readonly recusadas: readonly string[] }
+  | { readonly ok: false; readonly erro: string };
+
+export async function gerarFontesPesquisa(motor: Motor, entrada: unknown, confirmar: Confirmar): Promise<RespostaFontes> {
+  const e = pedidoFontesSchema.safeParse(entrada);
+  if (!e.success) return { ok: false, erro: 'Escreva o título do curso para a IA saber o que procurar.' };
+  try {
+    const r = await pesquisarFontes(motor, e.data, confirmar);
+    return { ok: true, ...r };
+  } catch (x) {
+    return { ok: false, erro: erroDe(x) };
+  }
+}
+
+export async function gerarFonteTextoBase(motor: Motor, entrada: unknown): Promise<RespostaFontes> {
+  const e = pedidoFontesSchema.safeParse(entrada);
+  if (!e.success) return { ok: false, erro: 'Escreva o título do curso para a IA saber o que escrever.' };
+  try {
+    return { ok: true, fontes: [await escreverTextoBase(motor, e.data)], recusadas: [] };
   } catch (x) {
     return { ok: false, erro: erroDe(x) };
   }

@@ -50,9 +50,22 @@ export function partirEmPassagens(texto: string, idFonte: string, max: number = 
   return pedacos.slice(0, 2_000).map((t, i) => ({ id: `${idFonte}.${i + 1}`, texto: t }));
 }
 
-export function criarFonte(n: number, titulo: string, tipo: Fonte['tipo'], texto: string): Fonte {
+export function criarFonte(
+  n: number,
+  titulo: string,
+  tipo: Fonte['tipo'],
+  texto: string,
+  extra: Pick<Fonte, 'url' | 'origem'> = {},
+): Fonte {
   const id = `F${n}`;
-  return { id, titulo: titulo.slice(0, LIMITES.curto), tipo, passagens: partirEmPassagens(texto.slice(0, LIMITES.caracteresPorFonte), id) };
+  return {
+    id,
+    titulo: titulo.slice(0, LIMITES.curto),
+    tipo,
+    ...(extra.url ? { url: extra.url } : {}),
+    ...(extra.origem ? { origem: extra.origem } : {}),
+    passagens: partirEmPassagens(texto.slice(0, LIMITES.caracteresPorFonte), id),
+  };
 }
 
 /** Todas as passagens, por id. */

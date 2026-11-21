@@ -142,6 +142,37 @@ const larg = await p.evaluate(() => document.documentElement.scrollWidth);
 ok(larg <= 390, `pública: sem scroll horizontal no telemóvel (${larg})`);
 if (SAIDA) await p.screenshot({ path: `${SAIDA}/cursos-publica-telemovel.png`, fullPage: false });
 
+// 4. Fontes pela IA: pesquisa (links confirmados, um recusado) e texto-base, sempre marcados.
+await p.setViewportSize({ width: 1280, height: 900 });
+await p.goto(`${BASE}/qa/cursos`);
+ok(await p.getByRole('button', { name: 'Pesquisar fontes na internet' }).isDisabled(), 'fontes pela IA desligadas sem título');
+await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
+await p.getByRole('button', { name: 'Pesquisar fontes na internet' }).click();
+await p.getByText(/fonte\(s\) encontrada\(s\) pela IA, com o link confirmado/).waitFor({ timeout: 30_000 });
+const listaIA = p.locator('ul[aria-label="Fontes carregadas"]');
+ok((await listaIA.locator('[data-origem="ia-pesquisa"]').count()) === 2, 'pesquisa: 2 fontes com o link confirmado');
+ok(!/nao-existe/.test(await listaIA.innerText()), 'pesquisa: o link que não abre ficou de fora');
+ok(/não entrou \(1\)/.test(await p.locator('section').first().innerText()), 'pesquisa: o recusado é mostrado com a razão');
+await p.getByRole('button', { name: 'Escrever texto-base com IA' }).click();
+await p.getByText(/Texto-base escrito pela IA/).waitFor({ timeout: 30_000 });
+ok((await listaIA.locator('[data-origem="ia-texto"]').count()) === 1, 'texto-base marcado como escrito pela IA');
+await p.getByLabel('Para quem').fill('Responsáveis de armazém (exemplo)');
+const axe3 = await new AxeBuilder({ page: p }).analyze();
+ok(
+  graves(axe3).length === 0,
+  `axe fontes IA ${graves(axe3)
+    .map((v) => `${v.id}(${v.nodes.length})`)
+    .join(',')}`,
+);
+if (SAIDA) await p.locator('section').first().screenshot({ path: `${SAIDA}/cursos-fontes-ia.png` });
+await p.getByRole('button', { name: /Gerar e verificar/ }).click();
+await p.getByText(/Curso montado com o que passou a verificação|Nenhuma aula passou/).waitFor({ timeout: 120_000 });
+const docIA = await p.locator('[data-curso-documento]').innerText();
+ok(/Encontrada pela IA na internet/.test(docIA), 'documento: fonte pesquisada marcada');
+ok(/Escrita pela IA, sem origem verificável/.test(docIA), 'documento: texto-base marcado');
+ok(/não que essas fontes estão certas/.test(docIA), 'documento: aviso no relatório de verificação');
+ok(/armazem\.example\.org\/inventario/.test(docIA), 'documento: link da fonte pesquisada');
+
 ok(erros.length === 0, `sem erros na consola ${erros.join(' | ')}`);
 await b.close();
 console.log(falhas ? `\n${falhas} falha(s).` : '\nTudo certo.');

@@ -179,3 +179,72 @@ export const SCHEMA_AULA = {
     },
   },
 } as const;
+
+/* ------------------------------------------------------- fontes pela IA */
+
+export interface PedidoFontesIA {
+  readonly titulo: string;
+  readonly tema: string;
+  readonly publico: string;
+  readonly nivel: keyof typeof ROTULO_NIVEL;
+}
+
+const linhasPedido = (p: PedidoFontesIA) =>
+  [
+    `- Título do curso: ${p.titulo}`,
+    p.tema ? `- Tema: ${p.tema}` : '',
+    p.publico ? `- Público: ${p.publico}` : '',
+    `- Nível: ${ROTULO_NIVEL[p.nivel]}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+export function promptPesquisa(p: PedidoFontesIA): string {
+  return `És o investigador da AGORAMOZ. Pesquisa na internet fontes públicas e fiáveis para um curso.
+
+Pedido:
+${linhasPedido(p)}
+
+Regras:
+- 2 a 5 fontes que cubram, juntas, o que o título promete. Prefere organismos públicos, organizações internacionais, universidades, normas e documentação oficial; evita blogues anónimos e páginas de venda.
+- Cada fonte tem de ser uma página real que encontraste agora: "url" é o endereço exacto (https) dessa página. Nunca escrevas um endereço de memória ou adivinhado.
+- "texto": o que essa página diz sobre o tema, em português de Moçambique (norma europeia), fiel ao original e o mais próximo possível das palavras dele, com os números, datas e nomes tal como aparecem. Entre 300 e 6 000 caracteres. Nada que não esteja na página.
+- "titulo": o título da página ou do documento, e quem o publicou.
+- Respondes só com JSON no esquema pedido.`;
+}
+
+export function promptTextoBase(p: PedidoFontesIA): string {
+  return `És um especialista que escreve, para a AGORAMOZ, um texto-base sobre o assunto de um curso. Este texto será a fonte do curso e ficará marcado como «escrito pela IA, sem origem verificável».
+
+Pedido:
+${linhasPedido(p)}
+
+Regras:
+- Português de Moçambique (norma europeia), claro, didáctico e organizado em secções com títulos («# …»).
+- Cobre o que o título promete: conceitos, como se faz (passos), erros comuns e exemplos simples e genéricos.
+- Só o que é conhecimento geral e estável do assunto. NÃO inventes números, percentagens, datas, nomes de pessoas ou empresas, estudos, leis ou citações. Se não tens a certeza de um facto, não o escrevas.
+- Entre 2 500 e 9 000 caracteres.
+- "titulo": um título descritivo do texto (não o do curso).
+- Respondes só com JSON no esquema pedido.`;
+}
+
+export const SCHEMA_PESQUISA = {
+  type: 'object',
+  required: ['fontes'],
+  properties: {
+    fontes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['titulo', 'url', 'texto'],
+        properties: { titulo: { type: 'string' }, url: { type: 'string' }, texto: { type: 'string' } },
+      },
+    },
+  },
+} as const;
+
+export const SCHEMA_TEXTO_BASE = {
+  type: 'object',
+  required: ['titulo', 'texto'],
+  properties: { titulo: { type: 'string' }, texto: { type: 'string' } },
+} as const;
