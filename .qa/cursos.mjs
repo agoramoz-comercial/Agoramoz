@@ -43,6 +43,8 @@ writeFileSync(
   ].join('\n\n'),
 );
 await p.goto(`${BASE}/qa/cursos`);
+ok((await p.locator('input[type=file]').count()) === 0, 'por omissão sem a secção das fontes (a IA trata delas)');
+await p.getByRole('button', { name: 'Usar as minhas fontes' }).click();
 await p.locator('input[type=file]').setInputFiles(ficheiro);
 await p.getByText('1 fonte(s) lida(s) neste computador.').waitFor();
 ok(/F1 · manual-exemplo/.test(await p.locator('ul[aria-label="Fontes carregadas"]').innerText()), 'fonte lida no browser e numerada F1');
@@ -146,6 +148,7 @@ if (SAIDA) await p.screenshot({ path: `${SAIDA}/cursos-publica-telemovel.png`, f
 // 4. Fontes pela IA: pesquisa (links confirmados, um recusado) e texto-base, sempre marcados.
 await p.setViewportSize({ width: 1280, height: 900 });
 await p.goto(`${BASE}/qa/cursos`);
+await p.getByRole('button', { name: 'Usar as minhas fontes' }).click();
 ok(await p.getByRole('button', { name: 'Pesquisar fontes na internet' }).isDisabled(), 'fontes pela IA desligadas sem título');
 await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
 await p.getByRole('button', { name: 'Pesquisar fontes na internet' }).click();
@@ -179,6 +182,20 @@ ok(/Encontrada pela IA na internet/.test(docIA), 'documento: fonte pesquisada ma
 ok(/Escrita pela IA, sem origem verificável/.test(docIA), 'documento: texto-base marcado');
 ok(/não que essas fontes estão certas/.test(docIA), 'documento: aviso no relatório de verificação');
 ok(/armazem\.example\.org\/inventario/.test(docIA), 'documento: link da fonte pesquisada');
+
+// 5. Directo: só título e público; a IA trata das fontes, do tema, do plano e das aulas.
+await p.goto(`${BASE}/qa/cursos`);
+await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
+await p.getByLabel('Para quem').fill('Responsáveis de armazém (exemplo)');
+ok(!(await p.getByRole('button', { name: /Gerar e verificar/ }).isDisabled()), 'directo: gerar ligado só com título e público');
+await p.getByRole('button', { name: /Gerar e verificar/ }).click();
+await p.getByText(/Curso montado com o que passou a verificação|Nenhuma aula passou/).waitFor({ timeout: 120_000 });
+ok(/página\(s\) da internet encontradas pela IA/.test(await p.locator('[data-nota-fontes]').innerText()), 'directo: fontes pesquisadas pela IA');
+ok((await p.locator('ul[aria-label="Fontes carregadas"] [data-origem="ia-pesquisa"]').count()) === 2, 'directo: as fontes aparecem em «1. Fontes»');
+ok(/Gestão de stock no armazém/.test(await p.getByLabel('Tema (gerado pela IA)').inputValue()), 'directo: tema gerado');
+const docDir = await p.locator('[data-curso-documento]').innerText();
+ok(/Encontrada pela IA na internet/.test(docDir) && /Gestão de stock no armazém/.test(docDir), 'directo: curso montado, fontes marcadas');
+if (SAIDA) await p.screenshot({ path: `${SAIDA}/cursos-directo.png`, fullPage: false });
 
 ok(erros.length === 0, `sem erros na consola ${erros.join(' | ')}`);
 await b.close();

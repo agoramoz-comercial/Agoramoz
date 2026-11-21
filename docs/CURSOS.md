@@ -14,6 +14,7 @@ Cursos escritos **só a partir das fontes que a AGORAMOZ carrega**, com cada afi
 
 ## Como funciona
 
+0. **Directo (por omissão).** O criador abre só com «O curso»: título e público chegam. Ao gerar sem fontes, a IA trata delas primeiro: pesquisa na internet e, se a pesquisa não der (por exemplo, a função do ZabaEdu ainda sem a marca de pesquisa), escreve o texto-base. As fontes ficam visíveis em «1. Fontes» e marcadas no curso. «Usar as minhas fontes» abre a secção das fontes.
 1. **Fontes.** Ficheiros (.docx, .pdf com texto, .txt, .md) lidos no browser, texto colado, ou pela IA (`lib/cursos/fontes-ia.ts`), a partir do título:
    - **«Pesquisar fontes na internet»** (`origem: ia-pesquisa`): o motor pesquisa e devolve, por página, título, link e o que lá está. Só se aceita uma resposta que a função do ZabaEdu marque com `internet: true`: sem isso os links podiam vir de memória, inventados, e o botão diz que a função tem de ser actualizada. Cada link é confirmado pelo servidor (https público, sem IP nem nomes internos; 404/410 ou sem resposta = recusado). O conteúdo não é confirmado: o curso diz «Confirme o conteúdo no link».
    - **«Escrever o texto com IA»**, dentro de «Colar texto como fonte» (`origem: ia-texto`): o motor escreve sobre o título, com ordem de não inventar números, nomes, estudos ou leis. O texto cai na caixa para ser revisto e editado antes de «Juntar às fontes»; entra marcado «Escrita pela IA, sem origem verificável», mesmo que tenha sido editado.

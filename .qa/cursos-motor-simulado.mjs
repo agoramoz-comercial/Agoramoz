@@ -23,6 +23,11 @@ createServer((req, res) => {
   req.on('end', () => {
     if (req.headers['x-agoramoz-chave'] !== CHAVE) return res.writeHead(401).end('{"error":"Unauthorized"}');
     const pedido = JSON.parse(corpo || '{}');
+    // SEM_INTERNET=1 imita a função antiga do ZabaEdu: responde sem a marca de pesquisa.
+    if (process.env.SEM_INTERNET === '1' && pedido.tarefa === 'pesquisar_fontes') {
+      const r = responderSimulado(pedido);
+      return res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(r.resultado));
+    }
     console.log(`[motor] ${pedido.tarefa} ${pedido.prompt.includes('REJEITADA') ? '(correcção)' : ''}`);
     setTimeout(() => res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(responderSimulado(pedido))), ATRASO);
   });
