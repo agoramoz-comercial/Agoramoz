@@ -16,6 +16,7 @@ describe('motor ZabaEdu', () => {
     });
     expect(await m(pedido)).toEqual({ titulo: 'T' });
     expect((visto!.headers as Record<string, string>)['x-agoramoz-chave']).toBe('x'.repeat(24));
+    expect((visto!.headers as Record<string, string>)['x-servico-token']).toBe('x'.repeat(24));
     expect(JSON.parse(String(visto!.body))).toEqual(pedido);
   });
 

@@ -93,7 +93,9 @@ export function criarMotor(opcoes?: { url: string; chave: string; fetch?: typeof
     try {
       r = await f(url!, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-agoramoz-chave': chave! },
+        // O mesmo segredo nos dois cabeçalhos: `x-agoramoz-chave` (função antiga no Base44) e
+        // `x-servico-token` (serviço novo). Quando só restar o novo, o primeiro sai.
+        headers: { 'content-type': 'application/json', 'x-agoramoz-chave': chave!, 'x-servico-token': chave! },
         body: JSON.stringify({ tarefa, prompt, schema }),
         signal: AbortSignal.timeout(tempo),
         cache: 'no-store',
