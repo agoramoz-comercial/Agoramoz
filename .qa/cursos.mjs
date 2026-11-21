@@ -43,11 +43,21 @@ writeFileSync(
   ].join('\n\n'),
 );
 await p.goto(`${BASE}/qa/cursos`);
+ok((await p.locator('input[type=file]').count()) === 0, 'por omissão sem a secção das fontes (a IA trata delas)');
+await p.getByRole('button', { name: 'Usar as minhas fontes' }).click();
 await p.locator('input[type=file]').setInputFiles(ficheiro);
 await p.getByText('1 fonte(s) lida(s) neste computador.').waitFor();
 ok(/F1 · manual-exemplo/.test(await p.locator('ul[aria-label="Fontes carregadas"]').innerText()), 'fonte lida no browser e numerada F1');
-ok(await p.getByRole('button', { name: /Gerar e verificar/ }).isDisabled(), 'gerar fica desligado sem tema e público');
-await p.getByLabel('Tema').fill('Gestão de stock no armazém');
+ok(await p.getByRole('button', { name: /Gerar e verificar/ }).isDisabled(), 'gerar fica desligado sem título e público');
+ok(/falta: o título do curso; «Para quem»/.test(await p.locator('[data-falta]').innerText()), 'o ecrã diz o que falta para gerar');
+ok(await p.getByRole('button', { name: 'Gerar o tema com IA' }).isDisabled(), 'tema com IA fica desligado sem título');
+await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
+await p.getByRole('button', { name: 'Gerar o tema com IA' }).click();
+await p.getByText(/Tema gerado pela IA a partir do título/).waitFor({ timeout: 30_000 });
+const temaGerado = await p.getByLabel('Tema (gerado pela IA)').inputValue();
+ok(/«Gestão de stock no armazém»/.test(temaGerado), 'a IA escreveu o tema a partir do título');
+ok(!/1987|4 321/.test(temaGerado), 'o número inventado no tema foi apanhado');
+ok(/2 tentativa\(s\)/.test(await p.getByText(/Tema gerado pela IA/).innerText()), 'o tema precisou de 2 tentativas');
 await p.getByLabel('Para quem').fill('Responsáveis de armazém (exemplo)');
 const axe0 = await new AxeBuilder({ page: p }).analyze();
 ok(
@@ -65,6 +75,7 @@ ok((await p.locator('[data-estado="falhou"]').count()) === 0, 'nenhuma peça fal
 ok(await p.getByRole('button', { name: 'Descarregar PDF' }).isVisible(), 'descarregar PDF disponível');
 const doc = await p.locator('[data-curso-documento]').innerText();
 ok(/AGORAMOZ ACADEMIA/.test(doc) && /Gestão de stock no armazém/.test(doc), 'documento com capa e título');
+ok(!/edição alargada/.test(doc), 'o título é o da equipa, não o que o motor propôs');
 ok(!/4 321|1987|75%/.test(doc), 'o que o verificador recusou não chegou ao documento');
 ok(/F1\.\d/.test(doc), 'blocos com etiquetas de fonte');
 if (SAIDA) await p.screenshot({ path: `${SAIDA}/cursos-criador.png`, fullPage: false });
@@ -133,6 +144,58 @@ await p.setViewportSize({ width: 390, height: 844 });
 const larg = await p.evaluate(() => document.documentElement.scrollWidth);
 ok(larg <= 390, `pública: sem scroll horizontal no telemóvel (${larg})`);
 if (SAIDA) await p.screenshot({ path: `${SAIDA}/cursos-publica-telemovel.png`, fullPage: false });
+
+// 4. Fontes pela IA: pesquisa (links confirmados, um recusado) e texto-base, sempre marcados.
+await p.setViewportSize({ width: 1280, height: 900 });
+await p.goto(`${BASE}/qa/cursos`);
+await p.getByRole('button', { name: 'Usar as minhas fontes' }).click();
+ok(await p.getByRole('button', { name: 'Pesquisar fontes na internet' }).isDisabled(), 'fontes pela IA desligadas sem título');
+await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
+await p.getByRole('button', { name: 'Pesquisar fontes na internet' }).click();
+await p.getByText(/fonte\(s\) encontrada\(s\) pela IA, com o link confirmado/).waitFor({ timeout: 30_000 });
+const listaIA = p.locator('ul[aria-label="Fontes carregadas"]');
+ok((await listaIA.locator('[data-origem="ia-pesquisa"]').count()) === 2, 'pesquisa: 2 fontes com o link confirmado');
+ok(!/nao-existe/.test(await listaIA.innerText()), 'pesquisa: o link que não abre ficou de fora');
+ok(/não entrou \(1\)/.test(await p.locator('section').first().innerText()), 'pesquisa: o recusado é mostrado com a razão');
+await p.locator('summary', { hasText: 'Colar texto como fonte' }).click();
+await p.getByRole('button', { name: 'Escrever o texto com IA' }).click();
+await p.getByText(/A IA escreveu o texto na caixa/).waitFor({ timeout: 30_000 });
+ok((await p.getByLabel('Texto', { exact: true }).inputValue()).length > 1500, 'a IA escreveu o texto na caixa de colar');
+ok(/Texto-base:/.test(await p.getByLabel('Título da fonte').inputValue()), 'com um título de fonte');
+await p.getByLabel('Texto', { exact: true }).press('End');
+await p.getByLabel('Texto', { exact: true }).pressSequentially(' Nota acrescentada pela equipa.');
+await p.getByRole('button', { name: 'Juntar às fontes' }).click();
+ok((await listaIA.locator('[data-origem="ia-texto"]').count()) === 1, 'texto-base marcado como escrito pela IA');
+await p.getByLabel('Para quem').fill('Responsáveis de armazém (exemplo)');
+const axe3 = await new AxeBuilder({ page: p }).analyze();
+ok(
+  graves(axe3).length === 0,
+  `axe fontes IA ${graves(axe3)
+    .map((v) => `${v.id}(${v.nodes.length})`)
+    .join(',')}`,
+);
+if (SAIDA) await p.locator('section').first().screenshot({ path: `${SAIDA}/cursos-fontes-ia.png` });
+await p.getByRole('button', { name: /Gerar e verificar/ }).click();
+await p.getByText(/Curso montado com o que passou a verificação|Nenhuma aula passou/).waitFor({ timeout: 120_000 });
+const docIA = await p.locator('[data-curso-documento]').innerText();
+ok(/Encontrada pela IA na internet/.test(docIA), 'documento: fonte pesquisada marcada');
+ok(/Escrita pela IA, sem origem verificável/.test(docIA), 'documento: texto-base marcado');
+ok(/não que essas fontes estão certas/.test(docIA), 'documento: aviso no relatório de verificação');
+ok(/armazem\.example\.org\/inventario/.test(docIA), 'documento: link da fonte pesquisada');
+
+// 5. Directo: só título e público; a IA trata das fontes, do tema, do plano e das aulas.
+await p.goto(`${BASE}/qa/cursos`);
+await p.getByLabel('Título do curso').fill('Gestão de stock no armazém');
+await p.getByLabel('Para quem').fill('Responsáveis de armazém (exemplo)');
+ok(!(await p.getByRole('button', { name: /Gerar e verificar/ }).isDisabled()), 'directo: gerar ligado só com título e público');
+await p.getByRole('button', { name: /Gerar e verificar/ }).click();
+await p.getByText(/Curso montado com o que passou a verificação|Nenhuma aula passou/).waitFor({ timeout: 120_000 });
+ok(/página\(s\) da internet encontradas pela IA/.test(await p.locator('[data-nota-fontes]').innerText()), 'directo: fontes pesquisadas pela IA');
+ok((await p.locator('ul[aria-label="Fontes carregadas"] [data-origem="ia-pesquisa"]').count()) === 2, 'directo: as fontes aparecem em «1. Fontes»');
+ok(/Gestão de stock no armazém/.test(await p.getByLabel('Tema (gerado pela IA)').inputValue()), 'directo: tema gerado');
+const docDir = await p.locator('[data-curso-documento]').innerText();
+ok(/Encontrada pela IA na internet/.test(docDir) && /Gestão de stock no armazém/.test(docDir), 'directo: curso montado, fontes marcadas');
+if (SAIDA) await p.screenshot({ path: `${SAIDA}/cursos-directo.png`, fullPage: false });
 
 ok(erros.length === 0, `sem erros na consola ${erros.join(' | ')}`);
 await b.close();

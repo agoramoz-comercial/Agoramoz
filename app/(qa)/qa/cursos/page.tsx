@@ -6,7 +6,7 @@ import { CriadorCurso } from '@/components/admin/cursos/CriadorCurso';
 import { DocumentoCurso } from '@/components/cursos/DocumentoCurso';
 import { PaginaCurso } from '@/components/cursos/PaginaCurso';
 import { motorCursosLigado } from '@/lib/cursos/motor';
-import { aulaQa, planearQa } from './acoes';
+import { aulaQa, pesquisaQa, planearQa, temaQa, textoBaseQa } from './acoes';
 import { cursoExemplo } from './exemplo';
 
 /**
@@ -55,7 +55,7 @@ export default async function QaCursos({ searchParams }: { searchParams: Promise
             <DocumentoCurso curso={(await cursoExemplo()).curso} />
           </div>
         ) : (
-          <CriadorCurso accoes={{ planear: planearQa, escreverAula: aulaQa }} motorLigado={motorCursosLigado()} podeGuardar={false} />
+          <CriadorCurso accoes={{ pesquisarFontes: pesquisaQa, textoBase: textoBaseQa, sugerirTema: temaQa, planear: planearQa, escreverAula: aulaQa }} motorLigado={motorCursosLigado()} podeGuardar={false} />
         )}
       </CascaAdmin>
     </div>

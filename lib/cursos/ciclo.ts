@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   aulaSchema,
   blocoSchema,
+  LIMITES,
   exercicioSchema,
   moduloSchema,
   perguntaSchema,
@@ -14,8 +15,8 @@ import {
   type Nivel,
 } from './modelo';
 import { indicePassagens } from './fontes';
-import { descreverFalhas, verificarConteudoAula, verificarResultado, type Falha } from './verificar';
-import { promptAula, promptPlano, SCHEMA_AULA, SCHEMA_PLANO } from './prompts';
+import { descreverFalhas, numerosForaDasFontes, verificarConteudoAula, verificarResultado, type Falha } from './verificar';
+import { promptAula, promptPlano, promptTema, SCHEMA_AULA, SCHEMA_PLANO, SCHEMA_TEMA } from './prompts';
 
 /**
  * O ciclo (D-49): gerar → verificar → devolver as falhas → gerar outra vez.
@@ -31,15 +32,52 @@ import { promptAula, promptPlano, SCHEMA_AULA, SCHEMA_PLANO } from './prompts';
 
 export const MAX_TENTATIVAS = 3;
 
-export type Tarefa = 'planear' | 'escrever_aula';
+export type Tarefa = 'pesquisar_fontes' | 'escrever_fonte' | 'sugerir_tema' | 'planear' | 'escrever_aula';
 export type Motor = (pedido: { tarefa: Tarefa; prompt: string; schema: object }) => Promise<unknown>;
 
 export interface PedidoCurso {
+  /**
+   * O título escolhido pela equipa. Fica tal e qual no curso: o plano, os
+   * resultados e as aulas servem este título, e o motor não o pode mudar.
+   */
+  readonly titulo: string;
+  /** O que o curso trata, dentro do título. Gerado pela IA a partir do título e das fontes; pode ser revisto. */
   readonly tema: string;
   readonly publico: string;
   readonly nivel: Nivel;
   /** Minutos totais desejados (aproximado). */
   readonly minutos: number;
+}
+
+/* ------------------------------------------------------------------ tema */
+
+const temaSchema = z.object({ tema: z.string().trim().min(20).max(LIMITES.tema) });
+
+/**
+ * A IA propõe o tema do curso a partir do título e do índice das fontes.
+ * O tema não é publicado: orienta o plano e as aulas. Mesmo assim, um tema
+ * com números que não estão nas fontes é recusado e pedido outra vez.
+ */
+export async function sugerirTema(
+  motor: Motor,
+  pedido: Omit<PedidoCurso, 'tema'>,
+  fontes: readonly Fonte[],
+  max = MAX_TENTATIVAS,
+): Promise<Peca<string>> {
+  const passagens = indicePassagens(fontes);
+  const textoFontes = [...passagens.values()].join(' ');
+  return ciclo<string>(async (anteriores) => {
+    const bruto = await motor({ tarefa: 'sugerir_tema', prompt: promptTema(pedido, fontes, anteriores), schema: SCHEMA_TEMA });
+    const r = temaSchema.safeParse(semNulos(bruto));
+    if (!r.success) return { valor: null, falhas: formaInvalida('tema', r.error), aceites: 0, retirados: 0 };
+    const falhas: Falha[] = numerosForaDasFontes(r.data.tema, textoFontes).map((n) => ({
+      onde: 'tema',
+      motivo: 'numero_sem_fonte' as const,
+      detalhe: n,
+    }));
+    if (falhas.length) return { valor: null, falhas, aceites: 0, retirados: 1 };
+    return { valor: r.data.tema, falhas: [], aceites: 1, retirados: 0 };
+  }, max);
 }
 
 /* ------------------------------------------------------------------ plano */
@@ -118,7 +156,7 @@ async function ciclo<T>(gerar: (falhasAnteriores: string[]) => Promise<Tentativa
     } catch (e) {
       t = {
         valor: null,
-        falhas: [{ onde: 'motor', motivo: 'suporte_fraco', detalhe: e instanceof Error ? e.message.slice(0, 160) : 'erro' }],
+        falhas: [{ onde: 'motor', motivo: 'motor_falhou', detalhe: e instanceof Error ? e.message.slice(0, 200) : 'erro' }],
         aceites: 0,
         retirados: 0,
       };
@@ -166,7 +204,8 @@ export async function planear(motor: Motor, pedido: PedidoCurso, fontes: readonl
       .filter((m) => m.aulas.length > 0);
     const retirados = plano.resultados.length - resultados.length;
     if (!resultados.length || !modulos.length) return { valor: null, falhas, aceites: resultados.length, retirados };
-    return { valor: { ...plano, resultados, modulos }, falhas, aceites: resultados.length, retirados };
+    // O título é o da equipa, nunca o que o motor escreveu.
+    return { valor: { ...plano, titulo: pedido.titulo, resultados, modulos }, falhas, aceites: resultados.length, retirados };
   }, max);
 }
 

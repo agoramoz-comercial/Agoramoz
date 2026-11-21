@@ -34,7 +34,8 @@ export type Motivo =
   | 'opcoes_repetidas'
   | 'grafico_sem_fonte'
   | 'conta_errada'
-  | 'dados_sem_fonte';
+  | 'dados_sem_fonte'
+  | 'motor_falhou';
 
 export interface Falha {
   /** Onde: «bloco 3», «pergunta 2», «resultado 1». */
@@ -53,6 +54,7 @@ export const EXPLICA: Readonly<Record<Motivo, string>> = {
   grafico_sem_fonte: 'tem no gráfico um valor que não está nas passagens citadas',
   conta_errada: 'tem uma conta que não dá o resultado escrito',
   dados_sem_fonte: 'diz que os dados vêm das fontes, mas um valor não está nas passagens citadas',
+  motor_falhou: 'o motor (ZabaEdu) não deu resposta',
 };
 
 /* -------------------------------------------------------------- normalizar */
@@ -104,6 +106,14 @@ export function numeros(s: string): { valor: number; pct: boolean; bruto: string
 }
 
 const tolerado = (n: { valor: number; pct: boolean }) => !n.pct && Number.isInteger(n.valor) && n.valor <= 10;
+
+/** Os números de `texto` (fora os tolerados) que não aparecem em `fonte`. */
+export function numerosForaDasFontes(texto: string, fonte: string): string[] {
+  const nf = numeros(fonte);
+  return numeros(texto)
+    .filter((n) => !tolerado(n) && !nf.some((x) => x.valor === n.valor))
+    .map((n) => n.bruto);
+}
 
 /* ---------------------------------------------------------------- verificar */
 

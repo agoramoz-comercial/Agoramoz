@@ -9,7 +9,7 @@
  */
 
 interface Pedido {
-  readonly tarefa: 'planear' | 'escrever_aula';
+  readonly tarefa: 'pesquisar_fontes' | 'escrever_fonte' | 'sugerir_tema' | 'planear' | 'escrever_aula';
   readonly prompt: string;
 }
 
@@ -22,12 +22,53 @@ function passagensDoPrompt(prompt: string, re: RegExp): { id: string; texto: str
   return [...prompt.matchAll(re)].map((m) => ({ id: m[1]!, texto: m[2]!.replace(/…$/, '').trim() }));
 }
 
+/* Textos de EXEMPLO para as fontes simuladas: não descrevem nenhum documento real. */
+const PARAGRAFOS = [
+  'O inventário periódico conta todos os artigos do armazém no fim de cada mês, comparando o stock físico com o registo do sistema.',
+  'Quando a diferença ultrapassa 2% do valor do stock, o responsável abre uma ocorrência e investiga a causa da diferença.',
+  'O método FIFO determina que os artigos que entram primeiro saem primeiro, o que reduz as perdas de produtos perecíveis.',
+  'Na recepção, a mercadoria é conferida contra a guia de remessa e a entrada é registada no sistema no mesmo dia.',
+  'Os artigos novos são arrumados atrás dos antigos, para que o método FIFO se cumpra sem esforço adicional da equipa.',
+  'A contagem cíclica verifica todas as semanas uma parte do armazém, escolhida pelos artigos de maior valor, sem parar a operação.',
+];
+
 export function responderSimulado({ tarefa, prompt }: Pedido): unknown {
   const corrigir = prompt.includes('REJEITADA');
+  const tituloCurso = prompt.match(/- Título do curso: (.+)/)?.[1]?.trim() ?? 'o curso';
+  if (tarefa === 'pesquisar_fontes') {
+    // Como a função do ZabaEdu actualizada: marcada como feita com pesquisa.
+    return {
+      internet: true,
+      resultado: {
+        fontes: [
+          { titulo: 'Guia de inventário (exemplo)', url: 'https://armazem.example.org/inventario', texto: PARAGRAFOS.slice(0, 3).join('\n\n') },
+          { titulo: 'Recepção e arrumação (exemplo)', url: 'https://logistica.example.org/recepcao', texto: PARAGRAFOS.slice(3).join('\n\n') },
+          // Um link que não abre: tem de ser recusado.
+          { titulo: 'Página inventada (exemplo)', url: 'https://armazem.example.org/nao-existe', texto: PARAGRAFOS.join(' ') },
+        ],
+      },
+    };
+  }
+  if (tarefa === 'escrever_fonte') {
+    const corpo = [`# ${tituloCurso}: o essencial`, ...PARAGRAFOS, '# Erros comuns', ...PARAGRAFOS.slice(0, 3)].join('\n\n');
+    return { titulo: `Texto-base: ${tituloCurso}`, texto: `${corpo}\n\n${corpo}` };
+  }
+  if (tarefa === 'sugerir_tema') {
+    const ps = passagensDoPrompt(prompt, /^\[(F\d+\.\d+)\] (.+)$/gmu);
+    if (!ps.length) return {};
+    const titulo = tituloCurso;
+    const assuntos = ps
+      .slice(0, 3)
+      .map((p) => frase(p.texto).replace(/[.!?…]$/, '').split(/\s+/).slice(0, 6).join(' ').toLowerCase())
+      .join('; ');
+    const tema = `Para cumprir «${titulo}», o curso trata, por esta ordem: ${assuntos}.`.slice(0, 560);
+    // 1.ª tentativa com um número que não está nas fontes, para o ciclo o apanhar.
+    return { tema: corrigir ? tema : `${tema} Em 1987 o método foi adoptado por 4 321 empresas.` };
+  }
   if (tarefa === 'planear') {
     const ps = passagensDoPrompt(prompt, /^\[(F\d+\.\d+)\] (.+)$/gmu);
     if (!ps.length) return {};
-    const tema = prompt.match(/- Tema: (.+)/)?.[1]?.trim() ?? 'Curso';
+    const tema = prompt.match(/- Título do curso \(fixo[^:]*: (.+)/)?.[1]?.trim() ?? 'Curso';
     const porModulo = Math.max(2, Math.ceil(ps.length / 3));
     const modulos: unknown[] = [];
     for (let i = 0; i < ps.length && modulos.length < 3; i += porModulo) {
@@ -50,7 +91,8 @@ export function responderSimulado({ tarefa, prompt }: Pedido): unknown {
     const resultados = ps.slice(0, 4).map((p) => ({ texto: frase(p.texto).slice(0, 290), fontes: [p.id] }));
     if (!corrigir)
       resultados.push({ texto: 'Aumentar a produtividade em 75% com inteligência artificial generativa.', fontes: [ps[0]!.id] });
-    return { titulo: tema, subtitulo: 'Curso de exemplo gerado pelo motor simulado', prerequisitos: [], resultados, modulos };
+    // 1.ª tentativa com outro título, para provar que o do pedido prevalece.
+    return { titulo: corrigir ? tema : `${tema}: edição alargada`, subtitulo: 'Curso de exemplo gerado pelo motor simulado', prerequisitos: [], resultados, modulos };
   }
 
   const ps = passagensDoPrompt(prompt, /^\[(F\d+\.\d+)\] ([\s\S]+?)(?=\n\n\[F|\n\nA TUA|$(?![\s\S]))/gmu);

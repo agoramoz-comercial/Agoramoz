@@ -2,24 +2,39 @@
 
 import { useId, useRef, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, CircleDashed, FileUp, Loader2, Printer, Save, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, CircleDashed, FileUp, Globe, Loader2, PenLine, Printer, Save, Sparkles, Trash2, XCircle } from 'lucide-react';
 import { inputClass } from '@/components/form/Field';
 import { DocumentoCurso } from '@/components/cursos/DocumentoCurso';
 import { cn } from '@/lib/utils/cn';
 import { agrupar } from '@/lib/propostas/modelo';
 import { ACEITES, ErroFicheiro, textoDoFicheiro } from '@/lib/propostas/ficheiro';
 import { criarFonte } from '@/lib/cursos/fontes';
-import { LIMITES, NIVEIS, ROTULO_NIVEL, type Aula, type Curso, type Fonte, type Nivel } from '@/lib/cursos/modelo';
+import {
+  LIMITES,
+  NIVEIS,
+  ROTULO_NIVEL,
+  ROTULO_ORIGEM,
+  type Aula,
+  type Curso,
+  type Fonte,
+  type Nivel,
+  type OrigemFonte,
+} from '@/lib/cursos/modelo';
 import { montarCurso, type Peca, type PedidoCurso, type Plano } from '@/lib/cursos/ciclo';
 import { descreverFalhas } from '@/lib/cursos/verificar';
-import type { Resposta } from '@/lib/cursos/gerar';
+import type { Resposta, RespostaFontes } from '@/lib/cursos/gerar';
+import type { FonteIA } from '@/lib/cursos/fontes-ia';
 
 /**
  * O criador de cursos (D-49).
  *
  * 1. As fontes: ficheiros lidos NESTE computador (o mesmo leitor das
- *    propostas) ou texto colado, partidos em passagens numeradas.
- * 2. O pedido: tema, público, nível, duração.
+ *    propostas), texto colado, ou pela IA — pesquisa na internet (com o
+ *    link confirmado) ou texto-base escrito por ela, sempre marcado como
+ *    tal. Tudo partido em passagens numeradas.
+ * 2. O pedido: o título (fixo: o curso alinha-se por ele), público, nível,
+ *    duração e o tema, que a IA escreve a partir do título e das fontes
+ *    (pode rever-se antes de gerar).
  * 3. Gerar: o plano, depois cada aula, uma a uma — cada peça passa pelo
  *    ciclo no servidor (gerar → verificar → corrigir, até 3 vezes) e o
  *    ecrã mostra o que passou, o que foi retirado e porquê.
@@ -30,6 +45,9 @@ import type { Resposta } from '@/lib/cursos/gerar';
  */
 
 export interface AccoesCriador {
+  readonly pesquisarFontes: (entrada: unknown) => Promise<RespostaFontes>;
+  readonly textoBase: (entrada: unknown) => Promise<RespostaFontes>;
+  readonly sugerirTema: (entrada: unknown) => Promise<Resposta<string>>;
   readonly planear: (entrada: unknown) => Promise<Resposta<Plano>>;
   readonly escreverAula: (entrada: unknown) => Promise<Resposta<Aula>>;
   readonly guardar?: (entrada: unknown) => Promise<{ ok: true; id: string; slug: string; revisao: number } | { ok: false; erro: string }>;
@@ -40,6 +58,8 @@ interface FonteCarregada {
   readonly tipo: Fonte['tipo'];
   readonly texto: string;
   readonly avisos: readonly string[];
+  readonly url?: string;
+  readonly origem?: OrigemFonte;
 }
 
 type EstadoPeca = {
@@ -64,16 +84,35 @@ function tipoDe(nome: string): Fonte['tipo'] {
 const inteiro = (n: number) => agrupar(n).replace(/,00$/, '');
 const tamanho = (fs: readonly FonteCarregada[]) => fs.reduce((s, f) => s + f.texto.length, 0);
 
+const paraCarregada = (f: FonteIA): FonteCarregada => ({
+  nome: f.titulo,
+  tipo: f.origem === 'ia-pesquisa' ? 'web' : 'texto',
+  texto: f.texto.slice(0, LIMITES.caracteresPorFonte),
+  avisos: [],
+  ...(f.url ? { url: f.url } : {}),
+  origem: f.origem,
+});
+
 export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: AccoesCriador; motorLigado: boolean; podeGuardar: boolean }) {
   const id = useId();
   const entrada = useRef<HTMLInputElement>(null);
   const [fontes, setFontes] = useState<FonteCarregada[]>([]);
   const [colado, setColado] = useState('');
   const [tituloColado, setTituloColado] = useState('');
+  /** O texto da caixa veio da IA: a fonte entra marcada como tal, mesmo depois de editada. */
+  const [coladoDaIA, setColadoDaIA] = useState(false);
   const [aLer, setALer] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
 
+  const [titulo, setTitulo] = useState('');
   const [tema, setTema] = useState('');
+  const [aTema, setATema] = useState(false);
+  const [aFontesIA, setAFontesIA] = useState<'pesquisa' | 'texto' | null>(null);
+  const [recusadasIA, setRecusadasIA] = useState<string[]>([]);
+  /** Por omissão a IA trata das fontes ao gerar; «Usar as minhas fontes» abre a secção 1. */
+  const [comFontes, setComFontes] = useState(false);
+  const [notaFontes, setNotaFontes] = useState<string | null>(null);
+  const [notaTema, setNotaTema] = useState<string | null>(null);
   const [publico, setPublico] = useState('');
   const [nivel, setNivel] = useState<Nivel>('iniciacao');
   const [minutos, setMinutos] = useState(120);
@@ -89,7 +128,74 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
 
   const total = tamanho(fontes);
   const excede = total > LIMITES.caracteresTotal;
-  const podeGerar = motorLigado && !aGerar && fontes.length > 0 && !excede && tema.trim().length >= 3 && publico.trim().length >= 3;
+  const ocupado = aGerar || aTema || aFontesIA !== null;
+  const podeFontesIA = motorLigado && !ocupado && titulo.trim().length >= 3 && fontes.length < LIMITES.fontes;
+
+  /** A IA pesquisa fontes na internet ou escreve um texto-base, a partir do título (e do tema, se já houver). */
+  async function pedirFontesIA(tipo: 'pesquisa' | 'texto') {
+    setAFontesIA(tipo);
+    setRecusadasIA([]);
+    setMensagem(tipo === 'pesquisa' ? 'A IA está a pesquisar na internet e a confirmar os links…' : 'A IA está a escrever o texto-base…');
+    const entrada = { titulo: titulo.trim(), tema: tema.trim(), publico: publico.trim(), nivel };
+    const r = await (tipo === 'pesquisa' ? accoes.pesquisarFontes(entrada) : accoes.textoBase(entrada)).catch(() => ({
+      ok: false as const,
+      erro: 'Ligação interrompida.',
+    }));
+    setAFontesIA(null);
+    if (!r.ok) {
+      setMensagem(r.erro);
+      return;
+    }
+    if (tipo === 'texto') {
+      const f = r.fontes[0]!;
+      setTituloColado(f.titulo);
+      setColado(f.texto.slice(0, LIMITES.caracteresPorFonte));
+      setColadoDaIA(true);
+      setMensagem('A IA escreveu o texto na caixa «Colar texto como fonte». Reveja-o, edite o que quiser e carregue em «Juntar às fontes».');
+      return;
+    }
+    const novas = r.fontes.slice(0, LIMITES.fontes - fontes.length).map(paraCarregada);
+    setFontes((x) => [...x, ...novas]);
+    setRecusadasIA([...r.recusadas]);
+    setMensagem(`${novas.length} fonte(s) encontrada(s) pela IA, com o link confirmado. Reveja o texto de cada uma e retire o que não servir.`);
+  }
+  const podeSugerir = motorLigado && !ocupado && fontes.length > 0 && !excede && titulo.trim().length >= 3;
+  // Sem fontes também se gera: a IA trata delas primeiro.
+  const podeGerar = motorLigado && !ocupado && !excede && titulo.trim().length >= 3 && publico.trim().length >= 3;
+  const mostrarFontes = comFontes || fontes.length > 0;
+  /** Porque é que «Gerar» está desligado, em linguagem de quem usa o ecrã. */
+  const falta = [
+    !motorLigado && 'o motor dos cursos ligado',
+    excede && 'fontes mais pequenas (retire uma)',
+    titulo.trim().length < 3 && 'o título do curso',
+    publico.trim().length < 3 && '«Para quem»',
+  ].filter((x): x is string => Boolean(x));
+
+  /** A IA escreve o tema a partir do título e das fontes. Devolve o tema, ou null (com a razão no ecrã). */
+  async function pedirTema(fs: Fonte[]): Promise<string | null> {
+    setATema(true);
+    setNotaTema(null);
+    const r = await accoes
+      .sugerirTema({ pedido: { titulo: titulo.trim(), publico: publico.trim(), nivel, minutos }, fontes: fs })
+      .catch(() => ({ ok: false as const, erro: 'Ligação interrompida.' }));
+    setATema(false);
+    if (!r.ok) {
+      setNotaTema(r.erro);
+      return null;
+    }
+    if (!r.peca.valor) {
+      setNotaTema(
+        `A IA não propôs um tema aceitável em ${r.peca.tentativas} tentativa(s): ${descreverFalhas(r.peca.falhas).slice(0, 2).join(' ')} Escreva-o à mão.`,
+      );
+      return null;
+    }
+    setTema(r.peca.valor);
+    setNotaTema(`Tema gerado pela IA a partir do título e das fontes (${r.peca.tentativas} tentativa(s)). Pode editá-lo antes de gerar.`);
+    return r.peca.valor;
+  }
+
+  const fontesDoPedido = (lista: readonly FonteCarregada[] = fontes) =>
+    lista.map((f, i) => criarFonte(i + 1, f.nome, f.tipo, f.texto, { ...(f.url ? { url: f.url } : {}), ...(f.origem ? { origem: f.origem } : {}) }));
 
   async function carregar(lista: FileList): Promise<void> {
     setALer(true);
@@ -130,10 +236,12 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
         tipo: 'texto',
         texto: colado.slice(0, LIMITES.caracteresPorFonte),
         avisos: [],
+        ...(coladoDaIA ? { origem: 'ia-texto' as const } : {}),
       },
     ]);
     setColado('');
     setTituloColado('');
+    setColadoDaIA(false);
   }
 
   const marcar = (i: number, p: EstadoPeca) => setPecas((x) => x.map((y, j) => (j === i ? p : y)));
@@ -144,8 +252,48 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
     setGuardado(null);
     setFalhasPlano([]);
     setMensagem(null);
-    const fs = fontes.map((f, i) => criarFonte(i + 1, f.nome, f.tipo, f.texto));
-    const pedido: PedidoCurso = { tema: tema.trim(), publico: publico.trim(), nivel, minutos };
+    setNotaFontes(null);
+    // Sem fontes, a IA trata delas: pesquisa na internet e, se não der, escreve o texto-base.
+    let usadas: readonly FonteCarregada[] = fontes;
+    if (!usadas.length) {
+      const rotuloFontes = 'Fontes do curso (pela IA)';
+      setPecas([{ rotulo: rotuloFontes, estado: 'a-gerar', detalhe: 'A pesquisar na internet…' }]);
+      const entrada = { titulo: titulo.trim(), tema: tema.trim(), publico: publico.trim(), nivel };
+      const interrompida = () => ({ ok: false as const, erro: 'Ligação interrompida.' });
+      const rp = await accoes.pesquisarFontes(entrada).catch(interrompida);
+      let r = rp;
+      if (!rp.ok) {
+        setPecas([{ rotulo: rotuloFontes, estado: 'a-gerar', detalhe: 'Pesquisa indisponível; a IA está a escrever o texto-base…' }]);
+        r = await accoes.textoBase(entrada).catch(interrompida);
+      }
+      if (!r.ok) {
+        setPecas([{ rotulo: rotuloFontes, estado: 'falhou', detalhe: r.erro }]);
+        setAGerar(false);
+        return;
+      }
+      usadas = r.fontes.slice(0, LIMITES.fontes).map(paraCarregada);
+      setFontes([...usadas]);
+      setRecusadasIA([...r.recusadas]);
+      setNotaFontes(
+        rp.ok
+          ? `Fontes: ${usadas.length} página(s) da internet encontradas pela IA, com o link confirmado. Estão em «1. Fontes» e ficam marcadas no curso.`
+          : `Fontes: a pesquisa na internet não deu (${rp.erro}) A IA escreveu o texto-base; fica marcado «Escrita pela IA, sem origem verificável» no curso.`,
+      );
+    }
+    const fs = fontesDoPedido(usadas);
+    // Sem tema, a IA escreve-o primeiro a partir do título.
+    let temaFinal = tema.trim();
+    if (temaFinal.length < 3) {
+      setPecas([{ rotulo: 'Tema do curso', estado: 'a-gerar' }]);
+      const t = await pedirTema(fs);
+      if (!t) {
+        setPecas([{ rotulo: 'Tema do curso', estado: 'falhou', detalhe: 'Sem tema, o curso não foi gerado.' }]);
+        setAGerar(false);
+        return;
+      }
+      temaFinal = t;
+    }
+    const pedido: PedidoCurso = { titulo: titulo.trim(), tema: temaFinal, publico: publico.trim(), nivel, minutos };
     setPecas([{ rotulo: 'Plano do curso', estado: 'a-gerar' }]);
 
     const rp = await accoes.planear({ pedido, fontes: fs }).catch(() => ({ ok: false as const, erro: 'Ligação interrompida.' }));
@@ -155,7 +303,11 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
       marcar(0, {
         rotulo: 'Plano do curso',
         estado: 'falhou',
-        detalhe: rp.ok ? `Sem plano aceitável em ${rp.peca.tentativas} tentativa(s).` : rp.erro,
+        detalhe: !rp.ok
+          ? rp.erro
+          : rp.peca.falhas.length > 0 && rp.peca.falhas.every((f) => f.motivo === 'motor_falhou')
+            ? `O motor (ZabaEdu) não respondeu em ${rp.peca.tentativas} tentativa(s): ${rp.peca.falhas[0]!.detalhe}`
+            : `Sem plano aceitável em ${rp.peca.tentativas} tentativa(s).`,
       });
       setAGerar(false);
       return;
@@ -237,7 +389,8 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-6 print:hidden lg:grid-cols-2">
+      <div className={cn('grid gap-6 print:hidden', mostrarFontes ? 'lg:grid-cols-2' : 'max-w-3xl')}>
+        {mostrarFontes && (
         <section className={CAIXA} aria-labelledby={`${id}-fontes`}>
           <div>
             <h2 id={`${id}-fontes`} className="text-base font-medium">
@@ -249,7 +402,7 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => entrada.current?.click()} disabled={aLer || aGerar} className={BOTAO}>
+            <button type="button" onClick={() => entrada.current?.click()} disabled={aLer || ocupado} className={BOTAO}>
               <FileUp aria-hidden className="size-4" />
               {aLer ? 'A ler…' : 'Carregar ficheiros'}
             </button>
@@ -272,17 +425,33 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             <ul role="list" className="grid gap-2" aria-label="Fontes carregadas">
               {fontes.map((f, i) => (
                 <li key={i} className="flex items-start justify-between gap-3 border-t border-[color:var(--border)] pt-2 text-sm">
-                  <span>
+                  <span className="min-w-0">
                     <span className="font-medium">F{i + 1}</span> · {f.nome}{' '}
                     <span className={AJUDA}>
                       ({f.tipo.toUpperCase()} · {inteiro(f.texto.length)} caracteres)
                     </span>
+                    {f.origem && (
+                      <span className={cn(AJUDA, 'block font-medium text-[color:var(--on-surface)]')} data-origem={f.origem}>
+                        {ROTULO_ORIGEM[f.origem]}
+                      </span>
+                    )}
+                    {f.url && (
+                      <a href={f.url} target="_blank" rel="noopener noreferrer" className={cn(AJUDA, 'block break-all underline')}>
+                        {f.url}
+                      </a>
+                    )}
                     {f.avisos.length > 0 && <span className={cn(AJUDA, 'block')}>{f.avisos.join(' ')}</span>}
+                    {f.origem && (
+                      <details className="mt-1">
+                        <summary className={cn(AJUDA, 'cursor-pointer')}>Ver o texto</summary>
+                        <p className="mt-1 max-h-48 overflow-y-auto whitespace-pre-line text-xs">{f.texto}</p>
+                      </details>
+                    )}
                   </span>
                   <button
                     type="button"
                     className={cn(BOTAO, 'min-h-9 px-2')}
-                    disabled={aGerar}
+                    disabled={ocupado}
                     onClick={() => setFontes((x) => x.filter((_, j) => j !== i))}
                     aria-label={`Retirar a fonte ${f.nome}`}
                   >
@@ -292,13 +461,55 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
               ))}
             </ul>
           )}
+          <div className="grid gap-2 border-t border-[color:var(--border)] pt-3">
+            <p className={ROTULO}>Ou deixe a IA trazer as fontes</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => pedirFontesIA('pesquisa')} disabled={!podeFontesIA} className={BOTAO}>
+                {aFontesIA === 'pesquisa' ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Globe aria-hidden className="size-4" />}
+                {aFontesIA === 'pesquisa' ? 'A pesquisar…' : 'Pesquisar fontes na internet'}
+              </button>
+            </div>
+            <p className={AJUDA}>
+              {titulo.trim().length < 3
+                ? 'Escreva primeiro o título do curso (em 2.): é por ele que a IA procura e escreve.'
+                : 'A pesquisa traz páginas da internet com o link, confirmado daqui; o conteúdo confirma-se no link. Para um texto escrito pela IA, use «Colar texto como fonte».'}
+            </p>
+            {recusadasIA.length > 0 && (
+              <details>
+                <summary className={cn(AJUDA, 'cursor-pointer')}>O que a pesquisa trouxe e não entrou ({recusadasIA.length})</summary>
+                <ul role="list" className={cn(AJUDA, 'mt-1 grid gap-1')}>
+                  {recusadasIA.map((x, i) => (
+                    <li key={i} className="break-all">
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
           {excede && (
             <p role="alert" className="text-sm">
               As fontes somam {inteiro(total)} caracteres; o máximo é {inteiro(LIMITES.caracteresTotal)}. Retire uma fonte.
             </p>
           )}
-          <details className="grid gap-2">
-            <summary className="cursor-pointer text-sm">Colar texto como fonte</summary>
+          <details className="grid gap-2" open={coladoDaIA || undefined}>
+            <summary className="cursor-pointer text-sm">Colar texto como fonte (ou pedir à IA que o escreva)</summary>
+            <div className="mt-2 grid gap-1">
+              <button
+                type="button"
+                onClick={() => pedirFontesIA('texto')}
+                disabled={!podeFontesIA}
+                className={cn(BOTAO, 'justify-self-start')}
+              >
+                {aFontesIA === 'texto' ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <PenLine aria-hidden className="size-4" />}
+                {aFontesIA === 'texto' ? 'A IA está a escrever…' : colado.trim() && coladoDaIA ? 'Escrever outro texto com IA' : 'Escrever o texto com IA'}
+              </button>
+              <p className={AJUDA}>
+                {titulo.trim().length < 3
+                  ? 'Escreva primeiro o título do curso (em 2.): é sobre ele que a IA escreve.'
+                  : 'A IA escreve sobre o título do curso. Reveja e edite antes de juntar: a fonte fica marcada «Escrita pela IA, sem origem verificável», também no curso publicado.'}
+              </p>
+            </div>
             <label className={cn(ROTULO, 'mt-2 block')} htmlFor={`${id}-titulo-colado`}>
               Título da fonte
             </label>
@@ -315,32 +526,66 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
             <textarea
               id={`${id}-colado`}
               value={colado}
-              onChange={(e) => setColado(e.target.value)}
-              rows={6}
+              onChange={(e) => {
+                setColado(e.target.value);
+                if (!e.target.value.trim()) setColadoDaIA(false);
+              }}
+              rows={coladoDaIA ? 14 : 6}
+              disabled={aFontesIA === 'texto'}
+              aria-describedby={coladoDaIA ? `${id}-colado-ia` : undefined}
               className={cn(inputClass, 'min-h-0 text-sm')}
             />
-            <button type="button" onClick={juntarColado} className={cn(BOTAO, 'mt-2 justify-self-start')}>
+            {coladoDaIA && (
+              <p id={`${id}-colado-ia`} className={cn(AJUDA, 'font-medium text-[color:var(--on-surface)]')}>
+                Texto escrito pela IA. Ao juntar, fica marcado «Escrita pela IA, sem origem verificável», mesmo que o edite.
+              </p>
+            )}
+            <button type="button" onClick={juntarColado} disabled={aFontesIA === 'texto'} className={cn(BOTAO, 'mt-2 justify-self-start')}>
               Juntar às fontes
             </button>
           </details>
+          {fontes.length === 0 && (
+            <button type="button" onClick={() => setComFontes(false)} className={cn(AJUDA, 'justify-self-start underline')}>
+              Deixar a IA tratar das fontes
+            </button>
+          )}
         </section>
+        )}
 
         <section className={CAIXA} aria-labelledby={`${id}-pedido`}>
           <h2 id={`${id}-pedido`} className="text-base font-medium">
-            2. O curso
+            {mostrarFontes ? '2. O curso' : 'O curso'}
           </h2>
+          {!mostrarFontes && (
+            <div className="grid gap-2 border-l-2 border-[color:var(--color-signal-600)] pl-3" data-modo="directo">
+              <p className="text-sm">
+                Escreva o título e para quem é: a IA trata do resto. Pesquisa fontes na internet (com o link confirmado) e, se não der,
+                escreve ela o texto-base; depois o tema, o plano e as aulas, tudo verificado contra essas fontes. As fontes da IA ficam
+                marcadas no curso publicado.
+              </p>
+              <button type="button" onClick={() => setComFontes(true)} className={cn(BOTAO, 'min-h-9 justify-self-start')}>
+                <FileUp aria-hidden className="size-4" />
+                Usar as minhas fontes
+              </button>
+            </div>
+          )}
           <div className="grid gap-1">
-            <label className={ROTULO} htmlFor={`${id}-tema`}>
-              Tema
+            <label className={ROTULO} htmlFor={`${id}-titulo`}>
+              Título do curso
             </label>
             <input
-              id={`${id}-tema`}
-              value={tema}
-              onChange={(e) => setTema(e.target.value)}
-              maxLength={200}
+              id={`${id}-titulo`}
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              maxLength={LIMITES.curto}
               className={inputClass}
               placeholder="Ex.: Gestão de stock num armazém"
+              aria-describedby={`${id}-titulo-ajuda`}
             />
+            <p id={`${id}-titulo-ajuda`} className={AJUDA}>
+              Fica tal e qual no curso. O tema, os resultados, os módulos e as aulas alinham-se por ele; o que as fontes têm e não serve o
+              título fica de fora.
+            </p>
           </div>
           <div className="grid gap-1">
             <label className={ROTULO} htmlFor={`${id}-publico`}>
@@ -384,10 +629,42 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
               />
             </div>
           </div>
+          <div className="grid gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className={ROTULO} htmlFor={`${id}-tema`}>
+                Tema (gerado pela IA)
+              </label>
+              {fontes.length > 0 && (
+                <button type="button" onClick={() => pedirTema(fontesDoPedido())} disabled={!podeSugerir} className={cn(BOTAO, 'min-h-9')}>
+                  {aTema ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}
+                  {aTema ? 'A gerar o tema…' : tema.trim() ? 'Gerar outro tema' : 'Gerar o tema com IA'}
+                </button>
+              )}
+            </div>
+            <textarea
+              id={`${id}-tema`}
+              value={tema}
+              onChange={(e) => setTema(e.target.value)}
+              maxLength={LIMITES.tema}
+              rows={4}
+              disabled={aTema}
+              className={cn(inputClass, 'min-h-0 text-sm')}
+              placeholder="A IA escreve-o a partir do título e das fontes. Se ficar vazio, é gerado ao carregar em «Gerar e verificar»."
+              aria-describedby={`${id}-tema-ajuda`}
+            />
+            <p id={`${id}-tema-ajuda`} className={AJUDA} aria-live="polite">
+              {notaTema ?? 'O que o curso trata para cumprir o título, só com o que as fontes cobrem. Orienta o plano; não é publicado.'}
+            </p>
+          </div>
           <button type="button" onClick={gerar} disabled={!podeGerar} className={cn(BOTAO_PRIMARIO, 'justify-self-start')}>
             {aGerar ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}
-            {aGerar ? 'A gerar e a verificar…' : '3. Gerar e verificar o curso'}
+            {aGerar ? 'A gerar e a verificar…' : mostrarFontes ? '3. Gerar e verificar o curso' : 'Gerar e verificar o curso'}
           </button>
+          {!ocupado && falta.length > 0 && (
+            <p className="text-sm" data-falta>
+              Para gerar, falta: {falta.join('; ')}.
+            </p>
+          )}
           {!motorLigado && (
             <p className={AJUDA} role="note">
               O motor dos cursos está desligado. Para ligar: criar a função agoramoz_llm no ZabaEdu e definir CURSOS_ENGINE,
@@ -413,6 +690,11 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
           <h2 id={`${id}-progresso`} className="text-base font-medium">
             Geração e verificação
           </h2>
+          {notaFontes && (
+            <p className="text-sm" data-nota-fontes>
+              {notaFontes}
+            </p>
+          )}
           <ol role="list" className="grid gap-1 text-sm">
             {pecas.map((x, i) => (
               <li key={i} className="flex items-start gap-2" data-estado={x.estado}>

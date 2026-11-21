@@ -3,7 +3,16 @@ import Link from 'next/link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { aulasDoCurso, duracao, minutosDoCurso, ROTULO_NIVEL, type Curso } from '@/lib/cursos/modelo';
+import {
+  aulasDoCurso,
+  AVISO_FONTE_IA,
+  duracao,
+  minutosDoCurso,
+  ROTULO_NIVEL,
+  ROTULO_ORIGEM,
+  temFonteIA,
+  type Curso,
+} from '@/lib/cursos/modelo';
 import { absolute } from '@/lib/seo/site';
 import { GraficoColunas } from './Visuais';
 
@@ -216,6 +225,7 @@ export function PaginaCurso({ curso: c, slug, trilho }: { curso: Curso; slug: st
                         Original em inglês; passagens traduzidas pela AGORAMOZ.
                       </span>
                     )}
+                    {f.origem && <span className="block text-xs text-[color:var(--muted)]">{ROTULO_ORIGEM[f.origem]}</span>}
                   </span>
                 </li>
               ))}
@@ -230,6 +240,7 @@ export function PaginaCurso({ curso: c, slug, trilho }: { curso: Curso; slug: st
             <p className="mt-2 text-sm text-[color:var(--muted)]">
               {v.aceites} afirmações aceites, {v.retirados} retiradas por não terem apoio nas fontes.
             </p>
+            {temFonteIA(c.fontes) && <p className="mt-4 text-sm font-medium">{AVISO_FONTE_IA}</p>}
             <ul role="list" className="mt-6 grid gap-2 text-sm">
               {[
                 'As passagens citadas existem e foram dadas àquela aula.',

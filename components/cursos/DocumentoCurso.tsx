@@ -1,6 +1,16 @@
 import { Fragment } from 'react';
 import { agrupar } from '@/lib/propostas/modelo';
-import { aulasDoCurso, duracao, minutosDoCurso, ROTULO_NIVEL, type Bloco, type Curso } from '@/lib/cursos/modelo';
+import {
+  aulasDoCurso,
+  AVISO_FONTE_IA,
+  duracao,
+  minutosDoCurso,
+  ROTULO_NIVEL,
+  ROTULO_ORIGEM,
+  temFonteIA,
+  type Bloco,
+  type Curso,
+} from '@/lib/cursos/modelo';
 import s from './curso.module.css';
 import { Esquema, ExercicioDoc, GraficoColunas } from './Visuais';
 
@@ -416,6 +426,7 @@ export function DocumentoCurso({ curso, escala }: { curso: Curso; escala?: numbe
                 </p>
                 {f.url && <p className={`${s.pequeno} ${s.ligacao}`}>{f.url}</p>}
                 {f.lingua === 'en' && <p className={s.pequeno}>Original em inglês; passagens traduzidas pela AGORAMOZ.</p>}
+                {f.origem && <p className={s.pequeno}>{ROTULO_ORIGEM[f.origem]}</p>}
               </div>
               <span className={s.idx}>{f.tipo.toUpperCase()}</span>
             </div>
@@ -475,6 +486,11 @@ export function DocumentoCurso({ curso, escala }: { curso: Curso; escala?: numbe
           {v.tentativas} pedido(s) ao motor, com o ciclo de correcção: o que falhou foi devolvido com a razão e reescrito; o que nunca
           passou foi retirado. A verificação prova que o curso vem das fontes — a exactidão das fontes é de quem as escolheu.
         </p>
+        {temFonteIA(curso.fontes) && (
+          <p className={`${s.corpo} ${s.mt2}`} style={{ maxWidth: '170mm' }}>
+            {AVISO_FONTE_IA}
+          </p>
+        )}
         {v.notas.length > 0 && (
           <ul className={`${s.mt2}`} style={{ listStyle: 'none', display: 'grid', gap: '1mm', maxWidth: '170mm' }}>
             {v.notas.slice(0, 8).map((n, i) => (
