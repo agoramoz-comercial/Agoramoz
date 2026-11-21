@@ -303,7 +303,11 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
       marcar(0, {
         rotulo: 'Plano do curso',
         estado: 'falhou',
-        detalhe: rp.ok ? `Sem plano aceitável em ${rp.peca.tentativas} tentativa(s).` : rp.erro,
+        detalhe: !rp.ok
+          ? rp.erro
+          : rp.peca.falhas.length > 0 && rp.peca.falhas.every((f) => f.motivo === 'motor_falhou')
+            ? `O motor (ZabaEdu) não respondeu em ${rp.peca.tentativas} tentativa(s): ${rp.peca.falhas[0]!.detalhe}`
+            : `Sem plano aceitável em ${rp.peca.tentativas} tentativa(s).`,
       });
       setAGerar(false);
       return;

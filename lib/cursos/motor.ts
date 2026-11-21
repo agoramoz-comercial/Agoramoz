@@ -1,4 +1,5 @@
 import { serverEnv } from '@/lib/config/env';
+import { log } from '@/lib/log/logger';
 import type { Motor } from './ciclo';
 
 /**
@@ -15,10 +16,25 @@ import type { Motor } from './ciclo';
 export type CodigoMotor = 'desligado' | 'timeout' | 'recusado' | 'indisponivel' | 'resposta_invalida';
 
 export class ErroMotor extends Error {
-  constructor(readonly codigo: CodigoMotor) {
-    super(MENSAGEM[codigo]);
+  /** O código HTTP com que o ZabaEdu respondeu, quando respondeu (nunca o corpo). */
+  constructor(
+    readonly codigo: CodigoMotor,
+    readonly status?: number,
+  ) {
+    super(status ? `${MENSAGEM[codigo]} (O ZabaEdu respondeu ${status}: ${PISTA[status] ?? PISTA_GERAL})` : MENSAGEM[codigo]);
   }
 }
+
+/** O que cada resposta costuma querer dizer, para quem tem de ir ao Base44. */
+const PISTA_GERAL = 'veja os registos da função agoramoz_llm no Base44.';
+const PISTA: Readonly<Record<number, string>> = {
+  400: 'a função recusou o pedido; confirme que o código da função é o de docs/CURSOS.md.',
+  404: 'a função agoramoz_llm não existe ou não está publicada no Base44.',
+  429: 'limite de pedidos ou de créditos de IA no Base44.',
+  500: 'a função rebentou no Base44; veja os registos da função agoramoz_llm (créditos de IA, plano ou erro no código).',
+  502: 'o Base44 não conseguiu correr a função; tente de novo e veja os registos da função.',
+  503: 'o Base44 está indisponível neste momento.',
+};
 
 export const MENSAGEM: Readonly<Record<CodigoMotor, string>> = {
   desligado: 'O motor dos cursos está desligado (CURSOS_ENGINE=off).',
@@ -83,10 +99,16 @@ export function criarMotor(opcoes?: { url: string; chave: string; fetch?: typeof
         cache: 'no-store',
       });
     } catch (e) {
-      throw new ErroMotor(e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError') ? 'timeout' : 'indisponivel');
+      const tempoEsgotado = e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError');
+      log.warn('cursos.motor', { outcome: 'failed', reason: tempoEsgotado ? 'timeout' : 'rede', tarefa });
+      throw new ErroMotor(tempoEsgotado ? 'timeout' : 'indisponivel');
     }
     if (r.status === 401 || r.status === 403) throw new ErroMotor('recusado');
-    if (!r.ok) throw new ErroMotor('indisponivel');
+    if (!r.ok) {
+      // Só o código e a tarefa: o corpo pode trazer o pedido, e o pedido traz o texto das fontes.
+      log.warn('cursos.motor', { outcome: 'failed', reason: `http_${r.status}`, tarefa });
+      throw new ErroMotor('indisponivel', r.status);
+    }
     let corpo: unknown;
     try {
       corpo = await r.json();

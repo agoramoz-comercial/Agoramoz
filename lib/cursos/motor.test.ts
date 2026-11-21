@@ -35,6 +35,21 @@ describe('motor ZabaEdu', () => {
     await expect(lento(pedido)).rejects.toMatchObject({ codigo: 'timeout' });
   });
 
+  it('o erro diz o código do ZabaEdu e o que fazer, nunca o corpo', async () => {
+    const com = (status: number) =>
+      criarMotor({
+        url: 'https://e.test/f',
+        chave: 'x'.repeat(24),
+        fetch: (async () => new Response('segredo do pedido', { status })) as unknown as typeof fetch,
+      });
+    const e500 = await com(500)(pedido).catch((e: ErroMotor) => e);
+    expect(e500).toMatchObject({ codigo: 'indisponivel', status: 500 });
+    expect((e500 as ErroMotor).message).toMatch(/respondeu 500: .*registos da função agoramoz_llm/);
+    expect((e500 as ErroMotor).message).not.toContain('segredo');
+    expect(((await com(404)(pedido).catch((e: Error) => e)) as Error).message).toMatch(/não existe ou não está publicada/);
+    expect(((await com(418)(pedido).catch((e: Error) => e)) as Error).message).toMatch(/respondeu 418: veja os registos/);
+  });
+
   it('desembrulha respostas', () => {
     expect(lerResposta('```json\n{"a":1}\n```')).toEqual({ a: 1 });
     expect(lerResposta({ result: { a: 1 } })).toEqual({ a: 1 });

@@ -251,7 +251,19 @@ describe('ciclo', () => {
     expect(a.falhas).toEqual([]);
   });
 
-  it('forma inválida conta como falha, não rebenta', async () => {
+  it('motor em baixo: a falha diz que foi o motor, não as fontes', async () => {
+    const motor: Motor = async () => {
+      throw new Error('O motor está indisponível neste momento. (O ZabaEdu respondeu 500: …)');
+    };
+    const p = await planear(motor, pedido, fontes);
+    expect(p.valor).toBeNull();
+    expect(p.falhas[0]).toMatchObject({ onde: 'motor', motivo: 'motor_falhou' });
+    const texto = descreverFalhas(p.falhas)[0]!;
+    expect(texto).toMatch(/o motor \(ZabaEdu\) não deu resposta .*respondeu 500/);
+    expect(texto).not.toMatch(/passagens citadas não dizem/);
+  });
+
+    it('forma inválida conta como falha, não rebenta', async () => {
     const p = await planear(async () => ({ nada: true }), pedido, fontes, 2);
     expect(p.valor).toBeNull();
     expect(p.tentativas).toBe(2);

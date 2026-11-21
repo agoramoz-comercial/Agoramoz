@@ -156,7 +156,7 @@ async function ciclo<T>(gerar: (falhasAnteriores: string[]) => Promise<Tentativa
     } catch (e) {
       t = {
         valor: null,
-        falhas: [{ onde: 'motor', motivo: 'suporte_fraco', detalhe: e instanceof Error ? e.message.slice(0, 160) : 'erro' }],
+        falhas: [{ onde: 'motor', motivo: 'motor_falhou', detalhe: e instanceof Error ? e.message.slice(0, 200) : 'erro' }],
         aceites: 0,
         retirados: 0,
       };
