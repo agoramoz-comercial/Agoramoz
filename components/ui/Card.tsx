@@ -24,9 +24,10 @@ export function Card({
     <As
       className={cn(
         'relative',
+        // `v3-vidro` só tem efeito dentro da casca pública (.v3): o admin fica igual.
         boxed
-          ? 'border border-dashed border-[color:var(--border)] bg-[color:var(--surface-raised)] p-7 md:p-9'
-          : 'border-t border-dashed border-[color:var(--hairline)] pt-6',
+          ? 'v3-vidro border border-dashed border-[color:var(--border)] bg-[color:var(--surface-raised)] p-7 md:p-9'
+          : 'v3-vidro v3-cartao-linha border-t border-dashed border-[color:var(--hairline)] pt-6',
         interactive &&
           'transition-colors duration-300 hover:border-solid hover:border-[color:var(--accent)]',
         className,

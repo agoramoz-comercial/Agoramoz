@@ -15,8 +15,22 @@ const archivo = Archivo({
   subsets: ['latin'],
   variable: '--font-archivo',
   display: 'swap',
+  // Só o admin e os documentos ainda a usam: o site público (v3) não a pré-carrega.
+  preload: false,
 });
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+/**
+ * Inter é o tipo do site público (v3) em seis línguas. `latin-ext` cobre o
+ * que o bloco básico não tem (ß alemão já está; mas ő, ł, ș, ğ de nomes
+ * próprios, e as aspas e travessões tipográficos de todas as línguas, sem
+ * cair no tipo de recurso). `adjustFontFallback` alinha as métricas do
+ * recurso para não haver salto de layout quando a fonte chega.
+ */
+const inter = Inter({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-inter',
+  display: 'swap',
+  adjustFontFallback: true,
+});
 
 /**
  * Chakra Petch é a voz techno do sistema: contadores quadrados, terminais
@@ -29,6 +43,7 @@ const chakra = Chakra_Petch({
   weight: ['500', '600'],
   variable: '--font-chakra',
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -45,6 +60,9 @@ export const viewport: Viewport = {
   themeColor: '#0A0A0B',
   width: 'device-width',
   initialScale: 1,
+  // Telemóveis com recorte: o conteúdo usa env(safe-area-inset-*) para não
+  // ficar debaixo do entalhe nem da barra de gestos.
+  viewportFit: 'cover',
 };
 
 /**

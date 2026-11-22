@@ -29,7 +29,7 @@ export async function IdeiasV3({ lingua, vazio }: { lingua: Lingua; vazio: strin
           <Link
             href={caminhoDoArtigo(a.slug, edicao)}
             lang={edicao !== lingua ? edicao : undefined}
-            className="group flex h-full min-h-72 flex-col justify-between rounded-[1.5rem] border border-[var(--v3-linha-escura)] p-7 transition-colors duration-500 hover:bg-[var(--v3-papel-2)]"
+            className="v3-vidro group flex h-full min-h-72 flex-col justify-between p-7"
           >
             <div>
               <time dateTime={a.publicado_em} className="v3-etiqueta text-[var(--v3-terra)]">

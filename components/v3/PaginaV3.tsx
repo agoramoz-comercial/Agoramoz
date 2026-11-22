@@ -18,6 +18,7 @@ import {
 import { IdeiasV3 } from '@/components/v3/IdeiasV3';
 import { ProvaCarrossel } from '@/components/v3/ProvaCarrossel';
 import { LigacaoVidro } from '@/components/v3/LigacaoVidro';
+import { LiquidGlass } from '@/components/ui/apple-tahoe-liquid-glass-button';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
 import { FOUNDERS } from '@/content/site';
 import type { Lingua } from '@/content/types';
@@ -134,9 +135,9 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
           </RevelarPalavras>
           <p className="mt-10 max-w-[56ch] text-lg leading-relaxed text-[var(--v3-cinza)]">{x.hero.texto}</p>
 
-          <ol className="mt-20 grid border-t border-[var(--v3-linha)] md:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-20 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {x.problema.itens.map((it, i) => (
-              <li key={it.titulo} className="border-b border-[var(--v3-linha)] py-8 md:pe-8 lg:border-e lg:px-6 lg:first:ps-0 lg:last:border-e-0">
+              <li key={it.titulo} className="v3-vidro flex flex-col p-6 sm:p-7">
                 <span className="v3-numeral block text-6xl text-[var(--v3-cinza)]">{dois(i + 1)}</span>
                 <h3 className="mt-8 text-2xl font-medium tracking-[-0.03em]">{it.titulo}</h3>
                 <p className="mt-3 text-[var(--v3-cinza)]">{it.texto}</p>
@@ -174,11 +175,15 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
 
           <CartoesEmpilhados className="mt-20">
             {x.caminhos.itens.map((c, i) => (
-              <article
+              <LiquidGlass
                 key={c.nome}
                 id={`caminho-${i + 1}`}
-                className="grid min-h-[62vh] scroll-mt-24 gap-10 rounded-[1.75rem] bg-[var(--v3-noite)] p-7 text-[var(--v3-papel)] sm:p-10 lg:grid-cols-12 lg:p-14"
+                material="regular"
+                appearance="dark"
+                refraction={28}
+                className="scroll-mt-24 rounded-[1.75rem] bg-[#0b0a09]/85! text-[var(--v3-papel)] ring-1 ring-[#efe8da]/12"
               >
+              <article className="grid min-h-[62vh] gap-10 p-7 sm:p-10 lg:grid-cols-12 lg:p-14">
                 <div className="flex flex-col justify-between gap-10 lg:col-span-7">
                   <div>
                     <p className="v3-etiqueta text-[var(--v3-cinza)]">
@@ -221,6 +226,7 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
                   </ul>
                 </div>
               </article>
+              </LiquidGlass>
             ))}
           </CartoesEmpilhados>
         </div>
@@ -239,7 +245,7 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
           {x.sistema.passos.map((s, i) => (
             <div
               key={s.titulo}
-              className="v3-passo flex shrink-0 flex-col justify-between rounded-[1.5rem] border border-[var(--v3-linha)] bg-[var(--v3-noite-2)] p-7"
+              className="v3-passo v3-vidro flex shrink-0 flex-col justify-between p-7"
             >
               <span className="v3-numeral text-7xl text-[var(--v3-ambar)]">{dois(i + 1)}</span>
               <div className="mt-16">
@@ -290,7 +296,7 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
           <div className="lg:col-span-7">
             <div
               data-surface="deep"
-              className="rounded-[1.75rem] bg-[var(--v3-noite)] p-5 text-[var(--v3-papel)] sm:p-8 lg:sticky lg:top-24"
+              className="v3-vidro v3-vidro-escuro p-5 text-[var(--v3-papel)] [--vidro-raio:1.75rem] sm:p-8 lg:sticky lg:top-24"
             >
               <DiagnosticoEmbutido idioma={lingua} />
             </div>
@@ -321,15 +327,15 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
           <p className="mt-4 text-xs text-[var(--v3-cinza)]">{x.prova.dica}</p>
 
           {/* O canvas não tem ligações: cada produto continua a abrir a sua página. */}
-          <ul className="mt-10 grid gap-px overflow-hidden rounded-[1.5rem] border border-[var(--v3-linha)] bg-[var(--v3-linha)] sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {x.prova.produtos.map((pr, i) => {
               const l = p(PRODUTOS[i]!);
               return (
-                <li key={pr.nome} className="bg-[var(--v3-noite)]">
+                <li key={pr.nome} className="v3-vidro">
                   <Link
                     href={l.href}
                     hrefLang={l.hrefLang}
-                    className="group flex h-full flex-col justify-between gap-6 p-6 transition-colors duration-500 hover:bg-[var(--v3-noite-2)]"
+                    className="group flex h-full min-h-44 flex-col justify-between gap-6 p-6"
                   >
                     <div>
                       <h3 className="flex flex-wrap items-center gap-3 text-xl font-medium tracking-[-0.03em]">
@@ -377,7 +383,7 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
             </div>
           </div>
 
-          <ol className="mt-20 border-t border-[var(--v3-linha)]">
+          <ol className="v3-vidro mt-20 px-5 sm:px-8 [&>li:last-child]:border-b-0">
             {x.fases.itens.map((f, i) => (
               <li key={f.titulo} className="border-b border-[var(--v3-linha)]">
                 <details className="group" open={i === 0}>
@@ -435,11 +441,11 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
           <Faixa itens={x.onde.mercados.map((m) => m.nome)} className="text-[clamp(3rem,2rem+5vw,7rem)] font-medium tracking-[-0.05em]" />
         </div>
 
-        <ul className="mx-auto mt-16 grid max-w-[110rem] gap-px px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
+        <ul className="mx-auto mt-16 grid max-w-[110rem] gap-4 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
           {x.onde.mercados.map((m, i) => {
             const l = p(MERCADOS[i]!);
             return (
-              <li key={m.nome} className="flex flex-col justify-between gap-8 border-t border-[var(--v3-linha-escura)] py-8 lg:pe-8">
+              <li key={m.nome} className="v3-vidro flex flex-col justify-between gap-8 p-6">
                 <div>
                   <h3 className="text-2xl font-medium tracking-[-0.03em]">{m.nome}</h3>
                   <p className="mt-3 text-[var(--v3-terra)]">{m.texto}</p>
@@ -472,7 +478,7 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
 
           <ul className="mt-20 grid gap-10 md:grid-cols-2">
             {FOUNDERS.people.map((pessoa, i) => (
-              <li key={pessoa.name}>
+              <li key={pessoa.name} className="v3-vidro p-3 sm:p-4">
                 <ImagemRevelada className="aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-[var(--v3-noite-2)]">
                   <Image
                     src={FOTOS[pessoa.photo as keyof typeof FOTOS]}
@@ -481,7 +487,7 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
                     className="h-full w-full object-cover grayscale-[35%]"
                   />
                 </ImagemRevelada>
-                <div className="mt-6 flex items-start justify-between gap-6">
+                <div className="mt-6 flex items-start justify-between gap-6 px-2 pb-3 sm:px-3">
                   <div>
                     <h3 className="text-3xl font-medium tracking-[-0.035em]">{pessoa.name}</h3>
                     <p className="v3-etiqueta mt-2 text-[var(--v3-cinza)]">{x.equipa.pessoas[i]!.papel}</p>
@@ -537,7 +543,7 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
               {x.faq.titulo}
             </h2>
           </div>
-          <ul className="border-t border-[var(--v3-linha)] lg:col-span-8">
+          <ul className="v3-vidro px-5 sm:px-8 lg:col-span-8 [&>li:last-child]:border-b-0">
             {x.faq.itens.map((f) => (
               <li key={f.q} className="border-b border-[var(--v3-linha)]">
                 <details>
