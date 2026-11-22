@@ -21,7 +21,7 @@ export function metadadosV3(lingua: Lingua): Metadata {
 /** A página inicial numa língua: casca v3 + secções. */
 export function InicioV3({ lingua }: { lingua: Lingua }) {
   return (
-    <CascaV3 lingua={lingua}>
+    <CascaV3 lingua={lingua} inicio>
       <PaginaV3 lingua={lingua} />
     </CascaV3>
   );

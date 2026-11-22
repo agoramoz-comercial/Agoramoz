@@ -319,6 +319,27 @@ const serverSchema = z.object({
     .enum(['https://api.moonshot.ai/v1', 'https://api.moonshot.cn/v1'])
     .default('https://api.moonshot.ai/v1')
     .catch('https://api.moonshot.ai/v1'),
+
+  // ── E-mail ao lead depois do diagnóstico (Resend) ───────────────────────
+  /**
+   * `off` — nada é enviado (o diagnóstico continua a gravar-se como sempre).
+   * `on` — depois de gravar uma submissão NOVA, envia à pessoa o
+   * «Enquadramento preliminar» em PDF. Sem `RESEND_API_KEY`, não envia e
+   * regista o motivo. Nenhuma destas variáveis pode partir o formulário: um
+   * valor inválido cai para o seguro (`.catch`). Ver docs/EMAIL.md.
+   */
+  EMAIL_LEADS: z.enum(['off', 'on']).default('off').catch('off'),
+  /** Chave da Resend. Sensível: só na Vercel, nunca no Git nem no chat. */
+  RESEND_API_KEY: z.string().min(10).optional().catch(undefined),
+  /** Remetente. O domínio tem de estar verificado na Resend (SPF e DKIM). */
+  EMAIL_FROM: z
+    .string()
+    .regex(/^[^<>@\s][^<>@]*<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>$|^[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+$/)
+    .default('AGORAMOZ <comercial@agoramoz.com>')
+    .catch('AGORAMOZ <comercial@agoramoz.com>'),
+  EMAIL_REPLY_TO: z.string().email().default('comercial@agoramoz.com').catch('comercial@agoramoz.com'),
+  /** Cópia oculta para a equipa (opcional). */
+  EMAIL_BCC_INTERNO: z.string().email().optional().catch(undefined),
 })
   .superRefine((env, ctx) => {
     if (env.DIAGNOSTIC_PERSISTENCE !== 'required') return;
@@ -487,6 +508,11 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       KIMI_API_KEY: process.env.KIMI_API_KEY,
       KIMI_MODEL: process.env.KIMI_MODEL,
       KIMI_BASE_URL: process.env.KIMI_BASE_URL,
+      EMAIL_LEADS: process.env.EMAIL_LEADS,
+      RESEND_API_KEY: process.env.RESEND_API_KEY,
+      EMAIL_FROM: process.env.EMAIL_FROM,
+      EMAIL_REPLY_TO: process.env.EMAIL_REPLY_TO,
+      EMAIL_BCC_INTERNO: process.env.EMAIL_BCC_INTERNO,
     },
     'servidor',
   );

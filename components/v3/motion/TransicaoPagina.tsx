@@ -27,6 +27,9 @@ export function TransicaoPagina() {
         primeira.current = false;
         return;
       }
+      // Com View Transitions, a «abertura» (TransicaoVista) trata da mudança:
+      // a cortina é só a alternativa para browsers sem a API.
+      if (typeof document !== 'undefined' && 'startViewTransition' in document) return;
       const mm = gsap.matchMedia();
       mm.add(COM_MOVIMENTO, () => {
         const tl = gsap

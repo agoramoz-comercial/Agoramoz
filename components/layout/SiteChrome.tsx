@@ -1,21 +1,14 @@
-import { MotionProvider } from '@/components/motion/MotionProvider';
-import { ScrollProgress } from '@/components/motion/ScrollProgress';
-import { CustomCursor } from '@/components/motion/CustomCursor';
-import { PageTransition } from '@/components/motion/PageTransition';
-import { SectionIndex } from '@/components/layout/SectionIndex';
-import { SiteHeader } from '@/components/layout/SiteHeader';
-import { SiteFooter } from '@/components/layout/SiteFooter';
-import { TopBar } from '@/components/layout/TopBar';
-import { MobileCtaBar } from '@/components/layout/MobileCtaBar';
-import { SkipLink } from '@/components/ui/SkipLink';
-import { AttributionBoot } from '@/components/analytics/AttributionBoot';
-import { MedicaoPaginas } from '@/components/analytics/MedicaoPaginas';
-import { OutboundTracker } from '@/components/analytics/OutboundTracker';
-import { SiteJsonLd } from '@/components/seo/JsonLd';
+import { CascaV3 } from '@/components/v3/CascaV3';
 import type { Idioma } from '@/content/types';
 
 /**
- * A casca do site público.
+ * A casca do site público — desde 2026 é a casca v3 (CascaV3), a mesma da
+ * página inicial: navegação em pílula de vidro, rodapé v3, transição de
+ * página «abertura» e as superfícies religadas à paleta v3. O cabeçalho, a
+ * barra de topo, o rodapé, a barra de CTA no telemóvel, o índice lateral, a
+ * barra de progresso e o cursor antigos deixaram de ser montados.
+ *
+ * Nota histórica:
  *
  * Estava no layout raiz, o que significava que corria em TODAS as rotas. Isso
  * não era um problema enquanto só existiam páginas de marketing; passou a ser
@@ -40,24 +33,5 @@ import type { Idioma } from '@/content/types';
  * aos motores de busca o que cada URL é.
  */
 export function SiteChrome({ children, idioma }: { children: React.ReactNode; idioma: Idioma }) {
-  return (
-    <div className="grain" data-tema="escuro" lang={idioma === 'en' ? 'en' : undefined}>
-      <SkipLink idioma={idioma} />
-      <SiteJsonLd />
-      <AttributionBoot />
-      <MedicaoPaginas />
-      <OutboundTracker />
-      <MotionProvider>
-        <ScrollProgress />
-        <PageTransition />
-        <CustomCursor />
-        <SectionIndex />
-        <TopBar idioma={idioma} />
-        <SiteHeader idioma={idioma} />
-        <main id="conteudo">{children}</main>
-        <SiteFooter idioma={idioma} />
-        <MobileCtaBar idioma={idioma} />
-      </MotionProvider>
-    </div>
-  );
+  return <CascaV3 lingua={idioma}>{children}</CascaV3>;
 }

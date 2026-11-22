@@ -23,10 +23,10 @@ const button = cva(
   {
     variants: {
       variant: {
-        signal: 'bg-[color:var(--color-signal-600)] text-white hover:bg-[color:var(--color-signal-700)]',
-        solid: 'bg-[color:var(--on-surface)] text-[color:var(--surface)] hover:opacity-90',
+        signal: 'btn-signal bg-[color:var(--color-signal-600)] text-white hover:bg-[color:var(--color-signal-700)]',
+        solid: 'btn-solid bg-[color:var(--on-surface)] text-[color:var(--surface)] hover:opacity-90',
         outline:
-          'border border-[color:var(--border)] text-[color:var(--on-surface)] hover:border-[color:var(--on-surface)]',
+          'btn-outline border border-[color:var(--border)] text-[color:var(--on-surface)] hover:border-[color:var(--on-surface)]',
         ghost: 'text-[color:var(--on-surface)] hover:bg-[color:var(--surface-raised)]',
         link: 'h-auto min-h-0 p-0 text-[color:var(--accent)] underline-offset-4 hover:underline',
       },

@@ -808,3 +808,71 @@ describe('agendamento no fim do diagnóstico', () => {
     expect(criarIntencao).not.toHaveBeenCalled();
   });
 });
+
+// ===========================================================================
+// E-mail «Enquadramento preliminar» (EMAIL_LEADS)
+// ===========================================================================
+
+const enviarEnquadramento = vi.fn<(p: { diagnosticId: string }) => Promise<unknown>>();
+vi.mock('@/lib/email/enviar', () => ({
+  enviarEnquadramento: (p: { diagnosticId: string }) => enviarEnquadramento(p),
+}));
+/** `after()` fora de um pedido real do Next: corre logo, para se poder afirmar. */
+const depois = vi.fn<(cb: () => unknown) => void>();
+vi.mock('next/server', async (original) => ({
+  ...(await original<typeof import('next/server')>()),
+  after: (cb: () => unknown) => {
+    depois(cb);
+    void cb();
+  },
+}));
+
+describe('e-mail de enquadramento depois do diagnóstico', () => {
+  function comEmail(extra: Record<string, string> = {}) {
+    return carregarRota({
+      DIAGNOSTIC_PERSISTENCE: 'required',
+      SUPABASE_URL: 'https://projecto.supabase.co',
+      SUPABASE_SERVICE_ROLE_KEY: 'chave-de-teste-suficientemente-longa',
+      EMAIL_LEADS: 'on',
+      RESEND_API_KEY: 're_teste_0123456789',
+      ...extra,
+    });
+  }
+
+  beforeEach(() => {
+    enviarEnquadramento.mockReset();
+    enviarEnquadramento.mockResolvedValue({ enviado: true, id: 'x' });
+    depois.mockReset();
+  });
+
+  it('submissão nova: agenda o envio depois da resposta, com o id do diagnóstico', async () => {
+    const POST = await comEmail();
+    const res = await POST(pedido(VALIDO));
+    expect(res.status).toBe(200);
+    expect(depois).toHaveBeenCalledTimes(1);
+    expect(enviarEnquadramento).toHaveBeenCalledWith(expect.objectContaining({ diagnosticId: resultado().diagnostic_id }));
+  });
+
+  it('submissão repetida: não volta a enviar, e a resposta tem a mesma forma', async () => {
+    ingest.mockResolvedValue(resultado({ duplicate: true }));
+    const POST = await comEmail();
+    const corpo = await (await POST(pedido(VALIDO))).json();
+    expect(Object.keys(corpo).sort()).toEqual(['correlationId', 'ok']);
+    expect(enviarEnquadramento).not.toHaveBeenCalled();
+  });
+
+  it('desligado: não agenda nada', async () => {
+    const POST = await comBase();
+    await POST(pedido(VALIDO));
+    expect(depois).not.toHaveBeenCalled();
+    expect(enviarEnquadramento).not.toHaveBeenCalled();
+  });
+
+  it('uma falha a gravar nunca envia', async () => {
+    ingest.mockRejectedValueOnce(Object.assign(new Error('x'), { code: '08006' }));
+    const POST = await comEmail();
+    const res = await POST(pedido(VALIDO));
+    expect(res.status).toBe(503);
+    expect(enviarEnquadramento).not.toHaveBeenCalled();
+  });
+});

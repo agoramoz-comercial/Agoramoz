@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { gerarRef, urlDeMarcacao } from '@/lib/agendamento/cal';
 import { criarIntencao } from '@/lib/agendamento/servidor';
 import { derivarCanal } from '@/lib/attribution/channel';
@@ -15,6 +15,7 @@ import {
 } from '@/lib/diagnostic/normalize';
 import { runRules } from '@/lib/diagnostic/rules';
 import { SCORING_VERSION, scoreDiagnostic } from '@/lib/diagnostic/score';
+import { enviarEnquadramento } from '@/lib/email/enviar';
 import { leadSchema, type LeadInput } from '@/lib/forms/lead-schema';
 import {
   clientKey,
@@ -33,8 +34,12 @@ import { log } from '@/lib/log/logger';
  * externo — n8n, IA, e-mail — é chamado a partir daqui. O que faz esse trabalho
  * lê a fila depois, e por isso uma VPS em baixo deixa de poder perder um lead.
  *
- * O que esta rota NÃO faz, de propósito: não redige, não gera documento, não
- * envia. Um diagnóstico nasce em `computed` e só sai de lá por decisão humana.
+ * O que esta rota NÃO faz, de propósito: não redige o diagnóstico nem decide
+ * nada. Um diagnóstico nasce em `computed` e só sai de lá por decisão humana.
+ *
+ * A única exceção é o «Enquadramento preliminar» por e-mail (EMAIL_LEADS=on):
+ * corre em `after()`, DEPOIS de a resposta sair, só para submissões novas, e
+ * a falha dele não toca no lead. Ver lib/email/enviar.ts e docs/EMAIL.md.
  */
 
 export const runtime = 'nodejs';
@@ -343,6 +348,17 @@ export async function POST(request: Request) {
     durationMs: Date.now() - started,
     outcome: 'accepted',
   });
+
+  /**
+   * 9-bis. O «Enquadramento preliminar» por e-mail, DEPOIS da resposta. Só para
+   * uma submissão nova (uma repetição não volta a enviar) e só se o e-mail
+   * estiver ligado — `enviarEnquadramento` verifica e regista o motivo. A
+   * resposta ao browser é a mesma em todos os casos.
+   */
+  if (!resultado.duplicate && resultado.diagnostic_id && env.EMAIL_LEADS === 'on') {
+    const diagnosticId = resultado.diagnostic_id;
+    after(() => enviarEnquadramento({ input, diagnosticId, correlationId }));
+  }
 
   /**
    * 10. A marcação da conversa (Cal.com), DEPOIS do lead estar gravado — e

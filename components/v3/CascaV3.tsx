@@ -6,6 +6,7 @@ import { OutboundTracker } from '@/components/analytics/OutboundTracker';
 import { MotionProvider } from '@/components/motion/MotionProvider';
 import { SiteJsonLd } from '@/components/seo/JsonLd';
 import { NavV3 } from '@/components/v3/NavV3';
+import { TransicaoVista } from '@/components/v3/TransicaoVista';
 import { CursorPonto, Intro, TransicaoPagina } from '@/components/v3/motion';
 import type { Lingua } from '@/content/types';
 import { LINGUAS, direcaoDe } from '@/lib/i18n/texto';
@@ -20,11 +21,21 @@ const arabe = IBM_Plex_Sans_Arabic({
 });
 
 /**
- * A casca da página inicial v3: sem o cabeçalho, o rodapé nem a barra do
- * design anterior. Mantém o que não é design — medição, JSON-LD, scroll suave
+ * A casca v3 de todo o site público (página inicial nas seis línguas e as
+ * páginas interiores em pt/en, via SiteChrome): sem o cabeçalho, o rodapé
+ * nem a barra do design anterior. Mantém o que não é design — medição, JSON-LD, scroll suave
  * (Lenis) — e marca a língua e o sentido de leitura do bloco inteiro.
  */
-export function CascaV3({ lingua, children }: { lingua: Lingua; children: React.ReactNode }) {
+export function CascaV3({
+  lingua,
+  inicio = false,
+  children,
+}: {
+  lingua: Lingua;
+  /** Página inicial: o «Diagnóstico» do menu leva ao formulário na própria página. */
+  inicio?: boolean;
+  children: React.ReactNode;
+}) {
   const x = textosV3(lingua);
   const p = (c: string) => paginaV3(c, lingua);
   const ligacoes = [
@@ -59,10 +70,12 @@ export function CascaV3({ lingua, children }: { lingua: Lingua; children: React.
         <NavV3
           lingua={lingua}
           ligacoes={ligacoes}
-          diagnostico={{ rotulo: x.nav.diagnostico, href: '#diagnostico' }}
+          diagnostico={{ rotulo: x.nav.diagnostico, ...(inicio ? { href: '#diagnostico' } : p('/diagnostico')) }}
           rotulos={{ menu: x.nav.menu, fechar: x.nav.fechar, lingua: x.nav.lingua, inicio: 'AGORAMOZ' }}
         />
-        <main id="conteudo">{children}</main>
+        <main id="conteudo">
+          <TransicaoVista>{children}</TransicaoVista>
+        </main>
 
         <footer className="relative overflow-hidden border-t border-[var(--v3-linha)] px-4 pt-20 pb-8 sm:px-6">
           <div className="mx-auto max-w-[110rem]">
