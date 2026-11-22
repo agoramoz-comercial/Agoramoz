@@ -1134,3 +1134,175 @@
 :root[data-motion='reduced'] .jornal-manchetes-pausa {
   display: none;
 }
+
+/* ===========================================================================
+   AGORAMOZ v3 (2026) — página inicial em seis línguas.
+   Sistema próprio, separado do anterior: noite quente, papel creme, tipo
+   neo-grotesco grande, pílulas, grão de película. Tudo vive dentro de `.v3`.
+   Contrastes calculados (WCAG 2.1):
+     papel #efe8da sobre noite #0b0a09 ......... 16,5:1
+     cinza #a8a092 sobre noite ................ 7,6:1
+     tinta #0b0a09 sobre papel ................ 16,5:1
+     terra #5f584d sobre papel ................ 5,9:1
+   =========================================================================== */
+
+.v3 {
+  --v3-noite: #0b0a09;
+  --v3-noite-2: #151311;
+  --v3-papel: #efe8da;
+  --v3-papel-2: #e4dccb;
+  --v3-cinza: #a8a092;
+  --v3-terra: #5f584d;
+  --v3-ambar: #e9a35c;
+  --v3-linha: rgb(239 232 218 / 0.14);
+  --v3-linha-escura: rgb(11 10 9 / 0.14);
+  background: var(--v3-noite);
+  color: var(--v3-papel);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.v3[dir='rtl'] {
+  font-family: var(--font-arabe), var(--font-inter), 'Noto Sans Arabic', Tahoma, sans-serif;
+}
+
+.v3 ::selection {
+  background: var(--v3-papel);
+  color: var(--v3-noite);
+}
+
+.v3 :focus-visible {
+  outline: 2px solid var(--v3-ambar);
+  outline-offset: 3px;
+}
+
+.v3-claro {
+  background: var(--v3-papel);
+  color: var(--v3-noite);
+}
+
+.v3-display {
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.86;
+}
+
+.v3[dir='rtl'] .v3-display {
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.v3-titulo {
+  font-size: clamp(2.25rem, 1.3rem + 3.9vw, 5.25rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.v3[dir='rtl'] .v3-titulo {
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.v3-etiqueta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.v3[dir='rtl'] .v3-etiqueta {
+  letter-spacing: 0;
+}
+
+/* A palavra AGORAMOZ do hero: cabe sempre numa linha (unidades do contentor). */
+.v3-marca {
+  container-type: inline-size;
+}
+
+.v3-marca > span {
+  display: block;
+  white-space: nowrap;
+  font-size: 18.2cqi;
+  font-weight: 500;
+  letter-spacing: -0.065em;
+  line-height: 0.8;
+}
+
+/* Grão de película estático por cima das imagens. */
+.v3-grao::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.v3-numeral {
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.v3 details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.v3 details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.v3 details[open] .v3-mais {
+  transform: rotate(45deg);
+}
+
+@media print {
+  .v3 {
+    background: #fff;
+    color: #000;
+  }
+}
+
+/* Os títulos da v3 usam o tipo da v3, não o Archivo do design anterior. */
+.v3 :is(h1, h2, h3, h4) {
+  font-family: inherit;
+}
+
+/* O sistema (7 passos): grelha quando não há pista horizontal (telemóvel,
+   movimento reduzido); cartões altos em linha quando o PinHorizontal liga. */
+.v3 .v3-passo {
+  min-height: 15rem;
+  margin-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .v3 .v3-passo {
+    margin-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .v3 .v3-passo {
+    width: calc(100% - 3rem);
+    max-width: 110rem;
+    margin-inline: auto;
+    min-height: 12rem;
+  }
+  .v3 :is([style*='flex-direction: row'], [style*='flex-flow: row']) > .v3-passo {
+    width: 24rem;
+    height: 62svh;
+    margin-block: auto;
+    margin-inline: 0 1.25rem;
+  }
+  .v3 :is([style*='flex-direction: row'], [style*='flex-flow: row']) > .v3-pista-intro {
+    width: min(34rem, 40vw);
+    height: 100svh;
+    margin: 0;
+    padding-inline-start: max(1.5rem, calc((100vw - 110rem) / 2 + 1.5rem));
+    padding-inline-end: 4rem;
+  }
+}

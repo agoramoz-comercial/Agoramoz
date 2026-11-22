@@ -19,7 +19,7 @@ import { cursosPublicados } from '@/lib/cursos/leitura';
  * incluindo as que têm datas certas. Datas medidas no histórico do git.
  */
 const REVISTO_EM = {
-  '/': '2026-10-11',
+  '/': '2026-11-22',
   '/diagnostico': '2026-10-11',
   '/solucoes': '2026-10-11',
   '/como-trabalhamos': '2026-10-11',
@@ -52,6 +52,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absolute('/privacidade'), lastModified: em('/privacidade'), priority: 0.2 },
     { url: absolute('/news'), lastModified: em('/news'), priority: 0.6 },
     { url: absolute('/civico'), lastModified: em('/civico'), priority: 0.7 },
+    // Página inicial v3 nas línguas sem o resto do site (fr, es, de, ar).
+    ...(['/fr', '/es', '/de', '/ar'] as const).map((url) => ({ url: absolute(url), lastModified: em('/'), priority: 0.6 })),
   ];
 
   /**

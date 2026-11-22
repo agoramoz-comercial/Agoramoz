@@ -22,12 +22,23 @@ import { CARTOES_AUTOMATICOS, cartaoInicial, minutosRestantes, podeIrPara, setor
 import { COUNTRY_CODES, GLOBAL_CODES, GLOBAL_MARKETS } from '@/content/registry';
 import { NOME_PAIS } from '@/content/i18n/chrome';
 import { DIAGNOSTICO as DIAGNOSTICO_TXT } from '@/content/i18n/diagnostico';
-import { CONSEQUENCIAS, FORM, OBJETIVOS, PAPEIS, PERGUNTAS, PRAZOS, TAMANHOS } from '@/content/i18n/formulario';
-import type { Idioma } from '@/content/types';
+import {
+  CONSENTIMENTO_LINGUA,
+  CONSEQUENCIAS,
+  FORM,
+  NOME_MERCADO,
+  OBJETIVOS,
+  PAPEIS,
+  PERGUNTAS,
+  PRAZOS,
+  TAMANHOS,
+} from '@/content/i18n/formulario';
+import type { Lingua, Texto } from '@/content/types';
 import { SoPortugues } from '@/components/ui/SoPortugues';
 import { ligacao } from '@/lib/i18n/rotas';
-import { t } from '@/lib/i18n/texto';
-import { ehCodigoDeDiagnostico, mercadoDoDiagnostico } from '@/lib/diagnostic/mercado';
+import { direcaoDe, idiomaBase, t } from '@/lib/i18n/texto';
+import { ehCodigoDeDiagnostico } from '@/lib/diagnostic/mercado';
+import { mercadoNaLingua } from '@/lib/forms/mercado-lingua';
 import Link from 'next/link';
 import { IMPROVEMENT_GOALS, SITE } from '@/content/site';
 import { track } from '@/lib/analytics/track';
@@ -58,7 +69,7 @@ const TOTAL = CARTOES.length;
  * No resumo de erros, os campos cuja mensagem é partilhada levam o rótulo à
  * frente: «Use no máximo 300 caracteres.» serve dois campos (WCAG 3.3.1).
  */
-const ROTULO_ERRO: Partial<Record<keyof LeadInput, { pt: string; en: string }>> = {
+const ROTULO_ERRO: Partial<Record<keyof LeadInput, Texto>> = {
   problemImpact: FORM.impacto,
   problemConsequences: FORM.consequencia,
   currentSystems: FORM.sistemas,
@@ -119,10 +130,21 @@ export function DiagnosticForm({
   idioma = 'pt',
   nivelTitulo = 'h2',
 }: {
-  idioma?: Idioma;
+  /**
+   * A língua de leitura. Em fr, es, de e ar, o que vai ao servidor — o campo
+   * `idioma`, as rotas e o texto de consentimento — fica no idioma-base
+   * (inglês): é a versão que o servidor conhece e regista.
+   */
+  idioma?: Lingua;
   /** `h3` quando o carrossel vive dentro de uma secção que já tem `h2`. */
   nivelTitulo?: 'h2' | 'h3';
 }) {
+  const base = idiomaBase(idioma);
+  /** Em árabe, «seguinte» está à esquerda: setas, teclas e deslizar invertem. */
+  const rtl = direcaoDe(idioma) === 'rtl';
+  /** O nome de um mercado na língua de leitura; em pt e en, exactamente o de antes. */
+  const nomeDe = (code: string, texto: Texto) =>
+    idioma === 'pt' || idioma === 'en' ? t(texto, idioma) : (NOME_MERCADO[code]?.[idioma] ?? t(texto, idioma));
   const params = useSearchParams();
   const presetCountry = params.get('pais');
   const presetSector = params.get('setor');
@@ -166,7 +188,7 @@ export function DiagnosticForm({
       currentSystems: '',
       desiredDecision: '',
       fax: '',
-      idioma,
+      idioma: base,
     },
   });
 
@@ -178,7 +200,7 @@ export function DiagnosticForm({
   const decisao = form.watch('desiredDecision') ?? '';
   const impactoVazio = impacto.trim() === '' && consequencias.length === 0 && sistemas.trim() === '' && decisao.trim() === '';
   // Pela porta única: resolve os treze mercados com a mesma forma.
-  const activeCountry = country ? mercadoDoDiagnostico(country, idioma) : null;
+  const activeCountry = country ? mercadoNaLingua(country, idioma) : null;
   const cartao = CARTOES[indice]!;
 
   /**
@@ -330,10 +352,12 @@ export function DiagnosticForm({
 
   /** ← e → quando o foco está na pergunta (onde fica depois de cada mudança). */
   function onKeyDownPergunta(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowRight') {
+    const seguinte = rtl ? 'ArrowLeft' : 'ArrowRight';
+    const anterior = rtl ? 'ArrowRight' : 'ArrowLeft';
+    if (e.key === seguinte) {
       e.preventDefault();
       void avancar();
-    } else if (e.key === 'ArrowLeft') {
+    } else if (e.key === anterior) {
       e.preventDefault();
       voltar();
     }
@@ -354,7 +378,7 @@ export function DiagnosticForm({
     const dx = e.clientX - inicio.x;
     const dy = e.clientY - inicio.y;
     if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
-    if (dx < 0) void avancar();
+    if (dx < 0 !== rtl) void avancar();
     else voltar();
   }
 
@@ -411,8 +435,8 @@ export function DiagnosticForm({
     if (status === 'done') okRef.current?.focus();
   }, [status]);
 
-  const solucoes = ligacao('/solucoes', idioma);
-  const politica = ligacao('/privacidade', idioma);
+  const solucoes = ligacao('/solucoes', base);
+  const politica = ligacao('/privacidade', base);
 
   if (status === 'done') {
     const enviado = form.getValues();
@@ -485,7 +509,7 @@ export function DiagnosticForm({
                 onClick={() => track({ name: 'meeting_requested', surface: 'diagnostico' })}
               >
                 {t(FORM.marcar, idioma)}
-                <ArrowRight aria-hidden className="size-4" />
+                <ArrowRight aria-hidden className="size-4 rtl:-scale-x-100" />
               </a>
             </Button>
             <p className="mt-3 max-w-md text-[length:var(--text-micro)] text-[color:var(--muted)]">
@@ -503,7 +527,7 @@ export function DiagnosticForm({
           <Button asChild variant="ghost">
             <Link href={solucoes.href} hrefLang={solucoes.soPortugues ? 'pt' : undefined}>
               {t(FORM.verSolucoes, idioma)}
-              {solucoes.soPortugues && <SoPortugues idioma={idioma} />}
+              {solucoes.soPortugues && <SoPortugues idioma={base} />}
             </Link>
           </Button>
         </div>
@@ -612,7 +636,7 @@ export function DiagnosticForm({
             className="mt-5 rounded-[--radius-sm] border border-[color:var(--color-signal-600)] p-4 outline-none"
           >
             <p className="text-sm font-medium">{t(FORM.corrija, idioma)}</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--muted)]">
+            <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-[color:var(--muted)]">
               {stepErrors.map((f) => (
                 <li key={String(f)}>
                   {ROTULO_ERRO[f] ? `${t(ROTULO_ERRO[f], idioma)}: ` : ''}
@@ -655,7 +679,7 @@ export function DiagnosticForm({
                       describedBy={automatico ? avisoId : undefined}
                       options={COUNTRY_CODES.map((c) => ({
                         value: c,
-                        label: t(NOME_PAIS[c], idioma),
+                        label: nomeDe(c, NOME_PAIS[c]),
                       }))}
                     />
                     <ChipGroup
@@ -668,7 +692,7 @@ export function DiagnosticForm({
                       describedBy={automatico ? avisoId : undefined}
                       options={GLOBAL_CODES.map((c) => ({
                         value: c,
-                        label: t(GLOBAL_MARKETS[c].name, idioma),
+                        label: nomeDe(c, GLOBAL_MARKETS[c].name),
                       }))}
                     />
                   </div>
@@ -1012,6 +1036,11 @@ export function DiagnosticForm({
                 <input id="fax-field" tabIndex={-1} autoComplete="off" {...form.register('fax')} />
               </div>
 
+              {idioma !== 'pt' && idioma !== 'en' && (
+                <p className="text-[length:var(--text-micro)] text-[color:var(--muted)]">
+                  {t(CONSENTIMENTO_LINGUA, idioma)}
+                </p>
+              )}
               <label className="flex items-start gap-3 text-sm">
                 <input
                   type="checkbox"
@@ -1022,7 +1051,7 @@ export function DiagnosticForm({
                   {...form.register('consent')}
                 />
                 <span className="text-[color:var(--muted)]">
-                  {activeCountry.consentText}{' '}
+                  <span lang={idioma !== base ? base : undefined}>{activeCountry.consentText}</span>{' '}
                   {/* A política só existe em português: em inglês, a ligação diz para onde vai. */}
                   <a
                     href={politica.href}
@@ -1030,7 +1059,7 @@ export function DiagnosticForm({
                     className="text-[color:var(--accent)] underline underline-offset-4"
                   >
                     {t(FORM.politica, idioma)}
-                    {politica.soPortugues && <SoPortugues idioma={idioma} />}
+                    {politica.soPortugues && <SoPortugues idioma={base} />}
                   </a>
                 </span>
               </label>
@@ -1070,7 +1099,7 @@ export function DiagnosticForm({
 
       <div className="mt-8 flex items-center justify-between gap-3">
         <Button type="button" variant="ghost" size="sm" disabled={indice === 0} onClick={voltar} className="gap-1.5">
-          <ArrowLeft aria-hidden className="size-4" />
+          <ArrowLeft aria-hidden className="size-4 rtl:-scale-x-100" />
           {t(FORM.voltar, idioma)}
         </Button>
 
@@ -1087,7 +1116,7 @@ export function DiagnosticForm({
             className="gap-1.5"
           >
             {cartao === 'impacto' && impactoVazio ? t(FORM.saltar, idioma) : t(FORM.continuar, idioma)}
-            <ArrowRight aria-hidden className="size-4" />
+            <ArrowRight aria-hidden className="size-4 rtl:-scale-x-100" />
           </Button>
         )}
       </div>

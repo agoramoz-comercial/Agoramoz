@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { FORM } from '@/content/i18n/formulario';
-import type { Idioma } from '@/content/types';
-import { t } from '@/lib/i18n/texto';
+import type { Lingua } from '@/content/types';
+import { direcaoDe, t } from '@/lib/i18n/texto';
 
 /**
  * O carrossel do diagnóstico dentro da secção da página inicial.
@@ -19,7 +19,7 @@ const Formulario = dynamic(() => import('./DiagnosticForm').then((m) => m.Diagno
   loading: () => null,
 });
 
-export function DiagnosticoEmbutido({ idioma }: { idioma: Idioma }) {
+export function DiagnosticoEmbutido({ idioma }: { idioma: Lingua }) {
   const [visivel, setVisivel] = useState(false);
   const moldura = useRef<HTMLDivElement>(null);
 
@@ -48,7 +48,7 @@ export function DiagnosticoEmbutido({ idioma }: { idioma: Idioma }) {
   );
 
   return (
-    <div ref={moldura} className="min-h-[30rem]">
+    <div ref={moldura} dir={direcaoDe(idioma)} className="min-h-[30rem]">
       {visivel ? (
         <Suspense fallback={espera}>
           <Formulario idioma={idioma} nivelTitulo="h3" />
