@@ -189,7 +189,7 @@ export function NavV3({
             tint="#efe8da"
             refraction={6}
             size="sm"
-            className="hidden h-10 bg-[var(--v3-papel)]/80! px-4 text-[0.82rem] font-medium tracking-normal text-[var(--v3-noite)] sm:inline-flex"
+            className="hidden! h-10 bg-[var(--v3-papel)]/80! px-4 text-[0.82rem] font-medium tracking-normal text-[var(--v3-noite)] sm:inline-flex!"
           >
             <Link href={diagnostico.href} hrefLang={diagnostico.hrefLang}>
               {diagnostico.rotulo}

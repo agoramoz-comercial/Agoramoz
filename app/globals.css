@@ -1796,3 +1796,46 @@
 .v3 :is(img, video, canvas, svg) {
   max-width: 100%;
 }
+
+/* O Card «em linha» (régua no topo) passa a cartão de vidro com respiro. */
+.v3 .v3-cartao-linha {
+  padding: 1.5rem;
+}
+
+/* Caixas com contorno completo nas páginas interiores (detalhes, resumos,
+   painéis do Cívico, Cursos, TerraBuild): vidro também. As pílulas
+   (rounded-full) e os campos de formulário ficam como estão. */
+.v3 main :is(li, article, div)[class~='border'][class*='border-[color:var(--']:not([class*='rounded-full'], input, textarea, select, button, [role='tab']) {
+  background-color: var(--vidro-fundo);
+  border-color: var(--vidro-borda) !important;
+  border-style: solid !important;
+  border-radius: 1.25rem;
+  box-shadow: var(--vidro-sombra);
+  -webkit-backdrop-filter: blur(var(--vidro-desfoque)) saturate(1.35);
+  backdrop-filter: blur(var(--vidro-desfoque)) saturate(1.35);
+}
+
+/* Ligações de texto: área de toque de 44 px em ecrãs tácteis, sem mudar o
+   desenho (o sublinhado continua junto ao texto). */
+@media (pointer: coarse) {
+  .v3 main a.underline {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* As setas que viram em RTL precisam de caixa própria para a transformação
+   se aplicar (num elemento inline, `scale` é ignorado). */
+.v3 [class*='rtl:-scale-x-100'] {
+  display: inline-block;
+}
+
+/* Hifenização só em palavras longas: «sel-ten» num título não, mas
+   «Verbin-dung» ou «Automatisie-rung» sim, quando não cabem. */
+.v3 :is(p, li, dd) {
+  hyphenate-limit-chars: 9 4 4;
+}
+.v3 :is(h1, h2, h3) {
+  hyphenate-limit-chars: 12 5 5;
+}

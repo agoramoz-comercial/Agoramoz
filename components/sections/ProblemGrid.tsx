@@ -19,12 +19,12 @@ export function ProblemGrid({
 }) {
   return (
     <Reveal className="mt-16">
-      <ul className={columns >= 3 ? 'grid gap-x-10 md:grid-cols-2 lg:grid-cols-3' : 'grid gap-x-16 md:grid-cols-2'}>
+      <ul className={columns >= 3 ? 'grid gap-4 md:grid-cols-2 lg:grid-cols-3' : 'grid gap-4 md:grid-cols-2'}>
         {items.map((p, i) => (
           <li
             key={p.title}
             data-animate
-            className="group border-t border-dashed border-[color:var(--hairline)] py-8 transition-colors duration-500 hover:border-[color:var(--accent)]"
+            className="v3-vidro v3-cartao-linha group border-t border-dashed border-[color:var(--hairline)] py-8 transition-colors duration-500 hover:border-[color:var(--accent)]"
           >
             <div className="flex items-start gap-6">
               <span

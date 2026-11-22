@@ -46,15 +46,19 @@ export function ProvaCarrossel({ prova, arabe }: { prova: V3['prova']; arabe: bo
   );
 
   return (
+    // No telemóvel o palco tem 170 % da largura (os cartões laterais saem pelas
+    // margens): o cartão da frente fica com ~240 px em vez de ~140 px.
     <div dir="ltr" className="overflow-hidden rounded-[1.75rem] border border-[var(--v3-linha)]">
+      <div className="-ms-[35%] h-[min(520px,128vw)] w-[170%] sm:ms-0 sm:aspect-[16/9] sm:h-auto sm:w-full">
       <WarpCarousel
         cards={cartoes}
         background="#0b0a09"
         font={fonte}
         ariaLabel={prova.carrossel}
         className="focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[var(--v3-ambar)]"
-        style={{ outline: undefined, aspectRatio: '16 / 9', minHeight: 420 }}
+        style={{ outline: undefined, aspectRatio: 'auto', height: '100%', minHeight: 420 }}
       />
+      </div>
     </div>
   );
 }

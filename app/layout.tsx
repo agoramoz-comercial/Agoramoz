@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0b0a09',
+  themeColor: '#0A0A0B',
   width: 'device-width',
   initialScale: 1,
   // Telemóveis com recorte: o conteúdo usa env(safe-area-inset-*) para não
