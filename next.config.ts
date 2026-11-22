@@ -28,10 +28,13 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   // O Next injeta scripts de arranque em linha. Sem `unsafe-eval`: se for
   // preciso, os relatórios dirão, em vez de o abrirmos por precaução.
-  "script-src 'self' 'unsafe-inline'",
+  // Cal.com: o carregador do embed (/marcar) vem de app.cal.com.
+  "script-src 'self' 'unsafe-inline' https://app.cal.com",
+  // O calendário do Cal.com é um iframe de app.cal.com (cal.com redirige para lá).
+  "frame-src 'self' https://app.cal.com https://cal.com",
   // `blob:` só cobre objectos criados pela própria página: o GLTFLoader do three
   // lê as texturas embutidas nos GLB do TerraBuild com fetch() de um URL blob:.
-  "connect-src 'self' blob:",
+  "connect-src 'self' blob: https://app.cal.com",
   "worker-src 'self' blob:",
   'upgrade-insecure-requests',
   'report-uri /api/csp-report',

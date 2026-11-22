@@ -3,6 +3,7 @@ import type { LeadInput } from '@/lib/forms/lead-schema';
 import { log } from '@/lib/log/logger';
 import { assunto, construirEnquadramento, nomeDoFicheiro } from './enquadramento';
 import { htmlDoEmail, textoDoEmail } from './html';
+import { SITE } from '@/content/site';
 import { reuniao } from './cta';
 import { gerarPdfEnquadramento } from './pdf';
 
@@ -52,7 +53,8 @@ export async function enviarEnquadramento(p: PedidoEnvio): Promise<ResultadoEnvi
   try {
     const doc = construirEnquadramento(p.input, p.input.idioma);
     const cta = reuniao(doc.t, {
-      calOrigem: env.CAL_ORIGIN,
+      site: SITE.url,
+      idioma: doc.idioma,
       calLink: env.CAL_LINK,
       nome: doc.nome,
       email: p.input.workEmail,

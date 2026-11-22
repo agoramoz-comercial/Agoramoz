@@ -44,8 +44,11 @@ feito só com as respostas dela. Língua: pt; as outras recebem em inglês.
    conta, criar o evento e pôr na Vercel `CAL_LINK` = `utilizador/evento`
    (ex.: `agoramoz/especialista`; o mesmo formato da marcação no fim do
    diagnóstico) e, se for uma instalação própria, `CAL_ORIGIN`. O botão do
-   e-mail e do PDF passa a abrir o Cal.com com o nome e o e-mail já
-   preenchidos. Sem `CAL_LINK`, o botão diz «Falar com um especialista» e
+   e-mail e do PDF passa a levar à página **`/marcar`** do site (`/en/marcar`
+   em inglês): o calendário do Cal.com embutido num painel de vidro, no design
+   AGORAMOZ. O nome e o e-mail seguem no fragmento do URL (`#name=…&email=…`),
+   que não chega a nenhum servidor, e pré-preenchem a marcação. A CSP permite
+   `https://app.cal.com` (script, iframe, connect) e `https://cal.com` (iframe). Sem `CAL_LINK`, o botão diz «Falar com um especialista» e
    abre um e-mail para `comercial@agoramoz.com`.
 6. Publicar de novo (as variáveis só valem num deploy novo) e fazer um
    diagnóstico de teste com um e-mail próprio.

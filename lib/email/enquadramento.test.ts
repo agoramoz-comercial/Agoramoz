@@ -32,7 +32,8 @@ const BASE: LeadInput = {
 const numeros = (s: string) => new Set(s.match(/\d+/g) ?? []);
 
 const CTA_EMAIL = reuniao(TEXTOS.pt, {
-  calOrigem: 'https://cal.com',
+  site: 'https://agoramoz.com',
+  idioma: 'pt',
   nome: 'Ana',
   email: 'ana@exemplo.co.mz',
   responderPara: 'comercial@agoramoz.com',
@@ -45,9 +46,10 @@ describe('enquadramento preliminar: botão de reunião', () => {
     expect(CTA_EMAIL.rotulo).toBe(TEXTOS.pt.ctaEscrever);
   });
 
-  it('com CAL_LINK, marca no Cal.com com nome e e-mail preenchidos', () => {
+  it('com CAL_LINK, leva à página /marcar do site, com nome e e-mail só no fragmento', () => {
     const r = reuniao(TEXTOS.en, {
-      calOrigem: 'https://cal.com',
+      site: 'https://agoramoz.com',
+      idioma: 'en',
       calLink: 'agoramoz/especialista',
       nome: 'Ana Machava',
       email: 'ana@exemplo.co.mz',
@@ -56,14 +58,19 @@ describe('enquadramento preliminar: botão de reunião', () => {
     expect(r.cal).toBe(true);
     expect(r.rotulo).toBe('Book a meeting with a specialist');
     const u = new URL(r.url);
-    expect(u.origin + u.pathname).toBe('https://cal.com/agoramoz/especialista');
-    expect(u.searchParams.get('name')).toBe('Ana Machava');
-    expect(u.searchParams.get('email')).toBe('ana@exemplo.co.mz');
+    expect(u.origin + u.pathname).toBe('https://agoramoz.com/en/marcar');
+    // Nada pessoal na query (chegaria ao servidor e aos registos).
+    expect(u.search).toBe('');
+    const f = new URLSearchParams(u.hash.slice(1));
+    expect(f.get('name')).toBe('Ana Machava');
+    expect(f.get('email')).toBe('ana@exemplo.co.mz');
+    const pt = reuniao(TEXTOS.pt, { site: 'https://agoramoz.com', idioma: 'pt', calLink: 'a/b', nome: '', email: '', responderPara: 'c@d.co' });
+    expect(pt.url).toBe('https://agoramoz.com/marcar');
   });
 
   it('o HTML e o texto levam o botão; o HTML leva o logótipo no topo', () => {
     const doc = construirEnquadramento(BASE, 'pt');
-    const cal = reuniao(doc.t, { calOrigem: 'https://cal.com', calLink: 'agoramoz/x', nome: 'Ana', email: 'a@b.co', responderPara: 'c@d.co' });
+    const cal = reuniao(doc.t, { site: 'https://agoramoz.com', idioma: 'pt', calLink: 'agoramoz/x', nome: 'Ana', email: 'a@b.co', responderPara: 'c@d.co' });
     const html = htmlDoEmail(doc, cal);
     expect(html).toContain(escapar(cal.url));
     expect(html).toContain('Marcar reunião com um especialista');

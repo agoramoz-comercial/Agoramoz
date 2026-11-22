@@ -90,6 +90,8 @@ export const RESERVED_TOP_LEVEL_SLUGS = [
   'en', 'global',
   // Página inicial v3 em seis línguas (2026): prefixos de língua, não países.
   'fr', 'es', 'de', 'ar',
+  // Marcação de conversas (Cal.com dentro do site).
+  'marcar',
   // AGORAMOZ Moz News (lote N).
   'news',
   // Website Final 2026: páginas de confiança.
