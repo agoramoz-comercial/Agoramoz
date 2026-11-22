@@ -16,6 +16,7 @@ import {
   RevelarPalavras,
 } from '@/components/v3/motion';
 import { IdeiasV3 } from '@/components/v3/IdeiasV3';
+import { ProvaCarrossel } from '@/components/v3/ProvaCarrossel';
 import { LigacaoVidro } from '@/components/v3/LigacaoVidro';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
 import { FOUNDERS } from '@/content/site';
@@ -314,37 +315,43 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
             </div>
           </div>
 
-          <ul className="mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ImagemRevelada className="mt-20">
+            <ProvaCarrossel prova={x.prova} arabe={lingua === 'ar'} />
+          </ImagemRevelada>
+          <p className="mt-4 text-xs text-[var(--v3-cinza)]">{x.prova.dica}</p>
+
+          {/* O canvas não tem ligações: cada produto continua a abrir a sua página. */}
+          <ul className="mt-10 grid gap-px overflow-hidden rounded-[1.5rem] border border-[var(--v3-linha)] bg-[var(--v3-linha)] sm:grid-cols-2 lg:grid-cols-4">
             {x.prova.produtos.map((pr, i) => {
               const l = p(PRODUTOS[i]!);
               return (
-                <li key={pr.nome}>
-                  <ImagemRevelada className="h-full">
-                    <Link
-                      href={l.href}
-                      hrefLang={l.hrefLang}
-                      className="group relative flex h-full min-h-[22rem] flex-col justify-between overflow-hidden rounded-[1.5rem] border border-[var(--v3-linha)] bg-[var(--v3-noite-2)] p-7 transition-colors duration-500 hover:bg-[#1d1a17]"
-                    >
-                      <div>
+                <li key={pr.nome} className="bg-[var(--v3-noite)]">
+                  <Link
+                    href={l.href}
+                    hrefLang={l.hrefLang}
+                    className="group flex h-full flex-col justify-between gap-6 p-6 transition-colors duration-500 hover:bg-[var(--v3-noite-2)]"
+                  >
+                    <div>
+                      <h3 className="flex flex-wrap items-center gap-3 text-xl font-medium tracking-[-0.03em]">
+                        {pr.nome}
                         {PRODUTOS[i] === '/projetos' && (
-                          <span className="v3-etiqueta mb-4 inline-block rounded-full border border-[var(--v3-linha)] px-3 py-1 text-[var(--v3-cinza)]">
+                          <span className="v3-etiqueta rounded-full border border-[var(--v3-linha)] px-2.5 py-0.5 text-[var(--v3-cinza)]">
                             {x.prova.demo}
                           </span>
                         )}
-                        <h3 className="text-3xl font-medium tracking-[-0.035em]">{pr.nome}</h3>
-                        <p className="mt-3 text-[var(--v3-cinza)]">{pr.prova}</p>
-                      </div>
-                      <span className="inline-flex items-center gap-3 text-sm">
-                        {x.prova.abrir}
-                        <span
-                          aria-hidden
-                          className="grid h-9 w-9 place-items-center rounded-full bg-[var(--v3-papel)] text-[var(--v3-noite)] transition-transform duration-500 group-hover:rotate-[-45deg] rtl:-scale-x-100"
-                        >
-                          →
-                        </span>
+                      </h3>
+                      <p className="mt-2 text-sm text-[var(--v3-cinza)]">{pr.prova}</p>
+                    </div>
+                    <span className="inline-flex items-center gap-3 text-sm">
+                      {x.prova.abrir}
+                      <span
+                        aria-hidden
+                        className="grid h-8 w-8 place-items-center rounded-full bg-[var(--v3-papel)] text-[var(--v3-noite)] transition-transform duration-500 group-hover:rotate-[-45deg] rtl:-scale-x-100"
+                      >
+                        →
                       </span>
-                    </Link>
-                  </ImagemRevelada>
+                    </span>
+                  </Link>
                 </li>
               );
             })}

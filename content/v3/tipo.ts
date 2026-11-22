@@ -68,6 +68,10 @@ export type V3 = {
     titulo: string;
     lead: string;
     produtos: { nome: string; prova: string }[];
+    /** Cartões do carrossel (WarpCarousel): título em 2 linhas (\n), número real, unidade e rodapé. */
+    cartoes: { titulo: string; valor: string; unidade?: string; rodape: string }[];
+    carrossel: string;
+    dica: string;
     demo: string;
     abrir: string;
     nota: string;
