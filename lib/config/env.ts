@@ -509,7 +509,8 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       KIMI_MODEL: process.env.KIMI_MODEL,
       KIMI_BASE_URL: process.env.KIMI_BASE_URL,
       EMAIL_LEADS: process.env.EMAIL_LEADS,
-      RESEND_API_KEY: process.env.RESEND_API_KEY,
+      // A chave foi guardada na Vercel com o nome «Resend»; aceitam-se os dois.
+      RESEND_API_KEY: process.env.RESEND_API_KEY ?? process.env.Resend,
       EMAIL_FROM: process.env.EMAIL_FROM,
       EMAIL_REPLY_TO: process.env.EMAIL_REPLY_TO,
       EMAIL_BCC_INTERNO: process.env.EMAIL_BCC_INTERNO,
