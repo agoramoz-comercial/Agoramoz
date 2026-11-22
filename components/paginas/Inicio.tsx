@@ -5,7 +5,9 @@ import { Hero } from '@/components/home/Hero';
 import { SegmentSelector } from '@/components/home/SegmentSelector';
 import { FlowDiagram } from '@/components/home/FlowDiagram';
 import { ProblemGrid } from '@/components/sections/ProblemGrid';
-import { SolutionsGrid } from '@/components/sections/SolutionsGrid';
+import { CaminhosGrid } from '@/components/sections/CaminhosGrid';
+import { ProdutosProva } from '@/components/sections/ProdutosProva';
+import { OQueEstamosAVer } from '@/components/sections/OQueEstamosAVer';
 import { CountriesBand } from '@/components/sections/CountriesBand';
 import { SectorExplorer } from '@/components/sections/SectorExplorer';
 import { ProcessTimeline } from '@/components/sections/ProcessTimeline';
@@ -19,10 +21,17 @@ import { FaqJsonLd } from '@/components/seo/JsonLd';
 import { getSolutionSummaries } from '@/content/registry';
 import { RESUMO_SOLUCAO } from '@/content/i18n/chrome';
 import { INICIO, conteudoDoInicio } from '@/content/i18n/inicio';
+import { CAMINHOS_SECAO, IDEIAS, ONDE } from '@/content/i18n/inicio-2026';
 import type { Idioma } from '@/content/types';
 import { caminhoNoIdioma, t } from '@/lib/i18n/texto';
 
 /**
+ * Ordem de 2026 (benchmark «Como vendem os gigantes»): a oferta e o primeiro
+ * passo sobem, a explicação desce. 1 hero com garantias · 2 caminho · 3
+ * problema → caminho · 4 três caminhos · 5 sistema · 6 diagnóstico · 7 prova
+ * (produtos a funcionar) · 8 fases · 9 risco · 10 onde trabalhamos · 11 quem
+ * lidera · 12 o que estamos a ver · 13 FAQ · 14 chamada final.
+ *
  * A página inicial nos dois idiomas, com a marcação que estava em
  * `app/(site)/page.tsx`. As quatro entradas de mercado — PT-PT, PT-MZ, PT-BR
  * e EN num contexto global — aparecem nas duas: no seletor do topo, na faixa
@@ -37,13 +46,20 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
     <>
       <FaqJsonLd items={c.faq} path={caminhoNoIdioma('/', idioma)} />
 
-      {/* 2 + 3 — Hero e seletor de país/setor */}
-      <Section surface="deep" spacing="tight" index={t(indice.inicio, idioma)} aria-label={t(aria.apresentacao, idioma)}>
-        <div className="pt-8 pb-4 lg:pt-16">
+      {/* 1 — Hero (direcção A «Sinal»: a única excepção do vermelho) */}
+      <Section
+        surface="deep"
+        spacing="tight"
+        index={t(indice.inicio, idioma)}
+        className="hero-sinal"
+        aria-label={t(aria.apresentacao, idioma)}
+      >
+        <div className="pt-6 pb-4 lg:pt-10">
           <Hero idioma={idioma} />
         </div>
       </Section>
 
+      {/* 2 — Seletor de país/setor */}
       <Section surface="deep" spacing="tight" aria-label={t(aria.caminho, idioma)}>
         <div className="grid lg:grid-cols-12">
           <div className="lg:col-span-7 lg:col-start-6">
@@ -52,7 +68,7 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
         </div>
       </Section>
 
-      {/* 4 — Problemas */}
+      {/* 3 — Problemas, cada um com o caminho que o resolve */}
       <Section surface="light" id="problemas" index={t(indice.problema, idioma)} aria-labelledby="h-problemas">
         <SectionHeading
           id="h-problemas"
@@ -61,12 +77,24 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
           title={t(INICIO.problemas.titulo, idioma)}
           max="wide"
         />
-        <ProblemGrid items={c.problemas} />
+        <ProblemGrid items={c.problemas} caminhos={idioma} />
       </Section>
 
-      {/* 5 — Sistema de crescimento e operação (a secção com pin) */}
+      {/* 4 — A oferta em três caminhos (as sete capacidades lá dentro) */}
+      <Section surface="deep" id="solucoes" index={t(indice.solucoes, idioma)} contour aria-labelledby="h-solucoes">
+        <SectionHeading
+          id="h-solucoes"
+          number="03"
+          eyebrow={t(CAMINHOS_SECAO.eyebrow, idioma)}
+          title={t(CAMINHOS_SECAO.titulo, idioma)}
+          lead={t(INICIO.solucoes.lead, idioma)}
+        />
+        <CaminhosGrid idioma={idioma} problemas={c.problemas} />
+      </Section>
+
+      {/* 5 — Como funciona por dentro (a secção com pin) */}
       <Section
-        surface="deep"
+        surface="dark"
         spacing="none"
         index={t(indice.sistema, idioma)}
         bleed
@@ -76,54 +104,30 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
         <FlowDiagram idioma={idioma} />
       </Section>
 
-      {/* 6 — Soluções */}
-      <Section surface="light" id="solucoes" index={t(indice.solucoes, idioma)} contour aria-labelledby="h-solucoes">
-        <SectionHeading
-          id="h-solucoes"
-          number="03"
-          eyebrow={t(INICIO.solucoes.eyebrow, idioma)}
-          title={t(INICIO.solucoes.titulo, idioma)}
-          lead={t(INICIO.solucoes.lead, idioma)}
-        />
-        <SolutionsGrid idioma={idioma} />
+      {/* 6 — Oferta de entrada, com o diagnóstico na página */}
+      <Section surface="deep" id="diagnostico" index={t(indice.diagnostico, idioma)} contour aria-label={t(aria.oferta, idioma)}>
+        <OfferSection idioma={idioma} formulario />
       </Section>
 
-      {/* 7 — Países, com a entrada global */}
-      <Section surface="dark" id="mercados" index={t(indice.mercados, idioma)} contour aria-labelledby="h-mercados">
+      {/* 7 — Prova: produtos AGORAMOZ a funcionar + demonstrações */}
+      <Section surface="light" id="prova" index={t(indice.prova, idioma)} aria-labelledby="h-prova">
         <SectionHeading
-          id="h-mercados"
+          id="h-prova"
           number="04"
-          eyebrow={t(INICIO.mercados.eyebrow, idioma)}
-          title={t(INICIO.mercados.titulo, idioma)}
-          lead={t(INICIO.mercados.lead, idioma)}
+          eyebrow={c.provaSecao.eyebrow}
+          title={c.provaSecao.title}
+          lead={c.provaSecao.lead}
+          max="wide"
         />
-        <CountriesBand idioma={idioma} comGlobal />
+        <ProdutosProva idioma={idioma} />
+        <ProofSection items={c.prova} idioma={idioma} />
       </Section>
 
-      {/* Faixa de capacidades — as mesmas cinco, em movimento contínuo */}
-      <Section surface="deep" spacing="none" bleed aria-hidden>
-        <div className="rule border-b border-[color:var(--hairline)] py-6">
-          <Marquee items={capabilities} />
-        </div>
-      </Section>
-
-      {/* 8 — Setores, com o filtro global */}
-      <Section surface="deep" id="setores" index={t(indice.setores, idioma)} aria-labelledby="h-setores">
-        <SectionHeading
-          id="h-setores"
-          number="05"
-          eyebrow={t(INICIO.setores.eyebrow, idioma)}
-          title={t(INICIO.setores.titulo, idioma)}
-          lead={t(INICIO.setores.lead, idioma)}
-        />
-        <SectorExplorer idioma={idioma} comGlobal />
-      </Section>
-
-      {/* 9 — Processo */}
-      <Section surface="light" id="processo" index={t(indice.processo, idioma)} aria-labelledby="h-processo">
+      {/* 8 — Processo */}
+      <Section surface="deep" id="processo" index={t(indice.processo, idioma)} aria-labelledby="h-processo">
         <SectionHeading
           id="h-processo"
-          number="06"
+          number="05"
           eyebrow={c.processo.eyebrow}
           title={c.processo.title}
           lead={c.processo.lead}
@@ -131,29 +135,11 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
         <ProcessTimeline idioma={idioma} />
       </Section>
 
-      {/* 10 — Oferta de entrada */}
-      <Section surface="deep" id="diagnostico" index={t(indice.diagnostico, idioma)} contour aria-label={t(aria.oferta, idioma)}>
-        <OfferSection idioma={idioma} formulario />
-      </Section>
-
-      {/* 11 + 12 — Demonstrações e prova */}
-      <Section surface="light" id="prova" index={t(indice.prova, idioma)} aria-labelledby="h-prova">
-        <SectionHeading
-          id="h-prova"
-          number="07"
-          eyebrow={c.provaSecao.eyebrow}
-          title={c.provaSecao.title}
-          lead={c.provaSecao.lead}
-          max="wide"
-        />
-        <ProofSection items={c.prova} idioma={idioma} />
-      </Section>
-
-      {/* 13 — Redução de risco */}
+      {/* 9 — O que fica escrito antes de começar (redução de risco) */}
       <Section surface="tint" index={t(indice.risco, idioma)} aria-labelledby="h-risco">
         <SectionHeading
           id="h-risco"
-          number="08"
+          number="06"
           eyebrow={c.risco.eyebrow}
           title={c.risco.title}
           lead={c.risco.body}
@@ -175,19 +161,54 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
         </Reveal>
       </Section>
 
-      {/* 14 — Fundadores */}
+      {/* 10 — Onde trabalhamos: mercados → setores */}
+      <Section surface="deep" id="mercados" index={t(ONDE.indice, idioma)} contour aria-labelledby="h-mercados">
+        <SectionHeading
+          id="h-mercados"
+          number="07"
+          eyebrow={t(INICIO.mercados.eyebrow, idioma)}
+          title={t(INICIO.mercados.titulo, idioma)}
+          lead={t(INICIO.mercados.lead, idioma)}
+        />
+        <CountriesBand idioma={idioma} comGlobal />
+
+        <div id="setores" className="mt-[var(--space-section-tight)] scroll-mt-28">
+          <SectionHeading
+            id="h-setores"
+            eyebrow={t(INICIO.setores.eyebrow, idioma)}
+            title={t(INICIO.setores.titulo, idioma)}
+            lead={t(INICIO.setores.lead, idioma)}
+          />
+          <SectorExplorer idioma={idioma} comGlobal />
+        </div>
+      </Section>
+
+      {/* Faixa de capacidades — em movimento contínuo */}
+      <Section surface="deep" spacing="none" bleed aria-hidden>
+        <div className="rule border-b border-[color:var(--hairline)] py-6">
+          <Marquee items={capabilities} />
+        </div>
+      </Section>
+
+      {/* 11 — Fundadores */}
       <Section surface="dark" index={t(indice.equipa, idioma)} aria-labelledby="h-fundadores">
         <SectionHeading
           id="h-fundadores"
-          number="09"
+          number="08"
           eyebrow={c.fundadores.eyebrow}
           title={c.fundadores.title}
         />
         <Founders idioma={idioma} />
       </Section>
 
-      {/* 15 — FAQ */}
-      <Section surface="light" id="faq" index={t(indice.perguntas, idioma)} aria-labelledby="h-faq">
+      {/* 12 — O que estamos a ver (Moz News) */}
+      <Section surface="light" id="ideias" index={t(IDEIAS.indice, idioma)} aria-labelledby="h-ideias">
+        <SectionHeading id="h-ideias" number="09" eyebrow={t(IDEIAS.eyebrow, idioma)} title={t(IDEIAS.titulo, idioma)} />
+        <OQueEstamosAVer idioma={idioma} />
+      </Section>
+
+      {/* 13 — FAQ */}
+      <Section surface="deep" id="faq" index={t(indice.perguntas, idioma)} aria-labelledby="h-faq">
         <SectionHeading
           id="h-faq"
           number="10"
@@ -201,9 +222,9 @@ export function Inicio({ idioma }: { idioma: Idioma }) {
         </div>
       </Section>
 
-      {/* 16 — CTA final */}
-      <Section surface="deep" index={t(indice.contacto, idioma)} contour aria-label={t(aria.contacto, idioma)}>
-        <FinalCta idioma={idioma} />
+      {/* 14 — CTA final: leva ao diagnóstico desta página, sem mudar de página */}
+      <Section surface="dark" index={t(indice.contacto, idioma)} contour aria-label={t(aria.contacto, idioma)}>
+        <FinalCta idioma={idioma} href="#diagnostico" />
       </Section>
     </>
   );

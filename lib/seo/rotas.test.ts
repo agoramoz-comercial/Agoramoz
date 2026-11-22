@@ -16,7 +16,7 @@ import { ROTAS_BILINGUES } from '@/lib/i18n/rotas';
  */
 
 /** Os grupos de rotas do site público. `(en)` guarda as páginas em `/en/…`. */
-const GRUPOS = ['app/(site)', 'app/(en)'] as const;
+const GRUPOS = ['app/(site)', 'app/(en)', 'app/(v3)'] as const;
 
 function segmentosDeTopo(): string[] {
   return GRUPOS.flatMap((raiz) =>
@@ -97,8 +97,8 @@ describe('trilho de navegação', () => {
 
   it('toda a página excepto as iniciais rende um trilho', () => {
     const semTrilho = paginas()
-      // As duas iniciais — a portuguesa e a inglesa — são a raiz do trilho, não um nível dele.
-      .filter((p) => !['app/(site)/page.tsx', 'app/(en)/en/page.tsx'].includes(p.caminho))
+      // As páginas iniciais (v3, seis línguas) são a raiz do trilho, não um nível dele.
+      .filter((p) => !p.caminho.startsWith('app/(v3)'))
       .filter((p) => !p.fonte.includes('<Breadcrumbs'))
       .map((p) => p.caminho);
 
@@ -106,7 +106,7 @@ describe('trilho de navegação', () => {
   });
 
   it('a página inicial não rende trilho — é a raiz', () => {
-    const inicial = paginas().find((p) => p.caminho === 'app/(site)/page.tsx');
+    const inicial = paginas().find((p) => p.caminho === 'app/(v3)/page.tsx');
     expect(inicial?.fonte).not.toContain('<Breadcrumbs');
   });
 
@@ -158,8 +158,11 @@ describe('trilho de navegação', () => {
    * exactamente o que esta lista existe para impedir. Os dois lados, sempre.
    */
   it('toda a rota bilingue tem página nas duas árvores', () => {
-    const semPt = ROTAS_BILINGUES.filter((r) => !temPagina('app/(site)', r));
-    const semEn = ROTAS_BILINGUES.filter((r) => !temPagina(join('app/(en)', 'en'), r));
+    // A raiz e /en vivem agora no grupo (v3), que serve as seis línguas.
+    const semPt = ROTAS_BILINGUES.filter((r) => !temPagina('app/(site)', r) && !temPagina('app/(v3)', r));
+    const semEn = ROTAS_BILINGUES.filter(
+      (r) => !temPagina(join('app/(en)', 'en'), r) && !temPagina(join('app/(v3)', 'en'), r),
+    );
 
     expect(semPt).toEqual([]);
     expect(semEn).toEqual([]);

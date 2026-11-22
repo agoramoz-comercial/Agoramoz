@@ -7,7 +7,18 @@ import * as diagnostico from '@/content/i18n/diagnostico';
 import * as paginas from '@/content/i18n/paginas';
 import * as inicio from '@/content/i18n/inicio';
 import { buildMetadata } from '@/lib/seo/site';
-import { caminhoBase, caminhoNoIdioma, ehIdioma, IDIOMAS, paresDeIdioma, t } from './texto';
+import {
+  caminhoBase,
+  caminhoNoIdioma,
+  direcaoDe,
+  ehIdioma,
+  ehLingua,
+  IDIOMAS,
+  idiomaBase,
+  LINGUAS,
+  paresDeIdioma,
+  t,
+} from './texto';
 
 /**
  * A guarda que torna o bilinguismo real.
@@ -20,17 +31,20 @@ import { caminhoBase, caminhoNoIdioma, ehIdioma, IDIOMAS, paresDeIdioma, t } fro
  * forma de `Texto` e recusa os dois casos.
  */
 
-type Achado = { caminho: string; pt: string; en: string };
+type Extra = 'fr' | 'es' | 'de' | 'ar';
+type Achado = { caminho: string; pt: string; en: string } & Partial<Record<Extra, string>>;
+const EXTRAS: readonly Extra[] = ['fr', 'es', 'de', 'ar'];
 
-function ehTexto(v: unknown): v is { pt: string; en: string } {
+/** `pt` e `en` obrigatórios; as quatro línguas de 2026 opcionais; nada mais. */
+function ehTexto(v: unknown): v is Achado {
   if (typeof v !== 'object' || v === null) return false;
-  const chaves = Object.keys(v);
+  const o = v as Record<string, unknown>;
+  const chaves = Object.keys(o);
   return (
-    chaves.length === 2 &&
     chaves.includes('pt') &&
     chaves.includes('en') &&
-    typeof (v as Record<string, unknown>).pt === 'string' &&
-    typeof (v as Record<string, unknown>).en === 'string'
+    chaves.every((c) => c === 'pt' || c === 'en' || (EXTRAS as readonly string[]).includes(c)) &&
+    chaves.every((c) => typeof o[c] === 'string')
   );
 }
 
@@ -40,7 +54,7 @@ function recolher(valor: unknown, caminho: string, acc: Achado[], vistos: WeakSe
   vistos.add(valor);
 
   if (ehTexto(valor)) {
-    acc.push({ caminho, pt: valor.pt, en: valor.en });
+    acc.push({ ...valor, caminho });
     return acc;
   }
   for (const [chave, filho] of Object.entries(valor)) {
@@ -82,6 +96,24 @@ describe('texto bilingue', () => {
     ).toEqual([]);
   });
 
+  /**
+   * As quatro línguas de 2026: quando existem, não podem estar vazias nem ser
+   * o inglês copiado (o mesmo limiar de três palavras).
+   */
+  it('fr, es, de e ar, quando existem, são texto próprio', () => {
+    const maus: string[] = [];
+    for (const x of textos) {
+      for (const l of EXTRAS) {
+        const v = x[l];
+        if (v === undefined) continue;
+        if (v.trim() === '') maus.push(`${x.caminho}.${l}: vazio`);
+        else if (v.trim() === x.en.trim() && v.trim().split(/\s+/).length > 3)
+          maus.push(`${x.caminho}.${l}: igual ao inglês`);
+      }
+    }
+    expect(maus).toEqual([]);
+  });
+
   it('o próprio extractor funciona', () => {
     // Guarda contra o teste passar por não ter encontrado nada — que é a
     // maneira mais silenciosa de um teste deixar de proteger o que protegia.
@@ -95,6 +127,8 @@ describe('texto bilingue', () => {
     expect(ehTexto({ pt: 'a', en: 'b' })).toBe(true);
     expect(ehTexto({ pt: 'a' })).toBe(false);
     expect(ehTexto({ pt: 'a', en: 'b', extra: 1 })).toBe(false);
+    expect(ehTexto({ pt: 'a', en: 'b', fr: 'c', ar: 'd' })).toBe(true);
+    expect(ehTexto({ pt: 'a', en: 'b', it: 'c' })).toBe(false);
   });
 });
 
@@ -148,6 +182,24 @@ describe('caminhos por idioma', () => {
     expect(ehIdioma('en')).toBe(true);
     expect(ehIdioma('pt-PT')).toBe(false);
     expect(ehIdioma('fr')).toBe(false);
+  });
+
+  it('as seis línguas de leitura, o sentido e a base', () => {
+    expect(LINGUAS).toEqual(['pt', 'en', 'fr', 'es', 'de', 'ar']);
+    for (const l of LINGUAS) expect(ehLingua(l)).toBe(true);
+    expect(ehLingua('it')).toBe(false);
+    expect(direcaoDe('ar')).toBe('rtl');
+    for (const l of ['pt', 'en', 'fr', 'es', 'de'] as const) expect(direcaoDe(l)).toBe('ltr');
+    expect(idiomaBase('pt')).toBe('pt');
+    for (const l of ['en', 'fr', 'es', 'de', 'ar'] as const) expect(idiomaBase(l)).toBe('en');
+  });
+
+  it('uma língua por traduzir mostra o inglês, nunca vazio', () => {
+    const x = { pt: 'sistemas', en: 'systems', fr: 'systèmes' } as const;
+    expect(t(x, 'fr')).toBe('systèmes');
+    expect(t(x, 'de')).toBe('systems');
+    expect(t(x, 'ar')).toBe('systems');
+    expect(t(x, 'pt')).toBe('sistemas');
   });
 
   it('lê o lado certo', () => {

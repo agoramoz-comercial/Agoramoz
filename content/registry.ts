@@ -88,6 +88,8 @@ export const RESERVED_TOP_LEVEL_SLUGS = [
   // segmentos de topo e, sem estarem aqui, um código de país futuro com o
   // mesmo nome ganharia em silêncio à rota estática.
   'en', 'global',
+  // Página inicial v3 em seis línguas (2026): prefixos de língua, não países.
+  'fr', 'es', 'de', 'ar',
   // AGORAMOZ Moz News (lote N).
   'news',
   // Website Final 2026: páginas de confiança.

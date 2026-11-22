@@ -34,6 +34,10 @@ Cursos escritos **só a partir das fontes que a AGORAMOZ carrega**, com cada afi
 
 O que a verificação **prova**: que o curso vem das fontes. O que **não prova**: que as fontes estão certas, ou que uma frase com as mesmas palavras não inverteu o sentido. Quem publica revê o documento.
 
+## Cabeçalhos do motor
+
+O adaptador (`lib/cursos/motor.ts`) envia o segredo `ZABAEDU_CHAVE` em dois cabeçalhos: `x-agoramoz-chave` (função no Base44, abaixo) e `x-servico-token` (motor novo, segredo `SERVICO_TOKEN`). Trocar de motor é só mudar `ZABAEDU_FUNCTION_URL` e fazer deploy.
+
 ## Ligar o motor (ZabaEdu / Base44)
 
 Precisa do plano Builder no Base44 (funções de backend).

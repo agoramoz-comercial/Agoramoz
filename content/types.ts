@@ -24,13 +24,33 @@ export type Locale = 'pt-MZ' | 'pt-PT' | 'pt-BR';
 export type Idioma = 'pt' | 'en';
 
 /**
+ * Língua da interface nas superfícies multilingues (página inicial, menu,
+ * rodapé e diagnóstico). `Idioma` continua a ser a língua das ROTAS e do que o
+ * servidor guarda; `Lingua` acrescenta quatro línguas de leitura, que caem no
+ * inglês onde ainda não há texto. Árabe lê-se da direita para a esquerda.
+ */
+export type Lingua = Idioma | 'fr' | 'es' | 'de' | 'ar';
+
+/**
  * Um texto que existe nas duas línguas. Não é `string | { pt, en }`: a união
  * permitiria acrescentar conteúdo só em português e adiar o inglês para
  * sempre. Aqui, um campo bilingue sem inglês **não compila** — e o
  * teste-guarda em `lib/i18n/texto.test.ts` apanha o resto, que é o inglês que
  * existe mas é português copiado.
  */
-export type Texto = { readonly pt: string; readonly en: string };
+export type Texto = {
+  readonly pt: string;
+  readonly en: string;
+  /**
+   * As quatro línguas da página inicial, do menu e do diagnóstico (2026).
+   * Opcionais de propósito: o resto do site continua bilingue, e uma língua
+   * em falta mostra o inglês (ver `t()` em `lib/i18n/texto.ts`).
+   */
+  readonly fr?: string;
+  readonly es?: string;
+  readonly de?: string;
+  readonly ar?: string;
+};
 export type Currency =
   | 'MZN' | 'EUR' | 'BRL'
   // Moedas dos mercados do nível global. Cada uma existe porque um país a usa;

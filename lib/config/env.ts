@@ -231,7 +231,7 @@ const serverSchema = z.object({
       return !u.username && !u.password && !u.search && !u.hash;
     }, 'não deve ter credenciais, parâmetros nem fragmento')
     .optional(),
-  /** Segredo partilhado com a função (cabeçalho `x-agoramoz-chave`); o mesmo valor fica nos segredos do Base44. */
+  /** Segredo partilhado com o motor, enviado nos cabeçalhos `x-agoramoz-chave` (Base44) e `x-servico-token` (serviço novo, segredo SERVICO_TOKEN). */
   ZABAEDU_CHAVE: z.string().min(24, 'deve ter pelo menos 24 caracteres').optional(),
 
   // ── Agendamento (Cal.com) ───────────────────────────────────────────────

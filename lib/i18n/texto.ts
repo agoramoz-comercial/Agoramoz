@@ -1,4 +1,4 @@
-import type { Idioma, Texto } from '@/content/types';
+import type { Idioma, Lingua, Texto } from '@/content/types';
 
 /**
  * Leitura de texto bilingue e construção de caminhos por idioma.
@@ -14,8 +14,34 @@ export const IDIOMAS = ['pt', 'en'] as const satisfies readonly Idioma[];
 /** A raiz é portuguesa. Tudo o que não declarar idioma é isto. */
 export const IDIOMA_PADRAO: Idioma = 'pt';
 
-export function t(texto: Texto, idioma: Idioma): string {
-  return texto[idioma];
+/** As seis línguas de leitura, pela ordem do seletor. */
+export const LINGUAS = ['pt', 'en', 'fr', 'es', 'de', 'ar'] as const satisfies readonly Lingua[];
+
+/**
+ * O texto na língua pedida. Nas quatro línguas acrescentadas em 2026, um campo
+ * ainda por traduzir mostra o inglês — nunca uma string vazia nem o português
+ * a quem não o lê. Para `pt` e `en` é exactamente o que sempre foi.
+ */
+export function t(texto: Texto, idioma: Lingua): string {
+  return texto[idioma] ?? texto.en;
+}
+
+export function ehLingua(valor: string): valor is Lingua {
+  return (LINGUAS as readonly string[]).includes(valor);
+}
+
+/** O sentido de leitura: só o árabe vai da direita para a esquerda. */
+export function direcaoDe(lingua: Lingua): 'rtl' | 'ltr' {
+  return lingua === 'ar' ? 'rtl' : 'ltr';
+}
+
+/**
+ * O `Idioma` de rotas, validação do servidor e consentimento guardado para
+ * uma língua de leitura: português fica português, as outras usam o inglês —
+ * a versão que o servidor tem e que fica registada.
+ */
+export function idiomaBase(lingua: Lingua): Idioma {
+  return lingua === 'pt' ? 'pt' : 'en';
 }
 
 export function ehIdioma(valor: string): valor is Idioma {

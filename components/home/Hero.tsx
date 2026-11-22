@@ -10,6 +10,7 @@ import { ContourField } from '@/components/ui/ContourField';
 import { DitherMark } from '@/components/ui/DitherMark';
 import { CHROME } from '@/content/i18n/chrome';
 import { HERO } from '@/content/i18n/inicio';
+import { GARANTIAS, HERO_2026 } from '@/content/i18n/inicio-2026';
 import type { Idioma } from '@/content/types';
 import { ligacao } from '@/lib/i18n/rotas';
 import { t } from '@/lib/i18n/texto';
@@ -151,6 +152,11 @@ export function Hero({ idioma = 'pt' }: { idioma?: Idioma }) {
         <ContourField rows={7} />
       </div>
 
+      {/* A palavra gigante é decoração: vem de `content: attr()` num elemento
+          aria-hidden, sem nó de texto — não é lida duas vezes por leitores de
+          ecrã nem conta como texto novo da página. */}
+      <div aria-hidden data-palavra="AGORAMOZ" className="palavra-gigante -mx-[0.5%] mb-10 lg:mb-14" />
+
       <div data-animate className="flex items-baseline gap-4">
         <span className="rule-label text-[color:var(--muted)]">01</span>
         <DitherMark size="sm" className="self-center" />
@@ -164,7 +170,7 @@ export function Hero({ idioma = 'pt' }: { idioma?: Idioma }) {
       <h1
         data-hero-title
         data-split
-        className="chrome-text mt-10 max-w-[23ch] text-[length:var(--text-display)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)] opacity-0"
+        className="chrome-text mt-10 max-w-[26ch] text-[length:var(--text-statement)] leading-[var(--leading-display)] font-bold tracking-[var(--tracking-display)] opacity-0"
       >
         {t(HERO.titulo, idioma)}
       </h1>
@@ -193,9 +199,20 @@ export function Hero({ idioma = 'pt' }: { idioma?: Idioma }) {
               </Button>
             </MagneticButton>
             <Button asChild size="lg" variant="outline" className="w-full">
-              <Link href="#setores">{t(HERO.secundario, idioma)}</Link>
+              <Link href="#diagnostico">{t(HERO_2026.secundario, idioma)}</Link>
             </Button>
           </div>
+          <ul
+            aria-label={t(HERO_2026.garantiasAria, idioma)}
+            className="flex flex-col gap-2 md:items-end"
+          >
+            {GARANTIAS.map((g) => (
+              <li key={g.pt} className="flex items-center gap-2.5 text-sm text-[color:var(--on-surface)]">
+                <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--accent)]" />
+                {t(g, idioma)}
+              </li>
+            ))}
+          </ul>
           <p className="rule-label text-[color:var(--muted)] md:text-right">
             {t(HERO.micro, idioma)}
           </p>

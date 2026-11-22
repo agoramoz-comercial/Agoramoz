@@ -1,7 +1,7 @@
 import { DIAGNOSTIC_CODES } from '@/lib/diagnostic/mercado';
 import { VALIDACAO } from '@/content/i18n/formulario';
-import type { Idioma } from '@/content/types';
-import { IDIOMAS } from '@/lib/i18n/texto';
+import type { Lingua } from '@/content/types';
+import { IDIOMAS, t } from '@/lib/i18n/texto';
 import { z } from 'zod';
 
 /**
@@ -52,8 +52,8 @@ export const CONSEQUENCES = ['oportunidades', 'trabalho-manual', 'atraso', 'erro
  * mensagem muda. Construir duas vezes a partir de uma só função é o que
  * impede que um dia a validação inglesa aceite o que a portuguesa recusa.
  */
-function construir(idioma: Idioma) {
-  const m = (k: keyof typeof VALIDACAO) => VALIDACAO[k][idioma];
+function construir(lingua: Lingua) {
+  const m = (k: keyof typeof VALIDACAO) => t(VALIDACAO[k], lingua);
 
   /**
    * Um schema por cartão do carrossel, pela ordem em que aparecem. Uma
@@ -141,8 +141,18 @@ const EN = construir('en');
 export const leadSchema = PT.leadSchema;
 
 /** O schema do formulário, com as mensagens no idioma de quem o preenche. */
-export function leadSchemaPara(idioma: Idioma) {
-  return idioma === 'en' ? EN.leadSchema : PT.leadSchema;
+const OUTRAS = new Map<Lingua, ReturnType<typeof construir>>();
+
+/**
+ * fr, es, de e ar: as mesmas regras, com a mensagem na língua do formulário.
+ * Construídos a pedido (só o browser de quem lê essa língua paga por eles).
+ */
+export function leadSchemaPara(lingua: Lingua) {
+  if (lingua === 'pt') return PT.leadSchema;
+  if (lingua === 'en') return EN.leadSchema;
+  let s = OUTRAS.get(lingua);
+  if (!s) OUTRAS.set(lingua, (s = construir(lingua)));
+  return s.leadSchema;
 }
 
 export type LeadInput = z.infer<typeof leadSchema>;
