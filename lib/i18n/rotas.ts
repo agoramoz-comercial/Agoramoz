@@ -25,6 +25,8 @@ export const ROTAS_BILINGUES: readonly string[] = [
   ...GLOBAL_CODES.map((c) => `/global/${c}`),
   // Lote N: AGORAMOZ Moz News.
   '/news',
+  // Marcação de conversas (Cal.com dentro do site).
+  '/marcar',
 ]
 
 /** A rota existe nos dois idiomas. Aceita o caminho de qualquer lado. */

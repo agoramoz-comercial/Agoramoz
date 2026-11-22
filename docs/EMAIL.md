@@ -6,8 +6,14 @@ Depois de uma submissão **nova** do diagnóstico, a pessoa recebe, de
 decisão da fase, o que recebe no diagnóstico, garantias e próximos passos),
 feito só com as respostas dela. Língua: pt; as outras recebem em inglês.
 
-- Código: `lib/email/` (`enquadramento.ts` conteúdo, `pdf.ts` PDF com pdf-lib,
-  `html.ts` corpo do e-mail, `enviar.ts` envio pela API da Resend).
+- Código: `lib/email/` (`enquadramento.ts` conteúdo, `pdf.ts` PDF com pdf-lib
+  no design dos relatórios ZABATAINA, `html.ts` corpo do e-mail, `cta.ts` o
+  botão de reunião, `enviar.ts` envio pela API da Resend).
+- Tipo: Inter (subconjunto latino em TrueType, OFL) em `lib/email/fontes/`,
+  incluído na função pelo `outputFileTracingIncludes` do `next.config.ts`.
+  Sem as fontes, o PDF cai na Helvetica e continua a sair.
+- Logótipo: vectorial no PDF (o mesmo desenho de `components/brand/Mark.tsx`)
+  e `public/brand/email-logo-branco.png` no cabeçalho do e-mail.
 - Disparo: `app/api/diagnostico/route.ts`, em `after()`, depois de a resposta
   sair; nunca atrasa nem parte o formulário. Repetições (`duplicate`) não
   voltam a enviar. Sem e-mail de seguimento sem consentimento (o schema exige-o).
@@ -34,7 +40,17 @@ feito só com as respostas dela. Língua: pt; as outras recebem em inglês.
    - Opcionais: `EMAIL_FROM` (predefinido `AGORAMOZ <comercial@agoramoz.com>`),
      `EMAIL_REPLY_TO` (predefinido `comercial@agoramoz.com`),
      `EMAIL_BCC_INTERNO` (cópia oculta para a equipa).
-5. Publicar de novo (as variáveis só valem num deploy novo) e fazer um
+5. **Botão «Marcar reunião com um especialista» (Cal.com)**: quando houver
+   conta, criar o evento e pôr na Vercel `CAL_LINK` = `utilizador/evento`
+   (ex.: `agoramoz/especialista`; o mesmo formato da marcação no fim do
+   diagnóstico) e, se for uma instalação própria, `CAL_ORIGIN`. O botão do
+   e-mail e do PDF passa a levar à página **`/marcar`** do site (`/en/marcar`
+   em inglês): o calendário do Cal.com embutido num painel de vidro, no design
+   AGORAMOZ. O nome e o e-mail seguem no fragmento do URL (`#name=…&email=…`),
+   que não chega a nenhum servidor, e pré-preenchem a marcação. A CSP permite
+   `https://app.cal.com` (script, iframe, connect) e `https://cal.com` (iframe). Sem `CAL_LINK`, o botão diz «Falar com um especialista» e
+   abre um e-mail para `comercial@agoramoz.com`.
+6. Publicar de novo (as variáveis só valem num deploy novo) e fazer um
    diagnóstico de teste com um e-mail próprio.
 
 ## Desligar

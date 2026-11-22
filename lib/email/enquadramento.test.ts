@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
 import type { LeadInput } from '@/lib/forms/lead-schema';
 import { construirEnquadramento, nomeDoFicheiro } from './enquadramento';
-import { escapar, htmlDoEmail, textoDoEmail } from './html';
+import { reuniao } from './cta';
+import { LOGO_EMAIL, escapar, htmlDoEmail, textoDoEmail } from './html';
+import { TEXTOS } from './textos';
 import { gerarPdfEnquadramento } from './pdf';
 
 const BASE: LeadInput = {
@@ -29,6 +31,54 @@ const BASE: LeadInput = {
 /** Todos os números (sequências de dígitos) de um texto. */
 const numeros = (s: string) => new Set(s.match(/\d+/g) ?? []);
 
+const CTA_EMAIL = reuniao(TEXTOS.pt, {
+  site: 'https://agoramoz.com',
+  idioma: 'pt',
+  nome: 'Ana',
+  email: 'ana@exemplo.co.mz',
+  responderPara: 'comercial@agoramoz.com',
+});
+
+describe('enquadramento preliminar: botão de reunião', () => {
+  it('sem CAL_LINK, escreve à equipa por e-mail', () => {
+    expect(CTA_EMAIL.cal).toBe(false);
+    expect(CTA_EMAIL.url).toMatch(/^mailto:comercial@agoramoz\.com\?subject=/);
+    expect(CTA_EMAIL.rotulo).toBe(TEXTOS.pt.ctaEscrever);
+  });
+
+  it('com CAL_LINK, leva à página /marcar do site, com nome e e-mail só no fragmento', () => {
+    const r = reuniao(TEXTOS.en, {
+      site: 'https://agoramoz.com',
+      idioma: 'en',
+      calLink: 'agoramoz/especialista',
+      nome: 'Ana Machava',
+      email: 'ana@exemplo.co.mz',
+      responderPara: 'comercial@agoramoz.com',
+    });
+    expect(r.cal).toBe(true);
+    expect(r.rotulo).toBe('Book a meeting with a specialist');
+    const u = new URL(r.url);
+    expect(u.origin + u.pathname).toBe('https://agoramoz.com/en/marcar');
+    // Nada pessoal na query (chegaria ao servidor e aos registos).
+    expect(u.search).toBe('');
+    const f = new URLSearchParams(u.hash.slice(1));
+    expect(f.get('name')).toBe('Ana Machava');
+    expect(f.get('email')).toBe('ana@exemplo.co.mz');
+    const pt = reuniao(TEXTOS.pt, { site: 'https://agoramoz.com', idioma: 'pt', calLink: 'a/b', nome: '', email: '', responderPara: 'c@d.co' });
+    expect(pt.url).toBe('https://agoramoz.com/marcar');
+  });
+
+  it('o HTML e o texto levam o botão; o HTML leva o logótipo no topo', () => {
+    const doc = construirEnquadramento(BASE, 'pt');
+    const cal = reuniao(doc.t, { site: 'https://agoramoz.com', idioma: 'pt', calLink: 'agoramoz/x', nome: 'Ana', email: 'a@b.co', responderPara: 'c@d.co' });
+    const html = htmlDoEmail(doc, cal);
+    expect(html).toContain(escapar(cal.url));
+    expect(html).toContain('Marcar reunião com um especialista');
+    expect(html.indexOf(LOGO_EMAIL)).toBeLessThan(html.indexOf(doc.t.titulo, html.indexOf('<body')));
+    expect(textoDoEmail(doc, cal)).toContain(cal.url);
+  });
+});
+
 describe('enquadramento preliminar: conteúdo', () => {
   it('vem só das respostas e do catálogo, na língua pedida', () => {
     const doc = construirEnquadramento(BASE, 'pt');
@@ -51,13 +101,14 @@ describe('enquadramento preliminar: conteúdo', () => {
 
   it('nunca mostra a pontuação nem o tier (D-15)', () => {
     const doc = construirEnquadramento(BASE, 'pt');
-    const tudo = JSON.stringify(doc) + textoDoEmail(doc) + htmlDoEmail(doc, 'comercial@agoramoz.com');
+    const tudo = JSON.stringify(doc) + textoDoEmail(doc, CTA_EMAIL) + htmlDoEmail(doc, CTA_EMAIL);
     expect(tudo).not.toMatch(/\b(tier|score|pontua)/i);
   });
 
   it('não inventa números: todo o número do texto vem das respostas ou do catálogo', () => {
     const doc = construirEnquadramento(BASE, 'pt');
-    const texto = textoDoEmail(doc);
+    // Os URLs (o botão) ficam de fora: «%20» não é um número do documento.
+    const texto = textoDoEmail(doc, CTA_EMAIL).replace(/\S+:\/\/\S+|mailto:\S+/g, '');
     // Números permitidos: os da faixa e da dimensão escolhidas e as numerações 1–10 das listas.
     const permitidos = new Set([...numeros(doc.sponsor.faixa), ...numeros(doc.contexto.dimensao), ...numeros(doc.sponsor.prazo)]);
     for (let i = 1; i <= 10; i++) permitidos.add(String(i)).add(String(i).padStart(2, '0'));
@@ -76,10 +127,13 @@ describe('enquadramento preliminar: conteúdo', () => {
 
   it('escapa o texto da pessoa no HTML', () => {
     const doc = construirEnquadramento({ ...BASE, company: '<script>x</script>' } as LeadInput, 'pt');
-    const html = htmlDoEmail(doc, 'comercial@agoramoz.com');
+    const html = htmlDoEmail(doc, CTA_EMAIL);
     expect(html).not.toContain('<script>x</script>');
     expect(html).toContain(escapar('<script>x</script>'));
-    expect(html).not.toMatch(/<img/i);
+    // A única imagem é o logótipo alojado, com texto alternativo.
+    expect(html.match(/<img/gi)).toHaveLength(1);
+    expect(html).toContain(`src="${LOGO_EMAIL}"`);
+    expect(html).toContain('alt="AGORAMOZ"');
   });
 
   it('o nome do ficheiro é seguro', () => {
