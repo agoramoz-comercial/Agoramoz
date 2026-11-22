@@ -1306,3 +1306,15 @@
     padding-inline-end: 4rem;
   }
 }
+
+/* Vidro líquido (components/ui/apple-tahoe-liquid-glass-button): valores de
+   partida das variáveis que o componente escreve em tempo de execução. São os
+   mesmos que os fallbacks dentro do componente. */
+[data-liquid-glass] {
+  --lg-glow: 0;
+  --lg-glow-x: 50%;
+  --lg-glow-y: 50%;
+  --lg-glow-size: 64px;
+  --lg-glow-color: rgb(255 255 255 / 0.3);
+  --lg-shadow: 0 2px 8px rgb(0 0 0 / 0.1), 0 8px 24px -6px rgb(0 0 0 / 0.16);
+}

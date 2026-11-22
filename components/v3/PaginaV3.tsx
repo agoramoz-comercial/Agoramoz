@@ -16,6 +16,7 @@ import {
   RevelarPalavras,
 } from '@/components/v3/motion';
 import { IdeiasV3 } from '@/components/v3/IdeiasV3';
+import { LigacaoVidro } from '@/components/v3/LigacaoVidro';
 import { DIAGNOSTICO } from '@/content/i18n/diagnostico';
 import { FOUNDERS } from '@/content/site';
 import type { Lingua } from '@/content/types';
@@ -479,15 +480,18 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
                     <p className="v3-etiqueta mt-2 text-[var(--v3-cinza)]">{x.equipa.pessoas[i]!.papel}</p>
                     <p className="mt-4 max-w-[46ch] text-[var(--v3-cinza)]">{x.equipa.pessoas[i]!.texto}</p>
                   </div>
-                  <a
+                  <LigacaoVidro
                     href={pessoa.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${x.equipa.perfil}: ${pessoa.name}`}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--v3-linha)] text-sm transition-colors hover:bg-[var(--v3-papel)] hover:text-[var(--v3-noite)]"
+                    externa
+                    rotulo={`${x.equipa.perfil}: ${pessoa.name}`}
+                    material="regular"
+                    appearance="dark"
+                    refraction={5}
+                    size="icon"
+                    className="shrink-0 bg-[var(--v3-noite)]/60! text-sm text-[var(--v3-papel)] ring-1 ring-[var(--v3-linha)]"
                   >
                     in
-                  </a>
+                  </LigacaoVidro>
                 </div>
               </li>
             ))}

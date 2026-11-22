@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Mark } from '@/components/brand/Mark';
+import { LiquidGlass, LiquidGlassButton } from '@/components/ui/apple-tahoe-liquid-glass-button';
 import type { Lingua } from '@/content/types';
 import { LINGUAS } from '@/lib/i18n/texto';
 import { INICIO_DA_LINGUA, NOME_DA_LINGUA } from '@/lib/i18n/v3';
@@ -106,10 +107,14 @@ export function NavV3({
         </Link>
 
         {/* A pílula pendurada no topo (só a partir de 1024 px). */}
-        <nav
-          aria-label={rotulos.menu}
-          className="pointer-events-auto hidden rounded-b-[1.25rem] bg-[var(--v3-noite)]/85 px-3 backdrop-blur-md lg:block"
+        <LiquidGlass
+          asChild
+          material="regular"
+          appearance="dark"
+          refraction={12}
+          className="pointer-events-auto hidden rounded-t-none rounded-b-[1.25rem] bg-[var(--v3-noite)]/70 px-3 text-[var(--v3-papel)] lg:block"
         >
+        <nav aria-label={rotulos.menu}>
           <ul className="flex items-center">
             {ligacoes.map((l) => (
               <li key={l.href}>
@@ -128,23 +133,29 @@ export function NavV3({
             ))}
           </ul>
         </nav>
+        </LiquidGlass>
 
         <div className="pointer-events-auto mt-3 flex items-center gap-2">
           <div ref={caixaLinguas} className="relative">
-            <button
+            <LiquidGlassButton
               type="button"
+              interactive
+              material="regular"
+              appearance="dark"
+              refraction={6}
+              size="sm"
               aria-expanded={linguasAbertas}
               aria-controls={idLinguas}
               aria-label={`${rotulos.lingua}: ${NOME_DA_LINGUA[lingua].nome}`}
               onClick={() => setLinguasAbertas((v) => !v)}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[var(--v3-noite)]/70 px-3.5 text-xs font-medium tracking-[0.06em] backdrop-blur-md transition-colors hover:bg-[var(--v3-noite)]"
+              className="h-10 gap-1.5 bg-[var(--v3-noite)]/60! px-3.5 text-xs text-[var(--v3-papel)]"
             >
               <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.3">
                 <circle cx="8" cy="8" r="6.5" />
                 <path d="M1.5 8h13M8 1.5c2 2 2.8 4.2 2.8 6.5S10 12.5 8 14.5M8 1.5C6 3.5 5.2 5.7 5.2 8S6 12.5 8 14.5" />
               </svg>
               {NOME_DA_LINGUA[lingua].curto}
-            </button>
+            </LiquidGlassButton>
             <div
               id={idLinguas}
               hidden={!linguasAbertas}
@@ -154,23 +165,35 @@ export function NavV3({
             </div>
           </div>
 
-          <Link
-            href={diagnostico.href}
-            hrefLang={diagnostico.hrefLang}
-            className="hidden h-10 items-center rounded-full bg-[var(--v3-papel)] px-4 text-[0.82rem] font-medium text-[var(--v3-noite)] transition-colors hover:bg-white sm:inline-flex"
+          <LiquidGlassButton
+            asChild
+            interactive
+            material="regular"
+            appearance="light"
+            tint="#efe8da"
+            refraction={6}
+            size="sm"
+            className="hidden h-10 bg-[var(--v3-papel)]/80! px-4 text-[0.82rem] font-medium tracking-normal text-[var(--v3-noite)] sm:inline-flex"
           >
-            {diagnostico.rotulo}
-          </Link>
+            <Link href={diagnostico.href} hrefLang={diagnostico.hrefLang}>
+              {diagnostico.rotulo}
+            </Link>
+          </LiquidGlassButton>
 
-          <button
+          <LiquidGlassButton
             type="button"
+            interactive
+            material="regular"
+            appearance="dark"
+            refraction={6}
+            size="sm"
             aria-expanded={aberto}
             aria-controls={idMenu}
             onClick={() => setAberto((v) => !v)}
-            className="inline-flex h-10 items-center rounded-full bg-[var(--v3-noite)]/70 px-4 text-[0.82rem] font-medium backdrop-blur-md lg:hidden"
+            className="h-10 bg-[var(--v3-noite)]/60! px-4 text-[0.82rem] font-medium tracking-normal text-[var(--v3-papel)] lg:hidden"
           >
             {aberto ? rotulos.fechar : rotulos.menu}
-          </button>
+          </LiquidGlassButton>
         </div>
       </div>
 

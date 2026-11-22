@@ -1,10 +1,8 @@
 'use client';
 
-import { useRef } from 'react';
 import Link from 'next/link';
-import { gsap, useGSAP } from '@/lib/motion/register';
+import { LiquidGlassButton } from '@/components/ui/apple-tahoe-liquid-glass-button';
 import { cn } from '@/lib/utils/cn';
-import { PONTEIRO_FINO } from './util';
 
 function Seta({ className }: { className?: string }) {
   return (
@@ -15,11 +13,18 @@ function Seta({ className }: { className?: string }) {
 }
 
 /**
- * Botão em pílula com a seta num círculo (o «Get started» da referência).
- * No hover, a seta sai pela direita e uma cópia (geometria `aria-hidden`, sem
- * texto) entra pela esquerda — o «roll» do melon sem duplicar o rótulo. Com
- * ponteiro fino, o botão é atraído pelo cursor (íman). Em RTL a seta vira e
- * desliza para o outro lado (CSS lógico).
+ * Botão em pílula de vidro líquido (LiquidGlassButton, de
+ * `components/ui/apple-tahoe-liquid-glass-button`), com a seta num círculo.
+ *
+ * - `claro`: vidro escuro fosco, texto papel — sobre a fotografia e o fundo
+ *   noite. O material «regular» leva um véu de 65 % que segura o contraste
+ *   do texto seja qual for a imagem por trás.
+ * - `escuro`: vidro claro fosco, texto tinta — sobre as secções papel.
+ *
+ * A física de mola do vidro (aperto, brilho que segue o ponteiro) substitui o
+ * íman anterior: os dois mexiam no mesmo eixo. Em Chromium o vidro refracta;
+ * nos outros motores fica fosco. Com movimento reduzido, não há mola.
+ * No hover, a seta sai e uma cópia entra (o «roll» do melon); em RTL vira.
  */
 export function BotaoPilula({
   href,
@@ -32,66 +37,42 @@ export function BotaoPilula({
   variante?: 'claro' | 'escuro';
   className?: string;
 }) {
-  const ref = useRef<HTMLAnchorElement>(null);
-
-  useGSAP(
-    () => {
-      const el = ref.current;
-      if (!el) return;
-      const mm = gsap.matchMedia();
-      mm.add(PONTEIRO_FINO, () => {
-        const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' });
-        const yTo = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
-        const mover = (e: PointerEvent) => {
-          const r = el.getBoundingClientRect();
-          xTo((e.clientX - (r.left + r.width / 2)) * 0.22);
-          yTo((e.clientY - (r.top + r.height / 2)) * 0.3);
-        };
-        const sair = () => {
-          xTo(0);
-          yTo(0);
-        };
-        el.addEventListener('pointermove', mover);
-        el.addEventListener('pointerleave', sair);
-        return () => {
-          el.removeEventListener('pointermove', mover);
-          el.removeEventListener('pointerleave', sair);
-          gsap.set(el, { x: 0, y: 0 });
-        };
-      });
-      return () => mm.revert();
-    },
-    { scope: ref },
-  );
-
   const claro = variante === 'claro';
   return (
-    <Link
-      ref={ref}
-      href={href}
+    <LiquidGlassButton
+      asChild
+      interactive
+      material="regular"
+      appearance={claro ? 'dark' : 'light'}
+      refraction={10}
+      size="sm"
+      tint={claro ? undefined : '#efe8da'}
       className={cn(
-        'group inline-flex min-h-12 items-center gap-4 rounded-full py-1.5 ps-6 pe-1.5 text-[0.95rem] font-medium tracking-[-0.01em] transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-4',
+        'group min-h-12 gap-4 py-1.5 ps-6 pe-1.5 text-[0.95rem] font-medium tracking-[-0.01em] normal-case',
         claro
-          ? 'bg-[#efe8da] text-[#0b0a09] hover:bg-white focus-visible:outline-[#efe8da]'
-          : 'bg-[#0b0a09] text-[#efe8da] ring-1 ring-[#efe8da]/25 hover:bg-[#1a1816] focus-visible:outline-[#0b0a09]',
+          ? 'bg-[#0b0a09]/45! text-[#efe8da] ring-1 ring-[#efe8da]/30'
+          : 'bg-[#efe8da]/50! text-[#0b0a09] ring-1 ring-[#0b0a09]/15',
+        'focus-visible:ring-2 focus-visible:ring-[var(--v3-ambar)]',
         className,
       )}
     >
-      <span>{children}</span>
-      <span
-        aria-hidden
-        className={cn(
-          'relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full',
-          claro ? 'bg-[#0b0a09] text-[#efe8da]' : 'bg-[#efe8da] text-[#0b0a09]',
-        )}
-      >
-        <span className="col-start-1 row-start-1 transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:translate-x-[180%] motion-reduce:transition-none rtl:group-hover:-translate-x-[180%]">
-          <Seta />
+      <Link href={href}>
+        <span>{children}</span>
+        <span
+          aria-hidden
+          className={cn(
+            'relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full',
+            claro ? 'bg-[#efe8da] text-[#0b0a09]' : 'bg-[#0b0a09] text-[#efe8da]',
+          )}
+        >
+          <span className="col-start-1 row-start-1 transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:translate-x-[180%] motion-reduce:transition-none rtl:group-hover:-translate-x-[180%]">
+            <Seta />
+          </span>
+          <span className="col-start-1 row-start-1 -translate-x-[180%] transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:translate-x-0 motion-reduce:transition-none rtl:translate-x-[180%] rtl:group-hover:translate-x-0">
+            <Seta />
+          </span>
         </span>
-        <span className="col-start-1 row-start-1 -translate-x-[180%] transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:translate-x-0 motion-reduce:transition-none rtl:translate-x-[180%] rtl:group-hover:translate-x-0">
-          <Seta />
-        </span>
-      </span>
-    </Link>
+      </Link>
+    </LiquidGlassButton>
   );
 }
