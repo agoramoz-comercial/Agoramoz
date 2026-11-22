@@ -5,7 +5,7 @@ import AxeBuilder from '@axe-core/playwright';
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3000';
 const ROTAS = (process.env.ROTAS ?? '/').split(',');
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
+const b = await chromium.launch();
 let total = 0;
 for (const largura of [390, 1440]) {
   const ctx = await b.newContext({ viewport: { width: largura, height: 900 }, reducedMotion: 'reduce' });

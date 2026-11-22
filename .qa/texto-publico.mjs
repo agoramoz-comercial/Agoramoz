@@ -69,7 +69,9 @@ async function fotografar(pagina, caminho) {
   };
 }
 
-const lista = await urls();
+const iFich = process.argv.indexOf('--ficheiro');
+const FICHEIRO = iFich > 0 ? process.argv[iFich + 1] : null;
+const lista = FICHEIRO ? [] : await urls();
 const vistos = new Set(lista);
 const TECTO = 4000;
 function descobrir(c) {
@@ -79,8 +81,12 @@ function descobrir(c) {
     lista.push(p);
   }
 }
-const b = await chromium.launch();
-const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+const b = FICHEIRO ? null : await chromium.launch();
+const ctx = FICHEIRO ? null : await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+let ordenado;
+if (FICHEIRO) {
+  ordenado = JSON.parse(readFileSync(FICHEIRO, 'utf8'));
+} else {
 const foto = {};
 const FILAS = 4;
 let i = 0;
@@ -111,13 +117,29 @@ await Promise.all(
     await p.close();
   }),
 );
+// Uma página que esgotou o tempo volta a ser lida uma vez, sozinha: com o
+// servidor menos ocupado, quase sempre passa.
+{
+  const p = await ctx.newPage();
+  for (const [c, v] of Object.entries(foto)) {
+    if (!v.erro) continue;
+    try {
+      foto[c] = await fotografar(p, c);
+    } catch (e) {
+      foto[c] = { erro: String(e).slice(0, 200) };
+    }
+  }
+  await p.close();
+}
 await b.close();
-const ordenado = Object.fromEntries(Object.keys(foto).sort().map((k) => [k, foto[k]]));
+ordenado = Object.fromEntries(Object.keys(foto).sort().map((k) => [k, foto[k]]));
 writeFileSync(SAIDA, JSON.stringify(ordenado, null, 1));
 const erros = Object.entries(ordenado).filter(([, v]) => v.erro || v.estado >= 400);
 console.log(`${lista.length} página(s) fotografadas → ${SAIDA}; ${erros.length} com erro ou estado ≥ 400.`);
 if (vistos.size >= TECTO) console.log(`ATENÇÃO: chegou ao tecto de ${TECTO} páginas; a fotografia pode estar incompleta.`);
 for (const [c, v] of erros.slice(0, 20)) console.log(`  ${c}: ${v.erro ?? v.estado}`);
+
+}
 
 if (REF) {
   const ref = JSON.parse(readFileSync(REF, 'utf8'));
@@ -146,6 +168,11 @@ if (REF) {
   for (const c of new Set([...Object.keys(ref), ...Object.keys(ordenado)])) {
     const a = ref[c];
     const n = ordenado[c];
+    if (a?.erro || n?.erro) {
+      dif += 1;
+      console.log(`\n✗ ${c}: não foi possível ler (${(a?.erro ?? n?.erro).slice(0, 80)})`);
+      continue;
+    }
     if (!a || !n) {
       dif += 1;
       console.log(`\n✗ ${c}: ${a ? 'desapareceu' : 'página nova'}`);

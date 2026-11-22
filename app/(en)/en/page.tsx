@@ -6,6 +6,9 @@ import { buildMetadata } from '@/lib/seo/site';
 
 const IDIOMA = 'en' as const;
 
+/** «O que estamos a ver» lê os artigos mais recentes do Moz News: renova a cada 10 min. */
+export const revalidate = 600;
+
 export const metadata: Metadata = buildMetadata({
   title: t(INICIO.metaTitulo, IDIOMA),
   description: t(INICIO.metaDescricao, IDIOMA),

@@ -87,6 +87,10 @@
   --text-micro: 0.6875rem;
   /* Numeral de secção em escala de estatística — motivo das duas referências. */
   --text-numeral: clamp(2.5rem, 1.6rem + 3.4vw, 4.25rem);
+  /* Redesenho 2026: o H1 do hero baixa um degrau — a palavra gigante faz de display. */
+  --text-statement: clamp(1.875rem, 1.1rem + 2.4vw, 3.25rem);
+  /* Numeral gigante das listas (problemas, caminhos). */
+  --text-numeral-xl: clamp(3.5rem, 2rem + 5vw, 7rem);
 
   --leading-display: 0.94;
   --leading-heading: 1.02;
@@ -181,6 +185,133 @@
   --chrome-a: #ffffff;
   --chrome-b: #d2d3d9;
   --chrome-c: #9ea0a8; /* 7,58:1 sobre tinta-950 — AA */
+}
+
+/* ===========================================================================
+   Versão escura do site público (redesenho 2026, direcção híbrida «Tinta»).
+   O SiteChrome escreve data-tema="escuro": as superfícies claras passam a
+   tons de tinta e o site fica todo escuro. Só o site público: o admin e os
+   documentos A4 não estão dentro do SiteChrome. Os mesmos rácios de
+   contraste de 'dark' e 'deep' (calculados acima) aplicam-se aqui.
+   A impressão (news, cívico) continua a forçar papel branco.
+   =========================================================================== */
+
+[data-tema='escuro'] [data-surface='light'] {
+  --surface: var(--color-ink-900);
+  --surface-raised: var(--color-ink-850);
+  --on-surface: var(--color-chalk);
+  --muted: var(--color-steel-400); /* 5,85:1 — AA */
+  --border: color-mix(in oklab, var(--color-chalk) 16%, transparent);
+  --hairline: color-mix(in oklab, var(--color-chalk) 18%, transparent);
+  --accent: var(--color-steel-200);
+  --signal: var(--color-signal-500);
+  --ok: var(--color-steel-200);
+  --motif: color-mix(in oklab, var(--color-chalk) 24%, transparent);
+  --chrome-a: #ffffff;
+  --chrome-b: #d2d3d9;
+  --chrome-c: #9ea0a8;
+}
+
+[data-tema='escuro'] [data-surface='tint'] {
+  --surface: var(--color-ink-850);
+  --surface-raised: var(--color-ink-800);
+  --on-surface: var(--color-chalk);
+  --muted: var(--color-steel-400); /* 5,6:1 sobre tinta-850 — AA */
+  --border: color-mix(in oklab, var(--color-chalk) 16%, transparent);
+  --hairline: color-mix(in oklab, var(--color-chalk) 18%, transparent);
+  --accent: var(--color-steel-200);
+  --signal: var(--color-signal-500);
+  --ok: var(--color-steel-200);
+  --motif: color-mix(in oklab, var(--color-chalk) 22%, transparent);
+  --chrome-a: #ffffff;
+  --chrome-b: #d2d3d9;
+  --chrome-c: #9ea0a8;
+}
+
+/* ===========================================================================
+   Redesenho 2026 — direcção híbrida.
+   A «Sinal» só no hero da página inicial: o degradê vermelho fica atrás da
+   palavra gigante e acaba em tinta ANTES do texto (o H1, o parágrafo e os
+   botões assentam sempre em tinta-950, onde os contrastes calculados acima
+   valem). É a única excepção documentada à regra «sinal só para conversão».
+   B «Tinta» no resto: a primeira secção de cada página leva um degradê
+   radial de tinta. Grão estático, sem animação.
+   =========================================================================== */
+
+.hero-sinal {
+  background-image: linear-gradient(
+    180deg,
+    var(--color-signal-600) 0%,
+    var(--color-signal-700) 16%,
+    #8a1900 30%,
+    #2a0a04 44%,
+    var(--color-ink-950) 56%
+  );
+}
+
+.hero-sinal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.32;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+[data-tema='escuro'] main > [data-surface]:first-child:not(.hero-sinal) {
+  background-image: radial-gradient(
+    120% 90% at 50% 0%,
+    var(--color-ink-600) 0%,
+    var(--color-ink-800) 42%,
+    var(--color-ink-950) 78%
+  );
+}
+
+/* A palavra gigante: texto gerado (content: attr), num elemento aria-hidden.
+   O tamanho segue a largura do contentor (cqi), para caber sempre numa linha. */
+.palavra-gigante {
+  container-type: inline-size;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.palavra-gigante::before {
+  content: attr(data-palavra);
+  display: block;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 16.3cqi;
+  line-height: 0.78;
+  letter-spacing: -0.065em;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.96) 0%,
+    rgb(255 214 202 / 0.62) 52%,
+    rgb(255 255 255 / 0.04) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-tema='escuro'] main > [data-surface]:first-child:not(.hero-sinal) .palavra-gigante::before {
+  background: linear-gradient(180deg, rgb(237 237 235 / 0.95), rgb(142 142 150 / 0.45) 60%, rgb(24 24 27 / 0));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@media print {
+  .hero-sinal,
+  [data-tema='escuro'] main > [data-surface]:first-child {
+    background-image: none;
+  }
+  .palavra-gigante {
+    display: none;
+  }
 }
 
 @layer base {

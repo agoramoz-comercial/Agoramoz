@@ -41,7 +41,7 @@ import type { Idioma } from '@/content/types';
  */
 export function SiteChrome({ children, idioma }: { children: React.ReactNode; idioma: Idioma }) {
   return (
-    <div className="grain" lang={idioma === 'en' ? 'en' : undefined}>
+    <div className="grain" data-tema="escuro" lang={idioma === 'en' ? 'en' : undefined}>
       <SkipLink idioma={idioma} />
       <SiteJsonLd />
       <AttributionBoot />
