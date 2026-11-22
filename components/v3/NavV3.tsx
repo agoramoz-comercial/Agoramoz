@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { Mark } from '@/components/brand/Mark';
 import { LiquidGlass, LiquidGlassButton } from '@/components/ui/apple-tahoe-liquid-glass-button';
 import type { Lingua } from '@/content/types';
-import { LINGUAS } from '@/lib/i18n/texto';
+import { usePathname } from 'next/navigation';
+import { LINGUAS, caminhoBase, caminhoNoIdioma } from '@/lib/i18n/texto';
+import { temPar } from '@/lib/i18n/rotas';
 import { INICIO_DA_LINGUA, NOME_DA_LINGUA } from '@/lib/i18n/v3';
 import { cn } from '@/lib/utils/cn';
 
@@ -27,6 +29,20 @@ export function NavV3({
   diagnostico: LigacaoNav;
   rotulos: { menu: string; fechar: string; lingua: string; inicio: string };
 }) {
+  const pathname = usePathname() ?? '/';
+  /**
+   * Para onde leva cada língua a partir desta página: nas iniciais, a inicial
+   * da língua; nas interiores, o par pt⇄en quando existe (ROTAS_BILINGUES), e
+   * a inicial de fr/es/de/ar (o resto do site só existe em pt e en).
+   */
+  const destino = (l: (typeof LINGUAS)[number]): string => {
+    const iniciais = Object.values(INICIO_DA_LINGUA) as string[];
+    if (iniciais.includes(pathname)) return INICIO_DA_LINGUA[l];
+    const base = caminhoBase(pathname);
+    if (l === 'pt') return base;
+    if (l === 'en') return temPar(base) ? caminhoNoIdioma(base, 'en') : INICIO_DA_LINGUA.en;
+    return INICIO_DA_LINGUA[l];
+  };
   const [aberto, setAberto] = useState(false);
   const [linguasAbertas, setLinguasAbertas] = useState(false);
   const [rolou, setRolou] = useState(false);
@@ -69,7 +85,7 @@ export function NavV3({
       {LINGUAS.map((l) => (
         <li key={l}>
           <Link
-            href={INICIO_DA_LINGUA[l]}
+            href={destino(l)}
             hrefLang={NOME_DA_LINGUA[l].hreflang}
             lang={NOME_DA_LINGUA[l].hreflang}
             aria-current={l === lingua ? 'true' : undefined}
@@ -92,7 +108,7 @@ export function NavV3({
   );
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-[90]">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-[90]" style={{ viewTransitionName: 'nav-v3' }}>
       <div className="mx-auto flex max-w-[110rem] items-start justify-between gap-4 px-4 sm:px-6">
         <Link
           href={INICIO_DA_LINGUA[lingua]}

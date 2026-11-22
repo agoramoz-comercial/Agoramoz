@@ -41,7 +41,7 @@ export function SectionHeading({
         {(eyebrow || number) && (
           <div className="flex items-baseline gap-5 md:col-span-3 md:block">
             {number && (
-              <span className="numeral chrome-text block text-[length:var(--text-numeral)]">
+              <span data-titulo-num className="numeral chrome-text block text-[length:var(--text-numeral)]">
                 {number}
               </span>
             )}

@@ -1318,3 +1318,251 @@
   --lg-glow-color: rgb(255 255 255 / 0.3);
   --lg-shadow: 0 2px 8px rgb(0 0 0 / 0.1), 0 8px 24px -6px rgb(0 0 0 / 0.16);
 }
+
+/* ===========================================================================
+   v3 em todo o site público (2026). A casca v3 (`.v3`) envolve agora todas
+   as páginas de `(site)` e `(en)`, não só a página inicial. As superfícies
+   do sistema anterior religam-se à paleta v3 — os componentes continuam a
+   ler só `--surface`, `--on-surface`, `--muted`, etc., e mudam sozinhos.
+
+   Contrastes (WCAG 2.1, calculados):
+     tinta #0b0a09 sobre papel #efe8da 16,2:1 · sobre papel-2 #e4dccb 14,5:1
+     terra #5f584d sobre papel 5,8:1 · sobre papel-2 5,2:1
+     ocre #7a3f0c (sinal em papel) 6,8:1 · 6,1:1
+     papel sobre noite #0b0a09 16,2:1 · sobre noite-2 #151311 15,2:1
+     cinza #a8a092 sobre noite 7,6:1 · noite-2 7,2:1 · #1d1a17 6,7:1
+     âmbar #e9a35c (sinal em noite) 9,3:1 · 8,7:1
+   O admin e os documentos A4 não estão dentro de `.v3`: não mudam. A
+   impressão (news, cívico) continua a forçar papel branco (mais específica).
+   =========================================================================== */
+
+.v3 {
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-techno: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --tracking-techno: 0.08em;
+  --tracking-display: -0.05em;
+  --tracking-heading: -0.04em;
+}
+
+.v3[dir='rtl'] {
+  --font-display: var(--font-arabe), var(--font-inter), sans-serif;
+  --font-techno: var(--font-arabe), var(--font-inter), sans-serif;
+}
+
+.v3 [data-surface='light'],
+.v3 [data-surface='tint'] {
+  --surface: #efe8da;
+  --surface-raised: #e4dccb;
+  --on-surface: #0b0a09;
+  --muted: #5f584d;
+  --border: rgb(11 10 9 / 0.16);
+  --hairline: rgb(11 10 9 / 0.14);
+  --accent: #0b0a09;
+  --signal: #7a3f0c;
+  --ok: #0b0a09;
+  --motif: rgb(11 10 9 / 0.08);
+  --chrome-a: #0b0a09;
+  --chrome-b: #0b0a09;
+  --chrome-c: #0b0a09;
+}
+
+.v3 [data-surface='tint'] {
+  --surface: #e4dccb;
+  --surface-raised: #efe8da;
+}
+
+.v3 [data-surface='dark'],
+.v3 [data-surface='deep'] {
+  --surface: #0b0a09;
+  --surface-raised: #151311;
+  --on-surface: #efe8da;
+  --muted: #a8a092;
+  --border: rgb(239 232 218 / 0.16);
+  --hairline: rgb(239 232 218 / 0.14);
+  --accent: #efe8da;
+  --signal: #e9a35c;
+  --ok: #efe8da;
+  --motif: rgb(239 232 218 / 0.14);
+  --chrome-a: #efe8da;
+  --chrome-b: #efe8da;
+  --chrome-c: #efe8da;
+}
+
+.v3 [data-surface='dark'] {
+  --surface: #151311;
+  --surface-raised: #1d1a17;
+}
+
+/* Títulos no tipo da v3: neo-grotesco, peso médio, tracking apertado. */
+.v3 :is(h1, h2) {
+  font-weight: 500;
+}
+
+/* Rótulos (o «eyebrow» antigo) no estilo da etiqueta v3. */
+.v3 .rule-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+/* O numeral da secção passa a «(NN)», como na página inicial. */
+.v3 [data-titulo-num] {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  color: var(--muted);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+.v3 [data-titulo-num]::before {
+  content: '(';
+}
+.v3 [data-titulo-num]::after {
+  content: ')';
+}
+
+/* Botões: as variantes antigas tornam-se pílulas v3 (papel sobre noite,
+   tinta sobre papel). Só dentro da casca pública: o admin não muda. */
+.v3 :is(.btn-signal, .btn-solid) {
+  border-radius: 999px;
+  background-color: var(--on-surface);
+  color: var(--surface);
+}
+.v3 :is(.btn-signal, .btn-solid):hover {
+  background-color: var(--on-surface);
+  opacity: 0.88;
+}
+.v3 .btn-outline {
+  border-radius: 999px;
+}
+
+/* Páginas interiores: a navegação v3 flutua por cima, por isso a primeira
+   secção ganha espaço; e o topo leva o tratamento do hero v3 — grão de
+   película e um brilho âmbar quase imperceptível. */
+.v3 main > [data-surface]:first-child {
+  padding-top: clamp(7.5rem, 5.5rem + 6vw, 11rem) !important;
+  background-image: radial-gradient(120% 70% at 85% 0%, rgb(233 163 92 / 0.1) 0%, transparent 60%);
+}
+.v3 main > [data-surface]:first-child::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===========================================================================
+   Transição de página exclusiva AGORAMOZ — «abertura».
+   Em cada navegação interna (React <ViewTransition> + View Transitions API):
+   - a página que sai recua para o fundo (escala, escurece, desfoca) e
+     desliza na direcção da navegação;
+   - a página que entra abre-se por uma abertura em pílula — a forma da
+     navegação e dos botões v3 — que cresce até ocupar o ecrã;
+   - a navegação fica parada (âncora espacial).
+   A direcção vem de `html[data-nav]` («avancar» quando se desce na
+   hierarquia, «voltar» quando se sobe ou com o botão de trás).
+   Sem View Transitions (Firefox antigo): a cortina de tinta (TransicaoPagina).
+   Com movimento reduzido: troca instantânea.
+   =========================================================================== */
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-group(nav-v3) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(nav-v3) {
+  display: none;
+}
+::view-transition-new(nav-v3) {
+  animation: none;
+}
+
+::view-transition-group(.pagina) {
+  animation-duration: 780ms;
+}
+
+::view-transition-old(.pagina) {
+  --recuo: -3%;
+  animation: agz-recua 620ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  transform-origin: 50% 30%;
+}
+
+::view-transition-new(.pagina) {
+  --entrada: 0%;
+  animation: agz-abre 780ms cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+:root[data-nav='voltar']::view-transition-old(.pagina) {
+  --recuo: 3%;
+}
+
+:root[data-nav='voltar']::view-transition-new(.pagina) {
+  animation-name: agz-abre-topo;
+}
+
+@keyframes agz-recua {
+  from {
+    transform: translateY(0) scale(1);
+    filter: brightness(1) blur(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(var(--recuo)) scale(0.92);
+    filter: brightness(0.45) blur(3px);
+    opacity: 0.6;
+  }
+}
+
+/* A abertura nasce como uma pílula no fundo do ecrã (onde estão os botões
+   de acção) e cresce até ao rectângulo inteiro. */
+@keyframes agz-abre {
+  0% {
+    clip-path: inset(46% 34% 46% 34% round 999px);
+    transform: scale(1.06);
+    filter: brightness(1.15);
+  }
+  55% {
+    clip-path: inset(8% 6% 8% 6% round 2rem);
+  }
+  100% {
+    clip-path: inset(0 0 0 0 round 0);
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Ao voltar, a abertura desce do topo (de onde vem a navegação). */
+@keyframes agz-abre-topo {
+  0% {
+    clip-path: inset(0 38% 92% 38% round 0 0 999px 999px);
+    transform: scale(1.04);
+  }
+  60% {
+    clip-path: inset(0 4% 10% 4% round 0 0 2rem 2rem);
+  }
+  100% {
+    clip-path: inset(0 0 0 0 round 0);
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
