@@ -51,7 +51,34 @@ export interface TextosEnquadramento {
   readonly garantias: readonly string[];
   readonly passos: readonly string[];
   readonly cta: string;
+  /** Botão principal quando há CAL_LINK. */
+  readonly ctaReuniao: string;
+  /** Botão quando ainda não há CAL_LINK: escreve à equipa. */
+  readonly ctaEscrever: string;
+  readonly assuntoResposta: string;
   readonly responder: string;
+  readonly resumo: string;
+  readonly ano: string;
+  readonly pagina: string;
+  readonly perguntas: {
+    readonly resumo: string;
+    readonly problema: string;
+    readonly elegibilidade: string;
+    readonly garantias: string;
+    readonly entregas: string;
+  };
+  /** Título-conclusão do resumo: `{n}` indicados de `{total}`. */
+  readonly conclusao: string;
+  readonly conclusaoTudo: string;
+  readonly tituloProblema: string;
+  readonly tituloElegibilidade: string;
+  readonly tituloEntregas: string;
+  readonly kpis: { readonly indicados: string; readonly aConfirmar: string; readonly entregas: string };
+  readonly hero: string;
+  readonly heroTexto: string;
+  readonly fontes: string;
+  readonly fontesTexto: string;
+  readonly decisaoPedida: string;
   readonly rodape: string;
   readonly anexo: string;
 }
@@ -116,7 +143,32 @@ export const TEXTOS: Record<Idioma, TextosEnquadramento> = {
       'Decidimos em conjunto: avançar para o diagnóstico, reenquadrar ou não prosseguir.',
     ],
     cta: 'Responder a este e-mail',
+    ctaReuniao: 'Marcar reunião com um especialista',
+    ctaEscrever: 'Falar com um especialista',
+    assuntoResposta: 'Enquadramento preliminar — marcar conversa',
     responder: 'Pode responder diretamente a este e-mail para acrescentar ou corrigir alguma informação.',
+    resumo: 'Resumo executivo',
+    ano: '2026',
+    pagina: 'Página',
+    perguntas: {
+      resumo: 'Em que ponto está o enquadramento?',
+      problema: 'Que problema descreveu, e em que contexto?',
+      elegibilidade: 'O que já está indicado e o que falta confirmar?',
+      garantias: 'O que garantimos antes de qualquer proposta?',
+      entregas: 'Se avançar, o que recebe e o que acontece a seguir?',
+    },
+    conclusao: '{n} de {total} critérios já estão indicados; o resto confirma-se numa conversa',
+    conclusaoTudo: 'Os {total} critérios de elegibilidade já estão indicados',
+    tituloProblema: 'O problema, nas suas palavras',
+    tituloElegibilidade: 'O que já está indicado e o que falta confirmar',
+    tituloEntregas: 'Se avançar, o diagnóstico transforma isto numa decisão',
+    kpis: { indicados: 'critérios indicados', aConfirmar: 'critérios a confirmar', entregas: 'entregáveis no diagnóstico' },
+    hero: 'Diagnóstico antes de proposta.',
+    heroTexto: 'Não apresentamos arquitetura sem ter mapeado o processo atual. Se o diagnóstico concluir que não há adequação, dizemo-lo — e não há proposta.',
+    fontes: 'Fontes e método',
+    fontesTexto:
+      'Documento automático e preliminar, gerado no momento em que submeteu o diagnóstico. Usa apenas as suas respostas e o catálogo publicado da AGORAMOZ (fases, entregáveis e garantias). Não contém preços, prazos nem estimativas. A equipa AGORAMOZ revê-o e confirma consigo antes de qualquer decisão.',
+    decisaoPedida: 'Decisão desta fase',
     rodape: 'AGORAMOZ · Infraestrutura operacional digital · agoramoz.com',
     anexo: 'Em anexo: o enquadramento preliminar em PDF.',
   },
@@ -179,7 +231,32 @@ export const TEXTOS: Record<Idioma, TextosEnquadramento> = {
       'We decide together: go ahead with the diagnostic, reframe, or not proceed.',
     ],
     cta: 'Reply to this email',
+    ctaReuniao: 'Book a meeting with a specialist',
+    ctaEscrever: 'Talk to a specialist',
+    assuntoResposta: 'Preliminary framing — book a conversation',
     responder: 'You can reply directly to this email to add or correct any information.',
+    resumo: 'Executive summary',
+    ano: '2026',
+    pagina: 'Page',
+    perguntas: {
+      resumo: 'Where does the framing stand?',
+      problema: 'What problem did you describe, and in what context?',
+      elegibilidade: 'What is already stated and what is still to confirm?',
+      garantias: 'What do we guarantee before any proposal?',
+      entregas: 'If you go ahead, what do you receive and what happens next?',
+    },
+    conclusao: '{n} of {total} criteria are already stated; the rest is confirmed in one conversation',
+    conclusaoTudo: 'All {total} eligibility criteria are already stated',
+    tituloProblema: 'The problem, in your own words',
+    tituloElegibilidade: 'What is already stated and what is still to confirm',
+    tituloEntregas: 'If you go ahead, the diagnostic turns this into a decision',
+    kpis: { indicados: 'criteria stated', aConfirmar: 'criteria to confirm', entregas: 'diagnostic deliverables' },
+    hero: 'Diagnostic before proposal.',
+    heroTexto: 'We do not present an architecture without mapping the current process. If the diagnostic concludes there is no fit, we say so — and there is no proposal.',
+    fontes: 'Sources and method',
+    fontesTexto:
+      'Automatic, preliminary document, generated when you submitted the diagnostic. It uses only your answers and the published AGORAMOZ catalogue (stages, deliverables and guarantees). It contains no prices, timelines or estimates. The AGORAMOZ team reviews it and confirms it with you before any decision.',
+    decisaoPedida: 'Decision at this stage',
     rodape: 'AGORAMOZ · Operational digital infrastructure · agoramoz.com',
     anexo: 'Attached: the preliminary framing as a PDF.',
   },

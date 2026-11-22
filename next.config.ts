@@ -44,6 +44,14 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   images: { formats: ['image/avif', 'image/webp'] },
+  /**
+   * O PDF do «Enquadramento preliminar» lê o Inter (subconjunto latino, OFL)
+   * de lib/email/fontes em tempo de execução: o rastreio de ficheiros não o
+   * vê sozinho, por isso inclui-se aqui na rota que envia o e-mail.
+   */
+  outputFileTracingIncludes: {
+    '/api/diagnostico': ['./lib/email/fontes/**'],
+  },
   async headers() {
     return [
       {

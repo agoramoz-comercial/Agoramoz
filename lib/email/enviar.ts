@@ -3,6 +3,7 @@ import type { LeadInput } from '@/lib/forms/lead-schema';
 import { log } from '@/lib/log/logger';
 import { assunto, construirEnquadramento, nomeDoFicheiro } from './enquadramento';
 import { htmlDoEmail, textoDoEmail } from './html';
+import { reuniao } from './cta';
 import { gerarPdfEnquadramento } from './pdf';
 
 /**
@@ -50,15 +51,22 @@ export async function enviarEnquadramento(p: PedidoEnvio): Promise<ResultadoEnvi
   const inicio = Date.now();
   try {
     const doc = construirEnquadramento(p.input, p.input.idioma);
-    const pdf = await gerarPdfEnquadramento(doc, p.agora);
+    const cta = reuniao(doc.t, {
+      calOrigem: env.CAL_ORIGIN,
+      calLink: env.CAL_LINK,
+      nome: doc.nome,
+      email: p.input.workEmail,
+      responderPara: env.EMAIL_REPLY_TO,
+    });
+    const pdf = await gerarPdfEnquadramento(doc, p.agora, { ligacaoReuniao: cta.url, rotuloReuniao: cta.rotulo });
     const corpo = {
       from: env.EMAIL_FROM,
       to: [p.input.workEmail],
       reply_to: env.EMAIL_REPLY_TO,
       ...(env.EMAIL_BCC_INTERNO ? { bcc: [env.EMAIL_BCC_INTERNO] } : {}),
       subject: assunto(doc),
-      html: htmlDoEmail(doc, env.EMAIL_REPLY_TO),
-      text: textoDoEmail(doc),
+      html: htmlDoEmail(doc, cta),
+      text: textoDoEmail(doc, cta),
       attachments: [{ filename: nomeDoFicheiro(doc), content: Buffer.from(pdf).toString('base64') }],
       tags: [
         { name: 'tipo', value: 'enquadramento' },
