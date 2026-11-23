@@ -106,3 +106,54 @@ describe('revista em PDF', () => {
     expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe('revista em PDF — vidro e gráficos', () => {
+  const FONTE_SERIE = { titulo: 'Exemplo de QA: carga', unidade: 'Mt', fonte: 'Documento de exemplo' } as const;
+
+  it('glassmorphism: cada anúncio e a capa levam um painel de vidro (PNG com transparência)', async () => {
+    const bytes = await gerarRevista({
+      idioma: 'pt',
+      data: new Date('2026-11-23T10:00:00Z'),
+      artigos: [artigo(1)],
+      anuncios: ANUNCIOS,
+      imagens: new Map(),
+      site: 'https://agoramoz.com',
+    });
+    const pdf = await PDFDocument.load(bytes);
+    // PNG com canal alfa (SMask) = os painéis de vidro.
+    const vidros = pdf.context
+      .enumerateIndirectObjects()
+      .filter(([, o]) => o instanceof Object && 'dict' in o && (o as { dict: PDFDict }).dict.get(PDFName.of('SMask')));
+    expect(vidros.length).toBeGreaterThanOrEqual(1 + ANUNCIOS.length);
+    // Os anúncios continuam clicáveis e contados.
+    expect(await ligacoes(bytes)).toEqual(expect.arrayContaining(ANUNCIOS.map((a) => urlAnuncio('https://agoramoz.com', a.id))));
+  });
+
+  it('a notícia em números entra quando há país ou séries; as séries não acrescentam números', async () => {
+    const profunda = {
+      ...EXEMPLO_PROFUNDA,
+      dados: [{ ...FONTE_SERIE, tipo: 'linha' as const, pontos: [{ rotulo: '2024', valor: 27 }, { rotulo: '2025', valor: 31 }] }],
+    };
+    const com = await gerarRevista({
+      idioma: 'pt',
+      data: new Date('2026-11-23T10:00:00Z'),
+      artigos: [artigo(1, { profunda })],
+      anuncios: [],
+      imagens: new Map(),
+      site: 'https://agoramoz.com',
+    });
+    const sem = await gerarRevista({
+      idioma: 'pt',
+      data: new Date('2026-11-23T10:00:00Z'),
+      artigos: [artigo(1, { pais: null })],
+      anuncios: [],
+      imagens: new Map(),
+      site: 'https://agoramoz.com',
+    });
+    const paginas = async (b: Uint8Array) => (await PDFDocument.load(b)).getPageCount();
+    // capa + edição em números + artigo + análise + notícia em números + contracapa
+    expect(await paginas(com)).toBeGreaterThanOrEqual(6);
+    // sem país, sem análise profunda: nenhuma página «em números» do artigo
+    expect(await paginas(sem)).toBeLessThan(await paginas(com));
+  });
+});

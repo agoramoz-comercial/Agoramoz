@@ -20,8 +20,11 @@ import {
 } from 'pdf-lib';
 import type { AnuncioPublico } from './anuncios';
 import { NOME_DA_SECCAO, type ArtigoCompleto } from './artigo';
+import { porEvidencia, porPais, porSeccao, total } from './estatisticas';
 import { NOME_DO_PAIS } from './paises';
 import { NOME_TIPO } from './profunda';
+import * as G from './revista-graficos';
+import { cenaDeCor, cenaDeFoto, rectArredondado, vidro, type Cena, type Painel, type Tema } from './vidro';
 
 /**
  * A revista do AGORAMOZ News em PDF (A4), no desenho do jornal: capa
@@ -202,7 +205,7 @@ class Revista {
   }
 
   /** Cabeça corrida: marca, data e número da página, entre filetes. */
-  private cabecalho(): void {
+  cabecalho(): void {
     const p = this.page;
     const y = A4.h - M + 4;
     p.drawText('AGORAMOZ NEWS', { x: M, y, size: 11, font: this.f.mancha, color: this.tinta });
@@ -321,6 +324,42 @@ class Revista {
     this.y -= 4;
   }
 
+  /** Desenha uma cena (fundo do vidro) com o canto superior esquerdo em (x, yTopo). */
+  async cena(c: Cena, x: number, yTopo: number): Promise<void> {
+    const img = await this.pdf.embedJpg(c.jpeg);
+    this.page.drawImage(img, { x, y: yTopo - c.hPt, width: c.wPt, height: c.hPt });
+  }
+
+  /**
+   * Um painel de vidro fosco sobre a cena desenhada em (x, yTopo): o fundo
+   * desfocado (sharp) e, por cima, a borda clara de 0,5 pt em vector.
+   * Devolve o topo do painel na página.
+   */
+  async vidro(c: Cena, x: number, yTopo: number, p: Painel): Promise<number> {
+    const png = await this.pdf.embedPng(await vidro(c, p));
+    const px = x + p.x;
+    const pyTopo = yTopo - p.y;
+    this.page.drawImage(png, { x: px, y: pyTopo - p.h, width: p.w, height: p.h });
+    this.page.drawSvgPath(rectArredondado(p.w, p.h, p.raio ?? 16), {
+      x: px,
+      y: pyTopo,
+      borderColor: PAPEL,
+      borderWidth: 0.5,
+      borderOpacity: 0.75,
+    });
+    return pyTopo;
+  }
+
+  /** Altura de um texto quebrado numa largura (sem o desenhar). */
+  medir(texto: string, fonte: PDFFont, tam: number, largura: number, entrelinha = 1.22): number {
+    return quebrar(this.t(texto), fonte, tam, largura).length * tam * entrelinha;
+  }
+
+  /** O contexto dos gráficos vectoriais nesta página. */
+  get g(): G.Ctx {
+    return { page: this.page, sans: this.f.sans, forte: this.f.sansForte, serifa: this.f.serifa, negra: this.f.negra, t: (s) => this.t(s), idioma: this.e.idioma };
+  }
+
   /** Uma ligação clicável (anotação URI) num rectângulo da página. */
   ligacao(url: string, x: number, y: number, w: number, h: number): void {
     const anotacao = this.pdf.context.obj({
@@ -364,6 +403,18 @@ const TXT = {
     contracapa: 'Análise de negócio para quem decide em Moçambique e nos mercados lusófonos.',
     aviso: 'Análises produzidas com o motor AGORAMOZ e revistas pela redacção antes de publicar. Não são aconselhamento de investimento.',
     publicidade: 'Publicidade',
+    edicaoNumeros: 'A edição em números',
+    edicaoLead: 'Onde tocam as notícias desta edição, contado nos artigos publicados.',
+    noticiaNumeros: 'A notícia em números',
+    noticiaLead: 'Os números vêm só do documento da notícia; o que não estava lá não entra no gráfico.',
+    porPais: 'Artigos por país',
+    porSeccao: 'Artigos por secção',
+    porEvidencia: 'Afirmações por nível de evidência',
+    fonteEdicao: (n: number) => `Base de dados do AGORAMOZ News: os ${n} artigos desta edição.`,
+    fonteAnalise: 'Análises profundas ZABATAINA 3000 desta edição (contagem das afirmações).',
+    fonteAnaliseUma: 'Análise profunda ZABATAINA 3000 desta notícia (contagem das afirmações).',
+    onde: 'Onde',
+    fonteMapa: 'Natural Earth (domínio público); país escolhido pela redacção.',
   },
   en: {
     revista: 'Business analysis magazine',
@@ -391,8 +442,31 @@ const TXT = {
     contracapa: 'Business analysis for decision-makers in Mozambique and Portuguese-speaking markets.',
     aviso: 'Analysis produced with the AGORAMOZ engine and reviewed by our desk before publication. It is not investment advice.',
     publicidade: 'Advertisement',
+    edicaoNumeros: 'This edition in numbers',
+    edicaoLead: 'Where this edition’s stories land, counted from published articles.',
+    noticiaNumeros: 'The story in numbers',
+    noticiaLead: 'Numbers come only from the story’s document; anything not in it stays out of the chart.',
+    porPais: 'Articles by country',
+    porSeccao: 'Articles by section',
+    porEvidencia: 'Claims by evidence level',
+    fonteEdicao: (n: number) => `AGORAMOZ News database: the ${n} articles in this edition.`,
+    fonteAnalise: 'ZABATAINA 3000 deep analyses in this edition (count of claims).',
+    fonteAnaliseUma: 'ZABATAINA 3000 deep analysis of this story (count of claims).',
+    onde: 'Where',
+    fonteMapa: 'Natural Earth (public domain); country chosen by our desk.',
   },
 } as const;
+
+/** Um passo de vidro que falhe (sharp, imagem estranha) não parte a revista. */
+async function talvez<T>(f: () => Promise<T>): Promise<T | null> {
+  try {
+    return await f();
+  } catch {
+    return null;
+  }
+}
+
+const TEMAS: readonly Tema[] = ['noite', 'tinta', 'energia', 'crescimento'];
 
 export function dataDaEdicao(data: Date, idioma: 'pt' | 'en'): string {
   return new Intl.DateTimeFormat(idioma === 'en' ? 'en-GB' : 'pt-PT', {
@@ -459,23 +533,37 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
   r.y -= 18;
 
   const [capa, ...outros] = e.artigos;
+  // A capa: a fotografia da manchete (ou um gradiente de cor) e, por cima,
+  // um painel de vidro fosco com a secção, o título e a entrada.
+  const alturaIndice = e.artigos.length > 1 ? 34 + Math.min(outros.length, 5) * 15 : 0;
+  const caixaTopo = r.y;
+  const hCaixa = caixaTopo - (M + alturaIndice + 14);
+  const fotoCapa = capa ? e.imagens.get(capa.id) : undefined;
+  const cenaCapa =
+    (fotoCapa ? await talvez(() => cenaDeFoto(fotoCapa, larg, hCaixa)) : null) ??
+    (await talvez(() => cenaDeCor(larg, hCaixa, 'noite', 1)));
+  if (cenaCapa) await r.cena(cenaCapa, M, caixaTopo);
+  const wTexto = larg - 32 - 40;
+  const tamTitulo = 28;
+  const hPainel = capa
+    ? 20 + 16 + r.medir(capa.titulo, f.negra, tamTitulo, wTexto, 1.04) + (capa.entrada ? 8 + r.medir(capa.entrada, f.italica, 12.5, wTexto, 1.35) : 0) + 22
+    : 70;
+  const painelCapa: Painel = { x: 16, y: hCaixa - 16 - hPainel, w: larg - 32, h: hPainel, raio: 18 };
+  const topoPainel = cenaCapa ? await talvez(() => r.vidro(cenaCapa, M, caixaTopo, painelCapa)) : null;
+  r.y = (topoPainel ?? caixaTopo - painelCapa.y) - 20;
+  const xt = M + 16 + 20;
   if (capa) {
-    const img = imagens.get(capa.id);
-    if (img) {
-      r.imagem(img, M, r.y, larg, 250);
-      r.y -= 258;
-    }
-    const kx = r.rotulo(NOME_DA_SECCAO[capa.seccao][e.idioma], M, r.y - 10, PAPEL);
-    if (capa.pais) r.selo(capa.pais, M + kx + 8, r.y - 10);
-    r.y -= 16;
-    r.escrever(capa.titulo, f.negra, img ? 30 : 38, M, larg, PAPEL, 1.04);
+    const kx = r.rotulo(NOME_DA_SECCAO[capa.seccao][e.idioma], xt, r.y - 6, PAPEL);
+    if (capa.pais) r.selo(capa.pais, xt + kx + 8, r.y - 6);
+    r.y -= 14;
+    r.escrever(capa.titulo, f.negra, tamTitulo, xt, wTexto, PAPEL, 1.04);
     if (capa.entrada) {
-      r.y -= 6;
-      r.escrever(capa.entrada, f.italica, 13, M, larg, CINZA_ESCURO, 1.35);
+      r.y -= 8;
+      r.escrever(capa.entrada, f.italica, 12.5, xt, wTexto, CINZA_ESCURO, 1.35);
     }
-    r.ligacao(urlArtigo(e, capa.slug), M, r.y, larg, 30);
+    r.ligacao(urlArtigo(e, capa.slug), M + 16, caixaTopo - painelCapa.y - hPainel, larg - 32, hPainel);
   } else {
-    r.escrever(x.vazio, f.italica, 18, M, larg, PAPEL);
+    r.escrever(x.vazio, f.italica, 18, xt, wTexto, PAPEL);
   }
   // Índice no rodapé da capa.
   if (e.artigos.length > 1) {
@@ -489,8 +577,44 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
     }
   }
 
+  // ── A edição em números (contagens reais dos artigos desta edição) ─────────
+  const paisesEd = porPais(e.artigos);
+  const seccoesEd = porSeccao(e.artigos);
+  const profundas = e.artigos.flatMap((a) => (a.profunda ? [a.profunda] : []));
+  if (e.artigos.length > 0) {
+    r.novaPagina('papel');
+    r.rotulo('INFOGRAFIA', M, r.y - 8);
+    r.y -= 12;
+    r.escrever(x.edicaoNumeros, f.negra, 26, M, larg, TINTA, 1.06);
+    r.y -= 2;
+    r.escrever(x.edicaoLead, f.italica, 11.5, M, larg, CINZA, 1.35);
+    r.y -= 14;
+    const fonteEd = x.fonteEdicao(e.artigos.length);
+    if (paisesEd.length > 0) {
+      r.y -= G.quadro(r.g, M, r.y, larg, x.porPais, fonteEd, (y) => G.mapaCobertura(r.g, paisesEd, M, y, larg));
+      r.y -= 14;
+    }
+    const meia = (larg - 24) / 2;
+    const yLinha = r.y;
+    let hEsq = 0;
+    if (seccoesEd.length > 0)
+      hEsq = G.quadro(r.g, M, yLinha, meia, x.porSeccao, fonteEd, (y) =>
+        G.barras(r.g, M, y, meia, seccoesEd.map((c) => ({ rotulo: NOME_DA_SECCAO[c.chave][e.idioma], valor: c.n }))),
+      );
+    let hDir = 0;
+    if (profundas.length > 0) {
+      const ev = (['E1', 'E2', 'E3', 'E4'] as const).map((k) => ({
+        rotulo: k,
+        valor: profundas.reduce((sm, p) => sm + (porEvidencia(p).find((c) => c.chave === k)?.n ?? 0), 0),
+      }));
+      if (total(ev.map((p) => ({ chave: p.rotulo, n: p.valor }))) > 0)
+        hDir = G.quadro(r.g, M + meia + 24, yLinha, meia, x.porEvidencia, x.fonteAnalise, (y) => G.barras(r.g, M + meia + 24, y, meia, ev));
+    }
+    r.y = yLinha - Math.max(hEsq, hDir);
+  }
+
   // ── Um artigo por folha (a correr para as seguintes) ───────────────────────
-  for (const a of e.artigos) {
+  for (const [ia, a] of e.artigos.entries()) {
     r.novaPagina('papel');
     const kx = r.rotulo(NOME_DA_SECCAO[a.seccao][e.idioma], M, r.y - 8);
     if (a.pais) r.selo(a.pais, M + kx + 8, r.y - 8);
@@ -501,9 +625,32 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
       r.escrever(a.entrada, f.italica, 12.5, M, larg, CINZA, 1.35);
     }
     const img = imagens.get(a.id);
+    const bytesFoto = e.imagens.get(a.id);
     if (img) {
       r.y -= 10;
-      r.imagem(img, M, r.y, larg, 220);
+      // A fotografia com o destaque em vidro fosco (o primeiro ponto do resumo).
+      const cenaFoto = bytesFoto ? await talvez(() => cenaDeFoto(bytesFoto, larg, 220)) : null;
+      const destaque = a.analise.resumo[0];
+      if (cenaFoto) {
+        await r.cena(cenaFoto, M, r.y);
+        if (destaque) {
+          const wP = Math.min(300, larg * 0.62);
+          const linhasD = r.medir(destaque, f.serifa, 10.5, wP - 28, 1.3);
+          const hP = Math.min(200, 14 + 12 + linhasD + 14);
+          const yFoto = r.y;
+          const topo = await talvez(() => r.vidro(cenaFoto, M, yFoto, { x: 12, y: 220 - 12 - hP, w: wP, h: hP, raio: 14 }));
+          if (topo !== null) {
+            const salva = r.y;
+            r.fundo = 'preto';
+            r.y = topo - 12;
+            r.rotulo(x.resumo, M + 12 + 14, r.y - 6, PAPEL, 6.5);
+            r.y -= 8;
+            r.escrever(destaque, f.serifa, 10.5, M + 12 + 14, wP - 28, PAPEL, 1.3);
+            r.fundo = 'papel';
+            r.y = salva;
+          }
+        }
+      } else r.imagem(img, M, r.y, larg, 220);
       r.y -= 222;
       if (a.imagem_credito) {
         r.y -= 9;
@@ -560,19 +707,27 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
       r.novaPagina('preto');
       r.rotulo('ZABATAINA 3000', M, r.y - 8, CINZA_ESCURO);
       r.selo(p.pais, A4.w - M - 110, r.y - 8);
-      r.y -= 14;
-      r.escrever(`${x.impacto} ${NOME_DO_PAIS[p.pais][e.idioma]}`, f.negra, 24, M, larg, PAPEL, 1.08);
-      r.y -= 4;
-      r.escrever(
-        `${p.impacto.resumo} [${p.impacto.evidencia} · ${NOME_TIPO[p.impacto.tipo][e.idioma]}]`,
-        f.italica,
-        11.5,
-        M,
-        larg,
-        PAPEL,
-        1.4,
-      );
+      r.y -= 16;
+      // O impacto num painel de vidro sobre a fotografia (ou a luz da AGORAMOZ).
+      const tituloImp = `${x.impacto} ${NOME_DO_PAIS[p.pais][e.idioma]}`;
+      const textoImp = `${p.impacto.resumo} [${p.impacto.evidencia} · ${NOME_TIPO[p.impacto.tipo][e.idioma]}]`;
+      const wImp = larg - 2 * 18 - 2 * 20;
+      const hImp = 20 + r.medir(tituloImp, f.negra, 24, wImp, 1.08) + 6 + r.medir(textoImp, f.italica, 11.5, wImp, 1.4) + 20;
+      const hCena = hImp + 36;
+      const cenaImp =
+        (bytesFoto ? await talvez(() => cenaDeFoto(bytesFoto, larg, hCena)) : null) ??
+        (await talvez(() => cenaDeCor(larg, hCena, TEMAS[ia % TEMAS.length]!, ia + 2)));
+      const yCena = r.y;
+      let topoImp: number | null = null;
+      if (cenaImp) {
+        await r.cena(cenaImp, M, yCena);
+        topoImp = await talvez(() => r.vidro(cenaImp, M, yCena, { x: 18, y: 18, w: larg - 36, h: hImp, raio: 16 }));
+      }
+      r.y = (topoImp ?? yCena) - 20;
+      r.escrever(tituloImp, f.negra, 24, M + 38, wImp, PAPEL, 1.08);
       r.y -= 6;
+      r.escrever(textoImp, f.italica, 11.5, M + 38, wImp, PAPEL, 1.4);
+      r.y = yCena - (cenaImp ? hCena : hImp) - 10;
       r.filete(r.y, false);
       r.colunasDesde(r.y - 2);
       const marcaE = (ev: string, tipo: keyof typeof NOME_TIPO) => ` [${ev} · ${NOME_TIPO[tipo][e.idioma]}]`;
@@ -596,29 +751,91 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
         for (const k of p.indicadores) r.correr({ ...corpo, texto: `${k.nome}. ${k.porque}`, antes: 3, marca: '·' });
       }
     }
+
+    // A notícia em números: o mapa do país, as séries do documento e as contagens da análise.
+    const series = p?.dados ?? [];
+    if (a.pais || series.length > 0) {
+      r.novaPagina('papel');
+      r.rotulo('INFOGRAFIA', M, r.y - 8);
+      r.y -= 12;
+      r.escrever(x.noticiaNumeros, f.negra, 24, M, larg, TINTA, 1.06);
+      r.y -= 2;
+      r.escrever(a.titulo, f.italica, 11, M, larg, CINZA, 1.3);
+      if (series.length > 0) {
+        r.y -= 2;
+        r.escrever(x.noticiaLead, f.sans, 7.5, M, larg, CINZA, 1.4);
+      }
+      r.y -= 14;
+      const meia = (larg - 24) / 2;
+      const itens: { h: number; desenhar: (xx: number, yy: number) => void }[] = [];
+      if (a.pais && series.length === 0 && !p) {
+        // Só o mapa: a toda a largura.
+        const pais = a.pais;
+        r.y -= G.quadro(r.g, M, r.y, larg, `${x.onde}: ${NOME_DO_PAIS[pais][e.idioma]}`, x.fonteMapa, (y) => {
+          G.mapaPais(r.g, pais, NOME_DO_PAIS[pais][e.idioma], M, y, larg, larg * 0.625);
+          return larg * 0.625;
+        });
+      } else if (a.pais) {
+        const pais = a.pais;
+        itens.push({
+          h: 26 + meia * 0.625 + 16,
+          desenhar: (xx, yy) =>
+            G.quadro(r.g, xx, yy, meia, `${x.onde}: ${NOME_DO_PAIS[pais][e.idioma]}`, x.fonteMapa, (y) => {
+              G.mapaPais(r.g, pais, NOME_DO_PAIS[pais][e.idioma], xx, y, meia, meia * 0.625);
+              return meia * 0.625;
+            }),
+        });
+      }
+      for (const s of series) itens.push({ h: G.alturaSerie(s), desenhar: (xx, yy) => G.serie(r.g, xx, yy, meia, s) });
+      if (p) {
+        const ev = porEvidencia(p).map((c) => ({ rotulo: c.chave, valor: c.n }));
+        itens.push({
+          h: 26 + ev.length * 15 + 2 + 16,
+          desenhar: (xx, yy) => G.quadro(r.g, xx, yy, meia, x.porEvidencia, x.fonteAnaliseUma, (y) => G.barras(r.g, xx, y, meia, ev)),
+        });
+      }
+      // Duas colunas: cada gráfico vai para a coluna mais curta; sem espaço, folha nova.
+      const topoGrelha = r.y;
+      const yCol = [topoGrelha, topoGrelha];
+      for (const it of itens) {
+        let k = yCol[0]! >= yCol[1]! ? 0 : 1;
+        if (yCol[k]! - it.h < M + 10) {
+          r.novaPagina('papel');
+          yCol[0] = yCol[1] = r.y - 6;
+          k = 0;
+        }
+        it.desenhar(M + k * (meia + 24), yCol[k]!);
+        yCol[k] = yCol[k]! - it.h - 16;
+      }
+    }
   }
 
   // ── Página estratégica dos anunciantes (só se houver anúncios) ─────────────
   const ads = [...new Map(e.anuncios.map((a) => [a.id, a])).values()].slice(0, 6);
   if (ads.length > 0) {
-    r.novaPagina('preto');
+    r.novaPagina('preto', false);
+    // A página inteira é luz de cor; cada anúncio é um painel de vidro fosco por cima.
+    const cenaAds = await talvez(() => cenaDeCor(A4.w, A4.h, 'noite', 7));
+    if (cenaAds) await r.cena(cenaAds, 0, A4.h);
+    r.cabecalho();
     r.rotulo(x.parceiros, M, r.y - 8, CINZA_ESCURO);
     r.y -= 12;
     r.escrever(x.parceirosTitulo, f.negra, 28, M, larg, PAPEL, 1.06);
-    r.y -= 2;
+    r.y -= 10;
     r.escrever(x.parceirosNota, f.sans, 8.5, M, larg, CINZA_ESCURO, 1.4);
     r.y -= 14;
     const colunas = ads.length > 3 ? 2 : 1;
     const gutter = 14;
     const w = (larg - gutter * (colunas - 1)) / colunas;
     const linhas = Math.ceil(ads.length / colunas);
-    const h = Math.min(150, (r.y - M - 30 - gutter * (linhas - 1)) / linhas);
-    ads.forEach((ad, i) => {
+    const h = Math.min(210, (r.y - M - 30 - gutter * (linhas - 1)) / linhas);
+    for (const [i, ad] of ads.entries()) {
       const cx = M + (i % colunas) * (w + gutter);
       const top = r.y - Math.floor(i / colunas) * (h + gutter);
-      // Cartão em «vidro» claro sobre a página escura.
-      r.page.drawRectangle({ x: cx, y: top - h, width: w, height: h, color: rgb(0.16, 0.15, 0.13), borderColor: rgb(0.45, 0.42, 0.37), borderWidth: 0.7 });
       const salva = r.y;
+      await (cenaAds
+        ? talvez(() => r.vidro(cenaAds, 0, A4.h, { x: cx, y: A4.h - top, w, h, raio: 16 }))
+        : Promise.resolve(r.page.drawRectangle({ x: cx, y: top - h, width: w, height: h, color: rgb(0.16, 0.15, 0.13) })));
       r.y = top - 8;
       r.rotulo(x.publicidade, cx + 14, r.y - 8, CINZA_ESCURO, 6.5);
       r.y -= 14;
@@ -631,11 +848,11 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
       const cta = `${r.t(ad.cta)}  ->`;
       const wCta = f.sansForte.widthOfTextAtSize(cta, 9) + 24;
       const yCta = top - h + 14;
-      r.page.drawRectangle({ x: cx + 14, y: yCta, width: wCta, height: 22, color: PAPEL });
+      r.page.drawSvgPath(rectArredondado(wCta, 22, 11), { x: cx + 14, y: yCta + 22, color: PAPEL });
       r.page.drawText(cta, { x: cx + 26, y: yCta + 7, size: 9, font: f.sansForte, color: NOITE });
       r.ligacao(urlAnuncio(e.site, ad.id), cx, top - h, w, h);
       r.y = salva;
-    });
+    }
   }
 
   // ── Contracapa ─────────────────────────────────────────────────────────────
