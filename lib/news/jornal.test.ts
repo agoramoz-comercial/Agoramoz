@@ -68,6 +68,7 @@ describe('artigo — da análise ao rascunho', () => {
 
   it('o formulário do editor recusa fonte http, IP privado e endereço com maiúsculas', () => {
     const base = {
+      pais: 'mz',
       slug: 'petroleo-sobe-a1',
       titulo: 'Petróleo sobe',
       entrada: '',
@@ -83,6 +84,9 @@ describe('artigo — da análise ao rascunho', () => {
       false,
     );
     expect(formularioArtigo.safeParse({ ...base, slug: 'Petroleo' }).success).toBe(false);
+    // O país que a notícia afecta é obrigatório, e só dos mercados conhecidos.
+    expect(formularioArtigo.safeParse({ ...base, pais: '' }).success).toBe(false);
+    expect(formularioArtigo.safeParse({ ...base, pais: 'xx' }).success).toBe(false);
   });
 
   it('um artigo com análise estragada não se mostra; linhas estragadas saem da lista', () => {
@@ -281,6 +285,9 @@ describe('RSS', () => {
           actualizado_em: '2026-10-06T08:00:00+00:00',
           gostos: 0,
           partilhas: 0,
+          pais: null,
+          imagem_caminho: null,
+          imagem_alt: null,
         },
       ],
       'pt',

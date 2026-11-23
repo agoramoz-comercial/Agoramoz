@@ -303,6 +303,12 @@ const serverSchema = z.object({
    * SURVEYS ou NEWS_ENGINE, isto é uma ajuda ao admin, não um caminho público.
    */
   SURVEY_AI: z.enum(['off', 'kimi']).default('off').catch('off'),
+  /**
+   * Análise profunda ZABATAINA 3000 no News (lib/news/profunda.ts): `kimi`
+   * usa a mesma KIMI_API_KEY. `off` (omissão) — não há camada profunda, e
+   * nada a substitui. Um valor inválido cai para `off`.
+   */
+  NEWS_ANALISE_PROFUNDA: z.enum(['off', 'kimi']).default('off').catch('off'),
   /** Chave da plataforma Kimi. Sensível: só na Vercel, nunca no Git nem no chat. */
   KIMI_API_KEY: z.string().min(20).optional().catch(undefined),
   KIMI_MODEL: z
@@ -505,6 +511,7 @@ export function serverEnv(): z.infer<typeof serverSchema> {
       NEWS_BLOG: process.env.NEWS_BLOG,
       SURVEY_LINK_SECRET: process.env.SURVEY_LINK_SECRET,
       SURVEY_AI: process.env.SURVEY_AI,
+      NEWS_ANALISE_PROFUNDA: process.env.NEWS_ANALISE_PROFUNDA,
       KIMI_API_KEY: process.env.KIMI_API_KEY,
       KIMI_MODEL: process.env.KIMI_MODEL,
       KIMI_BASE_URL: process.env.KIMI_BASE_URL,
