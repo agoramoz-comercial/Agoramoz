@@ -266,11 +266,11 @@ export function Anel({ pontos, idioma }: { pontos: readonly Ponto[]; idioma: Idi
   const soma = pontos.reduce((s, p) => s + p.valor, 0);
   const R = 80;
   const r = 50;
-  let ang = -Math.PI / 2;
-  const arco = (v: number) => {
-    const a0 = ang;
-    const a1 = ang + (v / 100) * Math.PI * 2;
-    ang = a1;
+  // Ângulos de início de cada fatia, calculados de uma vez (sem estado mutável no render).
+  const inicios = pontos.map((_, i) => -Math.PI / 2 + (pontos.slice(0, i).reduce((t, p) => t + p.valor, 0) / 100) * Math.PI * 2);
+  const arco = (i: number) => {
+    const a0 = inicios[i]!;
+    const a1 = a0 + (pontos[i]!.valor / 100) * Math.PI * 2;
     const g = a1 - a0 > Math.PI ? 1 : 0;
     const p = (rad: number, a: number) => `${(100 + rad * Math.cos(a)).toFixed(2)},${(100 + rad * Math.sin(a)).toFixed(2)}`;
     return `M${p(R, a0)}A${R},${R} 0 ${g} 1 ${p(R, a1)}L${p(r, a1)}A${r},${r} 0 ${g} 0 ${p(r, a0)}Z`;
@@ -281,7 +281,7 @@ export function Anel({ pontos, idioma }: { pontos: readonly Ponto[]; idioma: Idi
       <svg viewBox="0 0 200 200" role="img" aria-label={resumo(pontos, '%', idioma)} className="h-44 w-44 shrink-0">
         <circle cx="100" cy="100" r={(R + r) / 2} fill="none" stroke={COR.linha} strokeWidth={R - r} />
         {pontos.map((p, i) => (
-          <path key={p.rotulo} d={arco(p.valor)} fill={CATEGORICAS[i % CATEGORICAS.length]} stroke={COR.papel} strokeWidth="2" />
+          <path key={p.rotulo} d={arco(i)} fill={CATEGORICAS[i % CATEGORICAS.length]} stroke={COR.papel} strokeWidth="2" />
         ))}
         <text x="100" y="106" textAnchor="middle" fontSize="20" fontWeight="700" fill={COR.tinta} className="font-sans">
           {numero(pontos[0]!.valor, idioma)}%

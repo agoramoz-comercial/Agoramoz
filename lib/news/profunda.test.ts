@@ -174,7 +174,8 @@ describe('análise profunda — séries para gráficos', () => {
       expect(v.analise.dados).toEqual([boa]);
       expect(v.analise.retirados).toBeGreaterThanOrEqual(1);
     }
-    const { dados: _ignorar, ...semDados } = EXEMPLO_PROFUNDA as typeof EXEMPLO_PROFUNDA & { dados?: unknown };
+    const semDados: Record<string, unknown> = { ...EXEMPLO_PROFUNDA };
+    delete semDados.dados;
     expect(lerProfunda(semDados)?.dados).toEqual([]);
   });
 
