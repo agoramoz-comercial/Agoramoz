@@ -95,5 +95,6 @@ export const EXEMPLO_PROFUNDA: AnaliseProfunda = {
     { accao: 'Simular o impacto na margem por linha de produto.', prazo: '30-dias', paraQuem: 'Direcção financeira' },
     { accao: 'Avaliar armazenagem partilhada perto dos clientes.', prazo: '90-dias', paraQuem: 'Operações' },
   ],
+  dados: [],
   retirados: 0,
 };
