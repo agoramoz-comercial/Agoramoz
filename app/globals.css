@@ -1839,3 +1839,28 @@
 .v3 :is(h1, h2, h3) {
   hyphenate-limit-chars: 12 5 5;
 }
+
+/* ------------------------------------------------- vidro em ecrãs tácteis --
+   No iPhone, cada backdrop-filter é uma camada própria na GPU, do tamanho do
+   cartão (há ~40 na página inicial, algumas com 800–1300 px de altura). Com o
+   formulário da secção (04) e o anel WebGL da (05) vivos ao mesmo tempo, o
+   Safari esgotava a memória e fechava o separador («ocorreu um problema»).
+   Em ecrãs tácteis o vidro passa a véu opaco com a mesma aresta e sombra:
+   o mesmo desenho, sem desfoque por trás. O texto ganha contraste. */
+@media (hover: none) and (pointer: coarse) {
+  .v3 {
+    --vidro-fundo: rgb(21 19 17 / 0.9);
+  }
+  .v3 :is(.v3-claro, [data-surface='light'], [data-surface='tint']) {
+    --vidro-fundo: rgb(255 255 255 / 0.78);
+  }
+  .v3 .v3-vidro-escuro {
+    --vidro-fundo: rgb(11 10 9 / 0.94);
+  }
+  .v3 .v3-vidro,
+  .v3 main [class*='bg-[color:var(--surface-raised)]']:not(input, textarea, select, button),
+  .v3 main :is(li, article, div)[class~='border'][class*='border-[color:var(--']:not([class*='rounded-full'], input, textarea, select, button, [role='tab']) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
