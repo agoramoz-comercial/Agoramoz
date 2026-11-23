@@ -12,7 +12,8 @@
 -- para 0009/0010; a 21 para 0011; a 22 para 0012; a 23 e a 24 para 0013; a 25 para 0014;
 -- a 26 e a 27 para 0015 (News), a 28 para 0016 (prazos do News), a 29 para
 -- 0017 (Espaço CEnO), a 30 para 0018 (Gabinete do Fundador), a 31 para 0019
--- (CRM operacional), a 32 para 0020 (Propostas), a 33 para 0021 (Facturação), a 34 para 0022 (Cursos).
+-- (CRM operacional), a 32 para 0020 (Propostas), a 33 para 0021 (Facturação), a 34 para 0022 (Cursos),
+-- a 35 para 0023 (News: país, fotografia, análise profunda).
 -- ============================================================================
 
 with objecto(ordem, tipo, nome, achado) as (
@@ -409,5 +410,22 @@ select 34, 'cursos', 'Cursos: gerados das fontes, verificados, publicados (0022)
                  or has_function_privilege('authenticated', 'public.validar_curso(jsonb, jsonb)', 'execute')
                  or to_regclass('public.cursos_slug_unico') is null
                  then 'ATENCAO - protecção incompleta; correr aplicar-0022.sql de novo'
+            else 'ok' end
+-- 0023: News — país afectado, fotografia e análise profunda.
+union all
+select 35, 'news_profunda', 'News: país, fotografia e análise profunda (0023)',
+       case when not exists (select 1 from information_schema.columns
+                              where table_schema = 'public' and table_name = 'news_artigos'
+                                and column_name = 'analise_profunda')
+                 or to_regprocedure('public.definir_pais_artigo(uuid, integer, text)') is null
+                 or to_regprocedure('public.definir_imagem_artigo(uuid, integer, text, text, text)') is null
+                 or to_regprocedure('public.guardar_profunda_artigo(uuid, integer, jsonb)') is null
+                 or not exists (select 1 from storage.buckets where id = 'news-imagens' and public)
+                 then 'EM FALTA - correr aplicar-0023.sql'
+            when has_function_privilege('anon', 'public.definir_imagem_artigo(uuid, integer, text, text, text)', 'execute')
+                 or has_function_privilege('anon', 'public.guardar_profunda_artigo(uuid, integer, jsonb)', 'execute')
+                 or has_function_privilege('authenticated', 'public.artigos_publicados(text, text, integer, timestamptz)', 'execute')
+                 or not exists (select 1 from pg_policies where schemaname = 'storage' and policyname = 'news_imagens_inserir')
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0023.sql de novo'
             else 'ok' end
 order by ordem;

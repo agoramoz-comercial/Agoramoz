@@ -66,6 +66,10 @@ export const RPC = {
   ],
   publicar_artigo: ['p_id', 'p_revisao'],
   arquivar_artigo: ['p_id', 'p_revisao'],
+  // 0023 — News: país, fotografia e análise profunda
+  definir_pais_artigo: ['p_id', 'p_revisao', 'p_pais'],
+  definir_imagem_artigo: ['p_id', 'p_revisao', 'p_caminho', 'p_alt', 'p_credito'],
+  guardar_profunda_artigo: ['p_id', 'p_revisao', 'p_profunda'],
   guardar_anuncio: [
     'p_id',
     'p_revisao',
