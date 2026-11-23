@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { numerosForaDasFontes } from '@/lib/cursos/verificar';
+import { numeros, numerosForaDasFontes } from '@/lib/cursos/verificar';
 import { NOME_DO_PAIS, PAISES_NEWS, type PaisNews } from './paises';
 
 /**
@@ -76,6 +76,24 @@ const accao = z.object({
   paraQuem: texto(120),
 });
 
+export const TIPOS_SERIE = ['barras', 'linha', 'comparacao', 'percentagem'] as const;
+export type TipoSerie = (typeof TIPOS_SERIE)[number];
+
+/**
+ * Uma série para gráfico, tirada do documento colado. Cada `valor` tem de
+ * estar escrito no documento (ver `serieLimpa`): o gráfico nunca mostra um
+ * número que a fonte não deu.
+ */
+const ponto = z.object({ rotulo: z.string().trim().min(1).max(60), valor: z.number().finite() });
+export const serie = z.object({
+  titulo: texto(120),
+  unidade: z.string().trim().max(24).default(''),
+  tipo: z.enum(TIPOS_SERIE),
+  pontos: z.array(ponto).min(2).max(12),
+  fonte: texto(160),
+});
+export type Serie = z.infer<typeof serie>;
+
 /** O que se pede ao Kimi (e o que se aceita dele). */
 export const respostaKimi = z.object({
   impacto: z.object({
@@ -89,6 +107,8 @@ export const respostaKimi = z.object({
   cenarios: z.object({ base: cenario, optimista: cenario, pessimista: cenario }),
   indicadores: z.array(indicador).max(8),
   accoes: z.array(accao).max(6),
+  /** Opcional: artigos antigos (e respostas sem números) não têm séries. */
+  dados: z.array(serie).max(4).optional().default([]),
 });
 export type RespostaKimi = z.infer<typeof respostaKimi>;
 
@@ -132,6 +152,21 @@ export function numerosInventados(item: unknown, fonte: string): string[] {
   return numerosForaDasFontes(textosDe(item).join(' \n '), fonte);
 }
 
+/**
+ * Uma série só fica se TODOS os valores estiverem escritos no documento
+ * (sem a tolerância dos inteiros pequenos: num gráfico, até um 3 tem de ter
+ * fonte) e se os textos (título, rótulos, unidade, fonte) não trouxerem
+ * números de fora. Percentagens fora de 0–100 também saem.
+ */
+export function serieLimpa(s: Serie, fonte: string): boolean {
+  const nf = new Set(numeros(fonte).map((n) => n.valor));
+  const valoresOk = s.pontos.every((p) => nf.has(Math.abs(p.valor)));
+  const textosOk = numerosInventados({ t: s.titulo, u: s.unidade, f: s.fonte, r: s.pontos.map((p) => p.rotulo) }, fonte).length === 0;
+  const pctOk = s.tipo !== 'percentagem' || s.pontos.every((p) => p.valor >= 0 && p.valor <= 100);
+  const rotulosUnicos = new Set(s.pontos.map((p) => p.rotulo)).size === s.pontos.length;
+  return valoresOk && textosOk && pctOk && rotulosUnicos;
+}
+
 export type Verificacao =
   | { readonly ok: true; readonly analise: Omit<AnaliseProfunda, 'versao' | 'pais' | 'modelo' | 'geradaEm'> }
   | { readonly ok: false; readonly motivo: 'numeros-no-impacto' };
@@ -168,6 +203,11 @@ export function verificarProfunda(r: RespostaKimi, fonte: string): Verificacao {
       },
       indicadores: filtrar(r.indicadores),
       accoes: filtrar(r.accoes),
+      dados: (r.dados ?? []).filter((x) => {
+        const ok = serieLimpa(x, fonte);
+        if (!ok) retirados += 1;
+        return ok;
+      }),
       retirados,
     },
   };
@@ -199,7 +239,9 @@ export function promptProfunda(pais: PaisNews, idioma: 'pt' | 'en'): string {
     `"oportunidades":[{"titulo":string,"descricao":string,"evidencia":E,"tipo":T}] (max 6),`,
     `"cenarios":{"base":{"descricao":string,"gatilhos":[string]},"optimista":{...},"pessimista":{...}} (max 4 gatilhos each; the Red Team writes the pessimistic one),`,
     `"indicadores":[{"nome":string,"porque":string}] (max 8, things a company in ${nome} should watch),`,
-    `"accoes":[{"accao":string,"prazo":"imediato"|"30-dias"|"90-dias","paraQuem":string}] (max 6, recommended company actions)}`,
+    `"accoes":[{"accao":string,"prazo":"imediato"|"30-dias"|"90-dias","paraQuem":string}] (max 6, recommended company actions),`,
+    `"dados":[{"titulo":string,"unidade":string,"tipo":"barras"|"linha"|"comparacao"|"percentagem","pontos":[{"rotulo":string,"valor":number}],"fonte":string}] (max 4 chart series, 2-12 points each)}`,
+    `DATA SERIES RULES: include a series ONLY when the document itself gives at least two comparable numbers (e.g. values per year, per region, before/after, shares of a whole). Copy every "valor" EXACTLY as written in the document (no conversions, no rounding, no totals you computed). "linha" = values over time in order; "comparacao" = before/after or A vs B; "percentagem" = shares in %; "barras" = anything else. "fonte" names where in the document the numbers come from. If the document has no such numbers, return "dados":[]. A series with any value not in the document is deleted.`,
   ].join('\n');
 }
 

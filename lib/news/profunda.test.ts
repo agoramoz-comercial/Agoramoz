@@ -8,6 +8,7 @@ import {
   numerosInventados,
   promptProfunda,
   respostaKimi,
+  serieLimpa,
   verificarProfunda,
   type RespostaKimi,
 } from './profunda';
@@ -137,5 +138,47 @@ describe('análise profunda — motor Kimi', () => {
     expect(await gerarProfunda({ fonte: FONTE, pais: 'mz', idioma: 'pt' }, { ...CONFIG, fetch: lixo })).toEqual({ ok: false, falha: 'json' });
     const erro = vi.fn(async () => new Response('x', { status: 429 })) as unknown as typeof fetch;
     expect(await gerarProfunda({ fonte: FONTE, pais: 'mz', idioma: 'pt' }, { ...CONFIG, fetch: erro })).toEqual({ ok: false, falha: 'http_429' });
+  });
+});
+
+describe('análise profunda — séries para gráficos', () => {
+  const FONTE_N =
+    'O porto movimentou 31 milhões de toneladas em 2025 e 27 milhões em 2024. A tarifa sobe 12,5%. ' +
+    'Os contentores representam 40% da carga e os granéis 35%. Em 2023 foram 3 novos terminais. '.repeat(3);
+  const base = { titulo: 'Carga movimentada', unidade: 'Mt', fonte: 'Documento colado' } as const;
+
+  it('fica a série cujos valores estão todos escritos no documento', () => {
+    const s = { ...base, tipo: 'linha' as const, pontos: [{ rotulo: '2024', valor: 27 }, { rotulo: '2025', valor: 31 }] };
+    expect(serieLimpa(s, FONTE_N)).toBe(true);
+  });
+
+  it('sai a série com um valor que o documento não dá, mesmo pequeno', () => {
+    const s = { ...base, tipo: 'barras' as const, pontos: [{ rotulo: '2024', valor: 27 }, { rotulo: '2025', valor: 4 }] };
+    expect(serieLimpa(s, FONTE_N)).toBe(false);
+  });
+
+  it('sai a série com um ano inventado no rótulo ou percentagem fora de 0–100', () => {
+    const ano = { ...base, tipo: 'linha' as const, pontos: [{ rotulo: '2019', valor: 27 }, { rotulo: '2025', valor: 31 }] };
+    expect(serieLimpa(ano, FONTE_N)).toBe(false);
+    const pct = { ...base, tipo: 'percentagem' as const, pontos: [{ rotulo: 'A', valor: 40 }, { rotulo: 'B', valor: 2025 }] };
+    expect(serieLimpa(pct, FONTE_N)).toBe(false);
+  });
+
+  it('a verificação retira e conta as séries contaminadas; artigos antigos ficam sem séries', () => {
+    const r = resposta();
+    const boa = { ...base, tipo: 'percentagem' as const, pontos: [{ rotulo: 'Contentores', valor: 40 }, { rotulo: 'Granéis', valor: 35 }] };
+    const ma = { ...base, tipo: 'barras' as const, pontos: [{ rotulo: 'X', valor: 99 }, { rotulo: 'Y', valor: 31 }] };
+    const v = verificarProfunda({ ...r, dados: [boa, ma] }, FONTE + FONTE_N);
+    expect(v.ok).toBe(true);
+    if (v.ok) {
+      expect(v.analise.dados).toEqual([boa]);
+      expect(v.analise.retirados).toBeGreaterThanOrEqual(1);
+    }
+    const { dados: _ignorar, ...semDados } = EXEMPLO_PROFUNDA as typeof EXEMPLO_PROFUNDA & { dados?: unknown };
+    expect(lerProfunda(semDados)?.dados).toEqual([]);
+  });
+
+  it('o prompt pede séries só com números do documento', () => {
+    expect(promptProfunda('mz', 'pt')).toMatch(/DATA SERIES RULES/);
   });
 });
