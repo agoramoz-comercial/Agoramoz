@@ -89,7 +89,9 @@ const CORES = {
     'cal-text-emphasis': '#ffffff',
     'cal-text-subtle': '#a8a092',
     'cal-text-muted': '#a8a092',
-    'cal-bg': 'transparent',
+    // Fundo sólido: com 'transparent' o contraste do texto dependia do que
+    // está por trás do iframe (e o axe via branco). O vidro fica na moldura.
+    'cal-bg': '#121110',
     'cal-bg-emphasis': 'rgba(239,232,218,0.10)',
     'cal-bg-subtle': 'rgba(239,232,218,0.06)',
     'cal-bg-muted': 'rgba(239,232,218,0.04)',
@@ -147,7 +149,7 @@ export function CalendarioCal({
         layout: 'month_view',
         hideEventTypeDetails: false,
         cssVarsPerTheme: CORES,
-        styles: { branding: { brandColor: '#e9a35c' } },
+        styles: { branding: { brandColor: '#e9a35c' }, body: { background: '#121110' } },
       });
       api('on', {
         action: 'linkReady',
