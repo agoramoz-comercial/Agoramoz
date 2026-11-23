@@ -6,6 +6,8 @@ import { OutboundTracker } from '@/components/analytics/OutboundTracker';
 import { MotionProvider } from '@/components/motion/MotionProvider';
 import { SiteJsonLd } from '@/components/seo/JsonLd';
 import { NavV3 } from '@/components/v3/NavV3';
+import { PreCarregarCal } from '@/components/v3/PreCarregarCal';
+import { serverEnv } from '@/lib/config/env';
 import { TransicaoVista } from '@/components/v3/TransicaoVista';
 import { CursorPonto, Intro, TransicaoPagina } from '@/components/v3/motion';
 import type { Lingua } from '@/content/types';
@@ -46,6 +48,27 @@ export function CascaV3({
     { rotulo: x.nav.contactos, ...p('/contactos') },
   ];
   const ano = new Date().getFullYear();
+  const MARCAR: Record<Lingua, string> = {
+    pt: 'Marcar conversa',
+    en: 'Book a meeting',
+    fr: 'Prendre rendez-vous',
+    es: 'Reservar una reunión',
+    de: 'Termin buchen',
+    ar: 'حجز موعد',
+  };
+  const rodape = [...ligacoes, { rotulo: MARCAR[lingua], ...p('/marcar') }];
+  /** O calendário a aquecer (ver PreCarregarCal); sem CAL_LINK, nada. */
+  const cal = (() => {
+    try {
+      const env = serverEnv();
+      if (!env.CAL_LINK) return null;
+      const origem = env.CAL_ORIGIN;
+      const embedOrigin = new URL(origem).host === 'cal.com' ? 'https://app.cal.com' : origem.replace(/\/$/, '');
+      return { calLink: env.CAL_LINK, embedOrigin };
+    } catch {
+      return null;
+    }
+  })();
 
   return (
     <div
@@ -67,6 +90,7 @@ export function CascaV3({
         <Intro />
         <TransicaoPagina />
         <CursorPonto />
+        {cal && <PreCarregarCal calLink={cal.calLink} embedOrigin={cal.embedOrigin} />}
         <NavV3
           lingua={lingua}
           ligacoes={ligacoes}
@@ -82,7 +106,7 @@ export function CascaV3({
             <div className="grid gap-12 md:grid-cols-12">
               <nav aria-label={x.nav.menu} className="md:col-span-5">
                 <ul className="grid gap-2 text-2xl font-medium tracking-[-0.03em]">
-                  {ligacoes.map((l) => (
+                  {rodape.map((l) => (
                     <li key={l.href}>
                       <Link href={l.href} hrefLang={l.hrefLang} className="hover:text-[var(--v3-cinza)]">
                         {l.rotulo}
