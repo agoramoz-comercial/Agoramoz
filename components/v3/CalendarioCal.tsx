@@ -31,7 +31,7 @@ declare global {
 }
 
 /** O carregador oficial do Cal (snippet «Inline embed»), em TypeScript. */
-function carregarCal(scriptUrl: string): CalApi {
+export function carregarCal(scriptUrl: string): CalApi {
   const w = window as Window & { Cal?: CalApi };
   if (!w.Cal) {
     const fila = (alvo: { q: unknown[] }, args: unknown) => void alvo.q.push(args);
