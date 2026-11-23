@@ -17,6 +17,7 @@ import { ArtigoCorpo } from './ArtigoCorpo';
 import { BotaoGosto } from './BotaoGosto';
 import { caminhoDoArtigo, caminhoDoJornal, ctaDoArtigo } from './ligacoes';
 import { Partilhar } from './Partilhar';
+import { ArtigoEmNumeros } from '@/components/news/graficos/EmNumeros';
 import { Profunda } from './Profunda';
 import { SeloPais } from './SeloPais';
 
@@ -164,6 +165,7 @@ export function PaginaArtigo({
           </div>
 
           {a.profunda && <Profunda analise={a.profunda} idioma={idioma} />}
+          <ArtigoEmNumeros artigo={a} idioma={idioma} />
 
           {a.nota_editorial && (
             <p className="jornal-serifa mt-12 border-t border-[color:var(--border)] pt-5 text-[1.0625rem] italic">

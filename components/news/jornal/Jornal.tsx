@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
@@ -133,6 +134,7 @@ export function Jornal({
   anuncios,
   seccao,
   hoje,
+  numeros,
 }: {
   idioma: Idioma;
   /** `null` quando a leitura falhou — nunca uma lista vazia a fingir «sem notícias». */
@@ -141,6 +143,8 @@ export function Jornal({
   seccao: SeccaoJornal | null;
   /** A data por extenso (Maputo), calculada na página. */
   hoje: string;
+  /** «A edição em números» (globo 3D e gráficos), feita na página. */
+  numeros?: ReactNode;
 }) {
   const lista = artigos ?? [];
   const [manchete, segunda, ...resto] = lista;
@@ -472,6 +476,8 @@ export function Jornal({
                 )}
               </div>
             )}
+
+            {numeros}
 
             {/* A revista */}
             <aside

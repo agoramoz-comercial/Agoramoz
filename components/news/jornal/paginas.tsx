@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { Idioma } from '@/content/types';
 import { SECCOES_JORNAL, type SeccaoJornal } from '@/lib/news/artigo';
 import { anunciosNoAr, listarPublicados, obterPublicado } from '@/lib/news/jornal-servidor';
+import { EdicaoEmNumeros } from '@/components/news/graficos/EmNumeros';
 import { Jornal } from './Jornal';
 import { PaginaArtigo } from './PaginaArtigo';
 
@@ -29,12 +30,23 @@ export function seccaoDe(valor: string | string[] | undefined): SeccaoJornal | n
 }
 
 export async function PrimeiraPagina({ idioma, seccao }: { idioma: Idioma; seccao: SeccaoJornal | null }) {
-  const [artigos, anuncios, hoje] = await Promise.all([
+  const [artigos, anuncios, hoje, todos] = await Promise.all([
     listarPublicados(idioma, seccao, 40),
     anunciosNoAr(),
     hojePorExtenso(idioma),
+    // Para os gráficos: as 100 mais recentes de todas as secções (o máximo da função).
+    listarPublicados(idioma, null, 100),
   ]);
-  return <Jornal idioma={idioma} artigos={artigos} anuncios={anuncios} seccao={seccao} hoje={hoje} />;
+  return (
+    <Jornal
+      idioma={idioma}
+      artigos={artigos}
+      anuncios={anuncios}
+      seccao={seccao}
+      hoje={hoje}
+      numeros={todos && todos.length > 0 ? <EdicaoEmNumeros lista={todos} idioma={idioma} /> : null}
+    />
+  );
 }
 
 export async function Artigo({ idioma, slug, trilho }: { idioma: Idioma; slug: string; trilho: ReactNode }) {
