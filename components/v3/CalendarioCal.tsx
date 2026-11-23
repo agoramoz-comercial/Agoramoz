@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { LiquidGlass, LiquidGlassButton } from '@/components/ui/apple-tahoe-liquid-glass-button';
+import { preconnect, preload } from 'react-dom';
 import type { Idioma } from '@/content/types';
 
 /**
@@ -120,6 +120,8 @@ export function CalendarioCal({
   ligacaoDirecta: string;
   textos: { calendario: string; carregando: string; alternativa: string; abrirCal: string };
 }) {
+  preconnect(embedOrigin);
+  preload(`${embedOrigin}/embed/embed.js`, { as: 'script' });
   const id = `cal-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const ns = 'agoramoz';
   const [estado, setEstado] = useState<'a-carregar' | 'pronto' | 'falhou'>('a-carregar');
@@ -129,7 +131,7 @@ export function CalendarioCal({
     if (iniciado.current) return;
     iniciado.current = true;
     let vivo = true;
-    const limite = window.setTimeout(() => vivo && setEstado((e) => (e === 'pronto' ? e : 'falhou')), 15000);
+    const limite = window.setTimeout(() => vivo && setEstado((e) => (e === 'pronto' ? e : 'falhou')), 20000);
 
     try {
       const Cal = carregarCal(`${embedOrigin}/embed/embed.js`);
@@ -156,7 +158,7 @@ export function CalendarioCal({
         callback: () => vivo && setEstado('falhou'),
       });
     } catch {
-      setEstado('falhou');
+      queueMicrotask(() => vivo && setEstado('falhou'));
     }
     return () => {
       vivo = false;
@@ -171,12 +173,9 @@ export function CalendarioCal({
         aria-hidden
         className="pointer-events-none absolute -inset-16 -z-10 bg-[radial-gradient(closest-side_at_28%_22%,rgb(233_163_92/0.22),transparent),radial-gradient(closest-side_at_76%_82%,rgb(120_96_200/0.16),transparent)]"
       />
-      <LiquidGlass
-        material="regular"
-        appearance="dark"
-        refraction={10}
-        className="v3-vidro v3-vidro-escuro overflow-hidden rounded-[1.75rem] p-2 sm:p-3"
-      >
+      {/* Vidro CSS (leve): o LiquidGlass recalculava a refracção por cima do
+          iframe do Cal a cada repintura e tornava o calendário lento. */}
+      <div className="v3-vidro v3-vidro-escuro overflow-hidden rounded-[1.75rem] p-2 sm:p-3">
         <div role="region" aria-label={textos.calendario} className="relative min-h-[38rem] sm:min-h-[44rem]">
           {estado !== 'pronto' && (
             <div aria-hidden={estado === 'falhou'} className="absolute inset-0 grid gap-4 p-5 sm:p-8">
@@ -194,24 +193,16 @@ export function CalendarioCal({
           )}
           <div id={id} className="relative h-full w-full overflow-auto" />
         </div>
-      </LiquidGlass>
-
-      <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-[var(--v3-cinza)]">
-        <span>{textos.alternativa}</span>
-        <LiquidGlassButton
-          asChild
-          interactive
-          material="regular"
-          appearance="dark"
-          refraction={6}
-          size="sm"
-          className="min-h-11 bg-[var(--v3-noite)]/60! px-4 text-[0.82rem] font-medium tracking-normal text-[var(--v3-papel)] ring-1 ring-[var(--v3-linha)]"
-        >
-          <a href={ligacaoDirecta} target="_blank" rel="noopener noreferrer">
-            {textos.abrirCal} <span aria-hidden>↗</span>
-          </a>
-        </LiquidGlassButton>
       </div>
+
+      {estado === 'falhou' && (
+        <p className="mt-5 text-sm text-[var(--v3-cinza)]">
+          {textos.alternativa}{' '}
+          <a href={ligacaoDirecta} className="text-[var(--v3-papel)] underline underline-offset-4">
+            {textos.abrirCal}
+          </a>
+        </p>
+      )}
     </div>
   );
 }

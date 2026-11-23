@@ -78,19 +78,22 @@ export function Marcar({ idioma, trilho }: { idioma: Idioma; trilho: React.React
                 idioma={idioma}
                 calLink={cfg.calLink}
                 embedOrigin={cfg.embedOrigin}
-                ligacaoDirecta={cfg.direct}
+                ligacaoDirecta={`mailto:comercial@agoramoz.com?subject=${encodeURIComponent(t(MARCAR.assunto, idioma))}`}
                 textos={{
                   calendario: t(MARCAR.calendario, idioma),
                   carregando: t(MARCAR.carregando, idioma),
                   alternativa: t(MARCAR.alternativa, idioma),
-                  abrirCal: t(MARCAR.abrirCal, idioma),
+                  abrirCal: t(MARCAR.escrever, idioma),
                 }}
               />
               <noscript>
                 <p className="mt-4 text-sm text-[var(--v3-cinza)]">
                   {t(MARCAR.semJs, idioma)}{' '}
-                  <a href={cfg.direct} className="underline underline-offset-4">
-                    {cfg.direct}
+                  <a
+                    href={`mailto:comercial@agoramoz.com?subject=${encodeURIComponent(t(MARCAR.assunto, idioma))}`}
+                    className="underline underline-offset-4"
+                  >
+                    {t(MARCAR.escrever, idioma)}
                   </a>
                 </p>
               </noscript>

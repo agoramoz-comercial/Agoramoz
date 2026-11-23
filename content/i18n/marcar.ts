@@ -41,13 +41,13 @@ export const MARCAR = {
   calendario: { pt: 'Calendário de marcação', en: 'Booking calendar' },
   carregando: { pt: 'A carregar o calendário…', en: 'Loading the calendar…' },
   alternativa: {
-    pt: 'O calendário não abriu aqui?',
-    en: 'Calendar not loading here?',
+    pt: 'O calendário não carregou.',
+    en: 'The calendar did not load.',
   },
   abrirCal: { pt: 'Abrir a marcação no Cal.com', en: 'Open booking on Cal.com' },
   semJs: {
-    pt: 'O calendário precisa de JavaScript. Pode marcar diretamente no Cal.com:',
-    en: 'The calendar needs JavaScript. You can book directly on Cal.com:',
+    pt: 'O calendário precisa de JavaScript. Escreva-nos e respondemos com horários:',
+    en: 'The calendar needs JavaScript. Write to us and we will reply with times:',
   },
   semCal: {
     pt: 'A marcação online está a ser preparada. Escreva-nos e respondemos com horários:',
