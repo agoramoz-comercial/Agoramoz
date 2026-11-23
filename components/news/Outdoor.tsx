@@ -12,9 +12,9 @@ import {
 import { chaveNoBrowser, tokenDoLeitor } from '@/lib/news/leitor';
 
 /**
- * O «outdoor» do AGORAMOZ News — um painel de LED à maneira da Times Square e
- * da fachada da Nasdaq no dia de uma entrada em bolsa: título grande, faixa a
- * correr, criativos que se revezam.
+ * O «outdoor» do AGORAMOZ News — em vidro (glassmorphism, o sistema v3): uma
+ * cena de cor, o criativo num painel de vidro fosco com chamada em pílula, a
+ * faixa a correr numa cápsula de vidro e criativos que se revezam.
  *
  * - Formato do banner do LinkedIn (4:1) no desktop, 3:1 no tablet, 2:1 no
  *   telemóvel para o texto continuar legível; o texto escala com o painel
@@ -31,30 +31,40 @@ import { chaveNoBrowser, tokenDoLeitor } from '@/lib/news/leitor';
  *   com `lang="pt"` para o leitor de ecrã os ler com a voz certa.
  */
 
-const TEMA: Record<TemaAnuncio, { fundo: string; texto: string; destaque: string; faixa: string }> = {
+/**
+ * Glassmorphism (o sistema de vidro v3): cada tema é uma «cena» de cor com
+ * luzes suaves, e o criativo vive num painel de vidro fosco por cima — 24 px
+ * de raio, borda clara, chamada em pílula. O véu do vidro é escuro (texto
+ * papel) ou claro (texto tinta) conforme a cena, para o contraste passar AA.
+ */
+const TEMA: Record<TemaAnuncio, { cena: string; vidro: string; texto: string; cta: string; faixa: string }> = {
   tinta: {
-    fundo: 'bg-[radial-gradient(120%_140%_at_85%_0%,#26262a_0%,#0a0a0b_55%)]',
-    texto: 'text-[color:var(--color-chalk)]',
-    destaque: 'bg-[color:var(--color-signal-600)] text-white',
-    faixa: 'bg-black/70 text-[color:var(--color-energy-500)]',
+    cena: 'bg-[radial-gradient(60%_90%_at_18%_20%,#e9a35c_0%,transparent_60%),radial-gradient(50%_80%_at_85%_80%,#5b4bd1_0%,transparent_62%),linear-gradient(135deg,#1d1915,#0b0a09)]',
+    vidro: 'outdoor-vidro-escuro',
+    texto: 'text-[#f6f1e7]',
+    cta: 'bg-[#f6f1e7] text-[#0b0a09] hover:bg-white',
+    faixa: 'outdoor-vidro-escuro text-[#f6f1e7]',
   },
   sinal: {
-    fundo: 'bg-[radial-gradient(120%_140%_at_85%_0%,#ff3b10_0%,#b82200_45%,#3a0b00_100%)]',
+    cena: 'bg-[radial-gradient(60%_90%_at_20%_15%,#ff8a4c_0%,transparent_60%),radial-gradient(55%_85%_at_88%_85%,#b0124a_0%,transparent_62%),linear-gradient(135deg,#c2410c,#3a0b00)]',
+    vidro: 'outdoor-vidro-escuro',
     texto: 'text-white',
-    destaque: 'bg-white text-[color:var(--color-ink-950)]',
-    faixa: 'bg-black/55 text-white',
+    cta: 'bg-white text-[#3a0b00] hover:bg-[#fff4ec]',
+    faixa: 'outdoor-vidro-escuro text-white',
   },
   crescimento: {
-    fundo: 'bg-[radial-gradient(120%_140%_at_85%_0%,#00b060_0%,#006b3a_50%,#00170d_100%)]',
+    cena: 'bg-[radial-gradient(60%_90%_at_15%_20%,#5eead4_0%,transparent_60%),radial-gradient(55%_85%_at_85%_80%,#0f766e_0%,transparent_62%),linear-gradient(135deg,#047857,#022c22)]',
+    vidro: 'outdoor-vidro-escuro',
     texto: 'text-white',
-    destaque: 'bg-[color:var(--color-energy-500)] text-[color:var(--color-ink-950)]',
-    faixa: 'bg-black/55 text-[color:var(--color-energy-500)]',
+    cta: 'bg-white text-[#022c22] hover:bg-[#ecfdf5]',
+    faixa: 'outdoor-vidro-escuro text-white',
   },
   energia: {
-    fundo: 'bg-[radial-gradient(120%_140%_at_85%_0%,#ffe680_0%,#ffd62e_45%,#b38f00_100%)]',
-    texto: 'text-[color:var(--color-ink-950)]',
-    destaque: 'bg-[color:var(--color-ink-950)] text-[color:var(--color-energy-500)]',
-    faixa: 'bg-[color:var(--color-ink-950)] text-[color:var(--color-energy-500)]',
+    cena: 'bg-[radial-gradient(60%_90%_at_18%_18%,#fff3b0_0%,transparent_60%),radial-gradient(55%_85%_at_86%_84%,#f59e0b_0%,transparent_62%),linear-gradient(135deg,#fcd34d,#b45309)]',
+    vidro: 'outdoor-vidro-claro',
+    texto: 'text-[#1a1408]',
+    cta: 'bg-[#1a1408] text-[#fff7d6] hover:bg-black',
+    faixa: 'outdoor-vidro-claro text-[#1a1408]',
   },
 };
 
@@ -237,43 +247,43 @@ export function Outdoor({
       <div
         key={activo ? ad.id : `medida-${ad.id}`}
         aria-hidden={activo ? undefined : true}
-        className={`relative flex h-full flex-col [grid-area:1/1] ${activo ? 'outdoor-criativo' : 'invisible'}`}
+        className={`relative flex h-full flex-col gap-[1.6cqi] p-[2.4cqi] [grid-area:1/1] ${activo ? 'outdoor-criativo' : 'invisible'}`}
         lang={idioma === 'en' ? 'pt' : undefined}
       >
-        <div className="flex min-h-0 flex-1 items-center gap-[3cqi] px-[4cqi] pt-[2.4cqi] pb-[1.2cqi]">
-          <div className="min-w-0 flex-1">
+        <div className="flex min-h-0 flex-1 items-end sm:items-center">
+          <div className={`outdoor-vidro ${temaAd.vidro} w-full max-w-[52rem] rounded-[24px] p-[max(1rem,2.6cqi)]`}>
             <p
               id={id('rotulo')}
               lang={idioma}
-              className="pr-24 font-techno text-[clamp(0.625rem,1.35cqi,0.875rem)] font-medium tracking-[0.22em] uppercase sm:pr-0"
+              className="inline-flex rounded-full border border-current/25 px-3 py-1 text-[clamp(0.625rem,1.2cqi,0.8125rem)] font-medium tracking-[0.18em] uppercase"
             >
               {t.publicidade} · AGORAMOZ
             </p>
             <p
               id={id('titulo')}
-              className="outdoor-titulo mt-[0.8cqi] font-display text-[clamp(1.125rem,4.6cqi,3.25rem)] leading-[0.98] font-black tracking-[-0.02em] text-balance uppercase sm:line-clamp-3"
+              className="mt-[1cqi] text-[clamp(1.25rem,4.2cqi,3rem)] leading-[1.02] font-semibold tracking-[-0.03em] text-balance sm:line-clamp-2"
             >
               {ad.titulo}
             </p>
             {ad.mensagem && (
-              <p className="mt-[1cqi] max-w-[60ch] text-[clamp(0.75rem,1.7cqi,1.125rem)] leading-snug opacity-90 sm:line-clamp-2">
+              <p className="mt-[0.8cqi] max-w-[60ch] text-[clamp(0.8125rem,1.6cqi,1.0625rem)] leading-snug opacity-90 sm:line-clamp-2">
                 {ad.mensagem}
               </p>
             )}
+            <span
+              id={id('cta')}
+              className={`mt-[1.6cqi] inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-[clamp(0.8125rem,1.5cqi,1rem)] font-semibold whitespace-nowrap transition-colors ${temaAd.cta}`}
+            >
+              {ad.cta}
+              <span aria-hidden="true">→</span>
+            </span>
           </div>
-          <span
-            id={id('cta')}
-            className={`hidden shrink-0 items-center gap-2 px-[2.2cqi] py-[1.1cqi] font-display text-[clamp(0.75rem,1.6cqi,1.0625rem)] font-bold whitespace-nowrap sm:inline-flex ${temaAd.destaque}`}
-          >
-            {ad.cta}
-            <span aria-hidden="true">→</span>
-          </span>
         </div>
-        <div className={`relative overflow-hidden py-[0.7cqi] ${temaAd.faixa}`} aria-hidden="true">
-          <div className="outdoor-faixa flex w-max font-techno text-[clamp(0.625rem,1.35cqi,0.9375rem)] font-semibold tracking-[0.14em] whitespace-nowrap uppercase">
+        <div className={`outdoor-vidro relative overflow-hidden rounded-full py-[0.6cqi] ${temaAd.faixa}`} aria-hidden="true">
+          <div className="outdoor-faixa flex w-max text-[clamp(0.625rem,1.25cqi,0.875rem)] font-medium tracking-[0.12em] whitespace-nowrap uppercase">
             {Array.from({ length: activo ? 8 : 1 }, (_, i) => (
               <span key={i} className="px-[2cqi]">
-                {faixaAd} <span className="opacity-60">◆</span>
+                {faixaAd} <span className="opacity-60">·</span>
               </span>
             ))}
           </div>
@@ -302,7 +312,7 @@ export function Outdoor({
       className={`outdoor relative w-full max-w-full overflow-hidden ${className}`}
     >
       <div
-        className={`outdoor-led relative min-h-[50cqi] w-full overflow-hidden sm:aspect-[3/1] sm:min-h-0 lg:aspect-[4/1] ${tema.fundo} ${tema.texto}`}
+        className={`outdoor-cena relative min-h-[64cqi] w-full overflow-hidden rounded-[24px] sm:min-h-[16rem] ${tema.cena} ${tema.texto}`}
       >
         {previa ? (
           <div className="h-full">{conteudo}</div>
@@ -317,7 +327,7 @@ export function Outdoor({
             aria-labelledby={`${ids}-rotulo ${ids}-titulo ${ids}-cta`}
             // Anel em dois tons (branco sobre tinta): visível em todos os temas,
             // incluindo o amarelo da energia e o verde do crescimento.
-            className="block h-full focus-visible:shadow-[inset_0_0_0_3px_#0a0a0b] focus-visible:outline-3 focus-visible:-outline-offset-6 focus-visible:outline-white"
+            className="block h-full rounded-[24px] focus-visible:shadow-[inset_0_0_0_3px_#0a0a0b] focus-visible:outline-3 focus-visible:-outline-offset-6 focus-visible:outline-white"
           >
             {conteudo}
           </a>
@@ -326,7 +336,7 @@ export function Outdoor({
         <div className="absolute top-[1.6cqi] right-[1.6cqi] z-10 flex items-center gap-2">
           {ordem.length > 1 && (
             <span
-              className="bg-black/55 px-1.5 py-0.5 font-techno text-[0.6875rem] text-white tabular-nums"
+              className="rounded-full bg-black/55 px-2.5 py-1 text-[0.6875rem] text-white tabular-nums backdrop-blur-md"
               aria-hidden="true"
             >
               {String((indice % ordem.length) + 1).padStart(2, '0')}/{String(ordem.length).padStart(2, '0')}
@@ -340,7 +350,7 @@ export function Outdoor({
               // Nome fixo; o estado diz-se com aria-pressed (o ícone muda).
               aria-label={t.pausar}
               title={pausadoPelaPessoa ? t.retomar : t.pausar}
-              className="grid size-11 place-items-center bg-black/55 text-white backdrop-blur-sm hover:bg-black/70 focus-visible:shadow-[0_0_0_2px_#0a0a0b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="grid size-11 place-items-center rounded-full border border-white/25 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 focus-visible:shadow-[0_0_0_2px_#0a0a0b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               {pausadoPelaPessoa ? (
                 <Play className="size-4" aria-hidden="true" />

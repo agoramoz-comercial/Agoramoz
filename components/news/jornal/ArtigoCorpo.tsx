@@ -128,7 +128,7 @@ export function ArtigoCorpo({
         </>
       )}
       {a.interpretacao && a.interpretacao.sinais.length > 0 && (
-        <aside className="mt-8 border-l-4 border-[color:var(--color-energy-500)] bg-[color:var(--surface-raised)] px-5 py-4">
+        <aside className="mt-8 border-l-4 border-[color:var(--color-energy-500)] bg-[#e9e3d6] px-5 py-4">
           <p className={ROTULO_TECHNO}>{t(RELATORIO.sinais, idioma)}</p>
           <Lista itens={a.interpretacao.sinais} />
         </aside>

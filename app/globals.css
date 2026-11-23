@@ -1026,35 +1026,67 @@
   }
 }
 
-/* ── AGORAMOZ News: o «outdoor» (Times Square / Nasdaq MarketSite) ─────────
-   Painel de LED: matriz de pontos e linhas de varrimento por cima do tema,
-   faixa a correr em baixo. O texto é sempre DOM real (lê-se, traduz-se,
-   selecciona-se); a textura é decoração, `pointer-events: none`. */
+/* ── AGORAMOZ News: o «outdoor» em vidro (glassmorphism v3) ──────────────
+   Uma cena de cor com luzes que respiram devagar e, por cima, painéis de
+   vidro fosco (24 px). O texto é DOM real; a cena é decoração. O véu do
+   vidro garante o contraste AA mesmo sem backdrop-filter. */
 .outdoor {
   container-type: inline-size;
 }
-.outdoor-led::before,
-.outdoor-led::after {
+.outdoor-cena::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -20%;
   pointer-events: none;
+  background:
+    radial-gradient(28% 40% at 70% 30%, rgb(255 255 255 / 0.28), transparent 70%),
+    radial-gradient(22% 34% at 30% 78%, rgb(255 255 255 / 0.16), transparent 70%);
+  filter: blur(18px);
 }
-.outdoor-led::before {
-  background-image: radial-gradient(rgb(255 255 255 / 0.13) 0.6px, transparent 0.9px);
-  background-size: 4px 4px;
-  mix-blend-mode: overlay;
+.outdoor-vidro {
+  position: relative;
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 24px 60px -28px rgb(0 0 0 / 0.55);
 }
-.outdoor-led::after {
-  background: repeating-linear-gradient(
-    to bottom,
-    rgb(0 0 0 / 0) 0,
-    rgb(0 0 0 / 0) 2px,
-    rgb(0 0 0 / 0.16) 3px
-  );
+.outdoor-vidro-escuro {
+  background-color: rgb(11 10 9 / 0.5);
 }
-.outdoor-titulo {
-  text-shadow: 0 0 18px rgb(255 255 255 / 0.18);
+.outdoor-vidro-claro {
+  background-color: rgb(255 251 235 / 0.62);
+  border-color: rgb(255 255 255 / 0.55);
+}
+@keyframes outdoor-luz {
+  from {
+    transform: translate3d(-4%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .outdoor-cena::before {
+    animation: outdoor-luz 14s ease-in-out infinite alternate;
+  }
+  .outdoor[data-pausa='sim'] .outdoor-cena::before {
+    animation-play-state: paused;
+  }
+}
+/* Telemóveis: sem desfoque (memória da GPU); o véu fica mais opaco. */
+@media (pointer: coarse) {
+  .outdoor-vidro {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .outdoor-vidro-escuro {
+    background-color: rgb(11 10 9 / 0.66);
+  }
+  .outdoor-vidro-claro {
+    background-color: rgb(255 251 235 / 0.8);
+  }
 }
 @keyframes outdoor-ticker {
   from {
@@ -1086,6 +1118,7 @@
   }
 }
 :root[data-motion='reduced'] .outdoor-faixa,
+:root[data-motion='reduced'] .outdoor-cena::before,
 :root[data-motion='reduced'] .outdoor-criativo {
   animation: none;
 }
@@ -1133,6 +1166,86 @@
 :root[data-motion='reduced'] .jornal-manchetes-copia,
 :root[data-motion='reduced'] .jornal-manchetes-pausa {
   display: none;
+}
+
+/* ── AGORAMOZ News em papel de jornal (2026-11) ──────────────────────────
+   O jornal é uma folha: papel de jornal, tinta preta, serifa, filetes,
+   colunas justificadas e páginas invertidas a preto. As variáveis de
+   superfície são religadas aqui para o corpo dos artigos (ArtigoCorpo) ler
+   bem no papel. Contraste: tinta 16,9:1, cinza #4f483e 8,3:1 no papel. */
+.jornal-papel {
+  --surface: #f3efe6;
+  --surface-raised: #e9e3d6;
+  --on-surface: #121110;
+  --muted: #4f483e;
+  --border: rgb(18 17 16 / 0.24);
+  background-color: #f3efe6;
+  background-image:
+    radial-gradient(120% 60% at 50% 0%, rgb(255 255 255 / 0.55), transparent 70%),
+    radial-gradient(rgb(18 17 16 / 0.035) 0.5px, transparent 0.8px);
+  background-size: auto, 3px 3px;
+  color: #121110;
+}
+.jornal-preto {
+  --surface: #0b0a09;
+  --surface-raised: #1a1815;
+  --on-surface: #f3efe6;
+  --muted: #c9c1b3;
+  --border: rgb(243 239 230 / 0.24);
+  background-color: #0b0a09;
+  color: #f3efe6;
+}
+.jornal-mancha {
+  font-family: var(--font-jornal), Georgia, 'Times New Roman', serif;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.86;
+}
+.jornal-filetes {
+  border-top: 3px double currentColor;
+  border-bottom: 1px solid currentColor;
+}
+.jornal-colunas {
+  column-gap: 2rem;
+  column-rule: 1px solid var(--border);
+}
+@media (min-width: 768px) {
+  .jornal-colunas-2 {
+    column-count: 2;
+  }
+  .jornal-colunas-3 {
+    column-count: 3;
+  }
+}
+.jornal-justo {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.jornal-capitular::first-letter {
+  float: left;
+  font-family: var(--font-jornal), Georgia, serif;
+  font-size: 3.4em;
+  font-weight: 800;
+  line-height: 0.82;
+  padding: 0.06em 0.1em 0 0;
+}
+.jornal-foto img {
+  filter: grayscale(0.2) contrast(1.04);
+}
+.jornal-preto .jornal-foto img {
+  filter: grayscale(1) contrast(1.12);
+}
+@media print {
+  .jornal-papel,
+  .jornal-preto {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .jornal-papel .outdoor,
+  .jornal-papel .jornal-nao-imprimir {
+    display: none !important;
+  }
 }
 
 /* ===========================================================================
@@ -1863,4 +1976,39 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+
+/* ── O jornal dentro da casca v3 ─────────────────────────────────────────
+   A v3 põe todos os títulos no neo-grotesco (peso 500), embrulha o texto
+   das listas (text-wrap: pretty desfaz o nowrap da faixa de últimas) e dá
+   manchas de luz a cada <section>. No papel de jornal vale a serifa, o
+   peso do próprio título e o papel liso. */
+.v3 .jornal-serifa {
+  font-family: var(--font-jornal), Georgia, 'Times New Roman', serif;
+}
+.v3 .jornal-mancha {
+  font-family: var(--font-jornal), Georgia, 'Times New Roman', serif;
+  font-weight: 800;
+}
+.v3 .jornal-papel :is(h1, h2, h3).font-bold {
+  font-weight: 700;
+}
+.v3 .jornal-papel :is(h1, h2, h3).font-semibold {
+  font-weight: 600;
+}
+.v3 .jornal-manchetes li {
+  text-wrap: nowrap;
+}
+.v3 main .jornal-papel section:not(.v3-grao) {
+  background-image: none;
+}
+.v3 main .jornal-papel p {
+  max-width: none;
+}
+/* As caixas de vidro do corpo do artigo, no papel: papel mais escuro, sem sombra. */
+.v3 .jornal-papel {
+  --vidro-fundo: rgb(233 227 214 / 0.85);
+  --vidro-borda: rgb(18 17 16 / 0.22);
+  --vidro-sombra: none;
+  --vidro-desfoque: 0px;
 }

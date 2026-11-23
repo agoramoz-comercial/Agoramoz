@@ -14,7 +14,7 @@ export function CaixaManchetes({ idioma, children }: { idioma: 'pt' | 'en'; chil
   const [pausada, setPausada] = useState(false);
   return (
     <div
-      className="jornal-manchetes-caixa bg-[color:var(--color-ink-950)] text-[color:var(--color-chalk)]"
+      className="jornal-manchetes-caixa jornal-nao-imprimir bg-[#121110] text-[#f3efe6]"
       data-pausa={pausada ? 'sim' : 'nao'}
     >
       <Container className="flex items-stretch">
