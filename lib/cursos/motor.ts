@@ -37,9 +37,9 @@ const PISTA: Readonly<Record<number, string>> = {
 };
 
 export const MENSAGEM: Readonly<Record<CodigoMotor, string>> = {
-  desligado: 'O motor dos cursos está desligado (CURSOS_ENGINE=off).',
+  desligado: 'O motor dos cursos está desligado (CURSOS_ENGINE=off, ou kimi sem KIMI_API_KEY).',
   timeout: 'O motor demorou demasiado a responder.',
-  recusado: 'O motor recusou o pedido: confirme o segredo partilhado (ZABAEDU_CHAVE / AGORAMOZ_CHAVE).',
+  recusado: 'O motor recusou o pedido: confirme a chave (KIMI_API_KEY, ou ZABAEDU_CHAVE / AGORAMOZ_CHAVE no ZabaEdu).',
   indisponivel: 'O motor está indisponível neste momento.',
   resposta_invalida: 'O motor respondeu sem JSON válido.',
 };
@@ -50,6 +50,7 @@ export const TEMPO_MAX_MS = 85_000;
 export function motorCursosLigado(): boolean {
   try {
     const env = serverEnv();
+    if (env.CURSOS_ENGINE === 'kimi') return Boolean(env.KIMI_API_KEY);
     return env.CURSOS_ENGINE === 'zabaedu' && Boolean(env.ZABAEDU_FUNCTION_URL && env.ZABAEDU_CHAVE);
   } catch {
     return false;
@@ -83,6 +84,9 @@ export function criarMotor(opcoes?: { url: string; chave: string; fetch?: typeof
   if (!url || !chave) {
     if (!motorCursosLigado()) throw new ErroMotor('desligado');
     const env = serverEnv();
+    if (env.CURSOS_ENGINE === 'kimi') {
+      return criarMotorKimi({ chave: env.KIMI_API_KEY!, modelo: env.KIMI_MODEL, baseUrl: env.KIMI_BASE_URL });
+    }
     url = env.ZABAEDU_FUNCTION_URL!;
     chave = env.ZABAEDU_CHAVE!;
   }
@@ -118,5 +122,71 @@ export function criarMotor(opcoes?: { url: string; chave: string; fetch?: typeof
       throw new ErroMotor('resposta_invalida');
     }
     return lerResposta(corpo);
+  };
+}
+
+/**
+ * O mesmo motor sobre o Kimi (Moonshot, API compatível com OpenAI), com a
+ * KIMI_API_KEY do News. O esquema vai no pedido de sistema e a resposta tem de
+ * ser JSON. O Kimi não pesquisa na internet: a resposta a `pesquisar_fontes`
+ * não leva `internet: true`, e o criador cai no texto-base (nunca links de memória).
+ */
+export function criarMotorKimi(opcoes: {
+  chave: string;
+  modelo: string;
+  baseUrl: string;
+  fetch?: typeof fetch;
+  tempoMs?: number;
+}): Motor {
+  const f = opcoes.fetch ?? fetch;
+  const tempo = opcoes.tempoMs ?? TEMPO_MAX_MS;
+  return async ({ tarefa, prompt, schema }) => {
+    let r: Response;
+    try {
+      r = await f(`${opcoes.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${opcoes.chave}` },
+        body: JSON.stringify({
+          model: opcoes.modelo,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Responde só com um objecto JSON válido, sem texto à volta, que cumpra este JSON Schema:\n' +
+                JSON.stringify(schema),
+            },
+            { role: 'user', content: prompt },
+          ],
+          response_format: { type: 'json_object' },
+          thinking: { type: 'disabled' },
+          max_tokens: 12_000,
+        }),
+        redirect: 'error',
+        signal: AbortSignal.timeout(tempo),
+        cache: 'no-store',
+      });
+    } catch (e) {
+      const tempoEsgotado = e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError');
+      log.warn('cursos.motor', { outcome: 'failed', reason: tempoEsgotado ? 'timeout' : 'rede', tarefa, motor: 'kimi' });
+      throw new ErroMotor(tempoEsgotado ? 'timeout' : 'indisponivel');
+    }
+    if (r.status === 401 || r.status === 403) {
+      await r.body?.cancel().catch(() => undefined);
+      throw new ErroMotor('recusado');
+    }
+    if (!r.ok) {
+      await r.body?.cancel().catch(() => undefined);
+      log.warn('cursos.motor', { outcome: 'failed', reason: `http_${r.status}`, tarefa, motor: 'kimi' });
+      throw new ErroMotor('indisponivel');
+    }
+    let conteudo: unknown;
+    try {
+      const dados = (await r.json()) as { choices?: { message?: { content?: unknown } }[] };
+      conteudo = dados.choices?.[0]?.message?.content;
+    } catch {
+      throw new ErroMotor('resposta_invalida');
+    }
+    if (typeof conteudo !== 'string' || !conteudo.trim()) throw new ErroMotor('resposta_invalida');
+    return lerResposta(conteudo);
   };
 }
