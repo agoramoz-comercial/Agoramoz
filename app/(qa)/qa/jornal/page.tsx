@@ -8,6 +8,8 @@ import type { AnuncioPublico } from '@/lib/news/anuncios';
 import { SECCOES_JORNAL, type ArtigoCompleto, type ArtigoDaLista } from '@/lib/news/artigo';
 import { normalizar } from '@/lib/news/esquema';
 import { EXEMPLO_LOVABLE } from '@/lib/news/exemplo';
+import { EXEMPLO_PROFUNDA } from '@/lib/news/exemplo-profunda';
+import { PAISES_NEWS } from '@/lib/news/paises';
 
 /**
  * Pré-visualização do jornal para o QA visual (Playwright + axe), sem base.
@@ -50,6 +52,10 @@ function artigos(idioma: 'pt' | 'en'): ArtigoDaLista[] {
     actualizado_em: `2026-10-05T0${i}:00:00+00:00`,
     gostos: [12, 3, 0, 7, 1, 0, 25, 2, 0][i]!,
     partilhas: i,
+    pais: i === 8 ? null : PAISES_NEWS[i % PAISES_NEWS.length]!,
+    // Fotografias de exemplo (servidas pelo Supabase falso do QA); umas sim, outras não.
+    imagem_caminho: [0, 1, 4, 5].includes(i) ? `00000000-0000-4000-8000-00000000000${i + 1}/qafoto${i % 3}000` : null,
+    imagem_alt: [0, 1, 4, 5].includes(i) ? (pt ? 'Exemplo de QA: fotografia ilustrativa' : 'QA example: illustrative photograph') : null,
   }));
 }
 
@@ -107,6 +113,8 @@ export default async function PreviaJornalPage({
       nota_editorial: idioma === 'en' ? 'QA example editor’s note.' : 'Nota da redacção de exemplo (QA).',
       fonte_nome: 'Fonte de exemplo',
       fonte_url: 'https://example.com/noticia',
+      imagem_credito: 'Exemplo de QA',
+      profunda: idioma === 'pt' ? EXEMPLO_PROFUNDA : null,
     };
     return (
       <PaginaArtigo

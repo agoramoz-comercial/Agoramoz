@@ -66,7 +66,7 @@ export default async function NewsAdminPage({
     <>
       <AdminHeading
         titulo="News — redacção"
-        descricao="Analise uma notícia, transforme o relatório em rascunho e publique no jornal depois de rever. Gostos e partilhas são contados no servidor."
+        descricao="Escolha o país, cole a notícia, analise, reveja, junte a fotografia e publique depois de rever. Gostos e partilhas são contados no servidor."
         accao={
           <div className="flex flex-wrap gap-2">
             <Link
@@ -101,7 +101,7 @@ export default async function NewsAdminPage({
 
       {escreve && env.NEWS_ENGINE !== 'off' ? (
         <section aria-label="Analisar uma notícia" className="mb-12">
-          <RedaccaoNews criar={criarArtigoDeAnalise} />
+          <RedaccaoNews criar={criarArtigoDeAnalise} profundaLigada={env.NEWS_ANALISE_PROFUNDA === 'kimi' && !!env.KIMI_API_KEY} />
         </section>
       ) : escreve ? (
         <p className="mb-10 border border-[color:var(--border)] px-4 py-3 text-sm">

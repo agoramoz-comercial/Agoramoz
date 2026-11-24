@@ -6,15 +6,31 @@ import { inputClass } from '@/components/form/Field';
 import { ArtigoCorpo } from '@/components/news/jornal/ArtigoCorpo';
 import { buttonVariants } from '@/components/ui/Button';
 import { ESTADO_ARTIGO } from '@/lib/admin/labels';
-import { arquivarArtigo, guardarArtigo, publicarArtigo } from '@/lib/admin/news-actions';
+import { FotoArtigo } from '@/components/admin/news/FotoArtigo';
+import { Profunda } from '@/components/news/jornal/Profunda';
+import {
+  apagarProfundaArtigo,
+  arquivarArtigo,
+  gerarProfundaArtigo,
+  guardarArtigo,
+  guardarImagemArtigo,
+  publicarArtigo,
+  removerImagemArtigo,
+} from '@/lib/admin/news-actions';
 import { createSessionClient } from '@/lib/auth/client';
 import { podeEscrever, requireStaff } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/config/env';
 import { fonteJornal } from '@/lib/fonts/jornal';
 import { NOME_DA_SECCAO, SECCOES_JORNAL, type SeccaoJornal } from '@/lib/news/artigo';
 import { validarAnalise } from '@/lib/news/esquema';
+import { urlDaImagem } from '@/lib/news/imagem';
+import { NOME_DO_PAIS, PAISES_NEWS, type PaisNews } from '@/lib/news/paises';
+import { lerProfunda } from '@/lib/news/profunda';
 
 export const metadata = { title: 'Artigo — News' };
+
+/** A análise profunda (Kimi) pode demorar até ~50 s. */
+export const maxDuration = 70;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -24,6 +40,10 @@ const OK: Record<string, string> = {
   guardado: 'Alterações guardadas.',
   publicado: 'Publicado no jornal. Já aceita gostos e partilhas.',
   arquivado: 'Arquivado: saiu do jornal.',
+  profunda: 'Análise profunda ZABATAINA 3000 gerada e verificada contra o documento.',
+  'profunda-apagada': 'Análise profunda retirada.',
+  imagem: 'Fotografia guardada.',
+  'imagem-removida': 'Fotografia retirada.',
 };
 
 interface Artigo {
@@ -43,6 +63,11 @@ interface Artigo {
   updated_at: string;
   gostos: number;
   partilhas: number;
+  pais: PaisNews | null;
+  imagem_caminho: string | null;
+  imagem_alt: string | null;
+  imagem_credito: string | null;
+  analise_profunda: unknown;
 }
 
 const ROTULO = 'text-sm font-medium';
@@ -64,18 +89,26 @@ export default async function ArtigoAdminPage({
   const { erro, ok } = await searchParams;
 
   const supabase = await createSessionClient();
-  const { data } = await supabase
+  const BASE =
+    'id, slug, idioma, estado, revisao, titulo, entrada, seccao, analise, nota_editorial, fonte_nome, fonte_url, publicado_em, updated_at, gostos, partilhas';
+  let { data, error } = await supabase
     .from('news_artigos')
-    .select(
-      'id, slug, idioma, estado, revisao, titulo, entrada, seccao, analise, nota_editorial, fonte_nome, fonte_url, publicado_em, updated_at, gostos, partilhas',
-    )
+    .select(`${BASE}, pais, imagem_caminho, imagem_alt, imagem_credito, analise_profunda`)
     .eq('id', id)
     .maybeSingle();
-  const a = data as Artigo | null;
+  // Antes da 0023 as colunas novas não existem: o editor continua a abrir.
+  const sem0023 = error?.code === '42703';
+  if (sem0023) ({ data, error } = await supabase.from('news_artigos').select(BASE).eq('id', id).maybeSingle());
+  const a = data
+    ? ({ pais: null, imagem_caminho: null, imagem_alt: null, imagem_credito: null, analise_profunda: null, ...(data as object) } as Artigo)
+    : null;
   if (!a) notFound();
   const analise = validarAnalise(a.analise) ? a.analise : null;
   const caminhoPublico = `${a.idioma === 'en' ? '/en' : ''}/news/${a.slug}`;
   const slugFixo = a.publicado_em !== null;
+  const profunda = lerProfunda(a.analise_profunda);
+  const profundaLigada = serverEnv().NEWS_ANALISE_PROFUNDA === 'kimi';
+  const fotoUrl = urlDaImagem(a.imagem_caminho);
 
   return (
     <>
@@ -105,6 +138,12 @@ export default async function ArtigoAdminPage({
           {erro}
         </p>
       )}
+      {sem0023 && (
+        <p role="alert" className="mb-6 border border-[color:var(--color-signal-600)] px-4 py-3 text-sm">
+          Falta aplicar a migração 0023 (supabase/aplicar-0023.sql): país, fotografia e análise profunda ficam
+          indisponíveis até lá, e publicar continua como antes.
+        </p>
+      )}
       {ok && OK[ok] && (
         <p role="status" className="mb-6 border border-[color:var(--border)] px-4 py-3 text-sm">
           {OK[ok]}
@@ -130,6 +169,22 @@ export default async function ArtigoAdminPage({
               <h2 className="text-[length:var(--text-h3)] tracking-[-0.02em]">Editar</h2>
               <input type="hidden" name="id" value={a.id} />
               <input type="hidden" name="revisao" value={a.revisao} />
+              <input type="hidden" name="paisAntes" value={a.pais ?? ''} />
+              <div className="grid gap-2">
+                <label htmlFor="artigo-pais" className={ROTULO}>
+                  País afectado <span className={NOTA}>(obrigatório para publicar)</span>
+                </label>
+                <select id="artigo-pais" name="pais" required defaultValue={a.pais ?? ''} className={inputClass}>
+                  <option value="" disabled>
+                    Escolha o país…
+                  </option>
+                  {PAISES_NEWS.map((p) => (
+                    <option key={p} value={p}>
+                      {NOME_DO_PAIS[p].pt}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="grid gap-2">
                 <label htmlFor="artigo-titulo" className={ROTULO}>
                   Título
@@ -237,6 +292,63 @@ export default async function ArtigoAdminPage({
               </div>
             </form>
 
+            <FotoArtigo
+              id={a.id}
+              revisao={a.revisao}
+              slug={a.slug}
+              actual={fotoUrl && a.imagem_alt ? { url: fotoUrl, alt: a.imagem_alt, credito: a.imagem_credito } : null}
+              guardar={guardarImagemArtigo}
+              remover={removerImagemArtigo}
+            />
+
+            <div className={CAIXA}>
+              <h2 className="text-[length:var(--text-h3)] tracking-[-0.02em]">Análise profunda ZABATAINA 3000</h2>
+              {!profundaLigada ? (
+                <p className="text-sm text-[color:var(--muted)]">
+                  Desligada (<code>NEWS_ANALISE_PROFUNDA=off</code> ou sem <code>KIMI_API_KEY</code>). O artigo sai só com a
+                  análise base — nada é gerado para a substituir.
+                </p>
+              ) : !a.pais ? (
+                <p className="text-sm text-[color:var(--muted)]">Escolha e guarde primeiro o país que a notícia afecta.</p>
+              ) : (
+                <form action={gerarProfundaArtigo} className="grid gap-4">
+                  <input type="hidden" name="id" value={a.id} />
+                  <input type="hidden" name="revisao" value={a.revisao} />
+                  <input type="hidden" name="slug" value={a.slug} />
+                  <input type="hidden" name="pais" value={a.pais} />
+                  <input type="hidden" name="idioma" value={a.idioma} />
+                  <p className="text-sm text-[color:var(--muted)]">
+                    Impacto em {NOME_DO_PAIS[a.pais].pt}, sectores, riscos, oportunidades, três cenários, indicadores e
+                    acções, com etiquetas E1–E4. Os números só podem vir do documento: o que trouxer outros sai.
+                  </p>
+                  <div className="grid gap-2">
+                    <label htmlFor="profunda-fonte" className={ROTULO}>
+                      Documento da notícia <span className={NOTA}>(colar o texto completo)</span>
+                    </label>
+                    <textarea id="profunda-fonte" name="fonte" required minLength={200} maxLength={40000} rows={8} className={inputClass} />
+                  </div>
+                  <div>
+                    <BotaoEnviar size="sm" variant="outline" aEnviar="O Kimi está a analisar (até 1 min)…">
+                      {profunda ? 'Gerar de novo' : 'Gerar análise profunda'}
+                    </BotaoEnviar>
+                  </div>
+                </form>
+              )}
+              {profunda && (
+                <form action={apagarProfundaArtigo}>
+                  <input type="hidden" name="id" value={a.id} />
+                  <input type="hidden" name="revisao" value={a.revisao} />
+                  <input type="hidden" name="slug" value={a.slug} />
+                  <p className="mb-2 text-xs text-[color:var(--muted)]">
+                    {profunda.modelo} · {profunda.retirados} item(ns) retirado(s) por números fora do documento.
+                  </p>
+                  <button type="submit" className="text-sm underline underline-offset-4">
+                    Retirar a análise profunda
+                  </button>
+                </form>
+              )}
+            </div>
+
             {a.estado !== 'publicado' ? (
               <form action={publicarArtigo} className={CAIXA}>
                 <h2 className="text-[length:var(--text-h3)] tracking-[-0.02em]">Publicar</h2>
@@ -246,6 +358,11 @@ export default async function ArtigoAdminPage({
                 <p className="text-sm text-[color:var(--muted)]">
                   Guarde primeiro as alterações. Publicar põe o artigo no jornal com o nome AGORAMOZ.
                 </p>
+                {!a.pais && (
+                  <p role="alert" className="text-sm text-[color:var(--color-signal-700)]">
+                    Falta o país afectado: escolha-o em «Editar» e guarde antes de publicar.
+                  </p>
+                )}
                 <label className="flex items-start gap-3 text-sm">
                   <input type="checkbox" name="revi" value="sim" required className="mt-1 size-4" />
                   Revi o título, a entrada e o conteúdo, e confirmo que podem sair com o nome AGORAMOZ.
@@ -292,6 +409,11 @@ export default async function ArtigoAdminPage({
                 {a.entrada}
               </p>
             )}
+            {fotoUrl && a.imagem_alt && (
+              // eslint-disable-next-line @next/next/no-img-element -- pré-visualização no admin
+              <img src={fotoUrl} alt={a.imagem_alt} className="mt-6 aspect-[3/2] w-full object-cover" />
+            )}
+            {profunda && <Profunda analise={profunda} idioma={a.idioma} />}
             {analise ? (
               <ArtigoCorpo analise={analise} idioma={a.idioma} />
             ) : (

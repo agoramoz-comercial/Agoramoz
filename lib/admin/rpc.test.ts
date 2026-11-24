@@ -11,12 +11,13 @@ const SQL19 = readFileSync('supabase/migrations/0019_crm_operacional.sql', 'utf-
 const SQL20 = readFileSync('supabase/migrations/0020_propostas.sql', 'utf-8');
 const SQL21 = readFileSync('supabase/migrations/0021_facturacao.sql', 'utf-8');
 const SQL22 = readFileSync('supabase/migrations/0022_cursos.sql', 'utf-8');
+const SQL23 = readFileSync('supabase/migrations/0023_news_pais_imagem_profunda.sql', 'utf-8');
 /**
  * Onde as funções do mapa `RPC` podem estar declaradas. A 0019 vem primeiro:
  * redefine funções da 0006 (mesma assinatura, corpo novo) e é a versão que
  * vale — a pesquisa pega na primeira declaração que encontra.
  */
-const ACCOES = `${SQL19}\n${SQL}\n${SQL13}\n${SQL15}\n${SQL17}\n${SQL18}\n${SQL20}\n${SQL21}\n${SQL22}`;
+const ACCOES = `${SQL23}\n${SQL19}\n${SQL}\n${SQL13}\n${SQL15}\n${SQL17}\n${SQL18}\n${SQL20}\n${SQL21}\n${SQL22}`;
 
 /** Lê os parâmetros declarados na migração para cada função (numa ou em várias linhas). */
 function parametrosDe(nome: string): string[] {

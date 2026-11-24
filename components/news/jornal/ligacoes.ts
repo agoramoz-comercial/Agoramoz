@@ -7,6 +7,11 @@ export function caminhoDoArtigo(slug: string, idioma: Idioma): string {
   return `${idioma === 'en' ? '/en' : ''}/news/${slug}`;
 }
 
+/** A revista (edição em PDF) de cada idioma. */
+export function caminhoDaRevista(idioma: Idioma): string {
+  return `${idioma === 'en' ? '/en' : ''}/news/revista.pdf`;
+}
+
 export function caminhoDoJornal(idioma: Idioma, seccao?: SeccaoJornal | null): string {
   const base = `${idioma === 'en' ? '/en' : ''}/news`;
   return seccao ? `${base}?seccao=${seccao}` : base;

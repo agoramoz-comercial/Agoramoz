@@ -133,6 +133,8 @@ function mensagemDoStatus(status: number, idioma: Idioma): string {
 export interface RelatorioPronto {
   readonly analise: Analise;
   readonly idioma: IdiomaMotor;
+  /** O texto colado (modo texto) que deu este relatório; ausente no modo link e no histórico. */
+  readonly fonte?: string;
 }
 
 export function Analisador({
@@ -153,6 +155,7 @@ export function Analisador({
   const tituloRef = useRef<HTMLHeadingElement>(null);
   const campoRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
   const abortar = useRef<AbortController | null>(null);
+  const [fonte, setFonte] = useState<string | undefined>(undefined);
 
   useEffect(() => () => abortar.current?.abort(), []);
 
@@ -187,6 +190,7 @@ export function Analisador({
     const controlador = new AbortController();
     abortar.current = controlador;
     setEstado({ tipo: 'a-analisar' });
+    setFonte(modo === 'texto' ? textoLimpo : undefined);
 
     let res: Response;
     try {
@@ -244,6 +248,7 @@ export function Analisador({
   const abrirDoHistorico = (h: Entrada) => {
     // Uma análise em curso, ao chegar, taparia a que a pessoa escolheu abrir.
     abortar.current?.abort();
+    setFonte(undefined);
     setEstado({ tipo: 'pronto', id: h.id, analise: h.analise, idioma: h.idioma });
   };
 
@@ -421,7 +426,7 @@ export function Analisador({
             idiomaConteudo={estado.idioma}
             tituloRef={tituloRef}
           />
-          {depoisDoRelatorio?.({ analise: estado.analise, idioma: estado.idioma })}
+          {depoisDoRelatorio?.({ analise: estado.analise, idioma: estado.idioma, fonte })}
         </div>
       )}
     </div>

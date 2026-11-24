@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -9,11 +10,16 @@ import { NOME_DA_SECCAO, tempoDeLeitura, type ArtigoCompleto, type ArtigoDaLista
 import { articleId, ORG_ID } from '@/lib/seo/schema/ids';
 import { IDENTITY, SITE } from '@/content/site';
 import { absolute } from '@/lib/seo/site';
+import { urlDaImagem } from '@/lib/news/imagem';
+import { NOME_DO_PAIS } from '@/lib/news/paises';
 import { Outdoor } from '../Outdoor';
 import { ArtigoCorpo } from './ArtigoCorpo';
 import { BotaoGosto } from './BotaoGosto';
 import { caminhoDoArtigo, caminhoDoJornal, ctaDoArtigo } from './ligacoes';
 import { Partilhar } from './Partilhar';
+import { ArtigoEmNumeros } from '@/components/news/graficos/EmNumeros';
+import { Profunda } from './Profunda';
+import { SeloPais } from './SeloPais';
 
 /**
  * Um artigo do AGORAMOZ News: título e entrada em serifa, assinatura da
@@ -48,6 +54,7 @@ export function PaginaArtigo({
   const minutos = tempoDeLeitura(a.analise);
   const cta = ctaDoArtigo(a.seccao, a.slug, idioma);
   const en = idioma === 'en';
+  const foto = urlDaImagem(a.imagem_caminho);
   // Autor e editor por extenso (com o mesmo @id da organização): o Google não
   // resolve com fiabilidade um @id que só existe noutro bloco JSON-LD.
   const organizacao = { '@type': 'Organization', '@id': ORG_ID, name: SITE.name, url: absolute('/') };
@@ -58,7 +65,8 @@ export function PaginaArtigo({
     description: a.entrada ?? undefined,
     // Endereço estável da imagem do artigo (1200×630), sem o sufixo que o
     // Next acrescenta à rota `opengraph-image`.
-    image: [absolute(`${caminho}/imagem`)],
+    image: [...(foto ? [foto] : []), absolute(`${caminho}/imagem`)],
+    ...(a.pais ? { contentLocation: { '@type': 'Country', name: NOME_DO_PAIS[a.pais].en } } : {}),
     inLanguage: idioma,
     datePublished: a.publicado_em,
     dateModified: a.actualizado_em,
@@ -71,30 +79,46 @@ export function PaginaArtigo({
   };
 
   return (
-    <div
-      className={`${fonteJornal.variable} bg-[color:var(--surface)] pb-24 text-[color:var(--on-surface)]`}
-      data-surface="light"
-    >
+    <div className={`${fonteJornal.variable} jornal-papel pb-24`}>
       <JsonLd graph={{ '@context': 'https://schema.org', '@graph': [ld] }} />
-      <Container className="pt-10">
+      <Container className="pt-24 sm:pt-28">
         {trilho}
-        <div className="jornal-regra mt-4" />
+        <div className="jornal-filetes mt-4 py-2 text-center">
+          <Link href={caminhoDoJornal(idioma)} className="jornal-mancha text-[clamp(1.75rem,1.2rem+2.4vw,2.75rem)] uppercase hover:underline">
+            AGORAMOZ <span className="italic">News</span>
+          </Link>
+        </div>
 
         <article className="mx-auto mt-10 max-w-[44rem]">
           <header>
-            <Link
-              href={caminhoDoJornal(idioma, a.seccao)}
-              className="inline-flex min-h-11 items-center font-techno text-[length:var(--text-micro)] font-semibold tracking-[0.18em] text-[color:var(--color-signal-700)] uppercase hover:underline"
-            >
-              {NOME_DA_SECCAO[a.seccao][idioma]}
-            </Link>
-            <h1 className="jornal-serifa mt-1 text-[clamp(2.125rem,1.3rem+3.4vw,3.75rem)] leading-[1.04] font-semibold tracking-[-0.015em] text-balance">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={caminhoDoJornal(idioma, a.seccao)}
+                className="inline-flex min-h-11 items-center font-sans text-[0.75rem] font-semibold tracking-[0.18em] uppercase hover:underline"
+              >
+                {NOME_DA_SECCAO[a.seccao][idioma]}
+              </Link>
+              {a.pais && <SeloPais pais={a.pais} idioma={idioma} />}
+            </div>
+            <h1 className="jornal-serifa mt-1 text-[clamp(2.25rem,1.3rem+3.8vw,4.25rem)] leading-[1] font-bold tracking-[-0.025em] text-balance">
               {a.titulo}
             </h1>
             {a.entrada && (
-              <p className="jornal-serifa mt-5 text-[1.375rem] leading-snug text-[color:var(--muted)]">
+              <p className="jornal-serifa mt-5 text-[1.375rem] leading-snug text-[color:var(--muted)] italic">
                 {a.entrada}
               </p>
+            )}
+            {foto && a.imagem_alt && (
+              <figure className="jornal-foto mt-8">
+                <div className="relative aspect-[3/2] overflow-hidden bg-[#e9e3d6]">
+                  <Image src={foto} alt={a.imagem_alt} fill preload sizes="(min-width: 768px) 44rem, 100vw" className="object-cover" />
+                </div>
+                {a.imagem_credito && (
+                  <figcaption className="mt-2 border-b border-[color:var(--border)] pb-2 font-sans text-[0.75rem] tracking-[0.04em] text-[color:var(--muted)]">
+                    {en ? 'Photo' : 'Foto'}: {a.imagem_credito}
+                  </figcaption>
+                )}
+              </figure>
             )}
             <p className="mt-6 flex flex-wrap gap-x-3 gap-y-1 border-y border-[color:var(--border)] py-3 text-sm text-[color:var(--muted)]">
               <span className="font-medium text-[color:var(--on-surface)]">
@@ -139,6 +163,9 @@ export function PaginaArtigo({
               }
             />
           </div>
+
+          {a.profunda && <Profunda analise={a.profunda} idioma={idioma} />}
+          <ArtigoEmNumeros artigo={a} idioma={idioma} />
 
           {a.nota_editorial && (
             <p className="jornal-serifa mt-12 border-t border-[color:var(--border)] pt-5 text-[1.0625rem] italic">

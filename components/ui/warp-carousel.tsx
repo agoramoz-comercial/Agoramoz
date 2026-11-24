@@ -1118,14 +1118,18 @@ export function WarpCarousel({
     let unit = 1;
     const resize = () => {
       const r = wrap.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Telemóveis: menos píxeis no canvas e texturas menores. No iOS a memória
+      // da GPU é partilhada com o resto da página e o Safari fecha o separador
+      // quando esgota; 1,5× continua nítido num cartão em movimento.
+      const leve = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+      const dpr = Math.min(window.devicePixelRatio || 1, leve ? 1.5 : 2);
       W = Math.max(2, Math.round(r.width * dpr));
       H = Math.max(2, Math.round(r.height * dpr));
       if (canvas.width !== W) canvas.width = W;
       if (canvas.height !== H) canvas.height = H;
       // the 720 unit stage fills the width; short, wide boxes shrink it so the cards always fit the height
       unit = Math.min(W / 720, H / 440);
-      const want = Math.min(1024, Math.max(256, Math.round(CW * unit * 1.25)));
+      const want = Math.min(leve ? 640 : 1024, Math.max(256, Math.round(CW * unit * 1.25)));
       if (want !== texW) paintAll(want);
     };
 
@@ -1328,7 +1332,10 @@ export function WarpCarousel({
       if (gls) {
         gls.gl.deleteTexture(gls.tex);
         gls.gl.deleteProgram(gls.prog);
+        // Liberta já a memória da GPU (o Safari só a solta na recolha de lixo).
+        gls.gl.getExtension("WEBGL_lose_context")?.loseContext();
       }
+      cardCanvases = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list, background, glow, warp, font, N]);

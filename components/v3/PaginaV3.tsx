@@ -16,6 +16,7 @@ import {
   RevelarPalavras,
 } from '@/components/v3/motion';
 import { IdeiasV3 } from '@/components/v3/IdeiasV3';
+import { ErroLocal } from '@/components/v3/ErroLocal';
 import { ProvaCarrossel } from '@/components/v3/ProvaCarrossel';
 import { LigacaoVidro } from '@/components/v3/LigacaoVidro';
 import { LiquidGlass } from '@/components/ui/apple-tahoe-liquid-glass-button';
@@ -298,7 +299,15 @@ export function PaginaV3({ lingua }: { lingua: Lingua }) {
               data-surface="deep"
               className="v3-vidro v3-vidro-escuro p-5 text-[var(--v3-papel)] [--vidro-raio:1.75rem] sm:p-8 lg:sticky lg:top-24"
             >
-              <DiagnosticoEmbutido idioma={lingua} />
+              <ErroLocal
+                alternativa={
+                  <Link {...p('/diagnostico')} className="v3-etiqueta underline underline-offset-4">
+                    {x.nav.diagnostico} →
+                  </Link>
+                }
+              >
+                <DiagnosticoEmbutido idioma={lingua} />
+              </ErroLocal>
             </div>
           </div>
         </div>

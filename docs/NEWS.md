@@ -63,10 +63,52 @@ não tem sessão com escrita).
   `/news/<slug>/imagem`), imagem de partilha própria por artigo, sitemap com
   a data editorial real, RSS em `/news/feed.xml` e `/en/news/feed.xml`.
 
+### Edição de 2026-11: país, análise profunda, fotografias, jornal e revista
+
+Migração **0023** (`supabase/aplicar-0023.sql`, linha 35 do
+`verificar-estado.sql`). Aplicar **antes** de publicar o código: sem ela o
+editor avisa e continua a abrir, mas país, fotografia e análise profunda
+ficam indisponíveis.
+
+```
+/admin/news
+ 1. País afectado (obrigatório: MZ, PT, BR + os 10 mercados globais)
+ 2. Colar o documento (ou link) → Analisar (motor base Lovable)
+ 3. Rever → «Criar rascunho» ─► + análise profunda ZABATAINA 3000 (Kimi), se ligada
+ 4. Editor: país, fotografia (reduzida no browser a ≤ 1600 px: WebP + JPEG),
+    texto alternativo e crédito; gerar/refazer a análise profunda colando o documento
+ 5. Publicar (caixa «Revi…»; a base recusa publicar sem país)
+```
+
+- **Análise profunda** (`lib/news/profunda.ts`): agentes AG-04, 05, 07, 09,
+  21, 22 e 23 do ZABATAINA 3000 — impacto no país, sectores, riscos,
+  oportunidades, cenários base/optimista/pessimista, indicadores a vigiar e
+  acções; cada afirmação com etiqueta E1–E4 e tipo (facto, estimativa,
+  previsão, opinião, pressuposto, hipótese, desconhecido). **Números só da
+  fonte**: um item com um número que não está no documento sai (contado em
+  `retirados`); se for o impacto principal, a análise inteira é recusada.
+  Ligar com `NEWS_ANALISE_PROFUNDA=kimi` (usa `KIMI_API_KEY`). Desligada,
+  não há camada profunda — nada a substitui.
+- **Fotografias**: bucket público `news-imagens` (leitura pública, escrita só
+  `admin`/`comercial`), `next/image` no site, JPEG na revista.
+- **Jornal em papel de jornal**: cabeça em serifa entre filetes, barra de
+  data e edição, manchete com fotografia e texto em colunas, página
+  invertida a preto, selo do país, análise profunda como secção editorial.
+- **Revista em PDF**: `/news/revista.pdf` e `/en/news/revista.pdf` (refeita
+  no máximo a cada 10 min): capa, um artigo por folha com fotografia, a
+  análise profunda a preto, **página estratégica dos anunciantes** (só se
+  houver anúncios activos; cada cartão é uma ligação clicável para a oferta,
+  pela rota de clique, que conta) e contracapa. Serifa Newsreader (OFL,
+  `lib/news/fontes`).
+- QA: `.qa/news-0023-comportamento.sql` (Postgres 16 descartável),
+  `lib/news/{profunda,revista,migracao0023}.test.ts`.
+
 ### O «outdoor» (publicidade)
 
-Painel de LED à maneira da Times Square e da Nasdaq: título grande, faixa a
-correr, criativos a revezar a cada 7 s. Formato do banner do LinkedIn (4:1)
+Desde 2026-11 em vidro (glassmorphism v3): uma cena de cor com luzes suaves,
+o criativo num painel de vidro fosco de 24 px, chamada em pílula, faixa a
+correr numa cápsula de vidro; criativos a revezar a cada 7 s. No telemóvel o
+vidro perde o desfoque (memória da GPU) e fica mais opaco. Formato do banner do LinkedIn (4:1)
 no desktop, 3:1 no tablet, 2:1 no telemóvel (cresce se o texto precisar).
 Pausa por botão, ao passar o rato ou com o foco; com «reduzir movimento» fica
 parado.

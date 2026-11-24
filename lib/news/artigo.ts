@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { validarAnalise, PRIORIDADES, type Analise, type Prioridade } from './esquema';
 import { urlPublica } from './limites';
+import { PAISES_NEWS } from './paises';
+import { lerProfunda, type AnaliseProfunda } from './profunda';
 
 /**
  * O artigo do jornal: o que a redacção escreve à volta de uma análise do
@@ -125,6 +127,7 @@ const opcional = (max: number) =>
     .transform((v) => (v === '' ? null : v));
 
 export const formularioArtigo = z.object({
+  pais: z.enum(PAISES_NEWS, { message: 'Escolha o país que a notícia afecta.' }),
   slug: z.string().trim().min(3).max(90).regex(SLUG, 'Só letras minúsculas, números e hífenes.'),
   titulo: z.string().trim().min(3).max(200),
   entrada: opcional(400),
@@ -140,6 +143,8 @@ export type FormularioArtigo = z.infer<typeof formularioArtigo>;
 // ── Leitura do que a base devolve (dados, não confiança) ─────────────────────
 
 const data = z.string().min(10);
+/** `<id do artigo>/<aleatório>`: a base; há `.webp` (site) e `.jpg` (revista). */
+export const IMAGEM = /^[0-9a-f-]{36}\/[a-z0-9]{8,32}$/;
 
 export const artigoDaLista = z.object({
   id: z.string().uuid(),
@@ -153,6 +158,10 @@ export const artigoDaLista = z.object({
   actualizado_em: data,
   gostos: z.number().int().nonnegative(),
   partilhas: z.number().int().nonnegative(),
+  // 0023: opcionais — antes da migração (e nos artigos antigos) não existem.
+  pais: z.enum(PAISES_NEWS).nullable().optional().default(null).catch(null),
+  imagem_caminho: z.string().regex(IMAGEM).nullable().optional().default(null).catch(null),
+  imagem_alt: z.string().nullable().optional().default(null).catch(null),
 });
 export type ArtigoDaLista = z.infer<typeof artigoDaLista>;
 
@@ -161,6 +170,8 @@ const artigoBruto = artigoDaLista.extend({
   nota_editorial: z.string().nullable(),
   fonte_nome: z.string().nullable(),
   fonte_url: z.string().nullable(),
+  imagem_credito: z.string().nullable().optional().default(null).catch(null),
+  analise_profunda: z.unknown().optional(),
 });
 
 export interface ArtigoCompleto extends ArtigoDaLista {
@@ -168,15 +179,18 @@ export interface ArtigoCompleto extends ArtigoDaLista {
   readonly nota_editorial: string | null;
   readonly fonte_nome: string | null;
   readonly fonte_url: string | null;
+  readonly imagem_credito: string | null;
+  /** `null` sem camada profunda (motor desligado, artigo antigo, ou inválida). */
+  readonly profunda: AnaliseProfunda | null;
 }
 
 /** Um artigo só se mostra se a análise guardada ainda for uma análise válida. */
 export function lerArtigo(bruto: unknown): ArtigoCompleto | null {
   const r = artigoBruto.safeParse(bruto);
   if (!r.success) return null;
-  const { analise, ...resto } = r.data;
+  const { analise, analise_profunda, ...resto } = r.data;
   if (!validarAnalise(analise)) return null;
-  return { ...resto, analise };
+  return { ...resto, analise, profunda: lerProfunda(analise_profunda) };
 }
 
 export function lerLista(bruto: unknown): ArtigoDaLista[] {

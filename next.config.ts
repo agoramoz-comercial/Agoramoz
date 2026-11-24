@@ -46,7 +46,25 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  images: { formats: ['image/avif', 'image/webp'] },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    /**
+     * As fotografias do News vêm do bucket público `news-imagens` (0023) do
+     * Supabase. Só esse caminho é optimizado. `NEWS_QA_LOCAL=1` (só no build
+     * de QA local) aceita um Supabase falso em 127.0.0.1.
+     */
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/news-imagens/**' },
+      ...(process.env.NEWS_QA_LOCAL === '1'
+        ? [{ protocol: 'http' as const, hostname: '127.0.0.1', pathname: '/storage/v1/object/public/news-imagens/**' }]
+        : []),
+    ],
+    dangerouslyAllowLocalIP: process.env.NEWS_QA_LOCAL === '1',
+  },
+  /** A fotografia do artigo chega a uma Server Action em WebP + JPEG (≤ 1,5 MB cada). */
+  experimental: {
+    serverActions: { bodySizeLimit: '4mb' },
+  },
   /**
    * O PDF do «Enquadramento preliminar» lê o Inter (subconjunto latino, OFL)
    * de lib/email/fontes em tempo de execução: o rastreio de ficheiros não o
@@ -54,6 +72,9 @@ const nextConfig: NextConfig = {
    */
   outputFileTracingIncludes: {
     '/api/diagnostico': ['./lib/email/fontes/**'],
+    // A revista do News (PDF) embute a Newsreader (lib/news/fontes) e o Inter (lib/email/fontes), ambas OFL.
+    '/news/revista.pdf': ['./lib/news/fontes/**', './lib/email/fontes/**'],
+    '/en/news/revista.pdf': ['./lib/news/fontes/**', './lib/email/fontes/**'],
   },
   async headers() {
     return [

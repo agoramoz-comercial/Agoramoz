@@ -52,7 +52,13 @@ begin
   end;
 
   -- 3. Publicar grava a data; o endereço deixa de poder mudar.
-  r := public.publicar_artigo(v_id, 2);
+  --    Com a 0023 aplicada, publicar exige o país: marca-se antes (a revisão
+  --    sobe um, e o resto do bloco continua a ler a revisão de `r`).
+  if to_regprocedure('public.definir_pais_artigo(uuid, integer, text)') is not null then
+    r := public.publicar_artigo(v_id, public.definir_pais_artigo(v_id, 2, 'mz'));
+  else
+    r := public.publicar_artigo(v_id, 2);
+  end if;
   if (select estado from public.news_artigos where id = v_id) <> 'publicado'
      or (select publicado_em from public.news_artigos where id = v_id) is null then
     raise exception '3: publicação';
