@@ -128,3 +128,13 @@ Um curso também pode ser escrito em `content/cursos/<nome>/` e publicado sem a 
   Os números do enunciado e da solução seguem a mesma regra. Um ano-alvo («prever 2026») é tolerado.
 
 O documento para descarregar fica em `app/(documento)/cursos/[slug]/documento`, fora do layout do site. Dentro do layout, o Chrome acrescentava uma folha em branco no fim do PDF.
+
+## Motor alternativo: Kimi
+
+`CURSOS_ENGINE=kimi` escreve os cursos com o Kimi (Moonshot), com a mesma
+`KIMI_API_KEY` do Moz News e dos inquéritos (`KIMI_MODEL` e `KIMI_BASE_URL`
+opcionais). Os pedidos, a verificação e o ciclo de correcção são os mesmos.
+O Kimi não pesquisa na internet: «Pesquisar fontes na internet» diz que não
+há pesquisa, e o modo directo passa ao texto-base escrito pela IA (nunca
+links de memória). Com fontes carregadas, nada muda. Voltar ao ZabaEdu:
+`CURSOS_ENGINE=zabaedu` e publicar.

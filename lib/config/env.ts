@@ -214,9 +214,11 @@ const serverSchema = z.object({
    * Motor que escreve os cursos. `off` mantém o criador no admin sem gerar
    * nada (diz o que falta). `zabaedu` chama a função `agoramoz_llm` da app
    * ZabaEdu (Base44), que só reencaminha o pedido para a IA dela: os pedidos,
-   * a verificação e o ciclo de correcção são daqui (`lib/cursos`).
+   * a verificação e o ciclo de correcção são daqui (`lib/cursos`). `kimi` usa
+   * a mesma KIMI_API_KEY do News e dos inquéritos (sem pesquisa na internet:
+   * as fontes vêm das carregadas ou do texto-base escrito pela IA).
    */
-  CURSOS_ENGINE: z.enum(['off', 'zabaedu']).default('off'),
+  CURSOS_ENGINE: z.enum(['off', 'zabaedu', 'kimi']).default('off'),
   /** URL completo da função, p. ex. `https://zaba.base44.app/functions/agoramoz_llm`. */
   ZABAEDU_FUNCTION_URL: z
     .string()

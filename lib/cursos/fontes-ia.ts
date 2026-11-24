@@ -43,7 +43,7 @@ export class ErroFontesIA extends Error {
 
 export const MENSAGEM_FONTES_IA: Readonly<Record<CodigoFontesIA, string>> = {
   sem_internet:
-    'A função agoramoz_llm do ZabaEdu ainda não pesquisa na internet. Actualize-a no Base44 (docs/CURSOS.md, «Ligar o motor»): sem isso os links podiam ser inventados.',
+    'O motor dos cursos não pesquisa na internet (o Kimi não pesquisa; no ZabaEdu, actualize a função agoramoz_llm, docs/CURSOS.md). Sem pesquisa os links podiam ser inventados: carregue as fontes ou use o texto-base.',
   sem_resultados: 'A pesquisa não devolveu nenhuma fonte com link confirmado. Tente outro título ou carregue as fontes.',
   texto_curto: 'A IA devolveu um texto curto de mais para servir de fonte. Tente de novo.',
 };

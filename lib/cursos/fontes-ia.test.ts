@@ -98,7 +98,7 @@ describe('pesquisar fontes', () => {
     expect(r).toMatchObject({ ok: false });
     expect(chamado).toBe(false);
     const s = await gerarFontesPesquisa(async () => ({}), pedido, todos);
-    expect(s.ok === false && s.erro).toMatch(/ainda não pesquisa na internet/);
+    expect(s.ok === false && s.erro).toMatch(/não pesquisa na internet/);
   });
 });
 
