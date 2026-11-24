@@ -207,7 +207,7 @@ export function Jornal({
           </div>
           <nav
             aria-label={t(TEXTO.secoes, idioma)}
-            className="jornal-nao-imprimir overflow-x-auto"
+            className="jornal-seccoes jornal-nao-imprimir overflow-x-auto"
           >
             <ul className="mx-auto flex w-max border-b-[3px] border-double border-current">
               {[null, ...SECCOES_JORNAL].map((s) => {
@@ -242,7 +242,7 @@ export function Jornal({
           <span className="flex shrink-0 items-center bg-[#f3efe6] px-3 font-sans text-[0.75rem] font-bold tracking-[0.18em] text-[#121110] uppercase">
             {t(TEXTO.ultimas, idioma)}
           </span>
-          <div className="relative min-w-0 flex-1 overflow-hidden">
+          <div className="jornal-manchetes-janela relative min-w-0 flex-1 overflow-hidden">
             <ul className="jornal-manchetes flex w-max py-2.5">
               {[0, 1].map((copia) =>
                 ultimas.map((a) => (
