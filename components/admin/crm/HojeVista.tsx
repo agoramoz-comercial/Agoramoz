@@ -1,17 +1,17 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Plus } from 'lucide-react';
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { StateBadge } from '@/components/admin/primitives';
 import { atribuirAMim } from '@/lib/admin/crm-actions';
 import { CANAL, ESTADO_DIAGNOSTICO, FASE_OPORTUNIDADE, type FaseOportunidade } from '@/lib/admin/labels';
 import type { Canal } from '@/lib/attribution/types';
 import { formatarQuando } from '@/lib/crm/cronologia';
-import { dataPorExtenso, type ResumoHoje } from '@/lib/crm/hoje';
+import { dataPorExtenso, saudacao, type ResumoHoje } from '@/lib/crm/hoje';
 import type { PorRever, ReuniaoProxima } from '@/lib/crm/leitura';
 import { diasNaFase, type Fila } from '@/lib/crm/modelo';
 import type { OportunidadePipeline } from '@/lib/crm/pipeline';
 import { cn } from '@/lib/utils/cn';
-import { Dias, PorActivar, ProximaAccao, quandoCurto, ROTULO, Valor } from './partes';
+import { Dias, PorActivar, ProximaAccao, quandoCurto, Valor } from './partes';
 
 /**
  * «Hoje»: o ecrã de entrada do admin. Responde primeiro a «o que tenho de
@@ -32,9 +32,18 @@ export interface DadosHoje {
   readonly reunioes: readonly ReuniaoProxima[];
   readonly resumo: ResumoHoje;
   readonly falhou: boolean;
+  /**
+   * HOJE-01 — O funil dos últimos 30 dias, das mesmas contas do painel. `null`
+   * quando não há dados (por activar ou erro): o bloco não aparece, nunca com
+   * zeros inventados.
+   */
+  readonly funil?: readonly { rotulo: string; valor: number }[] | null;
+  /** HOJE-02 — «Criar rápido»: os mesmos destinos do «Criar» da paleta, já filtrados por papel. */
+  readonly criar?: readonly { texto: string; href: string }[];
 }
 
-const CAIXA = 'border border-[color:var(--border)] bg-[color:var(--surface-raised)]';
+
+const CAIXA = 'overflow-hidden rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-raised)]';
 
 export function HojeVista(d: DadosHoje) {
   const r = d.resumo;
@@ -42,42 +51,62 @@ export function HojeVista(d: DadosHoje) {
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--border)] pb-5">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[length:var(--text-h3)] tracking-[-0.02em]">Hoje</h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            <span className="first-letter:uppercase">{dataPorExtenso(d.agora)}</span> · {d.nome}
+          <h1 className="text-[clamp(2.25rem,1.5rem+2.6vw,3.75rem)] leading-[1] font-medium tracking-[-0.04em]">
+            {saudacao(d.agora)}, {d.nome.split(/\s+/)[0]}
+          </h1>
+          <p className="mt-3 text-sm text-[color:var(--muted)]">
+            <span className="first-letter:uppercase">{dataPorExtenso(d.agora)}</span> · o que precisa de si agora
           </p>
         </div>
-        <Link href="/admin/oportunidades" className="inline-flex min-h-11 items-center gap-2 text-sm underline-offset-4 hover:underline">
-          Abrir o pipeline <ArrowRight aria-hidden className="size-4" />
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/painel"
+            className="inline-flex min-h-11 items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-5 text-sm hover:border-[#0b0a09]/40"
+          >
+            Ver painel completo
+          </Link>
+          <Link
+            href="/admin/oportunidades"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b0a09] px-5 text-sm font-medium text-[#efe8da]"
+          >
+            Abrir o pipeline <ArrowRight aria-hidden className="size-4" />
+          </Link>
+        </div>
       </div>
 
       {d.falhou ? (
-        <p role="alert" className="mb-6 border border-[color:var(--color-signal-700)] px-4 py-3 text-sm">
+        <p role="alert" className="mb-6 rounded-[24px] border border-[color:var(--color-signal-700)] px-4 py-3 text-sm">
           Não foi possível ler as oportunidades. Recarregue a página; se persistir, veja o estado da base.
         </p>
       ) : null}
       {!d.activo ? <PorActivar o="Próximas acções escritas à mão e oportunidades paradas" /> : null}
 
-      <nav aria-label="Resumo do dia" className="mb-8">
-        <ul role="list" className="grid grid-cols-2 gap-px border border-[color:var(--border)] bg-[color:var(--border)] sm:grid-cols-4 lg:grid-cols-7">
-          <Indicador valor={r.atrasadas} texto="Atrasadas" href={`/admin/oportunidades?vista=atrasadas&dono=${d.eu}`} alerta={r.atrasadas > 0} />
-          <Indicador valor={r.hoje} texto="Para hoje" href="#para-hoje" />
-          <Indicador valor={r.semana} texto="Esta semana" href="#esta-semana" />
-          <Indicador valor={d.activo ? r.paradas : null} texto="Paradas" href={`/admin/oportunidades?vista=paradas&dono=${d.eu}`} />
-          <Indicador valor={r.semDono} texto="Sem dono" href="/admin/oportunidades?vista=sem-dono" />
-          <Indicador valor={d.porRever ? r.porRever : null} texto="Por rever" href="/admin/diagnosticos?estado=por-rever" />
-          <Indicador valor={r.reunioes} texto="Reuniões, 7 dias" href="#reunioes" />
+      <nav aria-label="Resumo do dia" className="mb-6">
+        <ul role="list" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+          <Indicador valor={r.atrasadas} texto="Atrasadas" nota="as minhas" href={`/admin/oportunidades?vista=atrasadas&dono=${d.eu}`} alerta={r.atrasadas > 0} />
+          <Indicador valor={r.hoje} texto="Para hoje" nota="próximas acções" href="#para-hoje" />
+          <Indicador valor={r.semana} texto="Esta semana" nota="próximas acções" href="#esta-semana" />
+          <Indicador valor={d.activo ? r.paradas : null} texto="Paradas" nota="sem actividade" href={`/admin/oportunidades?vista=paradas&dono=${d.eu}`} />
+          <Indicador valor={r.semDono} texto="Sem dono" nota="por atribuir" href="/admin/oportunidades?vista=sem-dono" />
+          <Indicador valor={d.porRever ? r.porRever : null} texto="Por rever" nota="diagnósticos" href="/admin/diagnosticos?estado=por-rever" />
+          <Indicador valor={r.reunioes} texto="Reuniões" nota="próximos 7 dias" href="#reunioes" />
         </ul>
       </nav>
 
+      {(d.funil && d.funil.length > 0) || (d.criar && d.criar.length > 0) ? (
+        <div className="mb-8 grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          {d.funil && d.funil.length > 0 ? <Funil etapas={d.funil} /> : <div aria-hidden className="hidden lg:block" />}
+          {d.criar && d.criar.length > 0 ? <CriarRapido itens={d.criar} /> : null}
+        </div>
+      ) : null}
+
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-        <div className="flex min-w-0 flex-col gap-8">
-          <h2 className="sr-only">A minha fila</h2>
+        <div data-surface="dark" className="flex min-w-0 flex-col gap-6 rounded-[28px] bg-[#0b0a09] p-4 text-[#efe8da] sm:p-6">
+          <h2 className="text-xl font-medium tracking-[-0.02em]">A minha fila</h2>
           {minhas === 0 ? (
-            <div className="border border-dashed border-[color:var(--border)] px-6 py-10 text-center">
+            <div className="rounded-[20px] border border-dashed border-[color:var(--border)] px-6 py-10 text-center">
               <p className="text-[length:var(--text-lead)]">Nada atrasado nem para hoje.</p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">
                 As oportunidades que forem suas e tiverem próxima acção aparecem aqui por urgência.{' '}
@@ -118,7 +147,7 @@ export function HojeVista(d: DadosHoje) {
         </div>
 
         <div className="flex min-w-0 flex-col gap-8">
-          <h2 className="sr-only">Da equipa</h2>
+          <h2 className="text-xl font-medium tracking-[-0.02em]">Da equipa</h2>
           <Seccao id="sem-dono" titulo="Sem dono" n={r.semDono} nota="Pela ordem em que vale a pena pegar: classificação, depois o mais recente." vazio="Todos os leads têm dono.">
             {d.triagem.map((o) => (
               <LinhaTriagem key={o.id} o={o} agora={d.agora} escreve={d.escreve} />
@@ -168,23 +197,96 @@ export function HojeVista(d: DadosHoje) {
   );
 }
 
-function Indicador({ valor, texto, href, alerta }: { valor: number | null; texto: string; href: string; alerta?: boolean }) {
+function Indicador({
+  valor,
+  texto,
+  nota,
+  href,
+  alerta,
+}: {
+  valor: number | null;
+  texto: string;
+  nota: string;
+  href: string;
+  alerta?: boolean;
+}) {
   return (
-    <li className="bg-[color:var(--surface)]">
+    <li>
       <Link
         href={href}
         className={cn(
-          'flex h-full min-h-20 flex-col justify-between gap-1 border-t-2 px-4 py-3 hover:bg-[color:var(--surface-raised)]',
-          alerta ? 'border-[color:var(--color-signal-700)]' : 'border-transparent',
+          'flex h-full min-h-32 flex-col justify-between gap-2 rounded-[24px] border bg-[color:var(--surface-raised)] p-4 hover:border-[#0b0a09]/40',
+          alerta ? 'border-[#e9a35c] shadow-[inset_0_0_0_1px_#e9a35c]' : 'border-[color:var(--border)]',
         )}
       >
-        <span className={ROTULO}>{texto}</span>
-        <span className={cn('text-[length:var(--text-h3)] leading-none tabular-nums', alerta && 'text-[color:var(--color-signal-700)]')}>
+        <span className="text-sm text-[color:var(--muted)]">{texto}</span>
+        <span className="text-[2rem] leading-none font-medium tracking-[-0.03em] tabular-nums">
           {valor ?? '—'}
           {valor === null ? <span className="sr-only"> (por activar)</span> : null}
         </span>
+        <span className="text-xs text-[color:var(--muted)]">{nota}</span>
       </Link>
     </li>
+  );
+}
+
+function Funil({ etapas }: { etapas: readonly { rotulo: string; valor: number }[] }) {
+  const max = Math.max(1, ...etapas.map((e) => e.valor));
+  return (
+    <section aria-labelledby="t-funil" className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 id="t-funil" className="text-lg font-medium tracking-[-0.02em]">
+            Funil de aquisição
+          </h2>
+          <p className="text-xs text-[color:var(--muted)]">Do primeiro passo ao negócio ganho, nos últimos 30 dias</p>
+        </div>
+        <Link
+          href="/admin/painel"
+          aria-label="Abrir o painel completo"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] hover:border-[#0b0a09]/40"
+        >
+          <ArrowUpRight aria-hidden className="size-4" />
+        </Link>
+      </div>
+      <ul role="list" className="mt-5 grid gap-3">
+        {etapas.map((e) => (
+          <li key={e.rotulo} className="grid grid-cols-[minmax(8rem,11rem)_1fr_auto] items-center gap-3 text-sm">
+            <span>{e.rotulo}</span>
+            <span aria-hidden className="h-2.5 overflow-hidden rounded-full bg-[color:var(--border)]">
+              <span className="admin-listras block h-full rounded-full" style={{ width: `${(e.valor / max) * 100}%` }} />
+            </span>
+            <span className="w-10 text-right font-medium tabular-nums">{e.valor.toLocaleString('pt-PT')}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function CriarRapido({ itens }: { itens: readonly { texto: string; href: string }[] }) {
+  return (
+    <section id="criar" aria-labelledby="t-criar" className="scroll-mt-24 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-5 sm:p-6">
+      <h2 id="t-criar" className="text-lg font-medium tracking-[-0.02em]">
+        Criar rápido
+      </h2>
+      <ul role="list" className="mt-4 grid gap-2 sm:grid-cols-2">
+        {itens.map((c, i) => (
+          <li key={c.href}>
+            <Link
+              href={c.href}
+              className={cn(
+                'flex min-h-16 items-center gap-2 rounded-[18px] px-4 text-sm font-medium',
+                i === 0 ? 'bg-[#e9a35c] text-[#0b0a09]' : 'bg-[color:var(--surface)] hover:bg-[#0b0a09]/5',
+              )}
+            >
+              <Plus aria-hidden className="size-4 shrink-0" />
+              {c.texto}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -217,7 +319,7 @@ function Seccao({
       </h3>
       {nota ? <p className="mb-2 text-xs text-[color:var(--muted)]">{nota}</p> : null}
       {vazia && vazio ? (
-        <p className="border border-dashed border-[color:var(--border)] px-4 py-5 text-sm text-[color:var(--muted)]">{vazio}</p>
+        <p className="rounded-[20px] border border-dashed border-[color:var(--border)] px-4 py-5 text-sm text-[color:var(--muted)]">{vazio}</p>
       ) : (
         <ul role="list" className={cn(CAIXA, 'divide-y divide-[color:var(--hairline)]')}>
           {children}

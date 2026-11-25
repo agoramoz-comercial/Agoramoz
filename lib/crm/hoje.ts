@@ -50,3 +50,9 @@ export function dataPorExtenso(d: Date): string {
     timeZone: 'Africa/Maputo',
   });
 }
+
+/** HOJE-01 — «Bom dia» / «Boa tarde» / «Boa noite», na hora de Maputo. */
+export function saudacao(d: Date): string {
+  const h = Number(d.toLocaleString('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Africa/Maputo' }));
+  return h < 12 ? 'Bom dia' : h < 19 ? 'Boa tarde' : 'Boa noite';
+}
