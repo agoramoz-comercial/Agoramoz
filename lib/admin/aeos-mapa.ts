@@ -1,5 +1,5 @@
 import { CADENCIA, FASES, RED_TEAM, REGISTO, aeosVisivel, type Permissoes } from './aeos';
-import { AGENTES, type AccaoAgente } from './agentes';
+import { AGENTES, AGENTES_CF, AGENTES_WX, guardaPropostas, type AccaoAgente, type AgenteZ } from './agentes';
 
 /**
  * O Mapa AEOS em leque: nó central → categorias (com contagens) → itens.
@@ -8,7 +8,7 @@ import { AGENTES, type AccaoAgente } from './agentes';
  * dado, o valor é `null` e o ecrã mostra «—»: nunca um zero inventado.
  */
 
-export type CategoriaId = 'blocos' | 'paineis' | 'agentes' | 'fases' | 'riscos' | 'cadencia';
+export type CategoriaId = 'blocos' | 'paineis' | 'agentes' | 'agentes-cf' | 'agentes-wx' | 'fases' | 'riscos' | 'cadencia';
 
 export interface Kpi {
   readonly rotulo: string;
@@ -81,8 +81,8 @@ export function mapaLeque(permite: Permissoes, accoes: readonly AccaoAgente[] | 
     notas: [],
   }));
 
-  const itensAgentes: ItemMapa[] = AGENTES.map((a) => {
-    const pend = pendentes(a.id);
+  const itemAgente = (a: AgenteZ): ItemMapa => {
+    const pend = guardaPropostas(a) ? pendentes(a.id) : null;
     return {
       id: `agente-${a.id}`,
       titulo: `${a.id} · ${a.papel}`,
@@ -94,11 +94,23 @@ export function mapaLeque(permite: Permissoes, accoes: readonly AccaoAgente[] | 
             : { rotulo: 'Sem pendentes', tom: 'ok' },
       resumo: a.objectivo,
       href: null,
-      kpis: [k('Módulos', a.modulos.length), k('Entradas', a.entradas.length), k('Proibições', a.proibidas.length), { rotulo: 'Propostas', valor: doAgente(a.id) }],
+      kpis: [
+        a.modulos.length ? k('Módulos', a.modulos.length) : sem('Módulos'),
+        a.entradas.length ? k('Entradas', a.entradas.length) : sem('Entradas'),
+        k('Proibições', a.proibidas.length),
+        guardaPropostas(a) ? { rotulo: 'Propostas', valor: doAgente(a.id) } : sem('Propostas'),
+      ],
       metrica: null,
-      notas: [`Módulos: ${a.modulos.join(', ')}`, `Saída: ${a.saida}`, `Escala para: ${a.escalacao}`, ...a.proibidas.map((p) => `Proibido: ${p}`)],
+      notas: [
+        ...(a.modulos.length ? [`Módulos: ${a.modulos.join(', ')}`] : []),         `Saída: ${a.saida}`,
+        `Escala para: ${a.escalacao}`,
+        ...a.proibidas.map((p) => `Proibido: ${p}`),
+      ],
     };
-  });
+  };
+  const itensAgentes = AGENTES.map(itemAgente);
+  const itensCf = AGENTES_CF.map(itemAgente);
+  const itensWx = AGENTES_WX.map(itemAgente);
 
   const itensFases: ItemMapa[] = FASES.map((f, i) => ({
     id: `fase-${i + 1}`,
@@ -139,6 +151,8 @@ export function mapaLeque(permite: Permissoes, accoes: readonly AccaoAgente[] | 
       { id: 'blocos', rotulo: 'Blocos', itens: itensBlocos },
       { id: 'paineis', rotulo: 'Painéis', itens: itensPaineis },
       { id: 'agentes', rotulo: 'Agentes ZABATAINA', itens: itensAgentes },
+      { id: 'agentes-cf', rotulo: 'Agentes CODEFORGE', itens: itensCf },
+      { id: 'agentes-wx', rotulo: 'Agentes WIE-X', itens: itensWx },
       { id: 'fases', rotulo: 'Fases', itens: itensFases },
       { id: 'riscos', rotulo: 'Riscos (Red Team)', itens: itensRiscos },
       { id: 'cadencia', rotulo: 'Cadência', itens: itensCadencia },

@@ -4,9 +4,20 @@ import {
   TIPOS_ACCAO,
   propostasValidas,
   respostaAgenteSchema,
+  sistemaDe,
   type AgenteZ,
   type Proposta,
 } from './agentes';
+
+const NOME_SISTEMA = { ZABATAINA: 'ZABATAINA 3000', CODEFORGE: 'ZABATAINA CODEFORGE 3000', 'WIE-X': 'WIE-X v4.0' } as const;
+/** Regra própria de cada sistema, tirada do respectivo documento. */
+const REGRA_SISTEMA = {
+  ZABATAINA: '',
+  CODEFORGE:
+    'CODEFORGE (§3, Módulo 20): distingue sempre o que está gerado, implementado, testado e verificado; nunca digas que algo funciona só porque o código existe.',
+  'WIE-X':
+    'WIE-X (Módulo 03): começa a resposta com a classificação do pedido — categoria A–F e complexidade L0–L4 — numa linha, ex.: «Categoria D · L1».',
+} as const;
 
 /**
  * Um agente ZABATAINA responde a uma pergunta sobre um item do Mapa AEOS,
@@ -18,15 +29,18 @@ import {
 
 export function mensagensAgente(agente: AgenteZ, contexto: string, pergunta: string) {
   const sistema = [
-    `És o agente ${agente.id} — ${agente.papel} — do ZABATAINA 3000, a trabalhar no AEOS da AGORAMOZ.`,
-    `Objectivo: ${agente.objectivo}. Módulos: ${agente.modulos.join(', ')}.`,
+    `És o agente ${agente.id} — ${agente.papel} — do ${NOME_SISTEMA[sistemaDe(agente)]}, a trabalhar no AEOS da AGORAMOZ.`,
+    `Objectivo: ${agente.objectivo}.${agente.modulos.length ? ` Módulos: ${agente.modulos.join(', ')}.` : ''}`,
+    REGRA_SISTEMA[sistemaDe(agente)],
     `Proibido: ${agente.proibidas.join('; ')}.`,
     'Regras da constituição (§9, §10): usa só o CONTEXTO dado; não inventes números, nomes, fontes nem resultados;',
     'quando o contexto não chega, diz exactamente o que falta. Responde em português de Portugal, curto e concreto.',
     'Podes propor no máximo 3 acções. Tipos permitidos: ' + TIPOS_ACCAO.join(', ') + '.',
     'Acções externas, financeiras, de publicação ou irreversíveis ficam à espera de aprovação humana: propõe, não executes.',
     'Responde SÓ com JSON: {"resposta": string, "propostas": [{"tipo": string, "titulo": string, "descricao": string}]}.',
-  ].join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
   const texto = pergunta.replace(/<<<|>>>/g, '');
   return [
     { role: 'system' as const, content: sistema },

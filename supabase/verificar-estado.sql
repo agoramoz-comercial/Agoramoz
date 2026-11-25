@@ -438,4 +438,13 @@ select 36, 'agentes_accoes', 'Agentes ZABATAINA: propostas e aprovações (0024)
                  or has_table_privilege('anon', 'public.agentes_accoes', 'select')
                  then 'ATENCAO - protecção incompleta; correr aplicar-0024.sql de novo'
             else 'ok' end
+union all
+select 37, 'agentes_accoes', 'Agentes CODEFORGE e WIE-X: propostas (0025)',
+       case when to_regclass('public.agentes_accoes') is null then 'EM FALTA - correr aplicar-0024.sql'
+            when not exists (select 1 from pg_constraint
+                              where conrelid = 'public.agentes_accoes'::regclass
+                                and conname = 'agentes_accoes_agente_check'
+                                and pg_get_constraintdef(oid) like '%CF%WX%')
+                 then 'EM FALTA - correr aplicar-0025.sql'
+            else 'ok' end
 order by ordem;
