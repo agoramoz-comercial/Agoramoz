@@ -100,3 +100,53 @@ describe('0024 — agentes', () => {
     expect(MIG).not.toMatch(/grant (insert|update|delete)/);
   });
 });
+
+describe('agentes CODEFORGE e WIE-X', async () => {
+  const { AGENTES_CF, AGENTES_WX, TODOS_AGENTES, ID_AGENTE, guardaPropostas, agentePorId } = await import('./agentes');
+  const { mensagensAgente } = await import('./agentes-ia');
+  const CF = JSON.parse(readFileSync('.claude/skills/codeforge-3000/data/agents.json', 'utf-8')).agents as {
+    id: string;
+    role: string;
+    primary_responsibility: string;
+  }[];
+
+  it('os 20 CODEFORGE são cópia fiel do registo da skill (§15.5)', () => {
+    expect(AGENTES_CF).toHaveLength(20);
+    CF.forEach((a, i) => {
+      expect(AGENTES_CF[i]!.id).toBe(a.id);
+      expect(AGENTES_CF[i]!.papel).toBe(a.role);
+      expect(AGENTES_CF[i]!.objectivo).toBe(a.primary_responsibility);
+    });
+  });
+
+  it('os 12 WIE-X têm o texto do Módulo 08, palavra por palavra', () => {
+    const doc = readFileSync('.claude/skills/wie-x/WIE-X-v4.0-MASTER.md', 'utf-8');
+    expect(AGENTES_WX).toHaveLength(12);
+    for (const a of AGENTES_WX) {
+      expect(doc).toContain(`**${a.papel.toUpperCase()}**`);
+      expect(doc).toContain(a.objectivo);
+    }
+  });
+
+  it('as proibições CODEFORGE vêm da §3 do documento', () => {
+    const doc = readFileSync('.claude/skills/codeforge-3000/CODEFORGE-MASTER-v1.0.md', 'utf-8');
+    for (const p of AGENTES_CF[0]!.proibidas) expect(doc).toContain(p);
+  });
+
+  it('ids únicos e válidos; só os ZABATAINA guardam propostas (CHECK da 0024)', () => {
+    expect(new Set(TODOS_AGENTES.map((a) => a.id)).size).toBe(TODOS_AGENTES.length);
+    for (const a of TODOS_AGENTES) expect(ID_AGENTE.test(a.id)).toBe(true);
+    expect(guardaPropostas(agentePorId('AG-01')!)).toBe(true);
+    expect(guardaPropostas(agentePorId('CF01')!)).toBe(false);
+    expect(guardaPropostas(agentePorId('WX01')!)).toBe(false);
+  });
+
+  it('o pedido leva a regra de cada sistema', () => {
+    const wx = mensagensAgente(agentePorId('WX03')!, 'c', 'p')[0]!.content;
+    expect(wx).toContain('WIE-X v4.0');
+    expect(wx).toContain('L0–L4');
+    const cf = mensagensAgente(agentePorId('CF17')!, 'c', 'p')[0]!.content;
+    expect(cf).toContain('CODEFORGE');
+    expect(cf).toMatch(/gerado, implementado, testado e verificado/);
+  });
+});

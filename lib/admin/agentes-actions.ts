@@ -8,7 +8,7 @@ import { serverEnv } from '@/lib/config/env';
 import { log } from '@/lib/log/logger';
 import { contextoDoItem, mapaLeque } from './aeos-mapa';
 import { carregarAccoes, permissoesAeos } from './aeos-servidor';
-import { agentePorId, estadoInicial, podeDecidir, type EstadoAccao, type Proposta } from './agentes';
+import { ID_AGENTE, agentePorId, estadoInicial, guardaPropostas, podeDecidir, type EstadoAccao, type Proposta } from './agentes';
 import { perguntarAoKimi } from './agentes-ia';
 
 /**
@@ -18,7 +18,7 @@ import { perguntarAoKimi } from './agentes-ia';
  */
 
 const perguntaSchema = z.object({
-  agente: z.string().regex(/^AG-\d{2}$/),
+  agente: z.string().regex(ID_AGENTE),
   item: z.string().min(1).max(80),
   pergunta: z.string().trim().min(3).max(1200),
 });
@@ -56,6 +56,18 @@ export async function perguntarAgente(entrada: unknown): Promise<RespostaPergunt
   const sb = await createSessionClient();
   const propostas: PropostaGuardada[] = [];
   let aviso: string | undefined;
+  if (!guardaPropostas(agente)) {
+    // A tabela 0024 só aceita AG-NN: estas propostas mostram-se, mas não se guardam nem se decidem.
+    return {
+      ok: true,
+      resposta: res.resposta,
+      propostas: res.propostas.map((p) => ({ ...p, estado: estadoInicial(p.tipo), guardada: false })),
+      retiradas: res.retiradas,
+      ...(res.propostas.length
+        ? { aviso: 'Propostas dos agentes CODEFORGE e WIE-X ainda não se guardam: falta uma migração que alargue a tabela da 0024.' }
+        : {}),
+    };
+  }
   for (const p of res.propostas) {
     const { data, error } = await sb.rpc('propor_accao_agente', {
       p_agente: agente.id,

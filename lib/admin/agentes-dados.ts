@@ -15,6 +15,8 @@ export interface AgenteZ {
   readonly aceitacao: string;
   readonly escalacao: string;
   readonly blocos: readonly number[];
+  /** Sistema de origem; omisso = ZABATAINA 3000. */
+  readonly sistema?: 'ZABATAINA' | 'CODEFORGE' | 'WIE-X';
 }
 
 export const AGENTES: readonly AgenteZ[] = [

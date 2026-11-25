@@ -3,7 +3,13 @@
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import type { CategoriaId, ItemMapa, MapaLeque } from '@/lib/admin/aeos-mapa';
-import { AGENTES, ROTULO_ESTADO, ROTULO_TIPO, type AccaoAgente } from '@/lib/admin/agentes';
+import { AGENTES, AGENTES_CF, AGENTES_WX, ROTULO_ESTADO, ROTULO_TIPO, type AccaoAgente } from '@/lib/admin/agentes';
+
+const GRUPOS_AGENTES = [
+  { rotulo: 'ZABATAINA 3000', agentes: AGENTES },
+  { rotulo: 'CODEFORGE 3000', agentes: AGENTES_CF },
+  { rotulo: 'WIE-X v4.0', agentes: AGENTES_WX },
+] as const;
 import type { RespostaPergunta } from '@/lib/admin/agentes-actions';
 
 /**
@@ -229,7 +235,7 @@ function Painel({
   decidir: Decidir;
 }) {
   const agenteDoItem =
-    catId === 'agentes'
+    catId === 'agentes' || catId === 'agentes-cf' || catId === 'agentes-wx'
       ? item.id.replace('agente-', '')
       : catId === 'blocos'
         ? (AGENTES.find((a) => a.blocos.includes(Number(item.id.replace('bloco-', ''))))?.id ?? 'AG-01')
@@ -328,8 +334,12 @@ function Painel({
           <label className="mt-2 flex items-center gap-2 px-2 text-xs text-[#a8a092]">
             Agente
             <select value={agente} onChange={(e) => setAgente(e.target.value)} className="min-h-9 w-full min-w-0 flex-1 rounded-full border border-white/10 bg-[#0b0a09] px-2 text-[#efe8da]">
-              {AGENTES.map((a) => (
-                <option key={a.id} value={a.id}>{a.id} · {a.papel}</option>
+              {GRUPOS_AGENTES.map((g) => (
+                <optgroup key={g.rotulo} label={g.rotulo}>
+                  {g.agentes.map((a) => (
+                    <option key={a.id} value={a.id}>{a.id} · {a.papel}</option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </label>

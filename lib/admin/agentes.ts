@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AGENTES, type AgenteZ } from './agentes-dados';
+import { AGENTES_CF, AGENTES_WX } from './agentes-sistemas';
 
 /**
  * Autonomia dos agentes ZABATAINA dentro da constituição (§10).
@@ -13,7 +14,18 @@ import { AGENTES, type AgenteZ } from './agentes-dados';
  * A classe de cada proposta é decidida AQUI pelo tipo, nunca pelo modelo.
  */
 
-export { AGENTES, type AgenteZ };
+export { AGENTES, AGENTES_CF, AGENTES_WX, type AgenteZ };
+
+export type Sistema = 'ZABATAINA' | 'CODEFORGE' | 'WIE-X';
+export const sistemaDe = (a: AgenteZ): Sistema => a.sistema ?? 'ZABATAINA';
+/** Os três sistemas, pela ordem do selector. */
+export const TODOS_AGENTES: readonly AgenteZ[] = [...AGENTES, ...AGENTES_CF, ...AGENTES_WX];
+export const ID_AGENTE = /^(AG-\d{2}|CF\d{2}|WX\d{2})$/;
+/**
+ * A tabela da 0024 só aceita `AG-NN` (CHECK). As propostas dos agentes
+ * CODEFORGE e WIE-X não se guardam até uma migração alargar esse CHECK.
+ */
+export const guardaPropostas = (a: AgenteZ): boolean => sistemaDe(a) === 'ZABATAINA';
 
 export const TIPOS_ACCAO = [
   'tarefa_interna',
@@ -58,7 +70,7 @@ export function podeDecidir(papel: string | null | undefined): boolean {
 }
 
 export function agentePorId(id: string): AgenteZ | undefined {
-  return AGENTES.find((a) => a.id === id);
+  return TODOS_AGENTES.find((a) => a.id === id);
 }
 
 export const propostaSchema = z.object({
