@@ -45,6 +45,10 @@ DIPLOMAS = {
 CABECALHO = re.compile(r'^[#\s*_]*art(?:igo|\.)\s*(\d{1,3})[\s*_.º°]*$', re.I)
 ESTRUTURA = re.compile(r'^[#\s*_]*(livro|t[ií]tulo|cap[ií]tulo|sec[cç][aã]o|subsec[cç][aã]o|divis[aã]o)\b', re.I)
 RUIDO = re.compile(r'^(\* \* \*|[-_]{3,}|\d{1,5}\s*[—–-]\s*\(\d+\)|.*boletim da rep[uú]blica.*|.*I\s+S[EÉ]RIE\s*[—–-]\s*N[UÚ]MERO.*|\d{1,2} DE [A-ZÇ]+ DE \d{4}|\d{1,5})$', re.I)
+# Cabeçalho colado ao título da divisão («###### Cessação da relação de trabalho Artigo 135»).
+CABECALHO_COLADO = re.compile(r'^#{1,6}\s+\S.*?\s+art(?:igo|\.)\s*(\d{1,3})[\s*_.º°]*$', re.I)
+# Epígrafe partida pela paginação: «A (Contagem do período probatório) rtigo 55».
+EPIGRAFE_PARTIDA = re.compile(r'^A \((.{3,160})\) rtigo \d{1,3}$')
 PARAGRAFO = re.compile(r'^(\d{1,2}\.|[a-z]\)|_[a-z]_\))\s')
 
 
@@ -58,7 +62,7 @@ def artigos_de(md: str):
     linhas = md.replace('\r', '').split('\n')
     blocos, actual = [], None
     for bruta in linhas:
-        m = CABECALHO.match(bruta.strip())
+        m = CABECALHO.match(bruta.strip()) or CABECALHO_COLADO.match(bruta.strip())
         if m:
             actual = {'n': int(m.group(1)), 'linhas': []}
             blocos.append(actual)
@@ -72,6 +76,8 @@ def construir(md: str):
     for b in artigos_de(md):
         linhas = [limpar(l) for l in b['linhas']]
         linhas = [l for l in linhas if l and not RUIDO.match(l)]
+        if linhas and EPIGRAFE_PARTIDA.match(linhas[0]):
+            linhas[0] = f'({EPIGRAFE_PARTIDA.match(linhas[0]).group(1)})'
         # A epígrafe é a primeira linha, entre parênteses.
         if not linhas or not re.match(r'^\(.{3,160}\)$', linhas[0]):
             rejeitados.append((b['n'], 'sem epígrafe'))
@@ -91,7 +97,12 @@ def construir(md: str):
             else:
                 junto = paragrafos[-1]
                 paragrafos[-1] = (junto[:-1] + l) if junto.endswith('-') and l[:1].islower() else f'{junto} {l}'
+        paragrafos = [re.sub(r'\$([a-z]\))\$', r'\1', x) for x in paragrafos]
         texto = ' '.join(paragrafos)
+        # Falha fechada: texto com a fonte trocada no PDF («XGTKIWCÁºQQ…») ou sem corpo.
+        if any(re.search(r'[A-ZÁºſ]{12,}', x) for x in [epigrafe, *paragrafos]) or re.match(r'^\(.{3,160}\)', texto):
+            rejeitados.append((b['n'], 'texto ilegível'))
+            continue
         if not (20 <= len(texto) <= 6000):
             rejeitados.append((b['n'], f'tamanho {len(texto)}'))
             continue

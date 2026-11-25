@@ -112,7 +112,7 @@ describe('POST /api/civico/consulta', () => {
     // O que fica é o nosso modelo, não o Markdown do motor.
     expect(JSON.stringify(final)).not.toContain('## Aviso');
     expect(final.vigencia).toMatchObject({ alertas: [], diplomas: [] });
-    expect(final.conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0 });
+    expect(final.conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0, valores: 0 });
 
     // O texto oficial sai primeiro, do nosso corpus, antes de o motor escrever.
     expect(lista[0]!.t).toBe('inicio');
@@ -167,7 +167,7 @@ describe('POST /api/civico/consulta', () => {
     );
     const POST = await carregarRota();
     const final = fim(await eventos(await POST(pedido({ pergunta: 'Quantos dias de licença de paternidade tenho?' }))))!;
-    expect(final.conferencia).toEqual({ citacoes: 1, artigos: 1, contactos: 1 });
+    expect(final.conferencia).toEqual({ citacoes: 1, artigos: 1, contactos: 1, valores: 0 });
     const texto = JSON.stringify(final.resposta);
     expect(texto).not.toContain('sete dias');
     expect(texto).not.toContain('Artigo 13');

@@ -72,6 +72,16 @@
    ]
   },
   {
+   "n": 6,
+   "epigrafe": "Direito ao trabalho",
+   "paragrafos": [
+    "1. Todos os cidadãos têm direito ao trabalho livremente escolhido, com igualdade de oportunidades, sem discriminação de qualquer natureza, tendo por princípios básicos a capacidade e a aptidão profissional do indivíduo na escolha da profissão ou tipo de trabalho.",
+    "2. O direito ao trabalho está ligado ao dever de trabalhar, sem prejuízo das limitações decorrentes da redução da capacidade para o trabalho em virtude de doença profissional ou comum ou ainda de invalidez.",
+    "3. O trabalho deve ser realizado com estrito respeito aos direitos e garantias fundamentais do trabalhador, protegendo a sua saúde e assegurando que realizem a actividade em condições de trabalho seguro e digno.",
+    "4. É proibido o trabalho compulsivo, excepto o trabalho realizado no quadro da legislação penal."
+   ]
+  },
+  {
    "n": 7,
    "epigrafe": "Direitos de personalidade",
    "paragrafos": [
@@ -161,6 +171,14 @@
     "3. A licença por paternidade é concedida por 60 dias nos casos de morte ou incapacidade da progenitora, quando comprovada por entidade sanitária competente.",
     "4. Aos cônjuges que trabalhem para o mesmo empregador, ainda que em estabelecimentos diferentes, pode ser concedida a faculdade de comutação da licença por maternidade ou por paternidade, no interesse do trabalho.",
     "5. O gozo da licença por paternidade é comunicado, por escrito, ao empregador."
+   ]
+  },
+  {
+   "n": 16,
+   "epigrafe": "Fontes de Direito do Trabalho",
+   "paragrafos": [
+    "1. São fontes de Direito do Trabalho a Constituição da República, os actos normativos emanados da Assembleia da República e do Governo, os tratados e convenções internacionais ratificados por Moçambique e os instrumentos de regulamentação colectiva de trabalho.",
+    "2. Constituem, ainda, fontes de Direito do Trabalho os regulamentos internos, o contrato de trabalho, os usos e c o s t u m e s l a b o r a i s d e c a d a p r o fi s s ã o , s e c t o r d e a c t i v i d a d e ou empresa, que não forem contrários à lei e ao princípio da boa-fé, excepto se os sujeitos da relação individual ou colectiva de trabalho convencionarem a sua inaplicabilidade."
    ]
   },
   {
@@ -1155,6 +1173,20 @@
    ]
   },
   {
+   "n": 104,
+   "epigrafe": "Descanso semanal",
+   "paragrafos": [
+    "1. O trabalhador tem direito a descanso semanal de, pelo menos, 24 horas consecutivas em dia que, normalmente, é domingo.",
+    "2. O dia de descanso semanal pode deixar de coincidir com o domingo em caso de:",
+    "a) ser necessário ter trabalhador para assegurar a continuidade dos serviços que não podem ser interrompidos;",
+    "b) trabalhadores de estabelecimentos de venda ao público ou de prestação de serviços;",
+    "c) pessoal dos serviços de limpeza e de trabalhos preparatórios e complementares que devem ser efectuados no dia de descanso dos restantes trabalhadores;",
+    "d) trabalhadores cuja actividade, pela sua natureza, se deva exercer ao domingo.",
+    "3. Nos casos referidos no número 2 do presente artigo, deve estipular-se, preferencialmente, com carácter sistemático, um outro dia de descanso semanal.",
+    "4. Sempre que possível, o empregador deve proporcionar aos trabalhadores pertencentes ao mesmo agregado familiar o descanso semanal no mesmo dia."
+   ]
+  },
+  {
    "n": 105,
    "epigrafe": "Feriados obrigatórios",
    "paragrafos": [
@@ -1303,6 +1335,16 @@
    "epigrafe": "Licença sem remuneração",
    "paragrafos": [
     "O empregador pode conceder ao trabalhador, a pedido deste e devidamente justificado, licença sem remuneração pelo tempo a acordar entre as partes."
+   ]
+  },
+  {
+   "n": 117,
+   "epigrafe": "Conceito e princípios gerais",
+   "paragrafos": [
+    "1. Considera-se remuneração o que, nos termos do contrato individual ou colectivo ou dos usos, o trabalhador tem direito como contrapartida do seu trabalho.",
+    "2. A remuneração compreende o salário base e todas as prestações regulares e periódicas feitas directa ou indirectamente, em dinheiro ou em espécie.",
+    "3. O empregador deve garantir a elevação do nível salarial dos trabalhadores na medida do crescimento da produção, da produtividade, do rendimento do trabalho e do desenvolvimento económico do País.",
+    "4. O Governo, ouvida a Comissão Consultiva de Trabalho, estabelece o salário ou os salários mínimos nacionais aplicáveis aos trabalhadores integrados em sectores de actividade."
    ]
   },
   {
@@ -1484,6 +1526,19 @@
     "08. O empregador deve comunicar, por escrito, a cada trabalhador abrangido, os fundamentos da suspensão e indicar a data de início e de duração da mesma, caso seja possível, remetendo simultaneamente cópias das comunicações ao Ministério que superintende a área do Trabalho e ao órgão sindical da empresa e na falta deste, ao órgão sindical do ramo.",
     "09. À suspensão prevista no presente artigo aplica-se, com as devidas adaptações, o disposto nos números 4 e 7 do artigo 132 da presente Lei.",
     "10. Durante o período de suspensão, os serviços de Inspecção- -Geral do Trabalho podem pôr termo a sua aplicação, relativamente a todos ou a alguns dos trabalhadores, quando se verifique a inexistência dos motivos invocados ou a admissão de novos trabalhadores para actividade ou função susceptível de ser exercida pelos trabalhadores suspensos."
+   ]
+  },
+  {
+   "n": 135,
+   "epigrafe": "Formas de cessação do contrato de trabalho",
+   "paragrafos": [
+    "1. O contrato de trabalho pode cessar por:",
+    "a) caducidade;",
+    "b) acordo revogatório;",
+    "c) denúncia por qualquer das partes;",
+    "d) rescisão por qualquer das partes contratantes com justa causa.",
+    "2. A cessação da relação de trabalho determina a extinção das obrigações das partes relativas ao cumprimento do vínculo laboral e a constituição de direitos e deveres, nos casos especialmente previstos na lei.",
+    "3. A cessação do contrato de trabalho produz efeitos jurídicos a partir do conhecimento da mesma por parte do outro contratante, mediante documento escrito."
    ]
   },
   {
@@ -1694,6 +1749,13 @@
     "5. O trabalhador sindicalizado deve pagar quotas ao sindicato em que se encontra filiado nos termos estabelecidos nos respectivos estatutos. *",
     "6. Para o efeito do disposto no número 5 do presente artigo, o comité sindical deve apresentar, por escrito, a relação nominal dos trabalhadores sindicalizados, assinada por cada trabalhador, para permitir a retenção dos descontos na fonte pelo empregador.",
     "7. A declaração de um trabalhador deficiente visual, ou que não saiba escrever, deve ser assinada a rogo, por terceiros contendo os elementos de identificação de ambos, sendo indispensável a impressão digital do próprio."
+   ]
+  },
+  {
+   "n": 154,
+   "epigrafe": "Aquisição da personalidade jurídica",
+   "paragrafos": [
+    "As associações sindicais ou de empregadores adquirem personalidade jurídica pelo registo dos seus estatutos no órgão central da administração do trabalho."
    ]
   },
   {
@@ -2683,6 +2745,15 @@
    ]
   },
   {
+   "n": 257,
+   "epigrafe": "Sistema de segurança social",
+   "paragrafos": [
+    "1. Todos os trabalhadores têm direito à segurança social, à medida das condições e possibilidades financeiras do desenvolvimento da economia nacional.",
+    "2. O sistema de segurança social compreende vários ramos, a entidade gestora do sistema e abrange todo o território nacional.",
+    "3. Os trabalhadores moçambicanos na diáspora podem aderir ao sistema de segurança social moçambicano aplicável."
+   ]
+  },
+  {
    "n": 258,
    "epigrafe": "Objectivos do sistema de segurança social",
    "paragrafos": [
@@ -2785,13 +2856,21 @@
     "3. A violação do disposto no artigo 29 da presente Lei, relativo à idade mínima para admissão ao trabalho, é punida com a sanção de multa que varia entre trinta a quarenta salários mínimos de cada sector de actividade.",
     "4. O incumprimento do disposto no número 6 do artigo 206 e no número 3 do artigo 209, ambos da presente Lei é punido com multa cujo montante varia de dois a dez salários mínimos de cada sector de actividade.",
     "5. A violação do disposto no número 1 do artigo 205 e no número 3, do artigo 212, parte final, ambos da presente Lei constitui infracção disciplinar e faz incorrer os trabalhadores em greve, em responsabilidade civil e penal, nos termos da lei geral.",
-    "6. O empregador que violar o disposto nos números 1 e 2 do artigo 206 da presente Lei, indemniza os trabalhadores em 6 vezes o salário referente ao tempo em que tiver durado o lock-out, sem prejuízo da multa que lhe couber pela infracção cometida. $$ 1\\ e\\ 2 $$",
+    "6. O empregador que violar o disposto nos números 1 e 2 do artigo 206 da presente Lei, indemniza os trabalhadores em 6 vezes o salário referente ao tempo em que tiver durado o lock-out, sem prejuízo da multa que lhe couber pela infracção cometida.",
     "7. A não observância do estabelecido no número 3, do artigo 221 da presente Lei, constitui infracção e é punível com multa cujo montante varia entre um a cinco salários mínimos do sector de actividade.",
     "8. Os limites mínimos e máximo da multa prevista no número 7 da presente Lei são elevados para dez, sempre que não forem constituídas as comissões de segurança no trabalho, nos casos exigidos por lei ou regulamentação colectiva de trabalho no caso de as mesmas não terem sido constituídas após notificação da Inspecção-Geral do Trabalho.",
     "9. A não canalização dos valores retidos nos termos do disposto no número 6 do artigo 153 da presente Lei, constitui infracção e é punível com multa cujo montante varia entre um a cinco salários mínimos do sector de actividade.",
     "10. A inobservância do disposto nas normas legais sobre o regime de contratação de mão-de-obra estrangeira, em Moçambique, é punida com suspensão e multa de cinco a dez salários mensais auferidos pelo trabalhador estrangeiro em relação ao qual se verifique a infracção.",
     "11. A falta de comparência dos empregadores ou seus representantes nos serviços da Inspecção-Geral do Trabalho, sem causa justificativa, quando notificados para serem ouvidos em declarações, prestar informações, proceder à entrega ou exibição de documentos, em virtude de se ter constatado determinado facto que exija tal procedimento, constitui transgressão punível com multa de cinco a dez salários mínimos.",
     "12. A sanção de multa prevista no número 11 do presente artigo, é igualmente aplicável no caso de a falta de comparência injustificada respeitar à notificação feita pelos serviços de mediação laboral em virtude de solicitação do trabalhador interessado."
+   ]
+  },
+  {
+   "n": 270,
+   "epigrafe": "Regulamentação",
+   "paragrafos": [
+    "1. Os regulamentos específicos referidos no artigo 4 da presente Lei são elaborados ou revistos no prazo de dois anos, contados a partir da data de entrada em vigor da presente Lei.",
+    "2. Compete ao Governo regulamentar as diferentes matérias da presente Lei."
    ]
   },
   {

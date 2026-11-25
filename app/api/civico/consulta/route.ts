@@ -242,10 +242,12 @@ export async function POST(request: Request) {
           artigos,
           citacaoConferida: citacaoNoCorpus,
           pergunta: pedido.pergunta,
+          // Sem artigos nossos não há com que conferir prazos: não se toca neles.
+          ...(oficial.length ? { textoOficial: oficial.map((a) => `${a.epigrafe} ${a.paragrafos.join(' ')}`).join('  ') } : {}),
         });
         const vigencia = verificarVigencia(resposta);
         const revogados = vigencia.alertas.filter((a) => a.tipo === 'revogado').length;
-        const retirados = conferencia.citacoes + conferencia.artigos + conferencia.contactos;
+        const retirados = conferencia.citacoes + conferencia.artigos + conferencia.contactos + (conferencia.valores ?? 0);
         /**
          * Uma resposta que cita lei revogada, a que foi preciso retirar
          * alguma coisa, ou sem nenhum apoio (nem artigos nossos, nem ligação)

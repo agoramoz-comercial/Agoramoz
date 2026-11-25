@@ -119,6 +119,7 @@ export const CIVICO = {
     citacoes: ['citação entre aspas', 'citações entre aspas'],
     artigos: ['número de artigo', 'números de artigo'],
     contactos: ['contacto', 'contactos'],
+    valores: ['prazo ou valor', 'prazos ou valores'],
   },
 
   // ── Verificação de vigência ────────────────────────────────────────────
