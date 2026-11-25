@@ -255,7 +255,7 @@ function Lista({ d, aqui }: { d: DadosPipeline; aqui: string }) {
     <>
       {/* `relative`: os textos sr-only (posição absoluta) ficam presos ao contentor
           com scroll, em vez de alargarem a página inteira. */}
-      <div className="relative overflow-x-auto border border-[color:var(--border)]">
+      <div className="admin-cartao relative overflow-x-auto rounded-[24px] border border-[color:var(--border)]">
         <table className="w-full min-w-[60rem] border-collapse text-sm">
           <caption className="sr-only">Oportunidades da vista «{VISTA[f.vista]}». Os cabeçalhos com seta ordenam.</caption>
           <thead>

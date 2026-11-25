@@ -2087,3 +2087,11 @@
 .admin-v3 .admin-listras {
   background-image: repeating-linear-gradient(-45deg, #e9a35c 0 6px, #f0b97f 6px 12px);
 }
+/* Campos e botões do painel: cantos v3. (As classes `rounded-[--radius-*]` antigas
+   não geram raio no Tailwind 4; isto dá-lhes o raio sem tocar em cada ecrã.) */
+.admin-v3 :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea) {
+  border-radius: 14px;
+}
+.admin-v3 main :is(button, a)[class*='border'][class*='min-h-1'] {
+  border-radius: 999px;
+}

@@ -45,7 +45,7 @@ export function ListaPropostas({ itens, truncado, podeCriar }: { itens: readonly
           descricao="Crie uma nova, ou cole o texto de uma proposta que já tenha escrita."
         />
       ) : (
-        <div className="overflow-x-auto border border-[color:var(--border)] bg-[color:var(--surface)]">
+        <div className="admin-cartao overflow-x-auto rounded-[24px] border border-[color:var(--border)]">
           <table className="w-full min-w-[48rem] border-collapse text-sm">
             <thead>
               <tr>
