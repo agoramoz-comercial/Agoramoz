@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gruposVisiveis } from './navegacao';
-import { comandosDe, emCampo, filtrarComandos, interpretar, normalizar } from './comandos';
+import { comandosDe, criarDe, emCampo, filtrarComandos, interpretar, normalizar } from './comandos';
 
 const nada = { inqueritos: false, news: false, energia: false, direcao: false, admin: false };
 
@@ -56,5 +56,25 @@ describe('atalhos', () => {
     expect(emCampo({ tagName: 'DIV', isContentEditable: true })).toBe(true);
     expect(emCampo({ tagName: 'A' })).toBe(false);
     expect(emCampo(null)).toBe(false);
+  });
+});
+
+describe('NAV-TAR-02 «Criar» na paleta', () => {
+  const tudo = { inqueritos: true, news: true, energia: true, direcao: true, admin: true };
+  it('quem escreve vê os quatro, primeiro na lista', () => {
+    const cs = comandosDe(gruposVisiveis(tudo), { escreve: true });
+    expect(cs.slice(0, 4).map((c) => [c.grupo, c.href])).toEqual([
+      ['Criar', '/admin/news#nova-noticia'],
+      ['Criar', '/admin/cursos/novo'],
+      ['Criar', '/admin/propostas/nova'],
+      ['Criar', '/admin/inqueritos/novo'],
+    ]);
+  });
+  it('o papel de leitura não vê «Criar»', () => {
+    expect(comandosDe(gruposVisiveis(tudo), { escreve: false }).some((c) => c.grupo === 'Criar')).toBe(false);
+    expect(comandosDe(gruposVisiveis(tudo)).some((c) => c.grupo === 'Criar')).toBe(false);
+  });
+  it('sem News nem Inquéritos ligados, não oferece criar o que daria 404', () => {
+    expect(criarDe(gruposVisiveis(nada), true).map((c) => c.href)).toEqual(['/admin/cursos/novo', '/admin/propostas/nova']);
   });
 });

@@ -100,7 +100,7 @@ export default async function NewsAdminPage({
       </dl>
 
       {escreve && env.NEWS_ENGINE !== 'off' ? (
-        <section aria-label="Analisar uma notícia" className="mb-12">
+        <section id="nova-noticia" aria-label="Analisar uma notícia" className="mb-12 scroll-mt-24">
           <RedaccaoNews criar={criarArtigoDeAnalise} profundaLigada={env.NEWS_ANALISE_PROFUNDA === 'kimi' && !!env.KIMI_API_KEY} />
         </section>
       ) : escreve ? (

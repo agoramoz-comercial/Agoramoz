@@ -2053,3 +2053,37 @@
     background-color: rgb(239 232 218 / 0.55);
   }
 }
+
+/* ===========================================================================
+   Painel de administração v3 (estudo do painel, 25/11/2026): papel quente,
+   tinta noite, âmbar só no activo, cantos generosos e pílulas. Religa os
+   tokens semânticos dentro de `.admin-v3`; os ecrãs continuam a ler só
+   semântica. O botão primário passa a noite (texto claro: 18:1).
+   =========================================================================== */
+.admin-v3 {
+  --surface: #f2ede3;
+  --surface-raised: #fbf8f2;
+  --on-surface: #0b0a09;
+  --muted: #5a5348; /* 6,4:1 sobre o papel — AA */
+  --border: color-mix(in oklab, #0b0a09 13%, transparent);
+  --hairline: color-mix(in oklab, #0b0a09 12%, transparent);
+  --accent: #0b0a09;
+  --color-signal-600: #0b0a09;
+  --radius-xs: 12px;
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 24px;
+}
+.admin-v3 .admin-pilula::-webkit-scrollbar {
+  display: none;
+}
+/* Cartões e tabelas: os contentores com borda do painel ganham os cantos de 24 px. */
+.admin-v3 .admin-cartao {
+  border-radius: 24px;
+  background: var(--surface-raised);
+}
+/* Faixa listrada das barras de progresso (funil). */
+.admin-v3 .admin-listras {
+  background-image: repeating-linear-gradient(-45deg, #e9a35c 0 6px, #f0b97f 6px 12px);
+}

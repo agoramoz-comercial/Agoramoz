@@ -4,49 +4,57 @@ import { destinoSeguro, gruposVisiveis } from './navegacao';
 const tudo = { inqueritos: true, news: true, energia: true, direcao: true, admin: true };
 const nada = { inqueritos: false, news: false, energia: false, direcao: false, admin: false };
 
-describe('navegação agrupada do admin', () => {
-  it('com tudo ligado, mostra os seis grupos do AEOS pela ordem do trabalho', () => {
-    expect(gruposVisiveis(tudo).map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing', 'Produtos', 'Espaços', 'Controlo']);
+describe('NAV-TAR-01 navegação por tarefa', () => {
+  it('com tudo ligado, mostra os seis grupos pela ordem do trabalho', () => {
+    expect(gruposVisiveis(tudo).map((g) => g.titulo)).toEqual(['Hoje', 'Vender', 'Publicar', 'Ensinar', 'Medir', 'Configurar']);
   });
 
-  it('os Inquéritos e o News continuam no admin, com o mesmo endereço e a mesma regra', () => {
-    const marketing = gruposVisiveis(tudo).find((g) => g.titulo === 'Marketing')!;
-    expect(marketing.entradas.map((e) => e.href)).toEqual(['/admin/trafego', '/admin/aquisicao', '/admin/inqueritos', '/admin/news']);
+  it('não perde nem ganha entradas: as mesmas 19 de antes, com os mesmos endereços', () => {
+    const hrefs = gruposVisiveis(tudo).flatMap((g) => g.entradas.map((e) => e.href)).sort();
+    expect(hrefs).toEqual(
+      [
+        '/admin', '/admin/painel', '/admin/aeos',
+        '/admin/oportunidades', '/admin/diagnosticos', '/admin/propostas', '/admin/facturacao', '/admin/contactos', '/admin/organizacoes',
+        '/admin/trafego', '/admin/aquisicao', '/admin/inqueritos', '/admin/news',
+        '/admin/cursos',
+        '/admin/gabinete', '/admin/energia',
+        '/admin/fila', '/admin/equipa', '/admin/auditoria',
+      ].sort(),
+    );
   });
 
-  it('as Propostas ficam na Receita, entre os Diagnósticos e os Contactos', () => {
-    const receita = gruposVisiveis(nada).find((g) => g.titulo === 'Receita')!;
-    expect(receita.entradas.map((e) => e.texto)).toEqual(['Pipeline', 'Diagnósticos', 'Propostas', 'Facturação', 'Contactos', 'Organizações']);
+  it('Vender junta o funil comercial pela ordem do trabalho', () => {
+    const vender = gruposVisiveis(nada).find((g) => g.titulo === 'Vender')!;
+    expect(vender.entradas.map((e) => e.texto)).toEqual(['Pipeline', 'Diagnósticos', 'Propostas', 'Facturação', 'Contactos', 'Organizações']);
   });
 
-  it('sem módulos nem papel admin, esconde Espaços e Controlo e as flags desligadas', () => {
+  it('sem módulos nem papel admin: nada de Publicar (flags desligadas) nem Configurar', () => {
     const grupos = gruposVisiveis(nada);
-    expect(grupos.map((g) => g.titulo)).toEqual(['Direcção', 'Receita', 'Marketing', 'Produtos']);
+    expect(grupos.map((g) => g.titulo)).toEqual(['Hoje', 'Vender', 'Ensinar', 'Medir']);
     const hrefs = grupos.flatMap((g) => g.entradas.map((e) => e.href));
-    expect(hrefs).not.toContain('/admin/inqueritos');
-    expect(hrefs).not.toContain('/admin/news');
-    expect(hrefs).not.toContain('/admin/fila');
-    expect(hrefs).not.toContain('/admin/equipa');
-    expect(hrefs).not.toContain('/admin/auditoria');
+    for (const h of ['/admin/inqueritos', '/admin/news', '/admin/fila', '/admin/equipa', '/admin/auditoria', '/admin/gabinete', '/admin/energia'])
+      expect(hrefs).not.toContain(h);
   });
 
-  it('os Cursos ficam nos Produtos (AEOS, bloco 3 — Academia), para toda a equipa', () => {
-    expect(gruposVisiveis(nada).find((g) => g.titulo === 'Produtos')!.entradas.map((e) => e.href)).toEqual(['/admin/cursos']);
-  });
-
-  it('o Gabinete e o CEnO só aparecem a quem tem o módulo', () => {
+  it('as permissões não mudam: cada entrada restrita continua com a mesma regra', () => {
     const so = (p: Partial<typeof nada>) =>
       gruposVisiveis({ ...nada, ...p }).flatMap((g) => g.entradas.map((e) => e.href));
     expect(so({ direcao: true })).toContain('/admin/gabinete');
     expect(so({ direcao: true })).not.toContain('/admin/energia');
     expect(so({ energia: true })).toContain('/admin/energia');
+    expect(so({ admin: true })).toEqual(expect.arrayContaining(['/admin/fila', '/admin/equipa', '/admin/auditoria']));
+    expect(so({ admin: true })).not.toContain('/admin/gabinete');
+    expect(so({ news: true })).toContain('/admin/news');
+    expect(so({ inqueritos: true })).toContain('/admin/inqueritos');
   });
 
-  it('o trabalho abre pelo Hoje; o painel analítico e o mapa AEOS vêm a seguir', () => {
-    expect(gruposVisiveis(nada)[0]!.entradas.map((e) => [e.texto, e.href])).toEqual([
-      ['Hoje', '/admin'],
-      ['Painel', '/admin/painel'],
-      ['Mapa AEOS', '/admin/aeos'],
+  it('o trabalho abre pelo Hoje; o painel analítico e o mapa AEOS passam para Medir', () => {
+    expect(gruposVisiveis(nada)[0]!.entradas.map((e) => e.href)).toEqual(['/admin']);
+    expect(gruposVisiveis(nada).find((g) => g.titulo === 'Medir')!.entradas.map((e) => e.href)).toEqual([
+      '/admin/painel',
+      '/admin/trafego',
+      '/admin/aquisicao',
+      '/admin/aeos',
     ]);
   });
 
