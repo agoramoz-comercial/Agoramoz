@@ -18,7 +18,7 @@ export const metadata = { title: 'Criar curso' };
 export const maxDuration = 300;
 
 export default async function NovoCursoPage() {
-  await requireRole(['admin', 'comercial']);
+  const sessao = await requireRole(['admin', 'comercial']);
   return (
     <>
       <div className="print:hidden">
@@ -43,6 +43,7 @@ export default async function NovoCursoPage() {
         }}
         motorLigado={motorCursosLigado()}
         podeGuardar
+        utilizador={sessao.userId}
       />
     </>
   );
