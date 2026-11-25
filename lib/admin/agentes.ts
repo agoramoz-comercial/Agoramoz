@@ -25,7 +25,8 @@ export const ID_AGENTE = /^(AG-\d{2}|CF\d{2}|WX\d{2})$/;
  * A tabela da 0024 só aceita `AG-NN` (CHECK). As propostas dos agentes
  * CODEFORGE e WIE-X não se guardam até uma migração alargar esse CHECK.
  */
-export const guardaPropostas = (a: AgenteZ): boolean => sistemaDe(a) === 'ZABATAINA';
+/** Desde a 0025, a tabela aceita AG-NN, CFNN e WXNN: todos os sistemas guardam propostas. */
+export const guardaPropostas = (a: AgenteZ): boolean => ID_AGENTE.test(a.id);
 
 export const TIPOS_ACCAO = [
   'tarefa_interna',

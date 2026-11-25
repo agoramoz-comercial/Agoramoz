@@ -57,14 +57,14 @@ export async function perguntarAgente(entrada: unknown): Promise<RespostaPergunt
   const propostas: PropostaGuardada[] = [];
   let aviso: string | undefined;
   if (!guardaPropostas(agente)) {
-    // A tabela 0024 só aceita AG-NN: estas propostas mostram-se, mas não se guardam nem se decidem.
+    // Só um id fora de AG-NN/CFNN/WXNN (CHECK da 0025) fica por guardar.
     return {
       ok: true,
       resposta: res.resposta,
       propostas: res.propostas.map((p) => ({ ...p, estado: estadoInicial(p.tipo), guardada: false })),
       retiradas: res.retiradas,
       ...(res.propostas.length
-        ? { aviso: 'Propostas dos agentes CODEFORGE e WIE-X ainda não se guardam: falta uma migração que alargue a tabela da 0024.' }
+        ? { aviso: 'Esta proposta não se guarda: o agente não tem um código válido.' }
         : {}),
     };
   }

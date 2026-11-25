@@ -133,12 +133,12 @@ describe('agentes CODEFORGE e WIE-X', async () => {
     for (const p of AGENTES_CF[0]!.proibidas) expect(doc).toContain(p);
   });
 
-  it('ids únicos e válidos; só os ZABATAINA guardam propostas (CHECK da 0024)', () => {
+  it('ids únicos e válidos; os três sistemas guardam propostas (CHECK da 0025)', () => {
     expect(new Set(TODOS_AGENTES.map((a) => a.id)).size).toBe(TODOS_AGENTES.length);
     for (const a of TODOS_AGENTES) expect(ID_AGENTE.test(a.id)).toBe(true);
     expect(guardaPropostas(agentePorId('AG-01')!)).toBe(true);
-    expect(guardaPropostas(agentePorId('CF01')!)).toBe(false);
-    expect(guardaPropostas(agentePorId('WX01')!)).toBe(false);
+    expect(guardaPropostas(agentePorId('CF01')!)).toBe(true);
+    expect(guardaPropostas(agentePorId('WX01')!)).toBe(true);
   });
 
   it('o pedido leva a regra de cada sistema', () => {
@@ -148,5 +148,20 @@ describe('agentes CODEFORGE e WIE-X', async () => {
     const cf = mensagensAgente(agentePorId('CF17')!, 'c', 'p')[0]!.content;
     expect(cf).toContain('CODEFORGE');
     expect(cf).toMatch(/gerado, implementado, testado e verificado/);
+  });
+});
+
+describe('0025 — agentes CODEFORGE e WIE-X', () => {
+  const MIG25 = readFileSync('supabase/migrations/0025_agentes_sistemas.sql', 'utf-8');
+  const APLICAR25 = readFileSync('supabase/aplicar-0025.sql', 'utf-8');
+  it('aplicar-0025 é a migração palavra por palavra', () => {
+    const fim = '-- ===== fim do cabeçalho: daqui para baixo é a migração 0025, sem alterações =====\n';
+    expect(APLICAR25.split(fim)[1]).toBe(MIG25);
+  });
+  it('o CHECK aceita AG-NN, CFNN e WXNN e mais nada', () => {
+    const re = /check \(agente ~ '([^']+)'\)/.exec(MIG25)![1]!;
+    const rx = new RegExp(re);
+    for (const id of ['AG-01', 'CF20', 'WX12']) expect(rx.test(id)).toBe(true);
+    for (const id of ['AG01', 'CF1', 'XX01', 'WX01; drop']) expect(rx.test(id)).toBe(false);
   });
 });
