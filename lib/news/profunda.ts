@@ -1,3 +1,4 @@
+import { comRecuo429, MENSAGEM_429 } from '@/lib/ia/kimi-429';
 import { z } from 'zod';
 import { numeros, numerosForaDasFontes } from '@/lib/cursos/verificar';
 import { NOME_DO_PAIS, PAISES_NEWS, type PaisNews } from './paises';
@@ -253,7 +254,9 @@ export type FalhaProfunda =
   | `http_${number}`
   | 'json'
   | 'esquema'
-  | 'numeros-no-impacto';
+  | 'numeros-no-impacto'
+  | 'sem-saldo'
+  | 'limite';
 
 export const MENSAGEM_FALHA: Record<string, string> = {
   desligada: 'A análise profunda está desligada (NEWS_ANALISE_PROFUNDA=off ou sem KIMI_API_KEY).',
@@ -264,6 +267,8 @@ export const MENSAGEM_FALHA: Record<string, string> = {
   esquema: 'O Kimi respondeu sem a estrutura pedida. Tente de novo.',
   'numeros-no-impacto':
     'Recusada: o impacto principal trazia números que não estão no documento. Tente de novo.',
+  'sem-saldo': MENSAGEM_429.saldo,
+  limite: MENSAGEM_429.limite,
 };
 
 export interface ConfigProfunda {
@@ -274,6 +279,8 @@ export interface ConfigProfunda {
   readonly fetch?: typeof fetch;
   readonly timeoutMs?: number;
   readonly agora?: () => Date;
+  /** Só para testes: não esperar de verdade entre tentativas no 429. */
+  readonly dormir?: (ms: number) => Promise<void>;
 }
 
 export type ResultadoProfunda =
@@ -289,25 +296,33 @@ export async function gerarProfunda(
   if (fonte.length < FONTE_MIN) return { ok: false, falha: 'fonte-curta' };
 
   const limpo = fonte.replace(/<<<|>>>/g, (m) => (m === '<<<' ? '‹‹‹' : '›››'));
+  const corpo = JSON.stringify({
+    model: config.modelo,
+    messages: [
+      { role: 'system', content: promptProfunda(entrada.pais, entrada.idioma) },
+      { role: 'user', content: `${INICIO}\n${limpo}\n${FIM}` },
+    ],
+    response_format: { type: 'json_object' },
+    thinking: { type: 'disabled' },
+    max_tokens: 8_000,
+  });
+  const prazo = AbortSignal.timeout(config.timeoutMs ?? 50_000);
   let res: Response;
   try {
-    res = await (config.fetch ?? fetch)(`${config.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${config.chave}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: config.modelo,
-        messages: [
-          { role: 'system', content: promptProfunda(entrada.pais, entrada.idioma) },
-          { role: 'user', content: `${INICIO}\n${limpo}\n${FIM}` },
-        ],
-        response_format: { type: 'json_object' },
-        thinking: { type: 'disabled' },
-        max_tokens: 8_000,
-      }),
-      redirect: 'error',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(config.timeoutMs ?? 50_000),
-    });
+    const feito = await comRecuo429(
+      () =>
+        (config.fetch ?? fetch)(`${config.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${config.chave}`, 'Content-Type': 'application/json' },
+          body: corpo,
+          redirect: 'error',
+          cache: 'no-store',
+          signal: prazo,
+        }),
+      { ...(config.dormir ? { dormir: config.dormir } : {}) },
+    );
+    if ('sem' in feito) return { ok: false, falha: feito.sem === 'saldo' ? 'sem-saldo' : 'limite' };
+    res = feito.res;
   } catch (e) {
     const nome = (e as { name?: string } | null)?.name;
     return { ok: false, falha: nome === 'TimeoutError' || nome === 'AbortError' ? 'timeout' : 'rede' };

@@ -1,4 +1,5 @@
 import { FalhaImportadorIA, type ExcertoIA, type ImportadorIA } from '../ia';
+import { motivo429 } from '@/lib/ia/kimi-429';
 import { LIMITES } from '../spec';
 import { rascunhoImportado, TIPOS_IMPORTAVEIS, type RascunhoImportado } from './esquema';
 
@@ -149,6 +150,11 @@ export function criarImportadorKimi(config: ConfigKimi): ImportadorIA {
         throw new FalhaImportadorIA(
           nome === 'TimeoutError' || nome === 'AbortError' ? 'timeout' : 'rede',
         );
+      }
+      if (res.status === 429) {
+        // Só o tipo do erro: saldo esgotado não passa a esperar (IA-429-01).
+        if ((await motivo429(res)) === 'saldo') throw new FalhaImportadorIA('sem_saldo');
+        throw new FalhaImportadorIA('http_429');
       }
       if (!res.ok) {
         // O corpo pode trazer detalhes da conta: não se lê nem se propaga.

@@ -1,6 +1,7 @@
 import { serverEnv } from '@/lib/config/env';
 import { log } from '@/lib/log/logger';
 import type { Motor } from './ciclo';
+import { comRecuo429, MENSAGEM_429 } from '@/lib/ia/kimi-429';
 
 /**
  * O motor dos cursos: a função `agoramoz_llm` da app ZabaEdu (Base44).
@@ -13,7 +14,7 @@ import type { Motor } from './ciclo';
  * pode trazer o pedido, e o pedido traz o texto das fontes).
  */
 
-export type CodigoMotor = 'desligado' | 'timeout' | 'recusado' | 'indisponivel' | 'resposta_invalida';
+export type CodigoMotor = 'desligado' | 'timeout' | 'recusado' | 'indisponivel' | 'resposta_invalida' | 'sem_saldo' | 'limite';
 
 export class ErroMotor extends Error {
   /** O código HTTP com que o ZabaEdu respondeu, quando respondeu (nunca o corpo). */
@@ -42,6 +43,8 @@ export const MENSAGEM: Readonly<Record<CodigoMotor, string>> = {
   recusado: 'O motor recusou o pedido: confirme a chave (KIMI_API_KEY, ou ZABAEDU_CHAVE / AGORAMOZ_CHAVE no ZabaEdu).',
   indisponivel: 'O motor está indisponível neste momento.',
   resposta_invalida: 'O motor respondeu sem JSON válido.',
+  sem_saldo: MENSAGEM_429.saldo,
+  limite: MENSAGEM_429.limite,
 };
 
 /** Tempo máximo de uma chamada: cabe no `maxDuration` da página com folga para três tentativas. */
@@ -137,35 +140,48 @@ export function criarMotorKimi(opcoes: {
   baseUrl: string;
   fetch?: typeof fetch;
   tempoMs?: number;
+  /** Só para testes: não esperar de verdade entre tentativas. */
+  dormir?: (ms: number) => Promise<void>;
 }): Motor {
   const f = opcoes.fetch ?? fetch;
   const tempo = opcoes.tempoMs ?? TEMPO_MAX_MS;
   return async ({ tarefa, prompt, schema }) => {
+    const corpo = JSON.stringify({
+      model: opcoes.modelo,
+      messages: [
+        {
+          role: 'system',
+          content: 'Responde só com um objecto JSON válido, sem texto à volta, que cumpra este JSON Schema:\n' + JSON.stringify(schema),
+        },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      thinking: { type: 'disabled' },
+      max_tokens: 12_000,
+    });
+    // Um só prazo para todas as tentativas: as esperas do 429 contam para ele.
+    const prazo = AbortSignal.timeout(tempo);
     let r: Response;
     try {
-      r = await f(`${opcoes.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${opcoes.chave}` },
-        body: JSON.stringify({
-          model: opcoes.modelo,
-          messages: [
-            {
-              role: 'system',
-              content:
-                'Responde só com um objecto JSON válido, sem texto à volta, que cumpra este JSON Schema:\n' +
-                JSON.stringify(schema),
-            },
-            { role: 'user', content: prompt },
-          ],
-          response_format: { type: 'json_object' },
-          thinking: { type: 'disabled' },
-          max_tokens: 12_000,
-        }),
-        redirect: 'error',
-        signal: AbortSignal.timeout(tempo),
-        cache: 'no-store',
-      });
+      const feito = await comRecuo429(
+        () =>
+          f(`${opcoes.baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', authorization: `Bearer ${opcoes.chave}` },
+            body: corpo,
+            redirect: 'error',
+            signal: prazo,
+            cache: 'no-store',
+          }),
+        { ...(opcoes.dormir ? { dormir: opcoes.dormir } : {}) },
+      );
+      if ('sem' in feito) {
+        log.warn('cursos.motor', { outcome: 'failed', reason: `http_429_${feito.sem}`, tarefa, motor: 'kimi' });
+        throw new ErroMotor(feito.sem === 'saldo' ? 'sem_saldo' : 'limite');
+      }
+      r = feito.res;
     } catch (e) {
+      if (e instanceof ErroMotor) throw e;
       const tempoEsgotado = e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError');
       log.warn('cursos.motor', { outcome: 'failed', reason: tempoEsgotado ? 'timeout' : 'rede', tarefa, motor: 'kimi' });
       throw new ErroMotor(tempoEsgotado ? 'timeout' : 'indisponivel');

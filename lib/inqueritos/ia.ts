@@ -54,7 +54,7 @@ export interface ResumoIA {
  *  - A chave nunca aparece em erros nem em logs; os logs levam só métricas.
  *  - Falhar nunca bloqueia: quem chama cai para o analisador local.
  */
-export type ErroImportadorIA = 'timeout' | 'rede' | 'json' | 'esquema' | 'vazio' | `http_${number}`;
+export type ErroImportadorIA = 'timeout' | 'rede' | 'json' | 'esquema' | 'vazio' | 'sem_saldo' | `http_${number}`;
 
 export class FalhaImportadorIA extends Error {
   constructor(readonly codigo: ErroImportadorIA) {

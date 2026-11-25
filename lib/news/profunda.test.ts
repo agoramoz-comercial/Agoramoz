@@ -136,8 +136,14 @@ describe('análise profunda — motor Kimi', () => {
     });
     const lixo = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: 'não é json' } }] }))) as unknown as typeof fetch;
     expect(await gerarProfunda({ fonte: FONTE, pais: 'mz', idioma: 'pt' }, { ...CONFIG, fetch: lixo })).toEqual({ ok: false, falha: 'json' });
-    const erro = vi.fn(async () => new Response('x', { status: 429 })) as unknown as typeof fetch;
-    expect(await gerarProfunda({ fonte: FONTE, pais: 'mz', idioma: 'pt' }, { ...CONFIG, fetch: erro })).toEqual({ ok: false, falha: 'http_429' });
+    const erro = vi.fn(async () => new Response('x', { status: 503 })) as unknown as typeof fetch;
+    expect(await gerarProfunda({ fonte: FONTE, pais: 'mz', idioma: 'pt' }, { ...CONFIG, fetch: erro })).toEqual({ ok: false, falha: 'http_503' });
+    // IA-429-01: o 429 diz se é saldo ou limite (e o limite espera e repete).
+    const semSaldo = vi.fn(async () => new Response(JSON.stringify({ error: { type: 'exceeded_current_quota_error' } }), { status: 429 })) as unknown as typeof fetch;
+    expect(await gerarProfunda({ fonte: FONTE, pais: 'mz', idioma: 'pt' }, { ...CONFIG, fetch: semSaldo })).toEqual({ ok: false, falha: 'sem-saldo' });
+    const limite = vi.fn(async () => new Response('x', { status: 429 })) as unknown as typeof fetch;
+    expect(await gerarProfunda({ fonte: FONTE, pais: 'mz', idioma: 'pt' }, { ...CONFIG, fetch: limite, dormir: async () => undefined })).toEqual({ ok: false, falha: 'limite' });
+    expect(limite).toHaveBeenCalledTimes(3);
   });
 });
 
