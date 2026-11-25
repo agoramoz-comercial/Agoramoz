@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Briefcase, CornerDownLeft, Keyboard, Search, User, X, Zap } from 'lucide-react';
+import { Building2, Briefcase, CornerDownLeft, Keyboard, Plus, Search, User, X, Zap } from 'lucide-react';
 import { emCampo, filtrarComandos, interpretar, ATALHOS, type Comando } from '@/lib/admin/comandos';
 import { FASE_OPORTUNIDADE, type FaseOportunidade } from '@/lib/admin/labels';
 import { limparTermo, totalDe, VAZIO, type ResultadoPesquisa } from '@/lib/crm/pesquisa-modelo';
@@ -57,7 +57,7 @@ const ROTULO =
 function itensDe(comandos: readonly Comando[], q: string, r: ResultadoPesquisa): Item[] {
   const cs = filtrarComandos(comandos, q).slice(0, q.trim() ? 6 : 20);
   return [
-    ...cs.map((c) => ({ id: c.id, grupo: c.grupo, texto: c.texto, href: c.href, Icone: Zap, atalho: c.atalho })),
+    ...cs.map((c) => ({ id: c.id, grupo: c.grupo, texto: c.texto, href: c.href, Icone: c.grupo === 'Criar' ? Plus : Zap, atalho: c.atalho })),
     ...r.oportunidades.map((o) => ({
       id: `op:${o.id}`,
       grupo: 'Oportunidades',
@@ -279,15 +279,15 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex min-w-0 flex-1 gap-2">
         <button
           type="button"
           onClick={abrir}
           aria-keyshortcuts="Control+K Meta+K"
-          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-[--radius-xs] border border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm text-[color:var(--muted)] hover:text-[color:var(--on-surface)]"
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-4 text-sm text-[color:var(--muted)] hover:text-[color:var(--on-surface)]"
         >
           <Search aria-hidden className="size-4" />
-          <span className="flex-1 text-left">Pesquisar</span>
+          <span className="flex-1 truncate text-left">Pesquisar ou criar…</span>
           <kbd aria-hidden className="hidden rounded-[--radius-xs] border border-[color:var(--border)] px-1.5 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] whitespace-nowrap sm:inline">
             {tecla}
           </kbd>
@@ -297,7 +297,7 @@ export function Paleta({ comandos, pesquisa }: { comandos: readonly Comando[]; p
           onClick={() => ajuda.current?.showModal()}
           aria-label="Atalhos de teclado"
           title="Atalhos de teclado"
-          className="flex size-11 shrink-0 items-center justify-center rounded-[--radius-xs] border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--muted)] hover:text-[color:var(--on-surface)]"
+          className="hidden size-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-raised)] text-[color:var(--muted)] hover:text-[color:var(--on-surface)] sm:flex"
         >
           <Keyboard aria-hidden className="size-4" />
         </button>

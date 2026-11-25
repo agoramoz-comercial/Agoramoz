@@ -26,6 +26,18 @@ const VISTAS: readonly { base: string; texto: string; href: string }[] = [
   { base: '/admin/painel', texto: 'Painel · últimos 90 dias', href: '/admin/painel?periodo=90' },
 ];
 
+/**
+ * NAV-TAR-02 — «Criar» na paleta: só para quem escreve (admin, comercial) e só
+ * se a secção existir para quem pede (mesmas flags e regras da navegação).
+ * Leva ao formulário de criação que já existe; não cria nada sozinho.
+ */
+const CRIAR: readonly { base: string; texto: string; href: string }[] = [
+  { base: '/admin/news', texto: 'Novo artigo do News', href: '/admin/news#nova-noticia' },
+  { base: '/admin/cursos', texto: 'Novo curso', href: '/admin/cursos/novo' },
+  { base: '/admin/propostas', texto: 'Nova proposta', href: '/admin/propostas/nova' },
+  { base: '/admin/inqueritos', texto: 'Novo inquérito', href: '/admin/inqueritos/novo' },
+];
+
 /** `g` + tecla: ir directamente para uma secção. */
 export const SEQUENCIAS: Readonly<Record<string, { href: string; texto: string }>> = {
   h: { href: '/admin', texto: 'Hoje' },
@@ -48,7 +60,7 @@ export const ATALHOS: readonly { teclas: string; faz: string }[] = [
 
 const atalhoDe = (href: string) => Object.entries(SEQUENCIAS).find(([, s]) => s.href === href)?.[0];
 
-export function comandosDe(grupos: readonly GrupoNav[]): Comando[] {
+export function comandosDe(grupos: readonly GrupoNav[], opcoes: { escreve?: boolean } = {}): Comando[] {
   const entradas = grupos.flatMap((g) => g.entradas.map((e) => ({ ...e, grupo: g.titulo })));
   const existe = new Set(entradas.map((e) => e.href));
   const ir: Comando[] = entradas.map((e) => {
@@ -59,7 +71,15 @@ export function comandosDe(grupos: readonly GrupoNav[]): Comando[] {
     const t = atalhoDe(v.href);
     return { id: `vista:${v.href}`, texto: v.texto, href: v.href, grupo: 'Vistas', ...(t ? { atalho: `g ${t}` } : {}) };
   });
-  return [...ir, ...vistas];
+  const criar: Comando[] = opcoes.escreve
+    ? CRIAR.filter((c) => existe.has(c.base)).map((c) => ({ id: `criar:${c.href}`, texto: c.texto, href: c.href, grupo: 'Criar' }))
+    : [];
+  return [...criar, ...ir, ...vistas];
+}
+
+/** Os comandos «Criar» que este conjunto de grupos permite (para o «Criar rápido» do Hoje). */
+export function criarDe(grupos: readonly GrupoNav[], escreve: boolean): readonly { texto: string; href: string }[] {
+  return comandosDe(grupos, { escreve }).filter((c) => c.grupo === 'Criar').map(({ texto, href }) => ({ texto, href }));
 }
 
 /** Minúsculas e sem acentos: «organizacoes» encontra «Organizações». */

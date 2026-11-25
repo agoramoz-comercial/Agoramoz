@@ -9,6 +9,7 @@ import {
 } from '@/components/admin/primitives';
 import { BotaoEnviar } from '@/components/admin/BotaoEnviar';
 import { ConfirmarEnvio } from '@/components/admin/ConfirmarEnvio';
+import { cn } from '@/lib/utils/cn';
 import { Feedback } from '@/components/admin/Feedback';
 import { VoltarLista } from '@/components/admin/MemoriaLista';
 import { Trilho } from '@/components/admin/Trilho';
@@ -203,6 +204,14 @@ export default async function RevisaoPage({
         }}
       />
 
+      {escreve && (estado === 'computed' || estado === 'pending_review') ? (
+        <p className="mb-6 lg:hidden">
+          <a href="#bloco-decisao" className="inline-flex min-h-11 items-center rounded-full bg-[#0b0a09] px-5 text-sm font-medium text-[#efe8da]">
+            Ir para a decisão
+          </a>
+        </p>
+      ) : null}
+
       <section aria-labelledby="resumo" className="mb-10">
         <h2 id="resumo" className="sr-only">
           Resumo
@@ -384,7 +393,18 @@ export default async function RevisaoPage({
         </div>
       </section>
 
-      <section aria-labelledby="decisao">
+      {/* DIAG-DEC-01: com decisão por tomar, o bloco fica preso ao fundo do ecrã
+          (estudo do painel): decide-se sem descer a página inteira. A revisão
+          continua em dois passos — enviar para revisão, depois aprovar/rejeitar. */}
+      <section
+        id="bloco-decisao"
+        aria-labelledby="decisao"
+        className={cn(
+          'scroll-mt-24 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-raised)] p-5 sm:p-6',
+          escreve && estado === 'computed' && 'sticky bottom-4 z-20 shadow-[0_24px_48px_-24px_rgb(11_10_9/0.45)]',
+          escreve && estado === 'pending_review' && 'lg:sticky lg:bottom-4 lg:z-20 lg:shadow-[0_24px_48px_-24px_rgb(11_10_9/0.45)]',
+        )}
+      >
         <h2 id="decisao" className="mb-4 text-[length:var(--text-h3)] tracking-[-0.02em]">
           Decisão
         </h2>

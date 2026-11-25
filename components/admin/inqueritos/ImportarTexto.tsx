@@ -107,6 +107,7 @@ const MOTIVO_FALLBACK: Record<string, string> = {
   http_401: 'O Kimi recusou a chave (verificar KIMI_API_KEY)',
   http_403: 'O Kimi recusou o acesso (verificar a conta)',
   http_429: 'A conta Kimi está no limite de pedidos (o nível da conta sobe com o saldo carregado)',
+  sem_saldo: 'A conta Kimi está sem saldo (carregue-a em platform.moonshot.ai)',
 };
 
 function motivoDoFallback(codigo: string): string {

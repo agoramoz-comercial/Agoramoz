@@ -25,9 +25,9 @@ export function AdminHeading({
   accao?: React.ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--border)] pb-5">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-[length:var(--text-h3)] tracking-[-0.02em]">{titulo}</h1>
+        <h1 className="text-[clamp(2rem,1.4rem+2.2vw,3.25rem)] leading-[1.02] font-medium tracking-[-0.035em]">{titulo}</h1>
         {descricao ? (
           <p className="mt-2 max-w-[60ch] text-sm text-[color:var(--muted)]">{descricao}</p>
         ) : null}
@@ -87,7 +87,7 @@ export function DataTable<T>({
   if (linhas.length === 0) return <>{vazio}</>;
 
   return (
-    <div className="overflow-x-auto border border-[color:var(--border)]">
+    <div className="admin-cartao overflow-x-auto rounded-[24px] border border-[color:var(--border)]">
       <table className="w-full border-collapse text-sm">
         {/* A legenda existe para quem navega por leitor de ecrã e salta de
             tabela em tabela; é invisível para os restantes. */}
@@ -132,7 +132,7 @@ export function DataTable<T>({
 
 export function EmptyState({ titulo, descricao }: { titulo: string; descricao?: string }) {
   return (
-    <div className="border border-dashed border-[color:var(--border)] px-6 py-14 text-center">
+    <div className="rounded-[24px] border border-dashed border-[color:var(--border)] px-6 py-14 text-center">
       <p className="text-[length:var(--text-lead)]">{titulo}</p>
       {descricao ? (
         <p className="mx-auto mt-2 max-w-[48ch] text-sm text-[color:var(--muted)]">{descricao}</p>

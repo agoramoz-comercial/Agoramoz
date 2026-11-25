@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FiltrosPilula } from '@/components/admin/FiltrosPilula';
 import { MemoriaLista } from '@/components/admin/MemoriaLista';
 import {
   AdminHeading,
@@ -50,7 +51,23 @@ export default async function DiagnosticosPage({
   if (porRever) consulta = consulta.in('state', [...ESTADOS_POR_REVER]);
   else if (filtro) consulta = consulta.eq('state', filtro);
 
-  const { data } = await consulta;
+  // LIST-PIL-01: as contagens das pílulas, contadas na base (cabeça, sem linhas).
+  const contar = async (f?: (q: ReturnType<typeof base>) => ReturnType<typeof base>) => {
+    const { count, error } = await (f ? f(base()) : base());
+    return error ? null : (count ?? 0);
+  };
+  const base = () => supabase.from('diagnostics').select('id', { count: 'exact', head: true });
+  const [{ data }, todos, porReverN, ...porEstado] = await Promise.all([
+    consulta,
+    contar(),
+    contar((q) => q.in('state', [...ESTADOS_POR_REVER])),
+    ...DIAGNOSTIC_STATES.map((e) => contar((q) => q.eq('state', e))),
+  ]);
+  const contagens = {
+    todos,
+    porRever: porReverN,
+    estados: Object.fromEntries(DIAGNOSTIC_STATES.map((e, i) => [e, porEstado[i] ?? null])) as Record<string, number | null>,
+  };
   const { linhas, haMais } = fatiar(data as unknown as Linha[] | null);
 
   return (
@@ -61,36 +78,24 @@ export default async function DiagnosticosPage({
         descricao="Cada submissão produz um diagnóstico. Nenhum segue sem decisão humana."
       />
 
-      {/* Filtro como formulário GET: o estado da vista vive no URL, o que a
-          torna partilhável e dispensa JavaScript. */}
-      <form method="get" className="mb-6 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
-            Estado
-          </span>
-          <select
-            name="estado"
-            defaultValue={filtro ?? ''}
-            className="min-h-11 rounded-[--radius-sm] border border-[color:var(--border)] bg-[color:var(--surface)] px-3"
-          >
-            <option value="">Todos</option>
-            <option value={POR_REVER}>Por rever (fila de decisão)</option>
-            {DIAGNOSTIC_STATES.map((e) => (
-              <option key={e} value={e}>
-                {ESTADO_DIAGNOSTICO[e].texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" className="min-h-11 border border-[color:var(--border)] px-4 text-sm">
-          Filtrar
-        </button>
-        {filtro ? (
-          <Link href="/admin/diagnosticos" className="min-h-11 py-3 text-sm underline">
-            Limpar
-          </Link>
-        ) : null}
-      </form>
+      <FiltrosPilula
+        rotulo="Filtrar por estado"
+        itens={[
+          { rotulo: 'Todos', href: '/admin/diagnosticos', contagem: contagens.todos, activa: !filtro },
+          {
+            rotulo: 'Por rever',
+            href: `/admin/diagnosticos?estado=${POR_REVER}`,
+            contagem: contagens.porRever,
+            activa: filtro === POR_REVER,
+          },
+          ...DIAGNOSTIC_STATES.filter((e) => e === filtro || (contagens.estados[e] ?? 0) > 0).map((e) => ({
+            rotulo: ESTADO_DIAGNOSTICO[e].texto,
+            href: `/admin/diagnosticos?estado=${e}`,
+            contagem: contagens.estados[e] ?? null,
+            activa: filtro === e,
+          })),
+        ]}
+      />
 
       <DataTable
         legenda="Diagnósticos, do mais recente para o mais antigo"

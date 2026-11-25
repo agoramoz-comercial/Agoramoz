@@ -1346,6 +1346,7 @@ function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefObject<HT
       <span
         ref={lensRef}
         aria-hidden
+        data-lg-lente=""
         style={{
           position: "absolute",
           inset: 0,

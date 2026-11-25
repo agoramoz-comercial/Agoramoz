@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Activity,
   Briefcase,
   Building2,
-  ChevronDown,
   ClipboardCheck,
   FileText,
   History,
@@ -30,9 +28,8 @@ import {
 import { cn } from '@/lib/utils/cn';
 
 /**
- * A navegação é um componente de cliente por duas razões concretas:
- * `aria-current="page"` precisa de saber onde estamos (um layout de servidor
- * não sabe o caminho) e, no telemóvel, a lista abre e fecha como gaveta.
+ * A navegação é um componente de cliente porque `aria-current` precisa de
+ * saber onde estamos (um layout de servidor não sabe o caminho).
  *
  * O ícone viaja como chave e não como componente: uma função não atravessa a
  * fronteira servidor → cliente.
@@ -78,80 +75,80 @@ export function estaActiva(href: string, caminho: string): boolean {
   return caminho === href || caminho.startsWith(`${href}/`);
 }
 
+/** O grupo da página actual: o que contém a entrada activa (ou o primeiro). */
+export function grupoActivo(grupos: readonly GrupoNav[], caminho: string): GrupoNav | undefined {
+  // A entrada mais específica ganha: `/admin` só conta quando é exactamente ela.
+  return grupos.find((g) => g.entradas.some((e) => estaActiva(e.href, caminho)));
+}
+
+/**
+ * NAV-TAR-01 — Navegação por tarefa: uma pílula escura com os seis grupos
+ * (o activo em âmbar) e, por baixo, as secções do grupo activo em pílulas.
+ * No telemóvel a pílula desliza na horizontal: são seis palavras curtas.
+ */
 export function AdminNav({ grupos }: { grupos: readonly GrupoNav[] }) {
   const caminho = usePathname();
-  const [aberta, setAberta] = useState(false);
-  const [vistoEm, setVistoEm] = useState(caminho);
-  const idLista = useId();
-
-  // Ao mudar de página, a gaveta fecha-se: ficar aberta tapava o ecrã novo.
-  // Ajuste durante a renderização (padrão do React) em vez de um efeito.
-  if (vistoEm !== caminho) {
-    setVistoEm(caminho);
-    setAberta(false);
-  }
-
-  useEffect(() => {
-    if (!aberta) return;
-    function fechar(e: KeyboardEvent) {
-      if (e.key === 'Escape') setAberta(false);
-    }
-    document.addEventListener('keydown', fechar);
-    return () => document.removeEventListener('keydown', fechar);
-  }, [aberta]);
-
-  const actual = grupos.flatMap((g) => g.entradas).find((e) => estaActiva(e.href, caminho));
+  const activo = grupoActivo(grupos, caminho);
 
   return (
-    <nav aria-label="Secções da administração">
-      {/* Só no telemóvel: a lista inteira não cabe ao alto, e uma linha com
-          scroll horizontal escondia metade das secções. */}
-      <button
-        type="button"
-        aria-expanded={aberta}
-        aria-controls={idLista}
-        onClick={() => setAberta((v) => !v)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-[--radius-xs] border border-[color:var(--border)] px-3 text-sm lg:hidden"
+    <nav aria-label="Secções da administração" className="grid min-w-0 gap-3">
+      <ul
+        role="list"
+        className="admin-pilula flex min-w-0 items-center gap-1 overflow-x-auto rounded-full bg-[#0b0a09] p-1 [scrollbar-width:none]"
       >
-        <span>
-          <span className="sr-only">Secções. Actual: </span>
-          {actual?.texto ?? 'Secções'}
-        </span>
-        <ChevronDown aria-hidden className={cn('size-4 transition-transform', aberta && 'rotate-180')} />
-      </button>
+        {grupos.map((g) => {
+          const eActivo = g === activo;
+          const destino = g.entradas[0]!.href;
+          return (
+            <li key={g.titulo} className="shrink-0">
+              <Link
+                href={destino}
+                aria-current={eActivo ? 'true' : undefined}
+                className={cn(
+                  'flex min-h-10 items-center rounded-full px-4 text-sm whitespace-nowrap transition-colors',
+                  eActivo ? 'bg-[#e9a35c] font-medium text-[#0b0a09]' : 'text-[#efe8da] hover:bg-white/10',
+                )}
+              >
+                {g.titulo}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
 
-      <div id={idLista} className={cn('mt-3 flex-col gap-5 lg:mt-0 lg:flex', aberta ? 'flex' : 'hidden')}>
-        {grupos.map((g) => (
-          <div key={g.titulo}>
-            <p className="mb-1.5 px-3 font-[family-name:var(--font-chakra)] text-[length:var(--text-micro)] tracking-[var(--tracking-eyebrow)] text-[color:var(--muted)] uppercase">
-              {g.titulo}
-            </p>
-            <ul role="list" className="flex flex-col gap-0.5">
-              {g.entradas.map((e) => {
-                const activo = estaActiva(e.href, caminho);
-                const Icone = ICONES[e.icone];
-                return (
-                  <li key={e.href}>
-                    <Link
-                      href={e.href}
-                      aria-current={activo ? 'page' : undefined}
-                      className={cn(
-                        'flex min-h-10 items-center gap-3 rounded-[--radius-xs] px-3 text-sm whitespace-nowrap',
-                        activo
-                          ? 'bg-[color:var(--on-surface)] font-medium text-[color:var(--surface)]'
-                          : 'text-[color:var(--muted)] hover:bg-[color:var(--surface-raised)] hover:text-[color:var(--on-surface)]',
-                      )}
-                    >
-                      <Icone aria-hidden className="size-4 shrink-0" />
-                      {e.texto}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </div>
+/** As secções do grupo activo, em pílulas claras (só quando o grupo tem mais de uma). */
+export function AdminSubNav({ grupos }: { grupos: readonly GrupoNav[] }) {
+  const caminho = usePathname();
+  const activo = grupoActivo(grupos, caminho);
+  if (!activo || activo.entradas.length < 2) return null;
+  return (
+    <nav aria-label={`Secções de ${activo.titulo}`}>
+      <ul role="list" className="flex flex-wrap gap-2">
+        {activo.entradas.map((e) => {
+          const eActiva = estaActiva(e.href, caminho);
+          const Icone = ICONES[e.icone];
+          return (
+            <li key={e.href}>
+              <Link
+                href={e.href}
+                aria-current={eActiva ? 'page' : undefined}
+                className={cn(
+                  'flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm whitespace-nowrap',
+                  eActiva
+                    ? 'border-[#0b0a09] bg-[#0b0a09] font-medium text-[#efe8da]'
+                    : 'border-[color:var(--border)] bg-[color:var(--surface-raised)] text-[color:var(--on-surface)] hover:border-[#0b0a09]/40',
+                )}
+              >
+                <Icone aria-hidden className="size-4 shrink-0" />
+                {e.texto}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </nav>
   );
 }

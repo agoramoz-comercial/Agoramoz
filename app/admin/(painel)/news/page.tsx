@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { FiltrosPilula } from '@/components/admin/FiltrosPilula';
 import { RedaccaoNews } from '@/components/admin/news/RedaccaoNews';
 import {
   AdminHeading,
@@ -40,13 +41,13 @@ const ALERTA =
 export default async function NewsAdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; estado?: string }>;
 }) {
   const env = serverEnv();
   if (env.NEWS_BLOG !== 'on') notFound();
   const sessao = await requireStaff();
   const escreve = podeEscrever(sessao.papel);
-  const { erro } = await searchParams;
+  const { erro, estado: estadoBruto } = await searchParams;
 
   const supabase = await createSessionClient();
   const { data, error } = await supabase
@@ -56,6 +57,10 @@ export default async function NewsAdminPage({
     .limit(100);
   const linhas = (data ?? []) as Linha[];
   const publicados = linhas.filter((l) => l.estado === 'publicado');
+  // LIST-PIL-01: filtro por estado sobre os 100 mais recentes já lidos (sem nova consulta).
+  const ESTADOS = ['rascunho', 'publicado', 'arquivado'] as const;
+  const estado = (ESTADOS as readonly string[]).includes(estadoBruto ?? '') ? (estadoBruto as Linha['estado']) : null;
+  const vistas = estado ? linhas.filter((l) => l.estado === estado) : linhas;
   const resumo: [string, number][] = [
     ['Publicados', publicados.length],
     ['Gostos nos publicados', publicados.reduce((s, l) => s + l.gostos, 0)],
@@ -100,7 +105,7 @@ export default async function NewsAdminPage({
       </dl>
 
       {escreve && env.NEWS_ENGINE !== 'off' ? (
-        <section aria-label="Analisar uma notícia" className="mb-12">
+        <section id="nova-noticia" aria-label="Analisar uma notícia" className="mb-12 scroll-mt-24">
           <RedaccaoNews criar={criarArtigoDeAnalise} profundaLigada={env.NEWS_ANALISE_PROFUNDA === 'kimi' && !!env.KIMI_API_KEY} />
         </section>
       ) : escreve ? (
@@ -117,9 +122,22 @@ export default async function NewsAdminPage({
           do verificar-estado).
         </p>
       ) : (
+        <>
+        <FiltrosPilula
+          rotulo="Filtrar artigos por estado"
+          itens={[
+            { rotulo: 'Todos', href: '/admin/news', contagem: linhas.length, activa: !estado },
+            ...ESTADOS.map((e) => ({
+              rotulo: ESTADO_ARTIGO[e].texto,
+              href: `/admin/news?estado=${e}`,
+              contagem: linhas.filter((l) => l.estado === e).length,
+              activa: estado === e,
+            })),
+          ]}
+        />
         <DataTable
           legenda="Artigos do jornal"
-          linhas={linhas}
+          linhas={vistas}
           chaveDe={(l) => l.id}
           colunas={[
             {
@@ -167,6 +185,7 @@ export default async function NewsAdminPage({
             />
           }
         />
+        </>
       )}
     </>
   );

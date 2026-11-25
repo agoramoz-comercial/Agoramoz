@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, CircleDashed, FileUp, Globe, Loader2, PenLine, Printer, Save, Sparkles, Trash2, XCircle } from 'lucide-react';
 import { inputClass } from '@/components/form/Field';
@@ -22,6 +22,7 @@ import {
 } from '@/lib/cursos/modelo';
 import { montarCurso, type Peca, type PedidoCurso, type Plano } from '@/lib/cursos/ciclo';
 import { descreverFalhas } from '@/lib/cursos/verificar';
+import { chaveRascunho, gravarRascunho, lerRascunho, rascunhoVazio } from '@/lib/cursos/rascunho';
 import type { Resposta, RespostaFontes } from '@/lib/cursos/gerar';
 import type { FonteIA } from '@/lib/cursos/fontes-ia';
 
@@ -93,7 +94,18 @@ const paraCarregada = (f: FonteIA): FonteCarregada => ({
   origem: f.origem,
 });
 
-export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: AccoesCriador; motorLigado: boolean; podeGuardar: boolean }) {
+export function CriadorCurso({
+  accoes,
+  motorLigado,
+  podeGuardar,
+  utilizador,
+}: {
+  accoes: AccoesCriador;
+  motorLigado: boolean;
+  podeGuardar: boolean;
+  /** Com utilizador, o trabalho fica gravado neste browser enquanto se cria (CUR-RAS-01). */
+  utilizador?: string;
+}) {
   const id = useId();
   const entrada = useRef<HTMLInputElement>(null);
   const [fontes, setFontes] = useState<FonteCarregada[]>([]);
@@ -126,9 +138,88 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
   const [aGuardar, setAGuardar] = useState(false);
   const [escala, setEscala] = useState(0.62);
 
+  /* CUR-RAS-01 — rascunho no browser: retomar ao abrir, gravar a cada mudança. */
+  const [retomado, setRetomado] = useState<string | null>(null);
+  const [carregado, setCarregado] = useState(!utilizador);
+  const chave = utilizador ? chaveRascunho(utilizador) : null;
+
+  useEffect(() => {
+    if (!chave) return;
+    let r = null;
+    try {
+      r = lerRascunho(localStorage.getItem(chave));
+    } catch {
+      r = null;
+    }
+    queueMicrotask(() => {
+      if (r) {
+        setTitulo(r.titulo);
+        setTema(r.tema);
+        setPublico(r.publico);
+        setNivel(r.nivel);
+        setMinutos(r.minutos);
+        setComFontes(r.comFontes || r.fontes.length > 0);
+        setFontes([...r.fontes]);
+        setCurso(r.curso);
+        setFontesFinais([...r.fontesFinais]);
+        setGuardado(r.guardado);
+        setRetomado(r.em);
+      }
+      setCarregado(true);
+    });
+  }, [chave]);
+
+  useEffect(() => {
+    if (!chave || !carregado) return;
+    const t = window.setTimeout(() => {
+      const r = { titulo, tema, publico, nivel, minutos, comFontes, fontes, curso, fontesFinais, guardado };
+      try {
+        if (rascunhoVazio(r)) localStorage.removeItem(chave);
+        else gravarRascunho(localStorage, chave, { ...r, em: new Date().toISOString() });
+      } catch {
+        /* sem armazenamento: segue sem rascunho */
+      }
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [chave, carregado, titulo, tema, publico, nivel, minutos, comFontes, fontes, curso, fontesFinais, guardado]);
+
+  function descartarRascunho() {
+    if (chave) {
+      try {
+        localStorage.removeItem(chave);
+      } catch {
+        /* nada */
+      }
+    }
+    setTitulo('');
+    setTema('');
+    setPublico('');
+    setNivel('iniciacao');
+    setMinutos(120);
+    setComFontes(false);
+    setFontes([]);
+    setCurso(null);
+    setFontesFinais([]);
+    setGuardado(null);
+    setPecas([]);
+    setRetomado(null);
+    setMensagem(null);
+  }
+
   const total = tamanho(fontes);
   const excede = total > LIMITES.caracteresTotal;
   const ocupado = aGerar || aTema || aFontesIA !== null;
+  /* Fechar o separador a meio de gerar, ou com um curso por guardar, pede confirmação. */
+  const porGuardar = Boolean(curso && podeGuardar && !guardado);
+  useEffect(() => {
+    if (!ocupado && !porGuardar) return;
+    const avisar = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', avisar);
+    return () => window.removeEventListener('beforeunload', avisar);
+  }, [ocupado, porGuardar]);
   const podeFontesIA = motorLigado && !ocupado && titulo.trim().length >= 3 && fontes.length < LIMITES.fontes;
 
   /** A IA pesquisa fontes na internet ou escreve um texto-base, a partir do título (e do tema, se já houver). */
@@ -389,6 +480,17 @@ export function CriadorCurso({ accoes, motorLigado, podeGuardar }: { accoes: Acc
 
   return (
     <div className="grid gap-6">
+      {retomado && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-raised)] px-4 py-3 text-sm print:hidden">
+          <span>
+            Retomámos o rascunho deste curso, gravado neste browser em{' '}
+            {new Date(retomado).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}.
+          </span>
+          <button type="button" onClick={descartarRascunho} className={BOTAO}>
+            Começar de novo
+          </button>
+        </div>
+      )}
       <div className={cn('grid gap-6 print:hidden', mostrarFontes ? 'lg:grid-cols-2' : 'max-w-3xl')}>
         {mostrarFontes && (
         <section className={CAIXA} aria-labelledby={`${id}-fontes`}>

@@ -7,6 +7,21 @@ import { crmOperacional } from '@/lib/crm/activacao';
 import { resumoHoje, triagem } from '@/lib/crm/hoje';
 import { lerOportunidades, lerPorRever, lerProximasReunioes } from '@/lib/crm/leitura';
 import { filaDeHoje } from '@/lib/crm/modelo';
+import { criarDe } from '@/lib/admin/comandos';
+import { gruposVisiveis } from '@/lib/admin/navegacao';
+import { janela } from '@/lib/admin/painel';
+import { carregarPainel, type EtapaFunil } from '@/lib/admin/painel-dados';
+import { serverEnv } from '@/lib/config/env';
+import { estadoErp } from '@/lib/erp/porta';
+
+/** Os mesmos nomes do painel completo (`PainelComando`). */
+const ETAPA: Record<EtapaFunil, string> = {
+  iniciados: 'Diagnósticos iniciados',
+  submetidos: 'Submetidos',
+  oportunidades: 'Oportunidades criadas',
+  reunioes: 'Reuniões marcadas',
+  ganhos: 'Ganhos',
+};
 
 export const metadata = { title: 'Hoje' };
 
@@ -29,11 +44,34 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
   const instante = await agora();
   const activo = (await crmOperacional(supabase)) === true;
 
-  const [lido, porRever, reunioes] = await Promise.all([
+  const env = serverEnv();
+  // HOJE-01: o funil dos últimos 30 dias sai das mesmas contas do painel completo.
+  const [lido, porRever, reunioes, painel] = await Promise.all([
     lerOportunidades(supabase, { soAbertas: true }, activo),
     lerPorRever(supabase),
     lerProximasReunioes(supabase, instante),
+    carregarPainel(supabase, janela(30, instante), {
+      pixel: env.ANALYTICS_PERSISTENCE === 'on',
+      agendamento: env.SCHEDULING === 'cal',
+      news: env.NEWS_ENGINE !== 'off',
+      inqueritos: env.SURVEYS === 'on',
+      filtrarInqueritos: env.SURVEYS === 'on' || Boolean(env.SURVEY_LINK_SECRET),
+      erp: estadoErp(env),
+    }).catch(() => null),
   ]);
+  const funil =
+    painel?.funil.estado === 'ok' ? painel.funil.dados.etapas.map((e) => ({ rotulo: ETAPA[e.chave], valor: e.valor })) : null;
+  // HOJE-02: «Criar rápido» com as mesmas regras do «Criar» da paleta.
+  const criar = criarDe(
+    gruposVisiveis({
+      inqueritos: env.SURVEYS === 'on',
+      news: env.NEWS_BLOG === 'on',
+      energia: false,
+      direcao: false,
+      admin: sessao.papel === 'admin',
+    }),
+    podeEscrever(sessao.papel),
+  );
 
   const abertas = lido?.itens ?? [];
   const fila = filaDeHoje(abertas, sessao.userId, instante);
@@ -53,6 +91,8 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
         reunioes={reunioes}
         resumo={resumoHoje(fila, porRever?.total ?? 0, reunioes.length)}
         falhou={lido === null}
+        funil={funil}
+        criar={criar}
       />
     </>
   );

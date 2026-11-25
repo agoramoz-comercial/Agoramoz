@@ -32,3 +32,19 @@ describe('motor dos cursos sobre o Kimi', () => {
     await expect(mk(resposta('olá'))({ tarefa: 'planear', prompt: '', schema: {} })).rejects.toBeInstanceOf(ErroMotor);
   });
 });
+
+describe('motor dos cursos sobre o Kimi: 429 (IA-429-01)', () => {
+  const dormir = async () => undefined;
+  it('sem saldo → sem_saldo, com a mensagem de carregar a conta', async () => {
+    const f = async () => new Response(JSON.stringify({ error: { type: 'exceeded_current_quota_error' } }), { status: 429 });
+    const m = criarMotorKimi({ ...base, fetch: f as unknown as typeof fetch, dormir });
+    await expect(m({ tarefa: 'planear', prompt: '', schema: {} })).rejects.toMatchObject({ codigo: 'sem_saldo' });
+  });
+  it('limite que passa à segunda → resposta normal', async () => {
+    let n = 0;
+    const f = async () =>
+      ++n === 1 ? new Response(JSON.stringify({ error: { type: 'rate_limit_reached_error' } }), { status: 429 }) : resposta('{"ok":1}');
+    const m = criarMotorKimi({ ...base, fetch: f as unknown as typeof fetch, dormir });
+    await expect(m({ tarefa: 'planear', prompt: '', schema: {} })).resolves.toEqual({ ok: 1 });
+  });
+});

@@ -191,9 +191,25 @@ function hoje(variante: string) {
       reunioes={reunioes}
       resumo={resumoHoje(fila, porRever.total, reunioes.length)}
       falhou={false}
+      funil={vazio ? null : FUNIL_EXEMPLO}
+      criar={[
+        { texto: 'Novo artigo do News', href: '/admin/news#nova-noticia' },
+        { texto: 'Novo curso', href: '/admin/cursos/novo' },
+        { texto: 'Nova proposta', href: '/admin/propostas/nova' },
+        { texto: 'Novo inquérito', href: '/admin/inqueritos/novo' },
+      ]}
     />
   );
 }
+
+/** Funil de EXEMPLO (QA visual): números inventados, como tudo nesta página. */
+const FUNIL_EXEMPLO = [
+  { rotulo: 'Diagnósticos iniciados', valor: 48 },
+  { rotulo: 'Submetidos', valor: 31 },
+  { rotulo: 'Oportunidades criadas', valor: 19 },
+  { rotulo: 'Reuniões marcadas', valor: 9 },
+  { rotulo: 'Ganhos', valor: 3 },
+];
 
 const AUDITORIA: LinhaAuditoria[] = [
   { id: 4, actor_id: EU, actor_type: 'user', action: 'crm.exportar', entity_type: 'crm_lista', entity_id: 'oportunidades', before: null, after: { linhas: 7, filtros: { vista: 'abertas' } }, occurred_at: dias(0, '09:30') },

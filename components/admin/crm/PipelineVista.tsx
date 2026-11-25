@@ -54,7 +54,7 @@ export function PipelineVista(d: DadosPipeline) {
   return (
     <>
       <nav aria-label="Vistas do pipeline" className="relative mb-5 overflow-x-auto">
-        <ul role="list" className="flex min-w-max gap-1 border-b border-[color:var(--border)]">
+        <ul role="list" className="flex min-w-max gap-2">
           {VISTAS.map((v) => {
             const actual = f.vista === v;
             return (
@@ -63,14 +63,21 @@ export function PipelineVista(d: DadosPipeline) {
                   href={urlCom(f, { vista: v, pagina: 1 })}
                   aria-current={actual ? 'page' : undefined}
                   className={cn(
-                    '-mb-px flex min-h-11 items-center gap-2 border-b-2 px-3 text-sm whitespace-nowrap',
+                    'flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm whitespace-nowrap',
                     actual
-                      ? 'border-[color:var(--on-surface)] font-medium'
-                      : 'border-transparent text-[color:var(--muted)] hover:text-[color:var(--on-surface)]',
+                      ? 'border-[#e9a35c] bg-[#e9a35c] font-medium text-[#0b0a09]'
+                      : 'border-[color:var(--border)] bg-[color:var(--surface-raised)] hover:border-[#0b0a09]/40',
                   )}
                 >
                   {VISTA[v]}
-                  <span className="tabular-nums text-[length:var(--text-micro)] text-[color:var(--muted)]">{d.contagens[v]}</span>
+                  <span
+                    className={cn(
+                      'inline-flex min-w-6 items-center justify-center rounded-full px-1.5 text-xs tabular-nums',
+                      actual ? 'bg-[#0b0a09] text-[#efe8da]' : 'bg-[color:var(--surface)] text-[color:var(--muted)]',
+                    )}
+                  >
+                    {d.contagens[v]}
+                  </span>
                 </Link>
               </li>
             );
@@ -248,7 +255,7 @@ function Lista({ d, aqui }: { d: DadosPipeline; aqui: string }) {
     <>
       {/* `relative`: os textos sr-only (posição absoluta) ficam presos ao contentor
           com scroll, em vez de alargarem a página inteira. */}
-      <div className="relative overflow-x-auto border border-[color:var(--border)]">
+      <div className="admin-cartao relative overflow-x-auto rounded-[24px] border border-[color:var(--border)]">
         <table className="w-full min-w-[60rem] border-collapse text-sm">
           <caption className="sr-only">Oportunidades da vista «{VISTA[f.vista]}». Os cabeçalhos com seta ordenam.</caption>
           <thead>

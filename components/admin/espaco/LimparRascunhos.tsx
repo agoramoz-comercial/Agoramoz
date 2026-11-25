@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { PREFIXOS_RASCUNHO } from './GuardaRascunho';
+import { PREFIXO_RASCUNHO_CURSO } from '@/lib/cursos/rascunho';
 
 /**
  * Dentro do formulário «Terminar sessão»: ao sair, apaga os rascunhos dos
@@ -19,6 +20,12 @@ export function LimparRascunhos() {
           if (PREFIXOS_RASCUNHO.some((p) => k.startsWith(p))) sessionStorage.removeItem(k);
       } catch {
         /* sem armazenamento: nada a limpar */
+      }
+      // O rascunho do criador de cursos vive em localStorage (sobrevive a fechar o separador).
+      try {
+        for (const k of Object.keys(localStorage)) if (k.startsWith(PREFIXO_RASCUNHO_CURSO)) localStorage.removeItem(k);
+      } catch {
+        /* idem */
       }
     };
     form.addEventListener('submit', limpar);

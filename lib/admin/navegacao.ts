@@ -2,14 +2,12 @@ import type { Entrada, GrupoNav } from '@/components/admin/AdminNav';
 import type { Permissoes, Regra } from './aeos';
 
 /**
- * Secções agrupadas pelos blocos do AEOS (`lib/admin/aeos.ts`), como numa
- * consola: a direcção e o trabalho do dia, a receita, o marketing, os
- * espaços privados e, só para administradores, o controlo. Cada grupo é
- * filtrado por flag, módulo e papel — uma entrada que daria 404 ou que o
- * papel não usa não aparece.
- *
- * Os Inquéritos e o News continuam aqui, no Marketing (bloco 2): mudam de
- * grupo, não de endereço nem de regra.
+ * NAV-TAR-01 — Secções agrupadas por TAREFA (estudo do painel, 25/11/2026):
+ * Hoje · Vender · Publicar · Ensinar · Medir · Configurar. São as mesmas
+ * entradas, endereços e regras de antes (grupos AEOS); só muda o agrupamento.
+ * Cada grupo é filtrado por flag, módulo e papel — uma entrada que daria 404
+ * ou que o papel não usa não aparece. O Gabinete e o CEnO continuam onde
+ * estavam em acesso (módulo próprio), agora em «Configurar».
  */
 interface EntradaComRegra extends Entrada {
   readonly so?: Regra;
@@ -17,15 +15,11 @@ interface EntradaComRegra extends Entrada {
 
 const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[] = [
   {
-    titulo: 'Direcção',
-    entradas: [
-      { href: '/admin', texto: 'Hoje', icone: 'hoje' },
-      { href: '/admin/painel', texto: 'Painel', icone: 'painel' },
-      { href: '/admin/aeos', texto: 'Mapa AEOS', icone: 'aeos' },
-    ],
+    titulo: 'Hoje',
+    entradas: [{ href: '/admin', texto: 'Hoje', icone: 'hoje' }],
   },
   {
-    titulo: 'Receita',
+    titulo: 'Vender',
     entradas: [
       { href: '/admin/oportunidades', texto: 'Pipeline', icone: 'oportunidades' },
       { href: '/admin/diagnosticos', texto: 'Diagnósticos', icone: 'diagnosticos' },
@@ -36,31 +30,33 @@ const GRUPOS: readonly { titulo: string; entradas: readonly EntradaComRegra[] }[
     ],
   },
   {
-    titulo: 'Marketing',
+    titulo: 'Publicar',
     entradas: [
-      { href: '/admin/trafego', texto: 'Tráfego', icone: 'trafego' },
-      { href: '/admin/aquisicao', texto: 'Aquisição', icone: 'aquisicao' },
-      { href: '/admin/inqueritos', texto: 'Inquéritos', icone: 'inqueritos', so: 'inqueritos' },
       { href: '/admin/news', texto: 'News', icone: 'news', so: 'news' },
+      { href: '/admin/inqueritos', texto: 'Inquéritos', icone: 'inqueritos', so: 'inqueritos' },
     ],
   },
   {
-    titulo: 'Produtos',
+    titulo: 'Ensinar',
     entradas: [{ href: '/admin/cursos', texto: 'Cursos', icone: 'cursos' }],
   },
   {
-    titulo: 'Espaços',
+    titulo: 'Medir',
     entradas: [
-      { href: '/admin/gabinete', texto: 'Gabinete', icone: 'gabinete', so: 'direcao' },
-      { href: '/admin/energia', texto: 'Espaço CEnO', icone: 'energia', so: 'energia' },
+      { href: '/admin/painel', texto: 'Painel', icone: 'painel' },
+      { href: '/admin/trafego', texto: 'Tráfego & SEO', icone: 'trafego' },
+      { href: '/admin/aquisicao', texto: 'Aquisição', icone: 'aquisicao' },
+      { href: '/admin/aeos', texto: 'Mapa AEOS', icone: 'aeos' },
     ],
   },
   {
-    titulo: 'Controlo',
+    titulo: 'Configurar',
     entradas: [
-      { href: '/admin/fila', texto: 'Fila de envio', icone: 'fila', so: 'admin' },
       { href: '/admin/equipa', texto: 'Equipa', icone: 'equipa', so: 'admin' },
+      { href: '/admin/fila', texto: 'Fila de envio', icone: 'fila', so: 'admin' },
       { href: '/admin/auditoria', texto: 'Auditoria', icone: 'auditoria', so: 'admin' },
+      { href: '/admin/gabinete', texto: 'Gabinete', icone: 'gabinete', so: 'direcao' },
+      { href: '/admin/energia', texto: 'Espaço CEnO', icone: 'energia', so: 'energia' },
     ],
   },
 ];

@@ -55,7 +55,7 @@ export default async function QaCursos({ searchParams }: { searchParams: Promise
             <DocumentoCurso curso={(await cursoExemplo()).curso} />
           </div>
         ) : (
-          <CriadorCurso accoes={{ pesquisarFontes: pesquisaQa, textoBase: textoBaseQa, sugerirTema: temaQa, planear: planearQa, escreverAula: aulaQa }} motorLigado={motorCursosLigado()} podeGuardar={false} />
+          <CriadorCurso accoes={{ pesquisarFontes: pesquisaQa, textoBase: textoBaseQa, sugerirTema: temaQa, planear: planearQa, escreverAula: aulaQa }} motorLigado={motorCursosLigado()} podeGuardar={false} utilizador="qa" />
         )}
       </CascaAdmin>
     </div>
