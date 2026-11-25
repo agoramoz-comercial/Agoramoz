@@ -1,5 +1,7 @@
 'use server';
 
+import { INDICADORES_BASE, indicadoresDoPais } from '@/lib/news/indicadores';
+
 import { randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -76,8 +78,11 @@ async function correrProfunda(
   destino: string,
 ): Promise<{ revisao: number } | { falha: string }> {
   const env = serverEnv();
+  // Os indicadores oficiais do país entram no pedido (e na conferência dos números);
+  // se o Banco Mundial não responder, a análise segue sem eles.
+  const indicadores = env.NEWS_ANALISE_PROFUNDA === 'kimi' ? await indicadoresDoPais(pais, INDICADORES_BASE) : null;
   const r = await gerarProfunda(
-    { fonte, pais, idioma },
+    { fonte, pais, idioma, indicadores },
     {
       ligada: env.NEWS_ANALISE_PROFUNDA === 'kimi',
       chave: env.KIMI_API_KEY,

@@ -94,6 +94,25 @@ export function Profunda({ analise: a, idioma }: { analise: AnaliseProfunda; idi
         <Etiqueta e={a.impacto.evidencia} tipo={a.impacto.tipo} idioma={idioma} />
       </p>
 
+      {a.leituraIndicadores.length > 0 && (
+        <div className="mt-10 border-y border-current/30 py-6">
+          <Rotulo>{idioma === 'en' ? 'What the official indicators mean for this story' : 'O que os indicadores oficiais significam para esta notícia'}</Rotulo>
+          <ul className="mt-4 grid gap-4">
+            {a.leituraIndicadores.map((x) => (
+              <li key={x.texto} className="jornal-serifa text-[1.125rem] leading-relaxed">
+                {x.texto}
+                <Etiqueta e={x.evidencia} tipo={x.tipo} idioma={idioma} />
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 font-sans text-[0.75rem] opacity-80">
+            {idioma === 'en'
+              ? 'Values cited from the World Bank (World Development Indicators) and from the story’s document only; any other number was removed.'
+              : 'Valores citados só do Banco Mundial (World Development Indicators) e do documento da notícia; qualquer outro número foi retirado.'}
+          </p>
+        </div>
+      )}
+
       {a.sectores.length > 0 && (
         <div className="mt-10">
           <Rotulo>{l(T.sectores, idioma)}</Rotulo>

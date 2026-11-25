@@ -1,3 +1,5 @@
+import { geografiaCitada } from './geografia';
+import { indicadoresEmTexto, type PainelIndicadores } from './indicadores';
 import { comRecuo429, MENSAGEM_429 } from '@/lib/ia/kimi-429';
 import { z } from 'zod';
 import { numeros, numerosForaDasFontes } from '@/lib/cursos/verificar';
@@ -110,6 +112,15 @@ export const respostaKimi = z.object({
   accoes: z.array(accao).max(6),
   /** Opcional: artigos antigos (e respostas sem números) não têm séries. */
   dados: z.array(serie).max(4).optional().default([]),
+  /**
+   * O que os indicadores oficiais do país (Banco Mundial) significam para esta
+   * notícia. Só números do documento ou dos indicadores passados no pedido.
+   */
+  leituraIndicadores: z
+    .array(z.object({ indicador: z.string().trim().max(40).optional(), texto: texto(600), ...marca }))
+    .max(5)
+    .optional()
+    .default([]),
 });
 export type RespostaKimi = z.infer<typeof respostaKimi>;
 
@@ -126,6 +137,16 @@ export const esquemaProfunda = respostaKimi.extend({
   }),
   /** Itens que o motor deu e saíram por terem números que não estão na fonte. */
   retirados: z.number().int().nonnegative(),
+  /** Os valores oficiais que a leitura usou (para saber de que ano são os números citados). */
+  indicadoresUsados: z
+    .array(z.object({ codigo: z.string().max(40), ano: z.number().int(), valor: z.number().finite() }))
+    .max(12)
+    .optional()
+    .default([]),
+  /** A geografia citada no DOCUMENTO (nomes encontrados no texto, não pelo modelo). */
+  geografia: z
+    .object({ regioes: z.array(z.string().max(80)).max(8), parceiros: z.array(z.string().length(2)).max(8) })
+    .optional(),
 });
 export type AnaliseProfunda = z.infer<typeof esquemaProfunda>;
 
@@ -169,14 +190,14 @@ export function serieLimpa(s: Serie, fonte: string): boolean {
 }
 
 export type Verificacao =
-  | { readonly ok: true; readonly analise: Omit<AnaliseProfunda, 'versao' | 'pais' | 'modelo' | 'geradaEm'> }
+  | { readonly ok: true; readonly analise: Omit<AnaliseProfunda, 'versao' | 'pais' | 'modelo' | 'geradaEm' | 'indicadoresUsados' | 'geografia'> }
   | { readonly ok: false; readonly motivo: 'numeros-no-impacto' };
 
 /**
  * Tira tudo o que traga números que não estão no documento. O impacto é o
  * coração da análise: se estiver contaminado, recusa-se a análise inteira.
  */
-export function verificarProfunda(r: RespostaKimi, fonte: string): Verificacao {
+export function verificarProfunda(r: RespostaKimi, fonte: string, fonteIndicadores = ''): Verificacao {
   if (numerosInventados(r.impacto, fonte).length > 0) return { ok: false, motivo: 'numeros-no-impacto' };
   let retirados = 0;
   const filtrar = <T>(lista: readonly T[]): T[] =>
@@ -209,6 +230,15 @@ export function verificarProfunda(r: RespostaKimi, fonte: string): Verificacao {
         if (!ok) retirados += 1;
         return ok;
       }),
+      // A leitura dos indicadores pode citar o documento OU os valores oficiais passados no pedido.
+      // Sem indicadores no pedido não há leitura (o pedido mandava devolver []); não conta como retirado.
+      leituraIndicadores: fonteIndicadores
+        ? (r.leituraIndicadores ?? []).filter((x) => {
+            const ok = numerosInventados(x, `${fonte}\n${fonteIndicadores}`).length === 0;
+            if (!ok) retirados += 1;
+            return ok;
+          })
+        : [],
       retirados,
     },
   };
@@ -221,7 +251,7 @@ const FIM = 'DOCUMENTO>>>';
 export const FONTE_MIN = 200;
 export const FONTE_MAX = 40_000;
 
-export function promptProfunda(pais: PaisNews, idioma: 'pt' | 'en'): string {
+export function promptProfunda(pais: PaisNews, idioma: 'pt' | 'en', indicadores = ''): string {
   const nome = NOME_DO_PAIS[pais][idioma === 'en' ? 'en' : 'pt'];
   const lingua = idioma === 'en' ? 'English' : 'European Portuguese (pt-PT)';
   return [
@@ -242,6 +272,9 @@ export function promptProfunda(pais: PaisNews, idioma: 'pt' | 'en'): string {
     `"indicadores":[{"nome":string,"porque":string}] (max 8, things a company in ${nome} should watch),`,
     `"accoes":[{"accao":string,"prazo":"imediato"|"30-dias"|"90-dias","paraQuem":string}] (max 6, recommended company actions),`,
     `"dados":[{"titulo":string,"unidade":string,"tipo":"barras"|"linha"|"comparacao"|"percentagem","pontos":[{"rotulo":string,"valor":number}],"fonte":string}] (max 4 chart series, 2-12 points each)}`,
+    indicadores
+      ? `OFFICIAL INDICATORS for ${nome} (World Bank, World Development Indicators, E1), year: value:\n${indicadores}\n"leituraIndicadores":[{"indicador":code,"texto":string,"evidencia":E,"tipo":T}] (max 5): explain what THESE indicators mean for THIS news in ${nome} (e.g. how inflation or the exchange rate amplifies or softens the impact). Cite an indicator value only exactly as listed above, always with its year. Never compute new numbers (no differences, averages or projections). The indicator values are "fact" with "E1"; your reading of them is "hypothesis" or "forecast".`
+      : `"leituraIndicadores":[] (no official indicators were provided).`,
     `DATA SERIES RULES: include a series ONLY when the document itself gives at least two comparable numbers (e.g. values per year, per region, before/after, shares of a whole). Copy every "valor" EXACTLY as written in the document (no conversions, no rounding, no totals you computed). "linha" = values over time in order; "comparacao" = before/after or A vs B; "percentagem" = shares in %; "barras" = anything else. "fonte" names where in the document the numbers come from. If the document has no such numbers, return "dados":[]. A series with any value not in the document is deleted.`,
   ].join('\n');
 }
@@ -288,7 +321,7 @@ export type ResultadoProfunda =
   | { readonly ok: false; readonly falha: FalhaProfunda };
 
 export async function gerarProfunda(
-  entrada: { fonte: string; pais: PaisNews; idioma: 'pt' | 'en' },
+  entrada: { fonte: string; pais: PaisNews; idioma: 'pt' | 'en'; indicadores?: PainelIndicadores | null },
   config: ConfigProfunda,
 ): Promise<ResultadoProfunda> {
   if (!config.ligada || !config.chave) return { ok: false, falha: 'desligada' };
@@ -296,10 +329,11 @@ export async function gerarProfunda(
   if (fonte.length < FONTE_MIN) return { ok: false, falha: 'fonte-curta' };
 
   const limpo = fonte.replace(/<<<|>>>/g, (m) => (m === '<<<' ? '‹‹‹' : '›››'));
+  const textoInd = entrada.indicadores ? indicadoresEmTexto(entrada.indicadores) : '';
   const corpo = JSON.stringify({
     model: config.modelo,
     messages: [
-      { role: 'system', content: promptProfunda(entrada.pais, entrada.idioma) },
+      { role: 'system', content: promptProfunda(entrada.pais, entrada.idioma, textoInd) },
       { role: 'user', content: `${INICIO}\n${limpo}\n${FIM}` },
     ],
     response_format: { type: 'json_object' },
@@ -342,7 +376,7 @@ export async function gerarProfunda(
   }
   const r = respostaKimi.safeParse(bruto);
   if (!r.success) return { ok: false, falha: 'esquema' };
-  const v = verificarProfunda(r.data, fonte);
+  const v = verificarProfunda(r.data, fonte, textoInd);
   if (!v.ok) return { ok: false, falha: v.motivo };
   const analise: AnaliseProfunda = {
     versao: 1,
@@ -350,6 +384,13 @@ export async function gerarProfunda(
     modelo: config.modelo,
     geradaEm: (config.agora?.() ?? new Date()).toISOString(),
     ...v.analise,
+    indicadoresUsados: (entrada.indicadores?.itens ?? []).flatMap((i) =>
+      i.serie.slice(-3).map((p) => ({ codigo: i.def.codigo, ano: p.ano, valor: p.valor })),
+    ).slice(0, 12),
+    geografia: (() => {
+      const g = geografiaCitada(fonte, entrada.pais);
+      return { regioes: g.regioes.map((x) => x.nome), parceiros: g.parceiros.map((x) => x.iso2) };
+    })(),
   };
   // A forma final passa pelo mesmo esquema que a leitura usa.
   return esquemaProfunda.safeParse(analise).success ? { ok: true, analise } : { ok: false, falha: 'esquema' };

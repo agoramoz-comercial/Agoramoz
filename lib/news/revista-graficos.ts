@@ -1,6 +1,8 @@
 import { clip, endPath, popGraphicsState, pushGraphicsState, rectangle, rgb, type PDFFont, type PDFPage, type RGB } from 'pdf-lib';
 import type { Contagem } from './estatisticas';
-import { ISO_DO_PAIS, mapaDoPais, mapaMundo } from './mapa';
+import type { PaisCitado, RegiaoCitada } from './geografia';
+import { formatarIndicador, formatarVariacao, type PainelIndicadores } from './indicadores';
+import { ISO_DO_PAIS, PONTO_DO_PAIS, mapaDoPais, mapaMundo, projectarNoMundo, projectarNoPais } from './mapa';
 import type { PaisNews } from './paises';
 import type { Serie } from './profunda';
 
@@ -250,6 +252,104 @@ export function mapaCobertura(c: Ctx, contagens: readonly Contagem<PaisNews>[], 
     c.page.drawText(cod, { x: X - c.forte.widthOfTextAtSize(cod, 6) / 2, y: Y - r - 7, size: 6, font: c.forte, color: CORES.tinta });
   }
   return m.altura * k;
+}
+
+/** O país com as regiões citadas, numeradas; a legenda vai por baixo. Devolve a altura. */
+export function mapaRegioes(c: Ctx, pais: PaisNews, regioes: readonly RegiaoCitada[], x: number, yTopo: number, w: number): number {
+  const m = mapaDoPais(pais, 640, 400);
+  const k = w / m.largura;
+  const h = m.altura * k;
+  c.page.drawRectangle({ x, y: yTopo - h, width: w, height: h, color: CORES.papelEscuro });
+  c.page.pushOperators(pushGraphicsState(), rectangle(x, yTopo - h, w, h), clip(), endPath());
+  for (const p of m.paises) c.page.drawSvgPath(p.d, { x, y: yTopo, scale: k, color: CORES.terra, borderColor: CORES.papel, borderWidth: 0.5 });
+  c.page.drawSvgPath(m.destaque, { x, y: yTopo, scale: k, color: hex('#3a352f'), borderColor: CORES.papel, borderWidth: 0.6 });
+  c.page.pushOperators(popGraphicsState());
+  const pts = projectarNoPais(pais, regioes.map((r) => [r.lon, r.lat] as const), 640, 400);
+  pts.forEach((xy, i) => {
+    if (!xy) return;
+    const X = x + xy[0] * k;
+    const Y = yTopo - xy[1] * k;
+    c.page.drawCircle({ x: X, y: Y, size: 7.5, color: CORES.ferrugem, borderColor: CORES.papel, borderWidth: 0.8 });
+    const n = String(i + 1);
+    c.page.drawText(n, { x: X - c.forte.widthOfTextAtSize(n, 7.5) / 2, y: Y - 2.7, size: 7.5, font: c.forte, color: CORES.papel });
+  });
+  // Legenda numerada em duas colunas.
+  let y = yTopo - h - 12;
+  const meia = (w - 12) / 2;
+  regioes.forEach((r, i) => {
+    const col = i % 2;
+    if (col === 0 && i > 0) y -= 12;
+    const txt = `${i + 1}  ${r.nome}${pts[i] ? '' : c.idioma === 'en' ? ' (outside frame)' : ' (fora do quadro)'}`;
+    c.page.drawText(cortar(c, txt, c.sans, 8, meia), { x: x + col * (meia + 12), y, size: 8, font: c.sans, color: CORES.tinta });
+  });
+  return h + 12 + Math.ceil(regioes.length / 2) * 12;
+}
+
+/** O mundo com o país da notícia ligado por arcos aos países citados. Devolve a altura. */
+export function mapaLigacoes(c: Ctx, pais: PaisNews, parceiros: readonly PaisCitado[], x: number, yTopo: number, w: number): number {
+  const m = mapaMundo();
+  const k = w / m.largura;
+  c.page.drawSvgPath(m.contorno, { x, y: yTopo, scale: k, color: CORES.papelEscuro });
+  for (const p of m.paises)
+    c.page.drawSvgPath(p.d, { x, y: yTopo, scale: k, color: p.id === ISO_DO_PAIS[pais] ? CORES.tinta : CORES.terra, borderColor: CORES.papel, borderWidth: 0.3 });
+  const [o, ...ds] = projectarNoMundo([PONTO_DO_PAIS[pais], ...parceiros.map((p) => [p.lon, p.lat] as const)]);
+  const [ox, oy] = o!;
+  ds.forEach(([dx, dy], i) => {
+    const mx = (ox + dx) / 2;
+    const my = Math.min(oy, dy) - Math.hypot(dx - ox, dy - oy) * 0.25;
+    c.page.drawSvgPath(`M${ox},${oy} Q${mx},${my} ${dx},${dy}`, { x, y: yTopo, scale: k, borderColor: CORES.ferrugem, borderWidth: 1.2 });
+    const X = x + dx * k;
+    const Y = yTopo - dy * k;
+    c.page.drawCircle({ x: X, y: Y, size: 2.8, color: CORES.ferrugem, borderColor: CORES.papel, borderWidth: 0.6 });
+    const nome = c.idioma === 'en' ? parceiros[i]!.en : parceiros[i]!.pt;
+    const s = cortar(c, nome, c.forte, 6.5, 90);
+    const sw = c.forte.widthOfTextAtSize(s, 6.5);
+    c.page.drawRectangle({ x: X - sw / 2 - 2, y: Y + 4, width: sw + 4, height: 9, color: CORES.papel, opacity: 0.85 });
+    c.page.drawText(s, { x: X - sw / 2, y: Y + 6.2, size: 6.5, font: c.forte, color: CORES.tinta });
+  });
+  c.page.drawCircle({ x: x + ox * k, y: yTopo - oy * k, size: 4, color: CORES.tinta, borderColor: CORES.papel, borderWidth: 1 });
+  return m.altura * k;
+}
+
+/** Os indicadores oficiais em cartões: valor e ano, variação e tendência. Devolve a altura. */
+export function indicadores(c: Ctx, p: PainelIndicadores, x: number, yTopo: number, w: number): number {
+  const cols = 2;
+  const gap = 12;
+  const cw = (w - gap * (cols - 1)) / cols;
+  const ch = 78;
+  p.itens.forEach((i, n) => {
+    const cx = x + (n % cols) * (cw + gap);
+    const top = yTopo - Math.floor(n / cols) * (ch + gap);
+    c.page.drawRectangle({ x: cx, y: top - ch, width: cw, height: ch, color: CORES.papelEscuro });
+    const nome = c.idioma === 'en' ? i.def.en : i.def.pt;
+    c.page.drawText(cortar(c, nome.toUpperCase(), c.forte, 6.5, cw - 16), { x: cx + 8, y: top - 13, size: 6.5, font: c.forte, color: CORES.muted });
+    const v = c.t(formatarIndicador(i.ultimo.valor, i.def, c.idioma));
+    c.page.drawText(v, { x: cx + 8, y: top - 33, size: 15, font: c.negra, color: CORES.tinta });
+    const vw = c.negra.widthOfTextAtSize(v, 15);
+    c.page.drawText(String(i.ultimo.ano), { x: cx + 12 + vw, y: top - 33, size: 7.5, font: c.sans, color: CORES.muted });
+    if (i.variacao !== null) {
+      const ant = i.serie[i.serie.length - 2]!.ano;
+      const t = c.t(`${formatarVariacao(i.variacao, i.def, c.idioma)} ${c.idioma === 'en' ? 'vs' : 'face a'} ${ant}`);
+      c.page.drawText(t, { x: cx + 8, y: top - 45, size: 7, font: c.sans, color: CORES.tinta });
+    }
+    // Tendência
+    const vs = i.serie.map((s) => s.valor);
+    const min = Math.min(...vs);
+    const amp = Math.max(...vs) - min || 1;
+    const sx = cx + 8;
+    const sw = cw - 16;
+    const sy = top - ch + 8;
+    const sh = 18;
+    const px = (k: number) => (i.serie.length === 1 ? sx + sw / 2 : sx + (k * sw) / (i.serie.length - 1));
+    const py = (val: number) => sy + (sh * (val - min)) / amp;
+    for (let k = 1; k < i.serie.length; k++)
+      c.page.drawLine({ start: { x: px(k - 1), y: py(i.serie[k - 1]!.valor) }, end: { x: px(k), y: py(i.serie[k]!.valor) }, thickness: 1, color: CORES.tinta });
+    const u = i.serie.length - 1;
+    c.page.drawCircle({ x: px(u), y: py(i.serie[u]!.valor), size: 1.8, color: CORES.ferrugem });
+    const r = `${i.serie[0]!.ano}–${i.ultimo.ano}`;
+    c.page.drawText(c.t(r), { x: cx + cw - 8 - c.sans.widthOfTextAtSize(c.t(r), 6), y: top - 13, size: 6, font: c.sans, color: CORES.muted });
+  });
+  return Math.ceil(p.itens.length / cols) * (ch + gap) - gap;
 }
 
 export type { RGB };

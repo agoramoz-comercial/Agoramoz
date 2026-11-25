@@ -1,3 +1,5 @@
+import type { GeografiaCitada } from './geografia';
+import type { PainelIndicadores } from './indicadores';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import fontkit from '@pdf-lib/fontkit';
@@ -49,6 +51,15 @@ export interface EdicaoRevista {
   readonly imagens: ReadonlyMap<string, Uint8Array>;
   /** Origem pública do site, para as ligações (ex.: https://agoramoz.com). */
   readonly site: string;
+  /** `artigo`: o PDF de uma notícia só (sem números da edição nem anunciantes, com fonte e método). */
+  readonly modo?: 'revista' | 'artigo';
+  /** Por id de artigo: os indicadores oficiais do país e a geografia citada. */
+  readonly extras?: ReadonlyMap<string, ExtrasArtigo>;
+}
+
+export interface ExtrasArtigo {
+  readonly indicadores: PainelIndicadores | null;
+  readonly geografia: GeografiaCitada;
 }
 
 const A4 = { w: 595.28, h: 841.89 } as const;
@@ -415,6 +426,23 @@ const TXT = {
     fonteAnaliseUma: 'Análise profunda ZABATAINA 3000 desta notícia (contagem das afirmações).',
     onde: 'Onde',
     fonteMapa: 'Natural Earth (domínio público); país escolhido pela redacção.',
+    regioes: (n: number, p: string) => `Onde o impacto se concentra: ${n} ${n === 1 ? 'região' : 'regiões'} de ${p} citadas`,
+    fonteRegioes: 'Regiões nomeadas no documento ou na análise publicada; Natural Earth (domínio público).',
+    parceirosMapa: (n: number, p: string) => `Com quem esta notícia liga ${p}: ${n} ${n === 1 ? 'país citado' : 'países citados'}`,
+    fonteParceiros: 'Países nomeados no documento ou na análise. O arco mostra uma ligação citada, não um fluxo medido. Natural Earth.',
+    indicadoresTitulo: (p: string) => `${p} em indicadores oficiais`,
+    fonteIndicadores: 'Banco Mundial, World Development Indicators (E1); último ano com dados e variação face ao anterior.',
+    metodoRotulo: 'FONTE E MÉTODO',
+    metodoTitulo: 'Como esta análise foi feita',
+    publicado: 'Publicado',
+    online: 'Versão online',
+    metodo: [
+      'A análise foi produzida com o motor AGORAMOZ e revista pela redacção antes de publicar. A análise profunda ZABATAINA 3000 só usa números escritos no documento da notícia; os itens com números de outra origem foram retirados.',
+      'Cada afirmação traz o nível de evidência (E1 primária, E2 secundária forte, E3 de apoio, E4 exploratória) e o tipo (facto, estimativa, previsão, hipótese, etc.).',
+      'Os indicadores do país vêm do Banco Mundial (World Development Indicators), lidos no dia em que este PDF foi gerado. A leitura dos indicadores só cita esses valores ou os do documento.',
+      'Os mapas mostram apenas regiões e países nomeados no texto; não afirmam fluxos medidos. Geometria: Natural Earth (domínio público).',
+      'Não é aconselhamento de investimento.',
+    ],
   },
   en: {
     revista: 'Business analysis magazine',
@@ -454,6 +482,23 @@ const TXT = {
     fonteAnaliseUma: 'ZABATAINA 3000 deep analysis of this story (count of claims).',
     onde: 'Where',
     fonteMapa: 'Natural Earth (public domain); country chosen by our desk.',
+    regioes: (n: number, p: string) => `Where the impact is concentrated: ${n} ${n === 1 ? 'region' : 'regions'} of ${p} cited`,
+    fonteRegioes: 'Regions named in the document or the published analysis; Natural Earth (public domain).',
+    parceirosMapa: (n: number, p: string) => `Who this story links ${p} to: ${n} ${n === 1 ? 'country' : 'countries'} cited`,
+    fonteParceiros: 'Countries named in the document or analysis. An arc shows a cited link, not a measured flow. Natural Earth.',
+    indicadoresTitulo: (p: string) => `${p} in official indicators`,
+    fonteIndicadores: 'World Bank, World Development Indicators (E1); latest year with data and change on the previous year.',
+    metodoRotulo: 'SOURCE AND METHOD',
+    metodoTitulo: 'How this analysis was made',
+    publicado: 'Published',
+    online: 'Online version',
+    metodo: [
+      'The analysis was produced with the AGORAMOZ engine and reviewed by our desk before publication. The ZABATAINA 3000 deep analysis uses only numbers written in the story’s document; items with numbers from elsewhere were removed.',
+      'Each claim carries its evidence level (E1 primary, E2 strong secondary, E3 supporting, E4 exploratory) and type (fact, estimate, forecast, hypothesis, etc.).',
+      'Country indicators come from the World Bank (World Development Indicators), read on the day this PDF was generated. The reading of the indicators cites only those values or the document’s.',
+      'Maps show only regions and countries named in the text; they do not claim measured flows. Geometry: Natural Earth (public domain).',
+      'This is not investment advice.',
+    ],
   },
 } as const;
 
@@ -489,7 +534,8 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const x = TXT[e.idioma];
   const dataTexto = dataDaEdicao(e.data, e.idioma);
-  pdf.setTitle(`AGORAMOZ News — ${x.edicao} ${dataTexto}`);
+  const soArtigo = e.modo === 'artigo';
+  pdf.setTitle(soArtigo && e.artigos[0] ? `AGORAMOZ News — ${e.artigos[0].titulo}` : `AGORAMOZ News — ${x.edicao} ${dataTexto}`);
   pdf.setAuthor('AGORAMOZ News');
   pdf.setSubject(x.revista);
   pdf.setLanguage(e.idioma === 'en' ? 'en-GB' : 'pt-PT');
@@ -581,7 +627,7 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
   const paisesEd = porPais(e.artigos);
   const seccoesEd = porSeccao(e.artigos);
   const profundas = e.artigos.flatMap((a) => (a.profunda ? [a.profunda] : []));
-  if (e.artigos.length > 0) {
+  if (e.artigos.length > 0 && !soArtigo) {
     r.novaPagina('papel');
     r.rotulo('INFOGRAFIA', M, r.y - 8);
     r.y -= 12;
@@ -731,6 +777,10 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
       r.filete(r.y, false);
       r.colunasDesde(r.y - 2);
       const marcaE = (ev: string, tipo: keyof typeof NOME_TIPO) => ` [${ev} · ${NOME_TIPO[tipo][e.idioma]}]`;
+      if (p.leituraIndicadores.length) {
+        r.titulo(e.idioma === 'en' ? 'What the official indicators mean' : 'O que os indicadores oficiais significam');
+        for (const k of p.leituraIndicadores) r.correr({ ...corpo, texto: `${k.texto}${marcaE(k.evidencia, k.tipo)}`, antes: 3, marca: '·' });
+      }
       if (p.riscos.length) {
         r.titulo(x.riscos);
         for (const k of p.riscos) r.correr({ ...corpo, texto: `${k.titulo}. ${k.descricao}${marcaE(k.evidencia, k.tipo)}`, antes: 3, marca: '·' });
@@ -768,7 +818,38 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
       r.y -= 14;
       const meia = (larg - 24) / 2;
       const itens: { h: number; desenhar: (xx: number, yy: number) => void }[] = [];
-      if (a.pais && series.length === 0 && !p) {
+      const extra = e.extras?.get(a.id);
+      const geo = extra?.geografia;
+      const cabe = (h: number) => {
+        if (r.y - h < M + 10) r.novaPagina('papel');
+      };
+      const nomeP = a.pais ? NOME_DO_PAIS[a.pais][e.idioma] : '';
+      const temGeo = !!geo && (geo.regioes.length > 0 || geo.parceiros.length > 0);
+      if (a.pais && geo && geo.regioes.length > 0) {
+        const pais = a.pais;
+        cabe(26 + larg * 0.625 + 12 + Math.ceil(geo.regioes.length / 2) * 12 + 30);
+        r.y -= G.quadro(r.g, M, r.y, larg, x.regioes(geo.regioes.length, nomeP), x.fonteRegioes, (y) =>
+          G.mapaRegioes(r.g, pais, geo.regioes, M, y, larg),
+        );
+        r.y -= 14;
+      }
+      if (a.pais && geo && geo.parceiros.length > 0) {
+        const pais = a.pais;
+        cabe(26 + larg * (500 / 960) + 30);
+        r.y -= G.quadro(r.g, M, r.y, larg, x.parceirosMapa(geo.parceiros.length, nomeP), x.fonteParceiros, (y) =>
+          G.mapaLigacoes(r.g, pais, geo.parceiros, M, y, larg),
+        );
+        r.y -= 14;
+      }
+      if (a.pais && extra?.indicadores) {
+        const ind = extra.indicadores;
+        cabe(26 + Math.ceil(ind.itens.length / 2) * 90 + 30);
+        r.y -= G.quadro(r.g, M, r.y, larg, x.indicadoresTitulo(nomeP), x.fonteIndicadores, (y) => G.indicadores(r.g, ind, M, y, larg));
+        r.y -= 14;
+      }
+      if (temGeo) {
+        // Os mapas já foram desenhados a toda a largura; a grelha fica para as séries.
+      } else if (a.pais && series.length === 0 && !p) {
         // Só o mapa: a toda a largura.
         const pais = a.pais;
         r.y -= G.quadro(r.g, M, r.y, larg, `${x.onde}: ${NOME_DO_PAIS[pais][e.idioma]}`, x.fonteMapa, (y) => {
@@ -810,8 +891,29 @@ export async function gerarRevista(e: EdicaoRevista): Promise<Uint8Array> {
     }
   }
 
+  // ── Fonte e método (só no PDF de uma notícia) ──────────────────────────────
+  if (soArtigo && e.artigos[0]) {
+    const a = e.artigos[0];
+    r.novaPagina('papel');
+    r.rotulo(x.metodoRotulo, M, r.y - 8);
+    r.y -= 12;
+    r.escrever(x.metodoTitulo, f.negra, 24, M, larg, TINTA, 1.06);
+    r.y -= 10;
+    const linhas = [
+      ...(a.fonte_nome ? [`${x.fonte}: ${a.fonte_nome}${a.fonte_url ? ` (${a.fonte_url})` : ''}`] : []),
+      `${x.publicado}: ${dataDaEdicao(new Date(a.publicado_em), e.idioma)}`,
+      ...x.metodo,
+      `${x.online}: ${urlArtigo(e, a.slug)}`,
+    ];
+    for (const t of linhas) {
+      r.escrever(t, f.serifa, 10.5, M, larg, TINTA, 1.4);
+      r.y -= 8;
+    }
+    r.ligacao(urlArtigo(e, a.slug), M, r.y - 4, larg, 16);
+  }
+
   // ── Página estratégica dos anunciantes (só se houver anúncios) ─────────────
-  const ads = [...new Map(e.anuncios.map((a) => [a.id, a])).values()].slice(0, 6);
+  const ads = soArtigo ? [] : [...new Map(e.anuncios.map((a) => [a.id, a])).values()].slice(0, 6);
   if (ads.length > 0) {
     r.novaPagina('preto', false);
     // A página inteira é luz de cor; cada anúncio é um painel de vidro fosco por cima.

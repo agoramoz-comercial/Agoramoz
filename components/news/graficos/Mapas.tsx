@@ -1,6 +1,7 @@
 import type { Idioma } from '@/content/types';
 import type { Contagem } from '@/lib/news/estatisticas';
-import { ISO_DO_PAIS, mapaDoPais, mapaMundo } from '@/lib/news/mapa';
+import type { PaisCitado, RegiaoCitada } from '@/lib/news/geografia';
+import { ISO_DO_PAIS, PONTO_DO_PAIS, mapaDoPais, mapaMundo, projectarNoMundo, projectarNoPais } from '@/lib/news/mapa';
 import { NOME_DO_PAIS, type PaisNews } from '@/lib/news/paises';
 import { COR } from './Graficos';
 
@@ -88,6 +89,104 @@ export function MapaCobertura({
           </g>
         );
       })}
+    </svg>
+  );
+}
+
+/**
+ * O país da notícia com as regiões que o documento cita, numeradas (a mesma
+ * numeração da legenda por baixo). Regiões fora do quadro não se desenham.
+ */
+export function MapaRegioes({ pais, regioes, idioma }: { pais: PaisNews; regioes: readonly RegiaoCitada[]; idioma: Idioma }) {
+  const m = mapaDoPais(pais, 640, 400);
+  const pts = projectarNoPais(pais, regioes.map((r) => [r.lon, r.lat] as const), 640, 400);
+  const nome = l(NOME_DO_PAIS[pais], idioma);
+  const lista = regioes.map((r) => r.nome).join(', ');
+  return (
+    <div>
+      <svg
+        viewBox={`0 0 ${m.largura} ${m.altura}`}
+        role="img"
+        aria-label={idioma === 'en' ? `Map of ${nome} with the regions cited: ${lista}` : `Mapa de ${nome} com as regiões citadas: ${lista}`}
+        className="h-auto w-full"
+      >
+        <rect width={m.largura} height={m.altura} fill="#e6dfd0" />
+        <path d={m.grelha} fill="none" stroke={COR.tinta} strokeOpacity="0.08" strokeWidth="0.6" />
+        {m.paises.map((p) => (
+          <path key={p.id} d={p.d} fill="#d3cab8" stroke={COR.papel} strokeWidth="0.8" />
+        ))}
+        <path d={m.destaque} fill="#3a352f" stroke={COR.papel} strokeWidth="1" />
+        {pts.map((xy, i) =>
+          xy ? (
+            <g key={regioes[i]!.nome} className="font-sans">
+              <circle cx={xy[0]} cy={xy[1]} r="19" fill={COR.ferrugem} fillOpacity="0.25" />
+              <circle cx={xy[0]} cy={xy[1]} r="12" fill={COR.ferrugem} stroke={COR.papel} strokeWidth="2" />
+              <text x={xy[0]} y={xy[1] + 5} textAnchor="middle" fontSize="14" fontWeight="700" fill={COR.papel}>
+                {i + 1}
+              </text>
+            </g>
+          ) : null,
+        )}
+      </svg>
+      <ol className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 font-sans text-[0.875rem] sm:grid-cols-2">
+        {regioes.map((r, i) => (
+          <li key={r.nome} className="flex gap-2">
+            <span className="w-5 text-right font-bold tabular-nums" aria-hidden="true">
+              {i + 1}
+            </span>
+            <span>
+              {r.nome}
+              {!pts[i] && <span className="text-[color:var(--muted)]"> ({idioma === 'en' ? 'outside the frame' : 'fora do quadro'})</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/**
+ * Com quem a notícia liga o país: os países citados, ligados ao país da
+ * notícia por arcos (a direcção não afirma um fluxo; mostra a ligação citada).
+ */
+export function MapaLigacoes({ pais, parceiros, idioma }: { pais: PaisNews; parceiros: readonly PaisCitado[]; idioma: Idioma }) {
+  const m = mapaMundo();
+  const [origem, ...destinos] = projectarNoMundo([PONTO_DO_PAIS[pais], ...parceiros.map((p) => [p.lon, p.lat] as const)]);
+  const [ox, oy] = origem!;
+  const nome = l(NOME_DO_PAIS[pais], idioma);
+  const nomeP = (p: PaisCitado) => (idioma === 'en' ? p.en : p.pt);
+  return (
+    <svg
+      viewBox={`0 0 ${m.largura} ${m.altura}`}
+      role="img"
+      aria-label={
+        idioma === 'en'
+          ? `World map: ${nome} linked to the countries cited — ${parceiros.map(nomeP).join(', ')}`
+          : `Mapa do mundo: ${nome} ligado aos países citados — ${parceiros.map(nomeP).join(', ')}`
+      }
+      className="h-auto w-full"
+    >
+      <path d={m.contorno} fill="#e6dfd0" />
+      {m.paises.map((p) => (
+        <path key={p.id} d={p.d} fill={p.id === ISO_DO_PAIS[pais] ? COR.tinta : '#d3cab8'} stroke={COR.papel} strokeWidth="0.5" />
+      ))}
+      {destinos.map(([x, y], i) => {
+        const mx = (ox + x) / 2;
+        const my = Math.min(oy, y) - Math.hypot(x - ox, y - oy) * 0.25;
+        return <path key={parceiros[i]!.iso2} d={`M${ox},${oy} Q${mx},${my} ${x},${y}`} fill="none" stroke={COR.ferrugem} strokeWidth="2" strokeOpacity="0.85" />;
+      })}
+      {destinos.map(([x, y], i) => (
+        <g key={`p-${parceiros[i]!.iso2}`} className="font-sans">
+          <circle cx={x} cy={y} r="6" fill={COR.ferrugem} stroke={COR.papel} strokeWidth="1.5" />
+          <text x={x} y={y - 10} textAnchor="middle" fontSize="13" fontWeight="700" fill={COR.tinta} stroke={COR.papel} strokeWidth="3" paintOrder="stroke">
+            {nomeP(parceiros[i]!)}
+          </text>
+        </g>
+      ))}
+      <circle cx={ox} cy={oy} r="9" fill={COR.tinta} stroke={COR.papel} strokeWidth="2.5" />
+      <text x={ox} y={oy + 24} textAnchor="middle" fontSize="14" fontWeight="700" fill={COR.tinta} stroke={COR.papel} strokeWidth="3" paintOrder="stroke" className="font-sans">
+        {nome}
+      </text>
     </svg>
   );
 }

@@ -93,6 +93,41 @@ export interface MapaRegional {
 
 const regionais = new Map<string, MapaRegional>();
 
+/** A projecção do mapa regional (a mesma para o contorno e para os pontos citados). */
+function projeccaoDoPais(pais: PaisNews, largura: number, altura: number) {
+  const alvo = p50().find((f) => f.id === ISO_DO_PAIS[pais]);
+  const [lon, lat] = PONTO_DO_PAIS[pais];
+  const proj = geoAzimuthalEqualArea().rotate([-lon, -lat]).clipAngle(90).precision(0.3);
+  if (alvo) proj.fitExtent([[largura * 0.27, altura * 0.18], [largura * 0.73, altura * 0.82]], principal(alvo));
+  const tecto = Math.min(largura, altura) * 4.2;
+  if (!alvo || proj.scale() > tecto) proj.scale(tecto).translate([largura / 2, altura / 2]);
+  return proj;
+}
+
+const r1 = (v: number) => Math.round(v * 10) / 10;
+
+/** Pontos [lon, lat] no mapa regional do país (os que caem fora do quadro saem como null). */
+export function projectarNoPais(
+  pais: PaisNews,
+  pontos: readonly (readonly [number, number])[],
+  largura = 640,
+  altura = 400,
+): ([number, number] | null)[] {
+  const proj = projeccaoDoPais(pais, largura, altura);
+  return pontos.map((p) => {
+    const xy = proj([p[0], p[1]]);
+    if (!xy || xy[0] < 0 || xy[1] < 0 || xy[0] > largura || xy[1] > altura) return null;
+    return [r1(xy[0]), r1(xy[1])];
+  });
+}
+
+/** Pontos [lon, lat] no mapa do mundo plano (`mapaMundo`). */
+export function projectarNoMundo(pontos: readonly (readonly [number, number])[]): [number, number][] {
+  const m = mapaMundo();
+  const proj = geoNaturalEarth1().fitExtent([[4, 4], [m.largura - 4, m.altura - 4]], { type: 'Sphere' });
+  return pontos.map((p) => (proj([p[0], p[1]]) ?? [0, 0]).map(r1) as [number, number]);
+}
+
 /**
  * O país da notícia no meio da sua região (projecção azimutal de área igual,
  * centrada nele), com os vizinhos à volta. O zoom tem tecto: Singapura e a
@@ -103,12 +138,8 @@ export function mapaDoPais(pais: PaisNews, largura = 640, altura = 400): MapaReg
   const feito = regionais.get(chave);
   if (feito) return feito;
   const todos = p50();
-  const alvo = todos.find((f) => f.id === ISO_DO_PAIS[pais]);
   const [lon, lat] = PONTO_DO_PAIS[pais];
-  const proj = geoAzimuthalEqualArea().rotate([-lon, -lat]).clipAngle(90).precision(0.3);
-  if (alvo) proj.fitExtent([[largura * 0.27, altura * 0.18], [largura * 0.73, altura * 0.82]], principal(alvo));
-  const tecto = Math.min(largura, altura) * 4.2;
-  if (!alvo || proj.scale() > tecto) proj.scale(tecto).translate([largura / 2, altura / 2]);
+  const proj = projeccaoDoPais(pais, largura, altura);
   const caminho = geoPath(proj).digits(1);
   const paises: CaminhoPais[] = [];
   let destaque = '';

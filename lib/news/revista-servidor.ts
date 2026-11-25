@@ -1,3 +1,5 @@
+import { geografiaDoArtigo } from './geografia';
+import { INDICADORES_DA_SECCAO, indicadoresDoPais } from './indicadores';
 import type { ArtigoCompleto } from './artigo';
 import { urlDaImagem } from './imagem';
 import { anunciosNoAr, jornalLigado, listarPublicados, obterPublicado } from './jornal-servidor';
@@ -52,6 +54,41 @@ export async function respostaRevista(idioma: 'pt' | 'en', site: string): Promis
       'content-type': 'application/pdf',
       'content-disposition': `attachment; filename="agoramoz-news-${idioma}-${dia}.pdf"`,
       'cache-control': 'public, max-age=600',
+      'x-robots-tag': 'noindex',
+    },
+  });
+}
+
+/**
+ * O PDF de UMA notícia (`/news/<slug>/pdf` e `/en/news/<slug>/pdf`): a capa
+ * com a fotografia e o vidro, o texto, a análise profunda, a notícia em
+ * números (mapas citados e indicadores oficiais) e a página de fonte e
+ * método. Só artigos publicados na edição pedida; o resto, 404.
+ */
+export async function respostaArtigoPdf(slug: string, idioma: 'pt' | 'en', site: string): Promise<Response> {
+  if (!jornalLigado() || !/^[a-z0-9-]{3,140}$/.test(slug)) return new Response('Not found', { status: 404 });
+  const a = await obterPublicado(slug);
+  if (!a || a.idioma !== idioma) return new Response('Not found', { status: 404 });
+  const [foto, indicadores] = await Promise.all([
+    lerFoto(a),
+    a.pais ? indicadoresDoPais(a.pais, INDICADORES_DA_SECCAO[a.seccao]) : Promise.resolve(null),
+  ]);
+  const geografia = a.pais ? geografiaDoArtigo(a) : { regioes: [], parceiros: [] };
+  const pdf = await gerarRevista({
+    idioma,
+    data: new Date(Date.now()),
+    artigos: [a],
+    anuncios: [],
+    imagens: new Map(foto ? [foto] : []),
+    site,
+    modo: 'artigo',
+    extras: new Map([[a.id, { indicadores, geografia }]]),
+  });
+  return new Response(new Uint8Array(pdf), {
+    headers: {
+      'content-type': 'application/pdf',
+      'content-disposition': `attachment; filename="agoramoz-news-${a.slug}.pdf"`,
+      'cache-control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
       'x-robots-tag': 'noindex',
     },
   });

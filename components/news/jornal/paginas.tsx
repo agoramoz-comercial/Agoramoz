@@ -1,3 +1,4 @@
+import { INDICADORES_DA_SECCAO, indicadoresDoPais } from '@/lib/news/indicadores';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import type { Idioma } from '@/content/types';
@@ -53,10 +54,20 @@ export async function Artigo({ idioma, slug, trilho }: { idioma: Idioma; slug: s
   const artigo = await obterPublicado(slug);
   // Um artigo da outra edição não se mostra aqui (o endereço certo é o dele).
   if (!artigo || artigo.idioma !== idioma) notFound();
-  const [anuncios, mesmaSeccao] = await Promise.all([
+  const [anuncios, mesmaSeccao, indicadores] = await Promise.all([
     anunciosNoAr(),
     listarPublicados(idioma, artigo.seccao, 4),
+    artigo.pais ? indicadoresDoPais(artigo.pais, INDICADORES_DA_SECCAO[artigo.seccao]) : Promise.resolve(null),
   ]);
   const relacionados = (mesmaSeccao ?? []).filter((r) => r.id !== artigo.id).slice(0, 3);
-  return <PaginaArtigo artigo={artigo} idioma={idioma} anuncios={anuncios} relacionados={relacionados} trilho={trilho} />;
+  return (
+    <PaginaArtigo
+      artigo={artigo}
+      idioma={idioma}
+      anuncios={anuncios}
+      relacionados={relacionados}
+      trilho={trilho}
+      indicadores={indicadores}
+    />
+  );
 }

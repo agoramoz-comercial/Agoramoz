@@ -6,6 +6,8 @@ import type { ArtigoCompleto } from './artigo';
 import { normalizar } from './esquema';
 import { EXEMPLO_LOVABLE } from './exemplo';
 import { EXEMPLO_PROFUNDA } from './exemplo-profunda';
+import { geografiaDoArtigo } from './geografia';
+import { INDICADORES, montarIndicador } from './indicadores';
 import { gerarRevista, urlAnuncio } from './revista';
 
 const ANALISE = normalizar(EXEMPLO_LOVABLE.analysis)!;
@@ -155,5 +157,35 @@ describe('revista em PDF — vidro e gráficos', () => {
     expect(await paginas(com)).toBeGreaterThanOrEqual(6);
     // sem país, sem análise profunda: nenhuma página «em números» do artigo
     expect(await paginas(sem)).toBeLessThan(await paginas(com));
+  });
+});
+
+describe('PDF de uma notícia', () => {
+  it('sem números da edição nem anunciantes; com mapas citados, indicadores e fonte e método', async () => {
+    const a = artigo(1, { profunda: EXEMPLO_PROFUNDA });
+    const indicadores = {
+      pais: 'mz' as const,
+      fonte: 'Banco Mundial — World Development Indicators' as const,
+      itens: [
+        { codigo: 'FP.CPI.TOTL.ZG', serie: [{ ano: 2022, valor: 9.8 }, { ano: 2023, valor: 7.1 }] },
+        { codigo: 'NY.GDP.MKTP.KD.ZG', serie: [{ ano: 2022, valor: 4.4 }, { ano: 2023, valor: 5 }] },
+      ].map((x) => montarIndicador(INDICADORES[x.codigo]!, x.serie, 'mz')!),
+    };
+    const bytes = await gerarRevista({
+      idioma: 'pt',
+      data: new Date('2026-11-25T10:00:00Z'),
+      artigos: [a],
+      anuncios: ANUNCIOS,
+      imagens: new Map(),
+      site: 'https://agoramoz.com',
+      modo: 'artigo',
+      extras: new Map([[a.id, { indicadores, geografia: geografiaDoArtigo(a) }]]),
+    });
+    const doc = await PDFDocument.load(bytes);
+    expect(doc.getTitle()).toBe(`AGORAMOZ News — ${a.titulo}`);
+    const links = await ligacoes(bytes);
+    expect(links.some((l) => l.includes('/api/news/anuncio/'))).toBe(false);
+    expect(links).toContain(`https://agoramoz.com/news/${a.slug}`);
+    expect(doc.getPageCount()).toBeGreaterThanOrEqual(5);
   });
 });

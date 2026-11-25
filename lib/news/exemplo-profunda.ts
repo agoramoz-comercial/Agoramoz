@@ -97,4 +97,14 @@ export const EXEMPLO_PROFUNDA: AnaliseProfunda = {
   ],
   dados: [],
   retirados: 0,
+  leituraIndicadores: [
+    {
+      indicador: 'FP.CPI.TOTL.ZG',
+      texto: 'Exemplo de QA: com a inflação acima do registo anterior, uma tarifa portuária mais alta passa mais depressa para o preço final.',
+      evidencia: 'E1',
+      tipo: 'hypothesis',
+    },
+  ],
+  indicadoresUsados: [],
+  geografia: { regioes: ['Maputo', 'Gaza'], parceiros: ['za', 'cn'] },
 };

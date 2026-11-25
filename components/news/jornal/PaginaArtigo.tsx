@@ -18,6 +18,7 @@ import { BotaoGosto } from './BotaoGosto';
 import { caminhoDoArtigo, caminhoDoJornal, ctaDoArtigo } from './ligacoes';
 import { Partilhar } from './Partilhar';
 import { ArtigoEmNumeros } from '@/components/news/graficos/EmNumeros';
+import type { PainelIndicadores } from '@/lib/news/indicadores';
 import { Profunda } from './Profunda';
 import { SeloPais } from './SeloPais';
 
@@ -41,7 +42,9 @@ export function PaginaArtigo({
   anuncios,
   relacionados,
   trilho,
+  indicadores = null,
 }: {
+  indicadores?: PainelIndicadores | null;
   artigo: ArtigoCompleto;
   idioma: Idioma;
   anuncios: readonly AnuncioPublico[];
@@ -146,7 +149,17 @@ export function PaginaArtigo({
             </p>
             <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
               <BotaoGosto slug={a.slug} inicial={a.gostos} idioma={idioma} />
-              <Partilhar slug={a.slug} url={url} titulo={a.titulo} idioma={idioma} />
+              <div className="flex flex-wrap items-center gap-3">
+                <a
+                  href={`${caminho}/pdf`}
+                  download
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-current px-4 font-sans text-[0.8125rem] font-semibold hover:bg-[color:var(--on-surface)] hover:text-[color:var(--surface,#f3efe6)]"
+                >
+                  <span aria-hidden="true">↓</span>
+                  {en ? 'Download analysis (PDF)' : 'Descarregar análise (PDF)'}
+                </a>
+                <Partilhar slug={a.slug} url={url} titulo={a.titulo} idioma={idioma} />
+              </div>
             </div>
           </header>
 
@@ -165,7 +178,7 @@ export function PaginaArtigo({
           </div>
 
           {a.profunda && <Profunda analise={a.profunda} idioma={idioma} />}
-          <ArtigoEmNumeros artigo={a} idioma={idioma} />
+          <ArtigoEmNumeros artigo={a} idioma={idioma} indicadores={indicadores} />
 
           {a.nota_editorial && (
             <p className="jornal-serifa mt-12 border-t border-[color:var(--border)] pt-5 text-[1.0625rem] italic">

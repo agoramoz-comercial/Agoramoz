@@ -17,7 +17,10 @@ import type { AnaliseProfunda } from '@/lib/news/profunda';
 import { Barras3D } from './Barras3D';
 import { Barras, Colunas, Figura, GraficoSerie, numero, RotulosColunas } from './Graficos';
 import { Globo } from './Globo';
-import { MapaCobertura, MapaPais } from './Mapas';
+import { geografiaDoArtigo } from '@/lib/news/geografia';
+import type { PainelIndicadores as PainelInd } from '@/lib/news/indicadores';
+import { PainelIndicadores } from './Indicadores';
+import { MapaCobertura, MapaLigacoes, MapaPais, MapaRegioes } from './Mapas';
 
 const l = (x: { pt: string; en: string }, i: Idioma) => (i === 'en' ? x.en : x.pt);
 
@@ -201,11 +204,22 @@ export function PainelAnalise({ analise: a, idioma }: { analise: AnaliseProfunda
  * principal em 3D) e o painel de contagens da análise. Cada bloco só aparece
  * se houver dados para ele.
  */
-export function ArtigoEmNumeros({ artigo: a, idioma }: { artigo: ArtigoCompleto; idioma: Idioma }) {
+export function ArtigoEmNumeros({
+  artigo: a,
+  idioma,
+  indicadores = null,
+}: {
+  artigo: ArtigoCompleto;
+  idioma: Idioma;
+  indicadores?: PainelInd | null;
+}) {
   const series = a.profunda?.dados ?? [];
   const principal = series.find((s) => s.pontos.every((p) => p.valor >= 0));
   if (!a.pais && series.length === 0 && !a.profunda) return null;
   const unidade = (u: string) => (u === '%' ? '%' : u ? ` ${u}` : '');
+  const geo = a.pais ? geografiaDoArtigo(a) : { regioes: [], parceiros: [] };
+  const nomePais = a.pais ? l(NOME_DO_PAIS[a.pais], idioma) : '';
+  const en = idioma === 'en';
   return (
     <section aria-labelledby="artigo-numeros" className="mt-14">
       <Titulo id="artigo-numeros">{l(T.emNumeros, idioma)}</Titulo>
@@ -213,22 +227,68 @@ export function ArtigoEmNumeros({ artigo: a, idioma }: { artigo: ArtigoCompleto;
         <p className="jornal-serifa mt-3 max-w-[60ch] text-[1.0625rem] italic">{l(T.emNumerosLead, idioma)}</p>
       )}
       <div className="mt-6 grid gap-10 lg:grid-cols-12">
-        {a.pais && (
+        {a.pais && geo.regioes.length > 0 && (
           <Figura
-            titulo={`${l(T.onde, idioma)}: ${l(NOME_DO_PAIS[a.pais], idioma)}`}
+            titulo={
+              en
+                ? `Where the impact is concentrated: ${geo.regioes.length} ${geo.regioes.length === 1 ? 'region' : 'regions'} of ${nomePais} cited`
+                : `Onde o impacto se concentra: ${geo.regioes.length} ${geo.regioes.length === 1 ? 'região' : 'regiões'} de ${nomePais} citadas`
+            }
+            fonte={
+              en
+                ? 'Regions named in the story’s document or published analysis; boundaries and points: Natural Earth (public domain).'
+                : 'Regiões nomeadas no documento ou na análise publicada; limites e pontos: Natural Earth (domínio público).'
+            }
+            idioma={idioma}
+            className="lg:col-span-12"
+          >
+            <MapaRegioes pais={a.pais} regioes={geo.regioes} idioma={idioma} />
+          </Figura>
+        )}
+        {a.pais && geo.parceiros.length > 0 && (
+          <Figura
+            titulo={
+              en
+                ? `Who this story links ${nomePais} to: ${geo.parceiros.length} ${geo.parceiros.length === 1 ? 'country' : 'countries'} cited`
+                : `Com quem esta notícia liga ${nomePais}: ${geo.parceiros.length} ${geo.parceiros.length === 1 ? 'país citado' : 'países citados'}`
+            }
+            fonte={
+              en
+                ? 'Countries named in the story’s document or published analysis. An arc shows a cited link, not a measured flow. Natural Earth (public domain).'
+                : 'Países nomeados no documento ou na análise publicada. O arco mostra uma ligação citada, não um fluxo medido. Natural Earth (domínio público).'
+            }
+            idioma={idioma}
+            className="lg:col-span-12"
+          >
+            <MapaLigacoes pais={a.pais} parceiros={geo.parceiros} idioma={idioma} />
+          </Figura>
+        )}
+        {a.pais && geo.regioes.length === 0 && geo.parceiros.length === 0 && (
+          <Figura
+            titulo={en ? `${nomePais}: the country this story affects` : `${nomePais}: o país que esta notícia afecta`}
             fonte={l(T.ondeFonte, idioma)}
             idioma={idioma}
-            className={principal ? 'lg:col-span-5' : 'lg:col-span-12'}
+            className={indicadores ? 'lg:col-span-5' : 'lg:col-span-12'}
           >
             <MapaPais pais={a.pais} idioma={idioma} />
+            <p className="mt-2 font-sans text-[0.8125rem] text-[color:var(--muted)]">
+              {en
+                ? 'The document names no region or other country, so the map shows the country only; the official indicators frame the story.'
+                : 'O documento não nomeia regiões nem outros países: o mapa mostra só o país, e os indicadores oficiais enquadram a notícia.'}
+            </p>
           </Figura>
+        )}
+        {a.pais && indicadores && (
+          <div className={geo.regioes.length === 0 && geo.parceiros.length === 0 ? 'lg:col-span-7' : 'lg:col-span-12'}>
+            <PainelIndicadores painel={indicadores} seccao={a.seccao} idioma={idioma} />
+          </div>
         )}
         {principal && (
           <Figura
             titulo={`${l(T.barras3d, idioma)} · ${principal.titulo}`}
             fonte={principal.fonte}
             idioma={idioma}
-            className={a.pais ? 'lg:col-span-7' : 'lg:col-span-12'}
+            className="lg:col-span-12"
           >
             <Barras3D
               rotulo={`${principal.titulo}: ${principal.pontos.map((p) => `${p.rotulo} ${numero(p.valor, idioma)}${unidade(principal.unidade)}`).join('; ')}`}
