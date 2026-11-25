@@ -50,6 +50,8 @@ export interface Conferencia {
   readonly artigos: number;
   /** Contactos retirados. */
   readonly contactos: number;
+  /** Prazos, valores e isenções que não constam dos artigos conferidos (substituídos por uma marca). */
+  readonly valores?: number;
 }
 
 export interface OpcoesDeConferencia {
@@ -62,11 +64,19 @@ export interface OpcoesDeConferencia {
    * pessoa, não a citar a lei.
    */
   readonly pergunta?: string;
+  /**
+   * O texto dos artigos oficiais que seguiram com esta resposta. Com ele, um
+   * prazo («7 dias»), um valor («500 MT»), uma percentagem ou uma isenção
+   * («isento», «gratuito») que não esteja nesses artigos é substituído por
+   * uma marca: o modelo não inventa prazos nem custos em nome da lei.
+   */
+  readonly textoOficial?: string;
 }
 
 export const MARCA_ARTIGO = 'artigo [número por confirmar]';
 export const MARCA_ARTIGOS = 'artigos [números por confirmar]';
 export const MARCA_CONTACTO = '[contacto retirado: confirme no sítio oficial da instituição]';
+export const MARCA_VALOR = '[valor por confirmar no serviço]';
 export const NOTA_CITACAO =
   'Citação retirada: o texto que o assistente citou aqui não foi encontrado no texto oficial que conferimos.';
 
@@ -122,7 +132,35 @@ interface Contagem {
   citacoes: number;
   artigos: number;
   contactos: number;
+  valores: number;
 }
+
+const EXTENSO: Record<string, number> = {
+  um: 1, uma: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10,
+  onze: 11, doze: 12, treze: 13, catorze: 14, quatorze: 14, quinze: 15, dezasseis: 16, dezesseis: 16, dezassete: 17,
+  dezessete: 17, dezoito: 18, dezanove: 19, dezenove: 19, vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50,
+  sessenta: 60, setenta: 70, oitenta: 80, noventa: 90, cem: 100, cento: 100,
+};
+
+/** Os números que o texto oficial escreve (em algarismos ou por extenso, «trinta e cinco»). */
+function numerosDoTexto(texto: string): Set<number> {
+  const t = plano(texto);
+  const ns = new Set<number>((t.match(/\d+/g) ?? []).map(Number));
+  const palavras = t.split(' ');
+  for (let i = 0; i < palavras.length; i++) {
+    const a = EXTENSO[palavras[i]!];
+    if (a === undefined) continue;
+    ns.add(a);
+    if (a >= 20 && palavras[i + 1] === 'e' && EXTENSO[palavras[i + 2]!] !== undefined) ns.add(a + EXTENSO[palavras[i + 2]!]!);
+  }
+  return ns;
+}
+
+/** Um prazo, um valor ou uma percentagem: «7 dias», «60 dias úteis», «500 MT», «10%». */
+const VALOR =
+  /(?<![\d/.,])(\d{1,3}(?:[ .]\d{3})*|\d+)(?:,\d+)?\s*(%|dias?(?:\s+úteis)?|semanas?|meses|m[eê]s|anos?|horas?|MT|MZN|meticais)(?![\p{L}])/giu;
+const ISENCAO = /\b(isent[oa]s?|gratuit[oa]s?|sem custos?)\b/giu;
+
 
 function limpar(texto: string, opcoes: OpcoesDeConferencia, conta: Contagem): { texto: string; citacaoRetirada: boolean } {
   let citacaoRetirada = false;
@@ -145,6 +183,22 @@ function limpar(texto: string, opcoes: OpcoesDeConferencia, conta: Contagem): { 
     conta.contactos += 1;
     return MARCA_CONTACTO;
   });
+
+  if (opcoes.textoOficial !== undefined) {
+    const oficial = opcoes.textoOficial;
+    const numeros = numerosDoTexto(oficial);
+    saida = saida.replace(VALOR, (tudo, n: string) => {
+      if (numeros.has(Number(n.replace(/[ .]/g, '')))) return tudo;
+      conta.valores += 1;
+      return MARCA_VALOR;
+    });
+    if (!/isent|gratuit|sem custo/i.test(oficial)) {
+      saida = saida.replace(ISENCAO, () => {
+        conta.valores += 1;
+        return MARCA_VALOR;
+      });
+    }
+  }
 
   return { texto: saida, citacaoRetirada };
 }
@@ -173,7 +227,7 @@ const nota = (): Bloco => ({ tipo: 'paragrafo', trechos: [{ t: 'enfase', v: NOTA
  * forma de não dizer a verdade.
  */
 export function conferir(resposta: Resposta, opcoes: OpcoesDeConferencia): { resposta: Resposta; conferencia: Conferencia } {
-  const conta: Contagem = { citacoes: 0, artigos: 0, contactos: 0 };
+  const conta: Contagem = { citacoes: 0, artigos: 0, contactos: 0, valores: 0 };
   const blocos: Bloco[] = [];
 
   for (const bloco of resposta.blocos) {
@@ -251,5 +305,9 @@ export function validarOficial(x: unknown): x is ArtigoOficial[] {
 
 export function validarConferencia(x: unknown): x is Conferencia {
   const c = x as Partial<Conferencia> | null;
-  return !!c && [c.citacoes, c.artigos, c.contactos].every((n) => Number.isInteger(n) && (n as number) >= 0);
+  return (
+    !!c &&
+    [c.citacoes, c.artigos, c.contactos].every((n) => Number.isInteger(n) && (n as number) >= 0) &&
+    (c.valores === undefined || (Number.isInteger(c.valores) && c.valores >= 0))
+  );
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { MARCA_ARTIGO, MARCA_ARTIGOS, MARCA_CONTACTO, NOTA_CITACAO, conferir, validarConferencia, validarOficial } from './conferir';
+import { MARCA_ARTIGO, MARCA_ARTIGOS, MARCA_CONTACTO, MARCA_VALOR, NOTA_CITACAO, conferir, validarConferencia, validarOficial } from './conferir';
 import { DIPLOMAS, citacaoNoCorpus, procurarArtigos, tamanhoDoCorpus } from './corpus';
 import { ordemAoAssistente } from './limites';
 import { contextoOficial, corpoDoPedido } from './motor';
@@ -14,7 +14,7 @@ function conf(markdown: string, artigos: number[] = []) {
 
 describe('o corpus', () => {
   it('tem os três diplomas, com epígrafe e texto em cada artigo', () => {
-    expect(tamanhoDoCorpus()).toEqual({ trabalho: 264, sucessoes: 309, familia: 428 });
+    expect(tamanhoDoCorpus()).toEqual({ trabalho: 272, sucessoes: 309, familia: 431 });
     for (const d of DIPLOMAS) {
       expect(d.fonte.href, d.id).toMatch(/^https:\/\//);
       const numeros = d.artigos.map((a) => a.n);
@@ -120,7 +120,7 @@ describe('conferir', () => {
 
   it('a citação inventada sai, o número de artigo sai, o contacto sai — e fica dito', () => {
     const { resposta, conferencia } = conf(INVENTADA, [15]);
-    expect(conferencia).toEqual({ citacoes: 1, artigos: 1, contactos: 1 });
+    expect(conferencia).toEqual({ citacoes: 1, artigos: 1, contactos: 1, valores: 0 });
     expect(resposta.texto).not.toContain('sete dias');
     expect(resposta.texto).not.toContain('Artigo 13');
     expect(resposta.texto).not.toContain('800 124 124');
@@ -133,7 +133,7 @@ describe('conferir', () => {
     const artigo = DIPLOMAS.find((d) => d.id === 'trabalho')!.artigos.find((a) => a.n === 15)!;
     const md = `Segundo o artigo 15 da Lei n.º 13/2023: "${artigo.paragrafos[0]}"`;
     const { resposta, conferencia } = conf(md, [15]);
-    expect(conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0 });
+    expect(conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0, valores: 0 });
     expect(resposta.texto).toContain('artigo 15');
     expect(resposta.texto).toContain(artigo.paragrafos[0]);
   });
@@ -159,14 +159,14 @@ describe('conferir', () => {
   it('o número do diploma, uma data e um ano não são números de artigo', () => {
     const md = 'A Lei n.º 13/2023, de 25 de Agosto, entrou em vigor em 2024 e tem 30 dias de prazo.';
     const { resposta, conferencia } = conf(md);
-    expect(conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0 });
+    expect(conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0, valores: 0 });
     expect(resposta.texto).toBe(md);
   });
 
   it('um termo entre aspas não é uma citação; um valor e um prazo não são contactos', () => {
     const md = 'Não existe "subsídio de casamento". A multa pode chegar a 25 000 000 MT e o prazo é de 90 dias.';
     const { resposta, conferencia } = conf(md);
-    expect(conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0 });
+    expect(conferencia).toEqual({ citacoes: 0, artigos: 0, contactos: 0, valores: 0 });
     expect(resposta.texto).toBe(md);
   });
 
@@ -241,4 +241,51 @@ describe('ordemAoAssistente', () => {
     'O senhorio finge que não recebeu a renda. E agora?',
     'Quem herda quando alguém morre sem deixar testamento?',
   ])('deixa passar «%s»', (texto) => expect(ordemAoAssistente(texto)).toBe(false));
+});
+
+describe('conferir: prazos, valores e isenções (alucinação)', () => {
+  const oficial =
+    'Licença por paternidade 1. O trabalhador tem direito a uma licença por paternidade de sete dias, iniciada no dia seguinte ao do nascimento da criança. 3. A licença é concedida por 60 dias nos casos de morte.';
+  const opcoes = { artigos: new Set([15]), citacaoConferida: () => true, textoOficial: oficial };
+  const para = (v: string) => ({ blocos: [{ tipo: 'paragrafo' as const, trechos: [{ t: 'texto' as const, v }] }], fontes: [], texto: v });
+  const texto = (r: ReturnType<typeof conferir>) => (r.resposta.blocos[0] as unknown as { trechos: { v: string }[] }).trechos[0]!.v;
+
+  it('mantém o prazo que está na lei, em algarismos ou por extenso', () => {
+    const r = conferir(para('Tem 7 dias de licença; 60 dias se a mãe morrer, nos termos do artigo 15.'), opcoes);
+    expect(texto(r)).toContain('7 dias');
+    expect(texto(r)).toContain('60 dias');
+    expect(r.conferencia.valores).toBe(0);
+  });
+
+  it('retira um prazo, um valor e uma isenção que a lei não diz', () => {
+    const r = conferir(para('Tem 10 dias de licença, paga 500 MT e o pedido é isento.'), opcoes);
+    expect(texto(r)).not.toMatch(/10 dias|500 MT|isento/);
+    expect(texto(r)).toContain(MARCA_VALOR);
+    expect(r.conferencia.valores).toBe(3);
+  });
+
+  it('sem texto oficial (sem artigos nossos), não mexe em prazos', () => {
+    const r = conferir(para('O prazo é de 30 dias.'), { artigos: new Set<number>(), citacaoConferida: () => false });
+    expect(texto(r)).toContain('30 dias');
+  });
+
+  it('artigo inventado e citação alterada continuam a sair', () => {
+    const r = conferir(para('Segundo o artigo 999, "o trabalhador tem direito a uma licença por paternidade de trinta dias seguidos".'), {
+      ...opcoes,
+      citacaoConferida: () => false,
+    });
+    expect(r.conferencia.artigos + r.conferencia.citacoes).toBeGreaterThan(0);
+  });
+});
+
+describe('corpus: texto integral dos artigos', () => {
+  it('os artigos recuperados estão no corpus e citam-se literalmente', () => {
+    expect(citacaoNoCorpus('Os feriados nacionais são dias de suspensão do trabalho')).toBe(true);
+    expect(citacaoNoCorpus('O trabalhador tem direito a descanso semanal de, pelo menos, 24 horas consecutivas')).toBe(true);
+    expect(citacaoNoCorpus('A afinidade determina-se pelos mesmos graus e linhas que definem o parentesco')).toBe(true);
+  });
+  it('um artigo longo segue inteiro, sem corte', () => {
+    const longos = procurarArtigos('greve lock-out empregador trabalhadores', 'trabalho');
+    expect(longos.every((a) => !a.cortado)).toBe(true);
+  });
 });

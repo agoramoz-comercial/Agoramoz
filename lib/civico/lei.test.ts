@@ -32,7 +32,7 @@ describe('as três leis, todos os artigos do corpus', () => {
     expect(diploma('codigo-penal')).toBeNull();
     // Os artigos que faltam são ditos: os que há mais os que faltam dá o último número.
     for (const d of diplomas()) expect(d.artigos.length + d.emFalta.length).toBe(Math.max(...d.artigos.map((a) => a.n)));
-    expect(diploma('trabalho')!.emFalta).toContain(16);
+    expect(diploma('trabalho')!.emFalta).toContain(55);
   });
 
   it.each(diplomas().map((d) => [d.slug, d] as const))('%s: títulos cabem em 60 com a marca, nomeiam o artigo e não se repetem', (_, d) => {

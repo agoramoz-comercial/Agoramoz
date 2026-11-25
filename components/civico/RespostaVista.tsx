@@ -299,6 +299,7 @@ function partesRetiradas(c: Conferencia): string {
       [c.citacoes, P.citacoes],
       [c.artigos, P.artigos],
       [c.contactos, P.contactos],
+      [c.valores ?? 0, P.valores],
     ] as const
   )
     .filter(([n]) => n > 0)
@@ -308,7 +309,7 @@ function partesRetiradas(c: Conferencia): string {
 
 /** Retirar em silêncio seria outra forma de não dizer a verdade: a página diz o que saiu. */
 export function ConferenciaVista({ conferencia }: { conferencia: Conferencia }) {
-  if (conferencia.citacoes + conferencia.artigos + conferencia.contactos === 0) return null;
+  if (conferencia.citacoes + conferencia.artigos + conferencia.contactos + (conferencia.valores ?? 0) === 0) return null;
   return (
     <p role="note" className="mb-8 border border-dashed border-[color:var(--on-surface)] p-4 text-sm font-medium">
       {CIVICO.conferenciaNota.replace('{partes}', partesRetiradas(conferencia))}

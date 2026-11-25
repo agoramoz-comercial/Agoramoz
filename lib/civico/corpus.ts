@@ -174,7 +174,7 @@ const oIndice = () => (indice ??= construirIndice());
 /** Quantos artigos seguem para o motor e para o ecrã. Mais do que isto dilui a resposta. */
 export const MAX_ARTIGOS = 4;
 /** Cada artigo vai inteiro até este tamanho; o resto fica a uma ligação de distância. */
-const MAX_TEXTO_ARTIGO = 2_200;
+const MAX_TEXTO_ARTIGO = 3_500;
 /** Abaixo disto, a semelhança é ruído: é melhor não mostrar texto de lei do que mostrar o errado. */
 const PONTUACAO_MINIMA = 7;
 
