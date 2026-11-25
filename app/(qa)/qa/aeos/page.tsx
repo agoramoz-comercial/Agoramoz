@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CascaAdmin } from '@/components/admin/CascaAdmin';
 import { MapaAeos } from '@/components/admin/aeos/MapaAeos';
+import { LequeAeos } from '@/components/admin/aeos/LequeAeos';
+import { mapaLeque } from '@/lib/admin/aeos-mapa';
+import { perguntarQa, decidirQa } from './acoes';
+import { ACCOES_QA } from '@/lib/admin/aeos-qa-dados';
 
 /**
  * Pré-visualização do mapa AEOS para o QA visual (Playwright + axe), sem
@@ -36,6 +40,14 @@ export default async function PreVisualizacaoAeos({ searchParams }: { searchPara
         energia={tudo}
         direcao={tudo}
       >
+        <LequeAeos
+          mapa={mapaLeque({ inqueritos: true, news: true, energia: tudo, direcao: tudo, admin: tudo }, ACCOES_QA)}
+          accoes={ACCOES_QA}
+          podeDecidir={tudo}
+          podePerguntar
+          perguntar={perguntarQa}
+          decidir={decidirQa}
+        />
         <MapaAeos
           permite={{
             inqueritos: true,
