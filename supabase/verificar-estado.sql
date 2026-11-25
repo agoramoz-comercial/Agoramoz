@@ -428,4 +428,14 @@ select 35, 'news_profunda', 'News: país, fotografia e análise profunda (0023)'
                  or not exists (select 1 from pg_policies where schemaname = 'storage' and policyname = 'news_imagens_inserir')
                  then 'ATENCAO - protecção incompleta; correr aplicar-0023.sql de novo'
             else 'ok' end
+union all
+select 36, 'agentes_accoes', 'Agentes ZABATAINA: propostas e aprovações (0024)',
+       case when to_regclass('public.agentes_accoes') is null
+                 or to_regprocedure('public.propor_accao_agente(text, text, text, text, text)') is null
+                 or to_regprocedure('public.decidir_accao_agente(uuid, text, text)') is null
+                 then 'EM FALTA - correr aplicar-0024.sql'
+            when has_function_privilege('anon', 'public.decidir_accao_agente(uuid, text, text)', 'execute')
+                 or has_table_privilege('anon', 'public.agentes_accoes', 'select')
+                 then 'ATENCAO - protecção incompleta; correr aplicar-0024.sql de novo'
+            else 'ok' end
 order by ordem;

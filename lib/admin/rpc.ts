@@ -8,6 +8,9 @@
  * primeira vez que alguém carrega em «Aprovar». Assim parte em CI.
  */
 export const RPC = {
+  // 0024 — Agentes ZABATAINA no Mapa AEOS.
+  propor_accao_agente: ['p_agente', 'p_tipo', 'p_titulo', 'p_descricao', 'p_alvo'],
+  decidir_accao_agente: ['p_id', 'p_decisao', 'p_nota'],
   enviar_para_revisao: ['p_id', 'p_revision'],
   aprovar_diagnostico: ['p_id', 'p_revision'],
   rejeitar_diagnostico: ['p_id', 'p_revision', 'p_motivo'],
